@@ -91,16 +91,20 @@ export class StateLockHolder extends S.Opaque<StateLockHolder, { readonly brand:
     acquiredAt: S.DateTimeUtcFromString.annotateKey({
       description: "When the lock was taken.",
     }),
-    bootId: S.OptionFromNullOr(S.NonEmptyString)
-      .pipe(S.withDecodingDefaultKey(Effect.succeed(null)), S.withConstructorDefault(Effect.succeedNone))
-      .annotateKey({
+    bootId: S.OptionFromNullOr(S.NonEmptyString).pipe(
+      S.annotateKey({
         description: "Kernel boot id when the lock was taken; none when it could not be read.",
       }),
-    startTime: S.OptionFromNullOr(S.NonEmptyString)
-      .pipe(S.withDecodingDefaultKey(Effect.succeed(null)), S.withConstructorDefault(Effect.succeedNone))
-      .annotateKey({
+      S.withDecodingDefaultKey(Effect.succeed(null)),
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
+    startTime: S.OptionFromNullOr(S.NonEmptyString).pipe(
+      S.annotateKey({
         description: "Start time of the holder process in clock ticks since boot; none when it could not be read.",
       }),
+      S.withDecodingDefaultKey(Effect.succeed(null)),
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
   }).pipe(
     $I.annoteSchema("StateLockHolder", {
       description: "Content of the state-directory writer lock.",

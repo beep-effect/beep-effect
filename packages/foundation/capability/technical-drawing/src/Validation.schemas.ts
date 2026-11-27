@@ -202,11 +202,11 @@ export class PdfFacts extends S.Opaque<PdfFacts, { readonly brand: unique symbol
     ),
     containerDiscovery: PdfStreamCheck.pipe(
       S.withConstructorDefault(Effect.succeed("complete" as const)),
-      S.withDecodingDefaultTypeKey(Effect.succeed("complete" as const)),
       S.annotateKey({
         description:
           "Whether raw PDF container discovery completed, reached its candidate limit, or was skipped for encryption; separate from inflate coverage.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed("complete" as const))
     ),
     streamCheck: PdfStreamCheck.pipe(
       S.withConstructorDefault(Effect.succeed("complete" as const)),

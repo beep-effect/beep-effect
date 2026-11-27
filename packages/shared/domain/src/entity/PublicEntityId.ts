@@ -213,9 +213,9 @@ export const factory = <const Entity extends EntityId.Any>(
 ): PublicEntityId<Entity, PrefixFor<Entity>, BrandFor<Entity>> => {
   const brand = `${entityId.entityType}PublicId` as BrandFor<Entity>;
   const annotationName = brand as SegmentValue<BrandFor<Entity>>;
+  const entityLiteralBrand = brand as Parameters<typeof S.brand<BrandFor<Entity>>>[0];
   const schema = S.TemplateLiteral([entityId.tableName, "_", Cuid] as const).pipe(
-    // S.brand cannot prove a generic brand key is a single literal; each entity's brand is one.
-    S.brand<BrandFor<Entity>>(brand as Parameters<typeof S.brand<BrandFor<Entity>>>[0]),
+    S.brand<BrandFor<Entity>>(entityLiteralBrand),
     $I.annoteSchema(annotationName, {
       description: `${entityId.entityType} public entity identifier.`,
     })

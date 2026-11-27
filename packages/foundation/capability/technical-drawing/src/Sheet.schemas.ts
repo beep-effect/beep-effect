@@ -481,8 +481,10 @@ export class LabelStyle extends S.Opaque<LabelStyle, { readonly brand: unique sy
     ),
     render: LabelRender.pipe(
       S.withConstructorDefault(Effect.succeed("outline" as const)),
-      S.withDecodingDefaultTypeKey(Effect.succeed("outline" as const)),
-      S.annotateKey({ description: "How the label reaches the PDF: outlines or embedded text. Defaults to `outline`." })
+      S.annotateKey({
+        description: "How the label reaches the PDF: outlines or embedded text. Defaults to `outline`.",
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed("outline" as const))
     ),
     fontFamily: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
       S.withConstructorDefault(Effect.succeedNone),
@@ -693,8 +695,8 @@ export class SheetOptions extends S.Opaque<SheetOptions, { readonly brand: uniqu
   S.Struct({
     format: SheetFormat.pipe(
       S.withConstructorDefault(Effect.succeed("letter" as const)),
-      S.withDecodingDefaultTypeKey(Effect.succeed("letter" as const)),
-      S.annotateKey({ description: "Page format. Defaults to letter." })
+      S.annotateKey({ description: "Page format. Defaults to letter." }),
+      S.withDecodingDefaultTypeKey(Effect.succeed("letter" as const))
     ),
     lineWeightMm: S.Finite.check(
       S.isGreaterThanOrEqualTo(
@@ -707,8 +709,8 @@ export class SheetOptions extends S.Opaque<SheetOptions, { readonly brand: uniqu
       )
     ).pipe(
       S.withConstructorDefault(Effect.succeed(0.35)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(0.35)),
-      S.annotateKey({ description: "Uniform stroke width in mm. Defaults to 0.35." })
+      S.annotateKey({ description: "Uniform stroke width in mm. Defaults to 0.35." }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0.35))
     ),
     letterHeightCm: S.Finite.check(
       S.isGreaterThanOrEqualTo(
@@ -721,8 +723,8 @@ export class SheetOptions extends S.Opaque<SheetOptions, { readonly brand: uniqu
       )
     ).pipe(
       S.withConstructorDefault(Effect.succeed(0.45)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(0.45)),
-      S.annotateKey({ description: "Cap height of `FIG. n` and `n/N` lettering in cm. Defaults to 0.45." })
+      S.annotateKey({ description: "Cap height of `FIG. n` and `n/N` lettering in cm. Defaults to 0.45." }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0.45))
     ),
     safetyMm: S.Finite.check(
       S.isGreaterThanOrEqualTo(
@@ -735,13 +737,13 @@ export class SheetOptions extends S.Opaque<SheetOptions, { readonly brand: uniqu
       )
     ).pipe(
       S.withConstructorDefault(Effect.succeed(3)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(3)),
-      S.annotateKey({ description: "Clearance kept inside the 1.84 margins, in mm. Defaults to 3." })
+      S.annotateKey({ description: "Clearance kept inside the 1.84 margins, in mm. Defaults to 3." }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(3))
     ),
     margins: MarginStandard.pipe(
       S.withConstructorDefault(Effect.succeed("cfr-cm" as const)),
-      S.withDecodingDefaultTypeKey(Effect.succeed("cfr-cm" as const)),
-      S.annotateKey({ description: "Margin standard the sheet is laid out to. Defaults to `cfr-cm`." })
+      S.annotateKey({ description: "Margin standard the sheet is laid out to. Defaults to `cfr-cm`." }),
+      S.withDecodingDefaultTypeKey(Effect.succeed("cfr-cm" as const))
     ),
     labelGapMm: S.OptionFromOptionalKey(
       S.Finite.check(
@@ -793,8 +795,8 @@ export class SheetOptions extends S.Opaque<SheetOptions, { readonly brand: uniqu
       )
     ).pipe(
       S.withConstructorDefault(Effect.succeed(0.2)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(0.2)),
-      S.annotateKey({ description: "Stroke width of surface-shading lines in mm. Defaults to 0.2." })
+      S.annotateKey({ description: "Stroke width of surface-shading lines in mm. Defaults to 0.2." }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0.2))
     ),
     shadingMinPitchMm: S.Finite.check(
       S.isGreaterThanOrEqualTo(
@@ -807,11 +809,11 @@ export class SheetOptions extends S.Opaque<SheetOptions, { readonly brand: uniqu
       )
     ).pipe(
       S.withConstructorDefault(Effect.succeed(1.2)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(1.2)),
       S.annotateKey({
         description:
           "Line pitch on the darkest faces, in mm on the sheet. Defaults to 1.2, which stays open at two-thirds reduction (judge round 1, R1-02).",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(1.2))
     ),
     shadingMaxPitchMm: S.Finite.check(
       S.isGreaterThanOrEqualTo(
@@ -824,8 +826,8 @@ export class SheetOptions extends S.Opaque<SheetOptions, { readonly brand: uniqu
       )
     ).pipe(
       S.withConstructorDefault(Effect.succeed(2.5)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(2.5)),
-      S.annotateKey({ description: "Line pitch on the faintest shaded faces, in mm on the sheet. Defaults to 2.5." })
+      S.annotateKey({ description: "Line pitch on the faintest shaded faces, in mm on the sheet. Defaults to 2.5." }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(2.5))
     ),
     shadingLitThreshold: S.Finite.check(
       S.isGreaterThanOrEqualTo(
@@ -846,27 +848,27 @@ export class SheetOptions extends S.Opaque<SheetOptions, { readonly brand: uniqu
       )
     ).pipe(
       S.withConstructorDefault(Effect.succeed(0.55)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(0.55)),
       S.annotateKey({
         description:
           "Exposure above which a face stays unshaded under the uniform style. Defaults to 0.55, just below a face seen square-on (1/√3 under the 45° light), so plans and elevations stay line drawings and only oblique faces are shaded. Graded shading ignores it.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0.55))
     ),
     shadingStyle: ShadingStyle.pipe(
       S.withConstructorDefault(Effect.succeed("uniform" as const)),
-      S.withDecodingDefaultTypeKey(Effect.succeed("uniform" as const)),
       S.annotateKey({
         description:
           "Shading line spacing: `uniform` (the default, evenly spaced, lit faces blank) or `graded` (every visible planar face, lines from the shadow edge).",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed("uniform" as const))
     ),
     shadingAxis: HatchAxis.pipe(
       S.withConstructorDefault(Effect.succeed("longest-edge" as const)),
-      S.withDecodingDefaultTypeKey(Effect.succeed("longest-edge" as const)),
       S.annotateKey({
         description:
           "Shading line direction: `longest-edge` (the default) or `surface-class` (walls vertical; inclined and level faces along their darkest major edge).",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed("longest-edge" as const))
     ),
     shadingMinFaceSpanMm: S.Finite.check(
       S.isGreaterThanOrEqualTo(
@@ -879,11 +881,11 @@ export class SheetOptions extends S.Opaque<SheetOptions, { readonly brand: uniqu
       )
     ).pipe(
       S.withConstructorDefault(Effect.succeed(0)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(0)),
       S.annotateKey({
         description:
           "Width in mm on the sheet below which a face (a thin board edge, a tab root) gets no shading lines. Defaults to 0 (no slivers).",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0))
     ),
     shadingMinStrokeMm: S.Finite.check(
       S.isGreaterThanOrEqualTo(
@@ -896,11 +898,11 @@ export class SheetOptions extends S.Opaque<SheetOptions, { readonly brand: uniqu
       )
     ).pipe(
       S.withConstructorDefault(Effect.succeed(0)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(0)),
       S.annotateKey({
         description:
           "Length in mm on the sheet below which a shading stroke (a chord near a face's pointed corner) is dropped. Defaults to 0 (every chord is drawn).",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0))
     ),
     brokenDashMm: S.Finite.check(
       S.isGreaterThanOrEqualTo(
@@ -913,8 +915,8 @@ export class SheetOptions extends S.Opaque<SheetOptions, { readonly brand: uniqu
       )
     ).pipe(
       S.withConstructorDefault(Effect.succeed(3)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(3)),
-      S.annotateKey({ description: "Dash length of broken (unclaimed) lines, in mm on the sheet. Defaults to 3." })
+      S.annotateKey({ description: "Dash length of broken (unclaimed) lines, in mm on the sheet. Defaults to 3." }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(3))
     ),
     brokenGapMm: S.Finite.check(
       S.isGreaterThanOrEqualTo(
@@ -927,11 +929,11 @@ export class SheetOptions extends S.Opaque<SheetOptions, { readonly brand: uniqu
       )
     ).pipe(
       S.withConstructorDefault(Effect.succeed(1.5)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(1.5)),
       S.annotateKey({
         description:
           "Gap between dashes of broken (unclaimed) lines, in mm on the sheet, measured before the round caps. Defaults to 1.5.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(1.5))
     ),
     emphasisWeightMm: S.Finite.check(
       S.isGreaterThanOrEqualTo(
@@ -944,10 +946,10 @@ export class SheetOptions extends S.Opaque<SheetOptions, { readonly brand: uniqu
       )
     ).pipe(
       S.withConstructorDefault(Effect.succeed(0.7)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(0.7)),
       S.annotateKey({
         description: "Stroke width of emphasis overlay lines in mm (the tab-in-slot edge). Defaults to 0.7.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0.7))
     ),
   }).pipe(
     $I.annoteSchema("SheetOptions", {

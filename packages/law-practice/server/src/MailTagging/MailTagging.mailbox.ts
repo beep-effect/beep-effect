@@ -91,16 +91,19 @@ export class MailboxM365Config extends S.Opaque<MailboxM365Config, { readonly br
       description: "Mailbox address or object id every driver request names.",
     }),
     pageSize: PosInt.pipe(
+      S.annotateKey({
+        description: "Messages requested per listing page; defaults to 50.",
+      }),
       S.withDecodingDefaultKey(Effect.succeed(defaultPageSize)),
       S.withConstructorDefault(Effect.succeed(defaultPageSize))
-    ).annotateKey({
-      description: "Messages requested per listing page; defaults to 50.",
-    }),
-    excludedFolderIds: S.Array(S.String)
-      .pipe(S.withDecodingDefaultKey(Effect.succeed([])), S.withConstructorDefault(Effect.succeed([])))
-      .annotateKey({
+    ),
+    excludedFolderIds: S.Array(S.String).pipe(
+      S.annotateKey({
         description: "Graph ids of extra mail folders to leave out, besides Deleted Items and Junk.",
       }),
+      S.withDecodingDefaultKey(Effect.succeed([])),
+      S.withConstructorDefault(Effect.succeed([]))
+    ),
   }).pipe(
     $I.annoteSchema("MailboxM365Config", {
       description: "Configuration of the Microsoft 365 mailbox adapter.",

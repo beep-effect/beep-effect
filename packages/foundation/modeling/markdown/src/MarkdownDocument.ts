@@ -541,11 +541,11 @@ export class MarkdownDocument extends S.Class<MarkdownDocument, { readonly brand
       })
     ),
     dialect: MarkdownDialect.pipe(
-      S.withDecodingDefaultKey(Effect.succeed<MarkdownDialect>("gfm")),
-      S.withConstructorDefault(Effect.succeed<MarkdownDialect>("gfm")),
       $I.annoteKey("MarkdownDocument.dialect", {
         description: "Resolved grammar used for parsing and contextual modification checks; defaults to gfm",
-      })
+      }),
+      S.withDecodingDefaultKey(Effect.succeed<MarkdownDialect>("gfm")),
+      S.withConstructorDefault(Effect.succeed<MarkdownDialect>("gfm"))
     ),
     root: S.suspend(() => Root).pipe(
       $I.annoteKey("MarkdownDocument.root", {

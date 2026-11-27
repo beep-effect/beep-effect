@@ -98,11 +98,13 @@ export class QuestionWriteError extends S.TaggedError<QuestionWriteError, { read
         description: "Question whose write failed, when the failure belongs to one.",
       })
     ),
-    pendingItemIds: S.Array(ReviewItemId)
-      .pipe(S.withConstructorDefault(Effect.succeed([])), S.withDecodingDefaultTypeKey(Effect.succeed([])))
-      .annotateKey({
+    pendingItemIds: S.Array(ReviewItemId).pipe(
+      S.withConstructorDefault(Effect.succeed([])),
+      S.annotateKey({
         description: "Questions whose writes may still be applied after a failed rollback; empty otherwise.",
       }),
+      S.withDecodingDefaultTypeKey(Effect.succeed([]))
+    ),
     reason: QuestionWriteReason.annotateKey({
       description: "Closed failure category suitable for exhaustive handling.",
     }),

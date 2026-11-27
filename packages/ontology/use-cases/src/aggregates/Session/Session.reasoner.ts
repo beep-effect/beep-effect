@@ -28,11 +28,8 @@ import {
 import { OWL_NAMESPACE } from "@beep/rdf/Vocab/Owl";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";
-// touches `document` at module top level (ReferenceError in workers).
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { A, O, Str } from "@beep/utils";
-// Deep imports, not the root barrel: this module runs inside the visualizer
-// worker, and the barrel pulls Markdown.ts → micromark, whose browser build
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import { dual, flow, pipe } from "effect/Function";
@@ -51,6 +48,7 @@ const RDFS_RANGE = makeNamedNode(`${RDFS_NAMESPACE}range`);
 const OWL_DISJOINT_WITH = makeNamedNode(`${OWL_NAMESPACE}disjointWith`);
 const INFERRED_GRAPH = makeNamedNode(graphPartitionIri("inferred"));
 
+// decision: worker-graph-imports-skip-root-barrels
 /**
  * **Example** (Assign closure module value)
  *

@@ -266,24 +266,24 @@ export class PgliteTestcontainersTestDriverConfig extends S.Opaque<
   S.Struct({
     database: S.String.pipe(
       S.withConstructorDefault(Effect.succeed("postgres")),
-      S.withDecodingDefaultKey(Effect.succeed("postgres")),
       $I.annoteKey("PgliteTestcontainersTestDriverConfig.database", {
         description: "Database name configured inside the PGLite Testcontainers server.",
-      })
+      }),
+      S.withDecodingDefaultKey(Effect.succeed("postgres"))
     ),
     internalPort: PgliteTcpPort.pipe(
       S.withConstructorDefault(Effect.succeed(5432)),
-      S.withDecodingDefaultKey(Effect.succeed(5432)),
       $I.annoteKey("PgliteTestcontainersTestDriverConfig.internalPort", {
         description: "Internal PostgreSQL TCP port exposed inside the PGLite container.",
-      })
+      }),
+      S.withDecodingDefaultKey(Effect.succeed(5432))
     ),
     maxConnections: PglitePositiveInteger.pipe(
       S.withConstructorDefault(Effect.succeed(1)),
-      S.withDecodingDefaultKey(Effect.succeed(1)),
       $I.annoteKey("PgliteTestcontainersTestDriverConfig.maxConnections", {
         description: "Maximum PostgreSQL client connections for the PGLite test driver.",
-      })
+      }),
+      S.withDecodingDefaultKey(Effect.succeed(1))
     ),
     password: S.String.pipe(
       S.withConstructorDefault(Effect.succeed("pglite-test-generated-password")),
@@ -294,17 +294,17 @@ export class PgliteTestcontainersTestDriverConfig extends S.Opaque<
     ),
     startupTimeoutMs: PglitePositiveInteger.pipe(
       S.withConstructorDefault(Effect.succeed(60_000)),
-      S.withDecodingDefaultKey(Effect.succeed(60_000)),
       $I.annoteKey("PgliteTestcontainersTestDriverConfig.startupTimeoutMs", {
         description: "Startup timeout in milliseconds for the PGLite Testcontainers server.",
-      })
+      }),
+      S.withDecodingDefaultKey(Effect.succeed(60_000))
     ),
     username: S.String.pipe(
       S.withConstructorDefault(Effect.succeed("postgres")),
-      S.withDecodingDefaultKey(Effect.succeed("postgres")),
       $I.annoteKey("PgliteTestcontainersTestDriverConfig.username", {
         description: "PostgreSQL username configured for the PGLite test driver.",
-      })
+      }),
+      S.withDecodingDefaultKey(Effect.succeed("postgres"))
     ),
   }).pipe(
     $I.annoteSchema("PgliteTestcontainersTestDriverConfig", {
@@ -353,10 +353,10 @@ export class PgExternalTestDriverConfig extends S.Opaque<
   S.Struct({
     connectTimeoutMs: PglitePositiveInteger.pipe(
       S.withConstructorDefault(Effect.succeed(5_000)),
-      S.withDecodingDefaultKey(Effect.succeed(5_000)),
       $I.annoteKey("PgExternalTestDriverConfig.connectTimeoutMs", {
         description: "Connection timeout in milliseconds for the external PostgreSQL test driver.",
-      })
+      }),
+      S.withDecodingDefaultKey(Effect.succeed(5_000))
     ),
     connectionUri: PgExternalConnectionUri.pipe(
       $I.annoteKey("PgExternalTestDriverConfig.connectionUri", {
@@ -365,30 +365,30 @@ export class PgExternalTestDriverConfig extends S.Opaque<
     ),
     isolation: PgExternalIsolationMode.pipe(
       S.withConstructorDefault(Effect.succeed("schema" as const)),
-      S.withDecodingDefaultKey(Effect.succeed("schema" as const)),
       $I.annoteKey("PgExternalTestDriverConfig.isolation", {
         description: "Isolation strategy applied around external PostgreSQL integration tests.",
-      })
+      }),
+      S.withDecodingDefaultKey(Effect.succeed("schema" as const))
     ),
     maxConnections: PglitePositiveInteger.pipe(
       S.withConstructorDefault(Effect.succeed(1)),
-      S.withDecodingDefaultKey(Effect.succeed(1)),
       $I.annoteKey("PgExternalTestDriverConfig.maxConnections", {
         description: "Maximum PostgreSQL client connections for the external SQL test driver.",
-      })
+      }),
+      S.withDecodingDefaultKey(Effect.succeed(1))
     ),
     schemaPrefix: PgExternalSchemaPrefix.pipe(
       S.withConstructorDefault(Effect.succeed("beep_test")),
-      S.withDecodingDefaultKey(Effect.succeed("beep_test")),
       $I.annoteKey("PgExternalTestDriverConfig.schemaPrefix", {
         description: "Prefix used when generating temporary external PostgreSQL schemas.",
-      })
+      }),
+      S.withDecodingDefaultKey(Effect.succeed("beep_test"))
     ),
     ssl: S.tag(false).pipe(
-      S.withDecodingDefaultKey(Effect.succeed(false as const)),
       $I.annoteKey("PgExternalTestDriverConfig.ssl", {
         description: "SSL toggle for the external PostgreSQL test driver; currently fixed to false.",
-      })
+      }),
+      S.withDecodingDefaultKey(Effect.succeed(false as const))
     ),
   }).pipe(
     $I.annoteSchema("PgExternalTestDriverConfig", {

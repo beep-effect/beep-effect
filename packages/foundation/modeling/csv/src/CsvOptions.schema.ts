@@ -534,8 +534,8 @@ export class CsvReadOptions extends S.Opaque<CsvReadOptions, { readonly brand: u
     ),
     limits: CsvLimits.pipe(
       S.withConstructorDefault(Effect.sync(() => CsvLimits.make({}))),
-      S.withDecodingDefaultTypeKey(Effect.sync(() => CsvLimits.make({}))),
-      S.annotateKey({ description: "The caps" })
+      S.annotateKey({ description: "The caps" }),
+      S.withDecodingDefaultTypeKey(Effect.sync(() => CsvLimits.make({})))
     ),
   }).pipe($I.annoteSchema("CsvReadOptions", { description: "How a CSV is read" }))
 ) {
@@ -732,13 +732,13 @@ export class CsvCodecOptions extends S.Opaque<CsvCodecOptions, { readonly brand:
   S.Struct({
     read: CsvReadOptions.pipe(
       S.withConstructorDefault(Effect.succeed(commaRead)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(commaRead)),
-      S.annotateKey({ description: "How the codec decodes; by default with the comma it writes" })
+      S.annotateKey({ description: "How the codec decodes; by default with the comma it writes" }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(commaRead))
     ),
     write: CsvWriteOptions.pipe(
       S.withConstructorDefault(Effect.sync(() => CsvWriteOptions.default)),
-      S.withDecodingDefaultTypeKey(Effect.sync(() => CsvWriteOptions.default)),
-      S.annotateKey({ description: "How the codec encodes" })
+      S.annotateKey({ description: "How the codec encodes" }),
+      S.withDecodingDefaultTypeKey(Effect.sync(() => CsvWriteOptions.default))
     ),
   }).pipe($I.annoteSchema("CsvCodecOptions", { description: "How a CSV codec reads and writes" }))
 ) {

@@ -423,4 +423,50 @@ export const SOURCES: { readonly [K in RuleName]: RuleSource } = {
       "\n"
     ),
   },
+  "no-annotation-after-decoding-default": {
+    invalidCount: 12,
+    messageIncludes: "annotate a field before `withDecodingDefault*`",
+    invalid: A.join(
+      [
+        "export const typeKey = S.Finite.pipe(S.withDecodingDefaultTypeKey(Effect.succeed(1)), S.annotateKey({ description: 'X' }));",
+        "export const key = S.String.pipe(",
+        "  S.withConstructorDefault(Effect.succeed('a')),",
+        "  S.withDecodingDefaultKey(Effect.succeed('a')),",
+        "  $I.annoteKey('Parent.key', { description: 'X' })",
+        ");",
+        "export const schemaLevel = S.Finite.pipe(S.withDecodingDefaultType(d), S.annotate({ description: 'X' }));",
+        "export const generic = Schema.Finite.pipe(Schema.withDecodingDefaultTypeKey(d), Schema.annotate<number>({ title: 'X' }));",
+        "export const method = S.NonEmptyString.pipe(S.withDecodingDefaultTypeKey(Effect.succeed('a'))).annotateKey({ description: 'X' });",
+        "export const methodAnnotate = S.Finite.pipe(S.withDecodingDefaultKey(d)).annotate({ description: 'X' });",
+        "export const later = S.Finite.pipe(S.withDecodingDefaultKey(d)).pipe(S.annotateKey({ description: 'X' }));",
+        "export const direct = S.withDecodingDefaultKey(d)(S.Finite).annotateKey({ description: 'X' });",
+        "export const directPipe = S.withDecodingDefaultKey(d)(S.Finite).pipe($I.annoteKey('Parent.direct'));",
+        "export const fnPipe = pipe(S.Finite, withDecodingDefaultTypeKey(d), annotateKey({ description: 'X' }));",
+        "export const ctorBetween = S.String.pipe(S.withDecodingDefaultKey(d), S.withConstructorDefault(d)).annotateKey({ description: 'X' });",
+        "export const ctorBetweenPipe = S.String.pipe(S.withDecodingDefaultTypeKey(d), S.withConstructorDefault(d), $I.annoteKey('Parent.ctor'));",
+      ],
+      "\n"
+    ),
+    valid: A.join(
+      [
+        "export const before = S.Finite.pipe(S.annotateKey({ description: 'X' }), S.withDecodingDefaultTypeKey(Effect.succeed(1)));",
+        "export const between = S.String.pipe(",
+        "  S.withConstructorDefault(Effect.succeed('a')),",
+        "  $I.annoteKey('Parent.between', { description: 'X' }),",
+        "  S.withDecodingDefaultKey(Effect.succeed('a'))",
+        ");",
+        "export const constructorOnly = S.Finite.pipe(S.withConstructorDefault(d), S.annotateKey({ description: 'X' }));",
+        "export const nested = S.Finite.pipe(S.withDecodingDefaultTypeKey(Effect.succeed(S.String.pipe(S.annotate({})))));",
+        "export const earlierPipe = S.Finite.pipe(S.annotateKey({ description: 'X' })).pipe(S.withDecodingDefaultKey(d));",
+        "export const identity = S.Boolean.pipe(S.withDecodingDefaultTypeKey(d), $I.annoteSchema('Flag', { description: 'X' }));",
+        "export const outer = S.Struct({ a: S.Finite.pipe(S.withDecodingDefaultKey(d)) }).annotate({ description: 'X' });",
+        "export const optional = S.Finite.pipe(S.optionalKey, S.annotateKey({ description: 'X' }));",
+        "export const enclosing = S.String.pipe(S.withDecodingDefaultType(Effect.succeed('')), S.Array, S.annotate({ description: 'Names' }));",
+        "export const enclosingMethod = S.String.pipe(S.withDecodingDefaultKey(d), S.Array).annotateKey({ description: 'X' });",
+        "export const enclosingLaterPipe = S.String.pipe(S.withDecodingDefaultKey(d), S.NullOr).pipe(S.annotate({ description: 'X' }));",
+        "// S.Finite.pipe(S.withDecodingDefaultKey(d), S.annotateKey({})) in a comment",
+      ],
+      "\n"
+    ),
+  },
 };

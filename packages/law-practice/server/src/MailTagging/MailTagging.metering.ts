@@ -167,11 +167,12 @@ export class BoxCallLedgerConfig extends S.Opaque<BoxCallLedgerConfig, { readonl
       description: "Full path of the shared Box API-call JSONL ledger.",
     }),
     runLabel: S.NonEmptyString.pipe(
+      S.annotateKey({
+        description: "Label the run's ledger line carries; defaults to the service name.",
+      }),
       S.withDecodingDefaultKey(Effect.succeed(defaultRunLabel)),
       S.withConstructorDefault(Effect.succeed(defaultRunLabel))
-    ).annotateKey({
-      description: "Label the run's ledger line carries; defaults to the service name.",
-    }),
+    ),
   }).pipe(
     $I.annoteSchema("BoxCallLedgerConfig", {
       description: "Location of the shared Box API-call ledger and this run's label.",

@@ -77,9 +77,11 @@ export class DocketQuestionEmail extends S.Opaque<DocketQuestionEmail, { readonl
 export class DocketQuestionInput extends S.Opaque<DocketQuestionInput, { readonly brand: unique symbol }>()(
   S.Struct({
     outcome: DocketIntakeOutcome.annotateKey({ description: "Outcome of processing one message." }),
-    candidateDates: S.Array(DocketCandidateDate)
-      .pipe(S.withConstructorDefault(Effect.succeed([])), S.withDecodingDefaultTypeKey(Effect.succeed([])))
-      .annotateKey({ description: "Dates the deadline could be, from the message, the review, or the docket sheet." }),
+    candidateDates: S.Array(DocketCandidateDate).pipe(
+      S.withConstructorDefault(Effect.succeed([])),
+      S.annotateKey({ description: "Dates the deadline could be, from the message, the review, or the docket sheet." }),
+      S.withDecodingDefaultTypeKey(Effect.succeed([]))
+    ),
     conversationId: OptionalText.annotateKey({ description: "Mail thread (Graph conversationId) of the message." }),
     docket: OptionalText.annotateKey({ description: "Docket number of the matched matter." }),
     entryLink: OptionalText.annotateKey({ description: "Link that opens the needs-review calendar entry in Outlook." }),
@@ -87,9 +89,11 @@ export class DocketQuestionInput extends S.Opaque<DocketQuestionInput, { readonl
       description: "One-line summary of what the matter lookup found (never logged).",
     }),
     ...DocketQuestionEmail.fields,
-    sourceRefs: S.Array(SourceRef)
-      .pipe(S.withConstructorDefault(Effect.succeed([])), S.withDecodingDefaultTypeKey(Effect.succeed([])))
-      .annotateKey({ description: "Filed documents the candidate dates were read from." }),
+    sourceRefs: S.Array(SourceRef).pipe(
+      S.withConstructorDefault(Effect.succeed([])),
+      S.annotateKey({ description: "Filed documents the candidate dates were read from." }),
+      S.withDecodingDefaultTypeKey(Effect.succeed([]))
+    ),
     title: OptionalText.annotateKey({ description: "Calendar title the docket entry would carry." }),
   }).pipe(
     $I.annoteSchema("DocketQuestionInput", {

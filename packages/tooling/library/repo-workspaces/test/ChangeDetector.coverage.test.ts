@@ -3,11 +3,12 @@ import { MemoryFileSystem } from "@beep/memfs";
 import { ChangeDetectionError, ChangeDetectionOptions, ChangeDetector } from "@beep/repo-workspaces/ChangeDetector";
 import { WorkspaceDiscovery } from "@beep/repo-workspaces/WorkspaceDiscovery";
 import { WorkspaceRoot } from "@beep/repo-workspaces/WorkspaceRoot";
-import { assert, describe, it } from "@effect/vitest";
+import { assert, describe, expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
+import * as S from "effect/Schema";
 
 const base = Layer.mergeAll(
   Path.layer,
@@ -47,5 +48,21 @@ describe("ChangeDetector coverage", () => {
         );
       })
     );
+  });
+});
+
+describe("ChangeDetectionOptions JSON Schema key annotations", () => {
+  it("emits the base key annotation in toJsonSchemaDocument because annotateKey runs before withDecodingDefaultKey", () => {
+    expect(S.toJsonSchemaDocument(ChangeDetectionOptions).definitions).toMatchObject({
+      "@beep/repo-workspaces/ChangeDetector/ChangeDetectionOptions": {
+        properties: {
+          base: {
+            allOf: expect.arrayContaining([
+              { title: "ChangeDetectionOptions.base", description: "The ref to compare against." },
+            ]),
+          },
+        },
+      },
+    });
   });
 });

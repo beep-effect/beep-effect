@@ -79,16 +79,20 @@ export class MatterContacts extends S.Opaque<MatterContacts, { readonly brand: u
     familyKey: S.NonEmptyString.annotateKey({
       description: "Practice-KG family key of the matter the contacts belong to.",
     }),
-    addresses: S.Array(EmailString)
-      .pipe(S.withDecodingDefaultKey(Effect.succeed([])), S.withConstructorDefault(Effect.succeed([])))
-      .annotateKey({
+    addresses: S.Array(EmailString).pipe(
+      S.annotateKey({
         description: "Email addresses of the matter's contacts, normalized on decode.",
       }),
-    domains: S.Array(MailDomain)
-      .pipe(S.withDecodingDefaultKey(Effect.succeed([])), S.withConstructorDefault(Effect.succeed([])))
-      .annotateKey({
+      S.withDecodingDefaultKey(Effect.succeed([])),
+      S.withConstructorDefault(Effect.succeed([]))
+    ),
+    domains: S.Array(MailDomain).pipe(
+      S.annotateKey({
         description: "Lowercase sender domains associated with the matter's client.",
       }),
+      S.withDecodingDefaultKey(Effect.succeed([])),
+      S.withConstructorDefault(Effect.succeed([]))
+    ),
   }).pipe(
     $I.annoteSchema("MatterContacts", {
       description: "Curated contact addresses and sender domains of one matter.",

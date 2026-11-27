@@ -486,10 +486,11 @@ export class M365ListSitesRequest extends S.Opaque<M365ListSitesRequest, { reado
   S.Struct({
     search: S.String.pipe(
       S.withConstructorDefault(Effect.succeed(ALL_SITES_SEARCH)),
+      S.annotateKey({
+        description: "Optional search text; defaults to `*` because Graph v1.0 site listing is search-based.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(ALL_SITES_SEARCH))
-    ).annotateKey({
-      description: "Optional search text; defaults to `*` because Graph v1.0 site listing is search-based.",
-    }),
+    ),
   }).pipe(
     $I.annoteSchema("M365ListSitesRequest", {
       description: "Request for searching SharePoint sites.",
@@ -1056,11 +1057,14 @@ export class M365EventDraft extends S.Opaque<M365EventDraft, { readonly brand: u
     end: M365EventDateTime.annotateKey({ description: "Event end; the following midnight for an all-day event." }),
     isAllDay: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(false)),
+      S.annotateKey({ description: "Whether the event spans whole days." }),
       S.withDecodingDefaultTypeKey(Effect.succeed(false))
-    ).annotateKey({ description: "Whether the event spans whole days." }),
-    categories: S.Array(S.NonEmptyString)
-      .pipe(S.withConstructorDefault(Effect.succeed([])), S.withDecodingDefaultTypeKey(Effect.succeed([])))
-      .annotateKey({ description: "Outlook category display names to apply." }),
+    ),
+    categories: S.Array(S.NonEmptyString).pipe(
+      S.withConstructorDefault(Effect.succeed([])),
+      S.annotateKey({ description: "Outlook category display names to apply." }),
+      S.withDecodingDefaultTypeKey(Effect.succeed([]))
+    ),
     body: eventOpt(M365EventBody, "Event body."),
     isReminderOn: eventOpt(S.Boolean, "Whether a reminder alert is set."),
     reminderMinutesBeforeStart: eventOpt(S.Natural, "Minutes before the start at which the reminder fires."),
@@ -1278,8 +1282,9 @@ export class M365MasterCategoryDraft extends S.Opaque<M365MasterCategoryDraft, {
   S.Struct({
     color: GraphCategoryColor.pipe(
       S.withConstructorDefault(Effect.succeed("none" as const)),
+      S.annotateKey({ description: "Preset color; defaults to `none`." }),
       S.withDecodingDefaultTypeKey(Effect.succeed("none" as const))
-    ).annotateKey({ description: "Preset color; defaults to `none`." }),
+    ),
     displayName: S.NonEmptyString.annotateKey({ description: "Category name; unique in the mailbox." }),
   }).pipe($I.annoteSchema("M365MasterCategoryDraft", { description: "A master category to create." }))
 ) {}
@@ -1623,9 +1628,11 @@ export class M365MailBody extends S.Opaque<M365MailBody, { readonly brand: uniqu
 ) {}
 
 const mailRecipients = (description: string) =>
-  S.Array(M365MailAddress)
-    .pipe(S.withConstructorDefault(Effect.succeed([])), S.withDecodingDefaultTypeKey(Effect.succeed([])))
-    .annotateKey({ description });
+  S.Array(M365MailAddress).pipe(
+    S.withConstructorDefault(Effect.succeed([])),
+    S.annotateKey({ description }),
+    S.withDecodingDefaultTypeKey(Effect.succeed([]))
+  );
 
 /**
  * **Example** (Draft a message to one recipient)

@@ -55,8 +55,9 @@ export class DocketIntakeError extends S.TaggedError<DocketIntakeError, { readon
   {
     ambiguousWrite: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(false)),
+      S.annotateKey({ description: "Whether a create may or may not have taken effect." }),
       S.withDecodingDefaultTypeKey(Effect.succeed(false))
-    ).annotateKey({ description: "Whether a create may or may not have taken effect." }),
+    ),
     cause: S.String.annotateKey({ description: "Short technical label of the failure; never content." }),
     stage: DocketIntakeStage.annotateKey({ description: "Stage whose port failed." }),
   },

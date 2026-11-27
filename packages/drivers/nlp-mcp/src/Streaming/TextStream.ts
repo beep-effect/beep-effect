@@ -212,10 +212,11 @@ export class TextReadOptions extends S.Opaque<TextReadOptions, { readonly brand:
   S.Struct({
     encoding: TextEncoding.pipe(
       S.withConstructorDefault(Effect.succeed<typeof DEFAULT_ENCODING>(DEFAULT_ENCODING)),
+      S.annotateKey({
+        description: 'Text decoding label applied to file bytes (default: "utf-8").',
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed<typeof DEFAULT_ENCODING>(DEFAULT_ENCODING))
-    ).annotateKey({
-      description: 'Text decoding label applied to file bytes (default: "utf-8").',
-    }),
+    ),
     skipEmpty: SchemaUtils.BoolKeyDefaultFalse.annotateKey({
       description: "Drop lines that are empty after optional trimming (default: false).",
     }),
@@ -247,16 +248,18 @@ export class TextStreamOptions extends S.Opaque<TextStreamOptions, { readonly br
     ...TextReadOptions.fields,
     maxLines: PositiveInteger.pipe(
       S.withConstructorDefault(Effect.succeed(Number.MAX_SAFE_INTEGER)),
+      S.annotateKey({
+        description: "Maximum number of lines to emit after skipping (default: unbounded).",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(Number.MAX_SAFE_INTEGER))
-    ).annotateKey({
-      description: "Maximum number of lines to emit after skipping (default: unbounded).",
-    }),
+    ),
     skip: NonNegativeInteger.pipe(
       S.withConstructorDefault(Effect.succeed(0)),
+      S.annotateKey({
+        description: "Number of leading lines to skip before emitting (default: 0).",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(0))
-    ).annotateKey({
-      description: "Number of leading lines to skip before emitting (default: 0).",
-    }),
+    ),
   }).pipe(
     $I.annoteSchema("TextStreamOptions", {
       description: "Streaming options that extend TextReadOptions with windowing controls.",

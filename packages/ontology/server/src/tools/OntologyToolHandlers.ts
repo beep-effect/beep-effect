@@ -173,18 +173,10 @@ export const OntologyMcpMutationHandlersLive = OntologyMutationToolkit.toLayer(
   })
 );
 
-// Byte-identical to what `gatedMutation` produces from a refused dispatch, so
-// a destination denial and an operation denial are indistinguishable to the
-// agent that receives them. It has to be restated rather than imported: the
-// gate lives in another slice, and slices do not import each other. The
-// composition-root test is what holds the two in sync, because only the app
-// sees both sides.
+// decision: egress-denial-reads-as-tier-refusal
 const egressRefusalGuidance = "This action is not authorized for this session. Resolve the mutation tier and retry.";
 
-// The governed egress boundary rejects with `EgressDenied`, which `HttpClient`
-// surfaces as a `TransportError` carrying it as the cause. Everything else is
-// an ordinary transport failure and stays distinguishable — only the denial is
-// flattened into the refusal envelope.
+// decision: egress-denial-reads-as-tier-refusal
 const publicationFailure = (error: HttpClientError.HttpClientError) =>
   error.reason._tag === "TransportError" && EgressDenied.is(error.reason.cause)
     ? OntologyTierGateRefusal.make({ guidance: egressRefusalGuidance, recoverable: true })

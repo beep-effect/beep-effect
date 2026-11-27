@@ -542,11 +542,6 @@ describe("Session use-cases", () => {
         "runs an ASK query and answers it",
         Effect.fnUntraced(function* () {
           submittedQuery = "";
-          // An ASK could not be run at all: the workbench's profile literal was
-          // ["select","construct"], so the query was rejected as a profile mismatch before
-          // it ever reached the engine — which had implemented ASK the whole time. And an
-          // ASK returns one boolean, so bounding it is meaningless: no LIMIT is appended to
-          // the user's query just so a badge has something to describe.
           const session = createSession(CreateSessionInput.make({ id: sessionId, baseDataset: dataset }));
           const query = "ASK { ?s ?p ?o }";
 
@@ -560,11 +555,10 @@ describe("Session use-cases", () => {
             })
           );
           expect(result.result.profile).toBe("ask");
-          pipe(result.limitInjected, assertFalse);
+          assertFalse(result.limitInjected, "an ASK returns one boolean, so no LIMIT is appended to it");
           pipe(result.truncated, assertFalse);
 
-          // The query reaches the engine exactly as written.
-          expect(submittedQuery).toBe(query);
+          expect(submittedQuery, "the ASK reaches the engine exactly as written").toBe(query);
         })
       );
     });
@@ -608,9 +602,6 @@ describe("Session use-cases", () => {
     });
   }
 
-  // The LIMIT guard is what stops the engine materializing an unbounded result
-  // set; anything that fools it into reporting "already limited" removes the
-  // bound entirely, so these are safety regressions, not formatting ones.
   {
     let submittedQuery = "";
     const sparql = SparqlQueryService.of({
@@ -640,7 +631,10 @@ describe("Session use-cases", () => {
               safeguards: OntologySparqlSafeguards.make({ defaultLimit: S.Natural.make(10) }),
             })
           );
-          pipe(result.limitInjected, assertTrue);
+          assertTrue(
+            result.limitInjected,
+            "a LIMIT in a comment must not read as already limited, or the engine materializes an unbounded result"
+          );
 
           expect(submittedQuery).toBe(`${query}\nLIMIT 10`);
         })
@@ -666,7 +660,6 @@ describe("Session use-cases", () => {
         Effect.fnUntraced(function* () {
           submittedQuery = "";
           const session = createSession(CreateSessionInput.make({ id: sessionId, baseDataset: dataset }));
-          // The inner LIMIT bounds the subquery's solutions, not the outer result.
           const query = "SELECT ?s WHERE { { SELECT ?s WHERE { ?s ?p ?o } LIMIT 5 } ?s ?p2 ?o2 }";
 
           const runner = yield* OntologySparqlRunner;
@@ -678,7 +671,7 @@ describe("Session use-cases", () => {
               safeguards: OntologySparqlSafeguards.make({ defaultLimit: S.Natural.make(10) }),
             })
           );
-          pipe(result.limitInjected, assertTrue);
+          assertTrue(result.limitInjected, "the inner LIMIT bounds the subquery solutions, not the outer result");
 
           expect(submittedQuery).toBe(`${query}\nLIMIT 10`);
         })

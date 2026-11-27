@@ -49,19 +49,17 @@ const projectionWith = (labelDetail: "full" | "key" | "hidden") =>
 
 describe("ontology graph labels reach the renderer", () => {
   it("carries every node's label through to the cosmos projection", () => {
-    // The projection has always computed a label for each node, and the renderer
-    // always dropped them — so a graph of named classes drew as a field of
-    // anonymous dots, and the "labels full" badge described text nobody could see.
     const projection = cosmosProjectionFromOntology(projectionWith("full"));
 
     expect(projection.labels).toStrictEqual(["Pizza", "Pizza base"]);
   });
 
   it("sends no labels when the fold level says they are hidden", () => {
-    // `hidden` is a real answer, not an oversight: past a certain size the names
-    // stop being readable and start being noise.
     const projection = cosmosProjectionFromOntology(projectionWith("hidden"));
 
-    expect(projection.labels).toBeUndefined();
+    expect(
+      projection.labels,
+      "hidden is deliberate: past a certain size node names are noise, not text"
+    ).toBeUndefined();
   });
 });

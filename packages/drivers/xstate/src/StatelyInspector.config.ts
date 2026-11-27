@@ -67,16 +67,18 @@ export class StatelyInspectorConfig extends S.Opaque<StatelyInspectorConfig, { r
   S.Struct({
     enabled: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(false)),
+      S.annotateKey({
+        description: "Whether actors are forwarded to the Stately inspector relay at all.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(false))
-    ).annotateKey({
-      description: "Whether actors are forwarded to the Stately inspector relay at all.",
-    }),
+    ),
     launch: StatelyInspectorLaunch.pipe(
       S.withConstructorDefault(Effect.succeed(launchDefault)),
+      S.annotateKey({
+        description: "Whether the SDK opens the inspector UI in the default browser.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(launchDefault))
-    ).annotateKey({
-      description: "Whether the SDK opens the inspector UI in the default browser.",
-    }),
+    ),
     relayUrl: S.OptionFromOptionalKey(URLStr).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "WebSocket relay base URL; omitted means the hosted Stately relay.",
     }),

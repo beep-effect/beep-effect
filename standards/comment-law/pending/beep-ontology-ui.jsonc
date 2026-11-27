@@ -1,6 +1,0 @@
-{
-  "schemaVersion": "comment-law-pending/v1",
-  "package": "@beep/ontology-ui",
-  "root": "packages/ontology/ui",
-  "scopes": ["."]
-}

@@ -11,10 +11,6 @@ import * as AtomRegistry from "effect/reactivity/AtomRegistry";
 import * as Schedule from "effect/Schedule";
 import { vi } from "vitest";
 
-// The parent encodes every command before it crosses the worker boundary. A
-// command the codec refuses must fail the graph out loud instead of posting
-// nothing; forcing the codec is the only way to reach that arm, because a
-// command built from session state always encodes.
 vi.mock("@beep/ontology-use-cases/aggregates/Session", (importOriginal) =>
   Promise.all([
     importOriginal<typeof import("@beep/ontology-use-cases/aggregates/Session")>(),

@@ -564,26 +564,25 @@ const assertSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, 
   pipe(equivalent(decoded, value), assertTrue);
 };
 
+const quadCoherenceDiscardAllowance = { ...fcRuns(10), maxDiscards: fcRuns(10).runs * 100 };
+
 describe("Session atoms schema round-trips", () => {
   it.prop(
     "round-trips session client schemas with schema-derived arbitraries",
     [Arbitrary.schema(OpenOntologyDocumentInput)],
     ([value]) => assertSchemaRoundTrip(OpenOntologyDocumentInput, value),
-    // Preserve the partition/quad-coherence discard allowance per schema.
-    { arbitrary: { ...fcRuns(10), maxDiscards: fcRuns(10).runs * 100 } }
+    { arbitrary: quadCoherenceDiscardAllowance }
   );
   it.prop(
     "round-trips session client schemas with schema-derived arbitraries (ChangeOperation)",
     [Arbitrary.schema(ChangeOperation)],
     ([value]) => assertSchemaRoundTrip(ChangeOperation, value),
-    // Preserve the partition/quad-coherence discard allowance per schema.
-    { arbitrary: { ...fcRuns(10), maxDiscards: fcRuns(10).runs * 100 } }
+    { arbitrary: quadCoherenceDiscardAllowance }
   );
   it.prop(
     "round-trips session client schemas with schema-derived arbitraries (CreateSessionInput)",
     [Arbitrary.schema(CreateSessionInput)],
     ([value]) => assertSchemaRoundTrip(CreateSessionInput, value),
-    // Preserve the partition/quad-coherence discard allowance per schema.
-    { arbitrary: { ...fcRuns(10), maxDiscards: fcRuns(10).runs * 100 } }
+    { arbitrary: quadCoherenceDiscardAllowance }
   );
 });

@@ -576,24 +576,27 @@ export type MailRuleIntent = typeof MailRuleIntent.Type;
  */
 export class MailTaxonomy extends S.Opaque<MailTaxonomy, { readonly brand: unique symbol }>()(
   S.Struct({
-    practiceCategories: S.Array(PracticeCategory)
-      .pipe(
-        S.withDecodingDefaultKey(Effect.succeed(PracticeCategory.literals)),
-        S.withConstructorDefault(Effect.succeed(PracticeCategory.literals))
-      )
-      .annotateKey({
+    practiceCategories: S.Array(PracticeCategory).pipe(
+      S.annotateKey({
         description: "Practice categories in use; defaults to the whole closed set.",
       }),
-    matterKeys: S.Array(MatterKey)
-      .pipe(S.withDecodingDefaultKey(Effect.succeed([])), S.withConstructorDefault(Effect.succeed([])))
-      .annotateKey({
+      S.withDecodingDefaultKey(Effect.succeed(PracticeCategory.literals)),
+      S.withConstructorDefault(Effect.succeed(PracticeCategory.literals))
+    ),
+    matterKeys: S.Array(MatterKey).pipe(
+      S.annotateKey({
         description: "Taggable matters; each owns one matter category.",
       }),
-    ruleIntents: S.Array(MailRuleIntent)
-      .pipe(S.withDecodingDefaultKey(Effect.succeed([])), S.withConstructorDefault(Effect.succeed([])))
-      .annotateKey({
+      S.withDecodingDefaultKey(Effect.succeed([])),
+      S.withConstructorDefault(Effect.succeed([]))
+    ),
+    ruleIntents: S.Array(MailRuleIntent).pipe(
+      S.annotateKey({
         description: "Inbox-rule intents rendered for the attorney.",
       }),
+      S.withDecodingDefaultKey(Effect.succeed([])),
+      S.withConstructorDefault(Effect.succeed([]))
+    ),
   }).pipe(
     $I.annoteSchema("MailTaxonomy", {
       description: "Mail-tagging taxonomy: practice categories, taggable matters, and inbox-rule intents.",

@@ -218,6 +218,14 @@ describe("rule registry", () => {
             "Build an `Option` of a schema value with the schema's own `makeOption` (EF-35b), never `O.some(X.make(...))`; non-schema receivers rooted at an `effect/<Module>` import are allowed, others take a recorded biome-ignore.",
           scope: "packages/**, apps/**",
         },
+        "no-annotation-after-decoding-default": {
+          name: "no-annotation-after-decoding-default",
+          severity: "error",
+          replaces: null,
+          summary:
+            "Annotate a schema field before `withDecodingDefault*`, never after it: an `annotate`, `annotateKey` or `$I.annoteKey` applied after the default lands on its decoded-side transformation node, and `toJsonSchemaDocument` drops its description and title.",
+          scope: null,
+        },
       });
     })
   );

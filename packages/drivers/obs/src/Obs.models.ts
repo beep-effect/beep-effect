@@ -153,38 +153,38 @@ export class ObsConfigInput extends S.Opaque<ObsConfigInput, { readonly brand: u
   S.Struct({
     connectTimeoutMillis: PositiveMilliseconds.pipe(
       S.withConstructorDefault(Effect.succeed(5000)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(5000)),
       $I.annoteKey("ObsConfigInput.connectTimeoutMillis", {
         description: "Timeout in milliseconds for the obs-websocket connect handshake.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(5000))
     ),
     eventSubscriptions: S.Int.pipe(
       S.withConstructorDefault(Effect.succeed(79)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(79)),
       $I.annoteKey("ObsConfigInput.eventSubscriptions", {
         description: "EventSubscription bitmask sent in Identify (default 79: General|Config|Scenes|Inputs|Outputs).",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(79))
     ),
     forceKillAfterMillis: PositiveMilliseconds.pipe(
       S.withConstructorDefault(Effect.succeed(2000)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(2000)),
       $I.annoteKey("ObsConfigInput.forceKillAfterMillis", {
         description: "Timeout in milliseconds before an interrupted spawned process is force-killed.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(2000))
     ),
     host: S.String.pipe(
       S.withConstructorDefault(Effect.succeed("127.0.0.1")),
-      S.withDecodingDefaultTypeKey(Effect.succeed("127.0.0.1")),
       $I.annoteKey("ObsConfigInput.host", {
         description: "Host the obs-websocket server listens on.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed("127.0.0.1"))
     ),
     obsBinaryPath: S.String.pipe(
       S.withConstructorDefault(Effect.succeed("obs")),
-      S.withDecodingDefaultTypeKey(Effect.succeed("obs")),
       $I.annoteKey("ObsConfigInput.obsBinaryPath", {
         description: "Executable path or command name used to spawn OBS Studio.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed("obs"))
     ),
     password: S.OptionFromOptionalKey(S.String.pipe(S.Redacted)).pipe(
       S.withConstructorDefault(Effect.succeedNone),
@@ -195,10 +195,10 @@ export class ObsConfigInput extends S.Opaque<ObsConfigInput, { readonly brand: u
     ),
     port: ObsWebSocketPort.pipe(
       S.withConstructorDefault(Effect.succeed(4455)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(4455)),
       $I.annoteKey("ObsConfigInput.port", {
         description: "Port the obs-websocket server listens on.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(4455))
     ),
   }).pipe(
     $I.annoteSchema("ObsConfigInput", {
@@ -359,24 +359,24 @@ export class EnsureQaSceneRequest extends S.Opaque<EnsureQaSceneRequest, { reado
   S.Struct({
     inputKind: S.String.pipe(
       S.withConstructorDefault(Effect.succeed("pipewire-screen-capture-source")),
-      S.withDecodingDefaultTypeKey(Effect.succeed("pipewire-screen-capture-source")),
       $I.annoteKey("EnsureQaSceneRequest.inputKind", {
         description: "OBS input kind used for the capture source (Wayland PipeWire portal capture by default).",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed("pipewire-screen-capture-source"))
     ),
     inputName: S.String.pipe(
       S.withConstructorDefault(Effect.succeed("beep-qa-capture")),
-      S.withDecodingDefaultTypeKey(Effect.succeed("beep-qa-capture")),
       $I.annoteKey("EnsureQaSceneRequest.inputName", {
         description: "Name of the capture input provisioned inside the QA scene.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed("beep-qa-capture"))
     ),
     sceneName: S.String.pipe(
       S.withConstructorDefault(Effect.succeed("beep-qa")),
-      S.withDecodingDefaultTypeKey(Effect.succeed("beep-qa")),
       $I.annoteKey("EnsureQaSceneRequest.sceneName", {
         description: "Name of the QA scene to provision.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed("beep-qa"))
     ),
   }).pipe(
     $I.annoteSchema("EnsureQaSceneRequest", {
@@ -468,10 +468,10 @@ export class StartRecordingRequest extends S.Opaque<StartRecordingRequest, { rea
     ),
     waitForActiveTimeoutMillis: PositiveMilliseconds.pipe(
       S.withConstructorDefault(Effect.succeed(10_000)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(10_000)),
       $I.annoteKey("StartRecordingRequest.waitForActiveTimeoutMillis", {
         description: "Timeout in milliseconds waiting for the RecordStateChanged STARTED event.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(10_000))
     ),
   }).pipe(
     $I.annoteSchema("StartRecordingRequest", {
@@ -533,10 +533,10 @@ export class StopRecordingRequest extends S.Opaque<StopRecordingRequest, { reado
   S.Struct({
     waitForStoppedTimeoutMillis: PositiveMilliseconds.pipe(
       S.withConstructorDefault(Effect.succeed(10_000)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(10_000)),
       $I.annoteKey("StopRecordingRequest.waitForStoppedTimeoutMillis", {
         description: "Timeout in milliseconds waiting for the RecordStateChanged STOPPED event.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(10_000))
     ),
   }).pipe(
     $I.annoteSchema("StopRecordingRequest", {

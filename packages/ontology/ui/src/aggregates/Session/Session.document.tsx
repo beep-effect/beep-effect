@@ -108,12 +108,8 @@ const isOntologyFoldLevel = S.is(OntologyFoldLevel);
  * @category components
  * @since 0.0.0
  */
-// The zero-behavior extraction keeps the toolbar's established event wiring
-// together so document actions and their error surface remain one region.
 // fallow-ignore-next-line complexity -- fallow's React model adds one cognitive point per hook binding; the toolbar region binds document actions, view controls, dirty state and errors (cognitive 24, cyclomatic 2), so splitting would only fragment hook ownership (#1855 detector frontier). Owner: @beep/ontology-ui. Exit: remove when the component sheds bindings or fallow stops counting hook bindings as branches.
 export function OntologyDocumentRegion(): JSX.Element {
-  // First-run bootstrap: opens the seeded tutorial once per app session when
-  // nothing is open. Mounted here because this region owns the open action.
   useAtomMount(ontologyWorkbenchAutoOpenAtom);
   const pathInput = useAtomValue(openPathInputAtom);
   const documentError = useAtomValue(ontologyDocumentErrorAtom);
@@ -136,9 +132,6 @@ export function OntologyDocumentRegion(): JSX.Element {
   const redoChange = useAtomSet(redoOntologyChangeAtom);
   const canUndo = O.match(session, { onNone: () => false, onSome: (openSession) => openSession.changeLog.length > 0 });
   const canRedo = redoStack.length > 0;
-  // The action atoms are AsyncResult fns: while an RPC is in flight the
-  // triggering button must say so and refuse re-entry, otherwise a slow open
-  // or save reads as "the button does nothing".
   const toolbar = documentToolbarState({
     opening: useAtomValue(openOntologyDocumentAtom).pipe(AsyncResult.isWaiting),
     saving: useAtomValue(saveOntologyDocumentAtom).pipe(AsyncResult.isWaiting),

@@ -40,7 +40,8 @@ const $I = $LintRulesId;
  *   "no-citation-optional-invocation",
  *   "no-hand-rolled-git-gh-spawn",
  *   "no-unrecorded-spawner-double",
- *   "prefer-schema-make-option"
+ *   "prefer-schema-make-option",
+ *   "no-annotation-after-decoding-default"
  * ])
  * ```
  *
@@ -61,6 +62,7 @@ export const RULE_NAMES = [
   "no-hand-rolled-git-gh-spawn",
   "no-unrecorded-spawner-double",
   "prefer-schema-make-option",
+  "no-annotation-after-decoding-default",
 ] as const;
 
 /**
@@ -186,6 +188,7 @@ export class RuleRegistrySchema extends S.Opaque<RuleRegistrySchema, { readonly 
     "no-hand-rolled-git-gh-spawn": RuleMetadataSchema,
     "no-unrecorded-spawner-double": RuleMetadataSchema,
     "prefer-schema-make-option": RuleMetadataSchema,
+    "no-annotation-after-decoding-default": RuleMetadataSchema,
   }).pipe(
     $I.annoteSchema("RuleRegistrySchema", {
       description: "Schema for the finite rule registry keyed by rule slug.",
@@ -308,6 +311,14 @@ export const RULES: { readonly [K in RuleName]: RuleMetadata } = RuleRegistrySch
     summary:
       "Build an `Option` of a schema value with the schema's own `makeOption` (EF-35b), never `O.some(X.make(...))`; non-schema receivers rooted at an `effect/<Module>` import are allowed, others take a recorded biome-ignore.",
     scope: O.some("packages/**, apps/**"),
+  }),
+  "no-annotation-after-decoding-default": RuleMetadataSchema.make({
+    name: "no-annotation-after-decoding-default",
+    severity: "error",
+    replaces: O.none(),
+    summary:
+      "Annotate a schema field before `withDecodingDefault*`, never after it: an `annotate`, `annotateKey` or `$I.annoteKey` applied after the default lands on its decoded-side transformation node, and `toJsonSchemaDocument` drops its description and title.",
+    scope: O.none(),
   }),
 });
 
