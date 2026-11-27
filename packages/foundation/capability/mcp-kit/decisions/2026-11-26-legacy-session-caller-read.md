@@ -18,4 +18,5 @@ Rejected: a stateless-only read, which would drop the session id of hosts still 
 session-era adapter.
 
 Accepted limit: transitional. Delete the header read and the client branch with the last
-host on a session-era adapter.
+host on a session-era adapter; the paused goal `goals/ontology-sidecar-stateless-identity` plans
+that deletion.

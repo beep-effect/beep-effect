@@ -202,8 +202,7 @@ const callerReport = <A = string>(result: { readonly content: ReadonlyArray<unkn
   return Result.getOrThrowWith(S.decodeResult(UnknownJson)((first as { readonly text: string }).text), identity) as A;
 };
 
-const withLegacySessionClient = (clientId: number) =>
-  Effect.provideService(McpServerClient, makeStubMcpClient(clientId));
+const withSessionClient = (clientId: number) => Effect.provideService(McpServerClient, makeStubMcpClient(clientId));
 
 const withSessionHeader = (sessionId: string) =>
   Effect.provideService(
@@ -310,7 +309,7 @@ describe("sanitizedToolkit", () => {
       "dispatches tools/call on a 2025 host through McpServerClient and reports no session id without an HTTP request",
       Effect.fnUntraced(function* () {
         const server = yield* McpServer.McpServer;
-        const result = yield* server.callTool({ name: "caller_tool", arguments: {} }).pipe(withLegacySessionClient(7));
+        const result = yield* server.callTool({ name: "caller_tool", arguments: {} }).pipe(withSessionClient(7));
 
         assert.strictEqual(
           callerReport(result),
@@ -327,7 +326,7 @@ describe("sanitizedToolkit", () => {
 
         const result = yield* server
           .callTool({ name: "caller_tool", arguments: {} })
-          .pipe(withSessionHeader("session-under-test"), withLegacySessionClient(11));
+          .pipe(withSessionHeader("session-under-test"), withSessionClient(11));
 
         assert.strictEqual(
           callerReport(result),
@@ -344,7 +343,7 @@ describe("sanitizedToolkit", () => {
 
         const result = yield* server
           .callTool({ name: "caller_tool", arguments: {} })
-          .pipe(withSessionHeader(""), withLegacySessionClient(13));
+          .pipe(withSessionHeader(""), withSessionClient(13));
 
         assert.strictEqual(
           callerReport(result),

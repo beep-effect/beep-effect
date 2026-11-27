@@ -77,7 +77,16 @@ const fileSystem = (tree: Tree, options: FileSystemOptions = {}): Layer.Layer<Fi
   });
 };
 
-/** A `FileSystem` + `Path` layer over a virtual tree that misbehaves as `options` describes. */
+/**
+ * A `FileSystem` + `Path` layer over a virtual tree that misbehaves as `options` describes.
+ *
+ * **Details**
+ *
+ * The volume is a real `@beep/memfs` filesystem, not a `FileSystem.layerNoop` stub of the methods
+ * `descend` calls today, so a walker bug that depends on mode bits, parent creation or a multi-hop
+ * symlink still shows up. Permission failures are injected as faults because memfs records modes
+ * but never enforces them.
+ */
 export const platformWith: {
   (options: FileSystemOptions): (tree: Tree) => Layer.Layer<FileSystem.FileSystem | Path.Path>;
   (tree: Tree, options: FileSystemOptions): Layer.Layer<FileSystem.FileSystem | Path.Path>;

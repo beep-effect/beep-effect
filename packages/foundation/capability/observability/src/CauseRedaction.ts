@@ -151,7 +151,7 @@ export const RedactionChannel = LiteralKit(["client", "diagnostic"]).pipe(
  */
 export type RedactionChannel = typeof RedactionChannel.Type;
 
-const bankCategoryRedactions: ReadonlyArray<(input: string) => string> = A.make(
+const bankRedactions: ReadonlyArray<(input: string) => string> = A.make(
   maskCredentialCategory("secret-assignment"),
   replaceCredentialCategory("auth-header", `$1$2${REDACTION_PLACEHOLDER}`),
   replaceCredentialCategory("bearer-token", `$1$2${REDACTION_PLACEHOLDER}`),
@@ -160,8 +160,7 @@ const bankCategoryRedactions: ReadonlyArray<(input: string) => string> = A.make(
   replaceCredentialCategory("home-path", `$1$3${REDACTION_PLACEHOLDER}`)
 );
 
-const applyRedactionSteps = (input: string): string =>
-  A.reduce(bankCategoryRedactions, input, (acc, step) => step(acc));
+const applyRedactionSteps = (input: string): string => A.reduce(bankRedactions, input, (acc, step) => step(acc));
 
 /**
  * Strip secret-shaped tokens and home-directory paths from a single string.

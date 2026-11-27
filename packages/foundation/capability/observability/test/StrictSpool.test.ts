@@ -317,10 +317,8 @@ describe("StrictSpool", () => {
         const probe = yield* spoolInOwnDirectory("/evict-failure-probe");
         yield* probe.append(metricsRecord).pipe(Effect.provideService(Clock.Clock, clockAt(1_000)));
         const [probeFile] = yield* segmentFiles("/evict-failure-probe");
-        const oneMetricsSegmentBytes = ByteSize.toNumberUnsafe(
-          (yield* fs.stat(`/evict-failure-probe/${probeFile ?? ""}`)).size
-        );
-        const tight = yield* spoolInOwnDirectory("/evict-failure", { maxBytes: oneMetricsSegmentBytes }).pipe(
+        const budget = ByteSize.toNumberUnsafe((yield* fs.stat(`/evict-failure-probe/${probeFile ?? ""}`)).size);
+        const tight = yield* spoolInOwnDirectory("/evict-failure", { maxBytes: budget }).pipe(
           Effect.provideService(FileSystem.FileSystem, stubborn)
         );
         const ledger = yield* tight.append(metricsRecord).pipe(Effect.provideService(Clock.Clock, clockAt(1_000)));
@@ -328,7 +326,10 @@ describe("StrictSpool", () => {
           countOf(ledger, "spool-evicted"),
           "the first and third segments were removed, and the append itself still succeeded"
         ).toBe(2);
-        expect(countOf(ledger, "spool-evict-failed")).toBe(1);
+        expect(
+          countOf(ledger, "spool-evict-failed"),
+          "a budget of one metrics segment puts all three older segments over it"
+        ).toBe(1);
         const left = yield* segmentFiles("/evict-failure");
         expect(A.length(left)).toBe(2);
         expect(A.take(left, 1)).toEqual([second ?? ""]);
