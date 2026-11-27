@@ -23,7 +23,6 @@ import type { LocalDate } from "@beep/schema/LocalDate";
 import type { AnswerLogShape, QuestionQueueShape } from "./QuestionQueue.ports.ts";
 import type { DigestSelection, QuestionReviewItem } from "./QuestionQueue.schemas.ts";
 
-// The answer the queue appends: the submission with its revision and timestamp.
 const answerRow = (answer: RecordAnswerInput, revision: number, recordedAt: DateTime.Utc): AnswerRow =>
   RecordAnswerInput.match(answer, {
     decided: (submitted) => AnswerRow.cases.decided.make({ ...submitted, revision, recordedAt }),
@@ -33,7 +32,6 @@ const answerRow = (answer: RecordAnswerInput, revision: number, recordedAt: Date
     withdrawn: (submitted) => AnswerRow.cases.withdrawn.make({ ...submitted, revision, recordedAt }),
   });
 
-// The answer belongs to the given question, and a decided answer names one of its options.
 const ensureAnswers = Effect.fnUntraced(function* (item: QuestionReviewItem, answer: RecordAnswerInput) {
   if (answer.itemId !== item.itemId) {
     return yield* QuestionNotFoundError.make({ itemId: answer.itemId });
@@ -46,7 +44,6 @@ const ensureAnswers = Effect.fnUntraced(function* (item: QuestionReviewItem, ans
   }
 });
 
-// Whether a question belongs in the digest on `today`, given its current answer.
 const isDueOn =
   (today: LocalDate) =>
   (answer: O.Option<AnswerRow>): boolean =>
@@ -74,8 +71,6 @@ const makeQuestionQueue = (log: AnswerLogShape, writeLock: Semaphore.Semaphore):
     return A.filter(selection.items, (item) => isDueOn(selection.today)(HashMap.get(answers, item.itemId)));
   });
 
-  // Validation, the revision read and the append run under one permit, so no
-  // other answer of this queue interleaves between the read and the append.
   const recordAnswer = Effect.fn("QuestionQueue.recordAnswer")(function* (input: {
     readonly item: QuestionReviewItem;
     readonly answer: RecordAnswerInput;

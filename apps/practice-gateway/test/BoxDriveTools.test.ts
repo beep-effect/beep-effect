@@ -45,8 +45,6 @@ const makePdf = (text: string) =>
     )
   );
 
-// A Windows user folder on disk: Box holds a client folder, notes, a PDF,
-// an image, and a symlink that leads out of the Box folder.
 const userFolder = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -202,8 +200,6 @@ describe("Box Drive tools", () => {
   });
 });
 
-// sanitizedToolkit registers on the shared McpServer layer; building it next
-// to the provider shares the same instance through layer memoization.
 const mountedFor = Effect.fn("mountedFor")(function* (profile: O.Option<PracticeProfile>) {
   const store = Layer.succeed(ProfileStore, ProfileStore.of({ get: Effect.succeed(profile), save: Effect.succeed }));
   const services = yield* Layer.build(
@@ -219,7 +215,10 @@ describe("Box Drive provider", () => {
   it.effect("mounts the tools only when the profile selects Box Drive", () =>
     Effect.gen(function* () {
       const mountedFor1 = yield* mountedFor(O.some(gapProfile));
-      expect(mountedFor1).toEqual(["box_list", "box_read"]);
+      expect(mountedFor1, "sanitizedToolkit and provider builds share the memoized McpServer instance.").toEqual([
+        "box_list",
+        "box_read",
+      ]);
       const mountedFor2 = yield* mountedFor(O.none());
       expect(mountedFor2).toEqual([]);
       const kgOnly = PracticeProfile.make({
@@ -241,13 +240,15 @@ describe("Box tool results", () => {
       Effect.gen(function* () {
         const ListingJson = S.fromJsonString(BoxListing);
         const DocumentJson = S.fromJsonString(BoxDocument);
-        // Schema equivalence, not deepStrictEqual: Opaque struct arbitraries build
-        // null-prototype objects while decoding builds plain ones.
-        const argument1 = S.toEquivalence(BoxListing);
+
+        const nullPrototypeListingEquivalence = S.toEquivalence(BoxListing);
         const argument2 = S.decodeEffect(ListingJson);
         const value = yield* S.encodeEffect(ListingJson)(listing);
         const argument21 = yield* argument2(value);
-        assertTrue(argument1(argument21, listing));
+        assertTrue(
+          nullPrototypeListingEquivalence(argument21, listing),
+          "Opaque struct arbitraries have null prototypes while decoders produce plain objects, so compare schema equivalence rather than prototypes."
+        );
         const argument3 = S.toEquivalence(BoxDocument);
         const argument4 = S.decodeEffect(DocumentJson);
         const value3 = yield* S.encodeEffect(DocumentJson)(document);

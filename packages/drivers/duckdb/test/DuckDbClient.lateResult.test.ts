@@ -9,8 +9,6 @@ import * as MutableRef from "effect/MutableRef";
 import * as Reactivity from "effect/reactivity/Reactivity";
 import * as Stream from "effect/Stream";
 
-// Fake native connection whose `stream` call ignores `interrupt()` and only
-// resolves once the test releases it, after the caller was already cancelled.
 const setupResult = {
   closeSync: () => undefined,
   returnType: 3,
@@ -61,7 +59,6 @@ describe("DuckDbClient late native results", () => {
         const fiber = yield* client.unsafe("SELECT 1 AS one").stream.pipe(Stream.runCollect, Effect.forkChild);
         yield* Deferred.await(native.started);
         const interrupting = yield* Fiber.interrupt(fiber).pipe(Effect.forkChild);
-        // The cancel handler has asked the native call to stop; it completes anyway.
         yield* Deferred.await(native.interrupted);
         native.release();
         yield* Fiber.join(interrupting);

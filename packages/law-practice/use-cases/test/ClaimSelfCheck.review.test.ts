@@ -80,8 +80,7 @@ const input = Effect.gen(function* () {
 const decompositionError = (message: string) =>
   ClaimDecompositionError.make({ claimNumber: 1, message, reason: "unsupported-claim-text" });
 
-// Every non-missing finding kind, derived from one real missing-antecedent candidate.
-const variantsOf = (mapped: ClaimFindingCandidate): ReadonlyArray<AntecedentFinding> => {
+const nonMissingFindingsOf = (mapped: ClaimFindingCandidate): ReadonlyArray<AntecedentFinding> => {
   const { finding } = mapped;
   const rule = finding.rule;
   const referring = finding.referring;
@@ -102,7 +101,6 @@ const variantsOf = (mapped: ClaimFindingCandidate): ReadonlyArray<AntecedentFind
   ];
 };
 
-// Replays the review over candidates derived from the first real candidate.
 const reviewWith = Effect.fnUntraced(function* (
   candidates: (mapped: ClaimFindingCandidate) => ReadonlyArray<ClaimFindingCandidate>,
   undecomposed: ReadonlyArray<ClaimDecompositionError>
@@ -142,7 +140,7 @@ describe("ClaimSelfCheck review projection", () => {
   it.layer(testLayer, { timeout: "30 seconds" })((it) => {
     it.effect("explains every finding kind and omits the chain for uncovered patterns", () =>
       Effect.gen(function* () {
-        const result = yield* reviewWith((first) => A.map(variantsOf(first), withFinding(first)), []);
+        const result = yield* reviewWith((first) => A.map(nonMissingFindingsOf(first), withFinding(first)), []);
         strictEqual(result.items.length, 4);
         assertTrue(Str.includes("Several earlier phrases")(textOf(result, 0)));
         assertTrue(Str.includes("outside this claim's dependency chain")(textOf(result, 1)));

@@ -40,7 +40,7 @@
       "path": "GOAL.md",
       "targetChars": 3500,
       "maxChars": 4000,
-      "command": "/goal follow the instructions in goals/<slug>/GOAL.md"
+      "command": "/goal follow the instructions in goals/<slug>/GOAL.md, or stop when the only work left is a step the packet names as Benjamin's"
     }
   ],
   "phases": [

@@ -35,19 +35,9 @@ import { LegalOppositionCandidateInput, LegalPositionRelatorView } from "./Legal
 
 const decodeUnknownLegalPositionRelator = S.decodeUnknownEffect(LegalPositionRelator);
 
-/**
- * Read a stored relation's two position fields back as the pair the
- * derivations are defined over. They are stored apart because only a separate
- * field can carry the advantage-side narrowing, and they are only ever derived
- * over together.
- */
 const storedPosition = (relator: LegalPositionRelator): HohfeldPosition =>
   HohfeldPosition.make({ content: relator.content, kind: relator.positionKind });
 
-/**
- * The cross-party reading: the same relation seen from the other end, so the
- * roles swap and the content is carried through untouched.
- */
 const correlativeViewOf = (relator: LegalPositionRelator): LegalPositionRelatorView =>
   LegalPositionRelatorView.make({
     bearer: relator.counterparty,
@@ -57,10 +47,6 @@ const correlativeViewOf = (relator: LegalPositionRelator): LegalPositionRelatorV
     viewKind: "correlative",
   });
 
-/**
- * The same-party negation: the roles stay where they are, and the position
- * kind and the act polarity move together in one step.
- */
 const oppositeViewOf = (relator: LegalPositionRelator): LegalPositionRelatorView =>
   LegalPositionRelatorView.make({
     bearer: relator.bearer,
@@ -70,14 +56,6 @@ const oppositeViewOf = (relator: LegalPositionRelator): LegalPositionRelatorView
     viewKind: "opposite",
   });
 
-/**
- * The five per-axis intersections of two recorded scopes.
- *
- * Each axis is a set of recorded values rather than a range, so overlap is one
- * operation applied five times with no axis-specific algebra. The intersections
- * are computed once and then serve twice: they decide whether the scopes
- * overlap at all, and they are the recorded basis a candidate carries.
- */
 const scopeOverlap = (left: LegalScopeContext, right: LegalScopeContext): LegalScopeContext =>
   LegalScopeContext.make({
     material: HashSet.intersection(left.material, right.material),
@@ -87,35 +65,13 @@ const scopeOverlap = (left: LegalScopeContext, right: LegalScopeContext): LegalS
     territorial: HashSet.intersection(left.territorial, right.territorial),
   });
 
-/**
- * Whether an overlap is non-empty on every one of the five axes. A single empty
- * axis means the two relations were never recorded as applying to the same
- * situation, which is the whole of what this answers.
- */
 const overlapsOnEveryAxis = (overlap: LegalScopeContext): boolean =>
   A.every(
     [overlap.material, overlap.quantitative, overlap.subjective, overlap.temporal, overlap.territorial],
     (axis) => !HashSet.isEmpty(axis)
   );
 
-/**
- * Whether one relation's opposite view coincides with the other's correlative
- * view on bearer, counterparty, kind, and content.
- *
- * The comparison is deliberately across the two derivations rather than between
- * the two stored kinds. Every stored kind is advantage-side and every kind's
- * opposite is burden-side, so comparing stored against stored is vacuously
- * false and would silently find nothing at all.
- *
- * Parties are compared by the party each role names, not by the roles
- * themselves: two norms may give the same party differently named roles, and
- * the question here is whether the same two parties are involved.
- *
- * The relation is symmetric — the derivations commute and are involutive, so
- * `opposite(left) = correlative(right)` implies
- * `opposite(right) = correlative(left)` — which is what makes an unordered
- * pair the honest shape for the answer.
- */
+// decision: legal-opposition-crosses-the-two-derivations
 const isPrimaFacieOpposed = (left: LegalPositionRelator, right: LegalPositionRelator): boolean => {
   const opposed = oppositeViewOf(left);
   const correlated = correlativeViewOf(right);
@@ -127,13 +83,7 @@ const isPrimaFacieOpposed = (left: LegalPositionRelator, right: LegalPositionRel
   );
 };
 
-/**
- * The candidate input for one pair, when both facts hold and not otherwise.
- *
- * The act description is read off the left relation because the two are
- * necessarily equal: the views coincide on content, and neither derivation ever
- * rewrites a description.
- */
+// decision: legal-opposition-crosses-the-two-derivations
 const candidateFor = (
   left: LegalPositionRelator,
   right: LegalPositionRelator

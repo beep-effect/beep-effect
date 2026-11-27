@@ -35,17 +35,6 @@ const alwaysFails: typeof globalThis.fetch = Object.assign(() => Promise.resolve
   preconnect: () => {},
 });
 
-/**
- * The real thing: real filesystem, real `tar`, real `unzip`.
- *
- * **Details**
- *
- * A stubbed filesystem cannot test this module's central claim. Stage-then-swap
- * is a statement about what the filesystem contains after a partial failure,
- * and an in-memory double would only assert the double. Extraction has the same
- * problem one level up — a fake spawner proves the arguments were assembled,
- * not that `tar` accepts them.
- */
 const live = (root: string, fetch: typeof globalThis.fetch = alwaysFails, env: Record<string, string> = {}) =>
   ToolInstaller.layer.pipe(
     Layer.provide(
@@ -87,7 +76,6 @@ const testLayer = (
     })
   ).pipe(Layer.provide(nativePlatform));
 
-/** A real gzipped tarball containing one file. */
 const makeTarball = Effect.fn("ToolInstaller.test.makeTarball")(function* (directory: string, contents: string) {
   const fs = yield* FileSystem.FileSystem;
   const { join } = yield* Path.Path;
@@ -101,7 +89,6 @@ const makeTarball = Effect.fn("ToolInstaller.test.makeTarball")(function* (direc
   return archive;
 });
 
-/** A real zip containing one file. */
 const makeZip = Effect.fn("ToolInstaller.test.makeZip")(function* (directory: string, contents: string) {
   const fs = yield* FileSystem.FileSystem;
   const { join } = yield* Path.Path;
@@ -115,17 +102,6 @@ const makeZip = Effect.fn("ToolInstaller.test.makeZip")(function* (directory: st
   return archive;
 });
 
-/**
- * A spawner built through core's own `ChildProcessSpawner.make`, counting
- * every spawn and answering each with one scripted handle.
- *
- * **Details**
- * The COUNT is the point: the convenience members (`string`, `exitCode`) each
- * spawn independently, so an implementation that composes them re-executes the
- * command — the exact defect that failed 5/5 Windows extraction jobs while
- * POSIX stayed green on idempotency. A test asserting only on outputs cannot
- * see the second execution; the counter can.
- */
 const countingSpawner = (script: { readonly exitCode: number; readonly output: string }) => {
   let spawns = 0;
   let argvs: ReadonlyArray<ReadonlyArray<string>> = [];
@@ -156,39 +132,28 @@ const countingSpawner = (script: { readonly exitCode: number; readonly output: s
   };
 };
 
-/**
- * The live layer with one or more `FileSystem` members replaced.
- *
- * **Details**
- * Everything else stays the real thing — the point is to observe or fail
- * exactly one member (chmod) while the download, the staging copy and the
- * swap all run against the real filesystem.
- */
 const liveWithFileSystem = (
   root: string,
   mutate: (fs: FileSystem.FileSystem) => FileSystem.FileSystem,
   fetch: typeof globalThis.fetch,
   env: Record<string, string> = {}
-) =>
-  ToolInstaller.layer.pipe(
+) => {
+  const fileSystemOverrideMergedLast = Layer.effect(
+    FileSystem.FileSystem,
+    Effect.map(FileSystem.FileSystem, mutate)
+  ).pipe(Layer.provide(nativePlatform));
+  return ToolInstaller.layer.pipe(
     Layer.provide(
       Layer.mergeAll(
         ActionEnvironment.layerTest({ RUNNER_TOOL_CACHE: root, ...env }),
-        // NodeServices FIRST, the mutated FileSystem after it: the last
-        // provider of a duplicated service wins the merge.
         nativePlatform,
-        Layer.effect(FileSystem.FileSystem, Effect.map(FileSystem.FileSystem, mutate)).pipe(
-          Layer.provide(nativePlatform)
-        ),
+        fileSystemOverrideMergedLast,
         FetchHttpClient.layer.pipe(Layer.provide(Layer.succeed(FetchHttpClient.Fetch)(fetch)))
       )
     )
   );
+};
 
-/**
- * What the Node platform hands back for a cross-device rename: the errno maps
- * to no named tag, so it is `Unknown` with the `EXDEV` exception as the cause.
- */
 const exdev = (from: string, to: string) =>
   PlatformError.systemError({
     _tag: "Unknown",
@@ -202,7 +167,6 @@ const exdev = (from: string, to: string) =>
     }),
   });
 
-/** A fetch that counts its calls — the observable for "did it download?". */
 const countingFetch = (respond: () => Response) => {
   let count = 0;
   const fetch: typeof globalThis.fetch = Object.assign(
@@ -215,13 +179,11 @@ const countingFetch = (respond: () => Response) => {
   return { fetch, count: () => count };
 };
 
-/** A memory filesystem with a scripted, counting process spawner. */
 const liveWithSpawner = (root: string, spawner: Layer.Layer<ChildProcessSpawner.ChildProcessSpawner>) =>
   ToolInstaller.layer.pipe(
     Layer.provide(
       Layer.mergeAll(
         ActionEnvironment.layerTest({ RUNNER_TOOL_CACHE: root }),
-        // The subject needs only filesystem/path services and a scripted process.
         MemoryFileSystem.layer,
         Path.layer,
         FetchHttpClient.layer.pipe(Layer.provide(Layer.succeed(FetchHttpClient.Fetch)(alwaysFails))),
@@ -238,8 +200,10 @@ describe("ToolInstaller", () => {
     assert.isTrue(S.is(ExtractOptions)({}));
     assert.isTrue(S.is(ExtractOptions)(extraction));
     assert.deepEqual(S.decodeResult(ExtractOptions)(extraction).pipe(Result.getOrThrow), extraction);
-    // Exact optional keys (EF-40): an optional key is omitted, never undefined.
-    assert.isFalse(S.is(ExtractOptions)({ destination: undefined }));
+    assert.isFalse(
+      S.is(ExtractOptions)({ destination: undefined }),
+      "exact optional keys: an optional key is omitted, never undefined"
+    );
     assert.isFalse(S.is(ExtractOptions)({ flags: undefined }));
     assert.deepEqual(S.decodeResult(ExtractOptions)({}).pipe(Result.getOrThrow), ExtractOptions.make({}));
     assert.isTrue(S.is(ExtractOptions)({ flags: [] }));
@@ -334,8 +298,10 @@ describe("ToolInstaller", () => {
         const source = path.join(root, "marker-source");
         yield* fs.writeFileString(source, "binary");
         const directory = yield* installer.cacheFile(source, "tool", "tool", "1");
-        // @actions/tool-cache.find checks both the tool path and its sibling <arch>.complete.
-        assert.isTrue((yield* fs.exists(directory)) && (yield* fs.exists(`${directory}.complete`)));
+        assert.isTrue(
+          (yield* fs.exists(directory)) && (yield* fs.exists(`${directory}.complete`)),
+          "@actions/tool-cache.find checks both the tool path and its sibling <arch>.complete"
+        );
         const readFileString3 = yield* fs.readFileString(`${directory}.complete`);
         assert.strictEqual(readFileString3, "");
         const tree = path.join(root, "marker-tree");
@@ -410,7 +376,6 @@ describe("ToolInstaller", () => {
           const root = yield* TestRoot;
           const installer = yield* ToolInstaller;
           const destination = installer.cachePath("tool", "1");
-          // Fixture writes use the original FileSystem, so only the install is refused.
           yield* fs.makeDirectory(destination, { recursive: true });
           yield* fs.writeFileString(path.join(destination, "old"), "old entry");
           yield* fs.writeFileString(`${destination}.complete`, "stale");
@@ -438,11 +403,10 @@ describe("ToolInstaller", () => {
 
   describe("the cache layout", () => {
     it("is the layout the runner and @actions/tool-cache both use", () => {
-      // A contract with the runner, not an internal detail: a tool cached at
-      // any other path is invisible to every other step in the workflow.
       assert.strictEqual(
         ToolInstaller.cachePath({ root: "/opt/hostedtoolcache", tool: "node", version: "22.11.0", arch: "x64" }),
-        "/opt/hostedtoolcache/node/22.11.0/x64"
+        "/opt/hostedtoolcache/node/22.11.0/x64",
+        "a runner contract: a tool cached at any other path is invisible to every other workflow step"
       );
     });
 
@@ -451,13 +415,11 @@ describe("ToolInstaller", () => {
         TestRoot.use((root) =>
           Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
-            // What PackageManagerInstaller writes into its shims BEFORE the
-            // swap: the same answer `cacheDir` lands at, from the same closure,
-            // so the two can no longer be derived twice and diverge.
             const installer = yield* ToolInstaller;
             assert.strictEqual(
               installer.cachePath("node", "22.11.0"),
-              ToolInstaller.cachePath({ root, tool: "node", version: "22.11.0", arch: currentHostArchitecture })
+              ToolInstaller.cachePath({ root, tool: "node", version: "22.11.0", arch: currentHostArchitecture }),
+              "PackageManagerInstaller's shims name this path before the swap, so it must be where cacheDir lands"
             );
             const exists8 = yield* fs.exists(installer.cachePath("node", "22.11.0"));
             assert.isFalse(exists8, "cachePath must not create anything");
@@ -535,13 +497,11 @@ describe("ToolInstaller", () => {
     });
 
     it.layer(testLayer(), { timeout: "30 seconds" })((it) => {
-      it.effect("reports nothing when the cache path is a file rather than a directory", () =>
+      it.effect("reports nothing when the cache path is a file, a path the caller could not use", () =>
         TestRoot.use((root) =>
           Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
             const { join } = yield* Path.Path;
-            // A stray file where a tool directory belongs is corruption, and
-            // answering "found" for it hands the caller a path it cannot use.
             const expected = ToolInstaller.cachePath({
               root,
               tool: "node",
@@ -579,10 +539,11 @@ describe("ToolInstaller", () => {
             assert.strictEqual(readFileString13, "#!/bin/sh\n");
             const found14 = yield* installer.find("node", "22.11.0");
             assertSome(found14, cached);
-            // The contract: `cacheDir` CONSUMES its source. On one filesystem the
-            // tree is renamed into the cache, so nothing is left at the source path.
             const exists15 = yield* fs.exists(source);
-            assert.isFalse(exists15, "cacheDir must consume its source");
+            assert.isFalse(
+              exists15,
+              "cacheDir must consume its source: on one filesystem the tree is renamed into the cache"
+            );
           })
         )
       );
@@ -598,8 +559,6 @@ describe("ToolInstaller", () => {
               root,
               (fs) => ({
                 ...fs,
-                // A cross-device rename: Node reports EXDEV, which the platform
-                // maps to an `Unknown` SystemError with the errno as its cause.
                 rename: (from, to) =>
                   from === join(root, "src")
                     ? Effect.sync(() => {
@@ -685,10 +644,11 @@ describe("ToolInstaller", () => {
             const error = yield* Effect.flip(installer.cacheDir(source, "node", "22.11.0"));
             assert.instanceOf(error, ToolInstallerError);
             assert.strictEqual(error.reason, "cacheFailed");
-            // A copy fallback here would mask a real failure (a permission
-            // problem, say) as a slow success — and would have consumed the source.
             const exists20 = yield* fs.exists(join(source, "bin"));
-            assert.isTrue(exists20, "a non-EXDEV failure must leave the source untouched");
+            assert.isTrue(
+              exists20,
+              "a non-EXDEV failure leaves the source; a copy fallback would mask it as a slow success"
+            );
             const found21 = yield* installer.find("node", "22.11.0");
             assertNone(found21);
           })
@@ -703,10 +663,6 @@ describe("ToolInstaller", () => {
             const fs = yield* FileSystem.FileSystem;
             const { join } = yield* Path.Path;
             const installer = yield* ToolInstaller;
-            // THE invariant. An implementation that creates the destination and
-            // then copies into it leaves an empty directory behind here — and
-            // `find` reports an empty directory as a hit, so every later run
-            // uses a tool that is not there and never re-downloads it.
             const error = yield* Effect.flip(installer.cacheDir(join(root, "does-not-exist"), "node", "22.11.0"));
             assert.instanceOf(error, ToolInstallerError);
             assert.strictEqual(error.reason, "cacheFailed");
@@ -718,7 +674,10 @@ describe("ToolInstaller", () => {
               arch: currentHostArchitecture,
             });
             const exists22 = yield* fs.exists(destination);
-            assert.isFalse(exists22, "a failed install must not leave a partial tool behind");
+            assert.isFalse(
+              exists22,
+              "a failed install leaves nothing on the real filesystem: find calls an empty directory a hit"
+            );
             const found23 = yield* installer.find("node", "22.11.0");
             assertNone(found23);
           })
@@ -759,12 +718,10 @@ describe("ToolInstaller", () => {
             yield* fs.writeFileString(join(second, "fresh.txt"), "new");
             const cached = yield* installer.cacheDir(second, "node", "22.11.0");
 
-            // A merge would leave `stale.txt` from the previous version's
-            // layout sitting in the new install.
             const exists25 = yield* fs.exists(join(cached, "fresh.txt"));
             assert.isTrue(exists25);
             const exists26 = yield* fs.exists(join(cached, "stale.txt"));
-            assert.isFalse(exists26, "a re-install must replace, not merge");
+            assert.isFalse(exists26, "a re-install must replace, not merge in the previous version's stale.txt");
           })
         )
       );
@@ -830,9 +787,11 @@ describe("ToolInstaller", () => {
             yield* fs.writeFileString(archive, "this is not a tarball");
             const error = yield* Effect.flip((yield* ToolInstaller).extractTar(archive));
             assert.strictEqual(error.reason, "extractFailed");
-            // The exit code alone says only "it failed"; stderr is the difference
-            // between a corrupt archive and tar not being installed.
-            assert.isAbove((error.stderr ?? "").length, 0, "tar's stderr must survive");
+            assert.isAbove(
+              (error.stderr ?? "").length,
+              0,
+              "tar's stderr must survive: it tells a corrupt archive from a missing tar"
+            );
           })
         )
       );
@@ -847,7 +806,6 @@ describe("ToolInstaller", () => {
       const tarLayer = Layer.effect(TarInstaller, ToolInstaller).pipe(
         Layer.provide(liveWithSpawner(root, tarSpawner.layer))
       );
-      // Build the second installer independently so layer memoization cannot reuse the tar spawner.
       const zipLayer = Layer.effect(ZipInstaller, ToolInstaller).pipe(
         Layer.provide(Layer.fresh(liveWithSpawner(root, zipSpawner.layer)))
       );
@@ -856,7 +814,11 @@ describe("ToolInstaller", () => {
           Effect.gen(function* () {
             const { join } = yield* Path.Path;
             yield* (yield* TarInstaller).extractTar(join(root, "a.tgz"));
-            assert.strictEqual(tarSpawner.count(), 1, "extractTar must spawn exactly once");
+            assert.strictEqual(
+              tarSpawner.count(),
+              1,
+              "extractTar must spawn once; composing string and exitCode re-runs tar"
+            );
             yield* (yield* ZipInstaller).extractZip(join(root, "a.zip"));
             assert.strictEqual(zipSpawner.count(), 1, "extractZip must spawn exactly once");
           })
@@ -906,17 +868,17 @@ describe("ToolInstaller", () => {
           Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
             const { join } = yield* Path.Path;
-            // The idempotency claim: extraction into a pre-populated
-            // destination must overwrite, not refuse — the POSIX half runs
-            // here (`unzip -o`); the Windows half is the three-argument
-            // ExtractToDirectory overwrite overload in the same code path.
             const archive = yield* makeZip(root, "zipped");
             const destination = join(root, "dest");
             const installer = yield* ToolInstaller;
             yield* installer.extractZip(archive, { destination });
             yield* installer.extractZip(archive, { destination });
             const readFileString30 = yield* fs.readFileString(join(destination, "tool.txt"));
-            assert.strictEqual(readFileString30, "zipped");
+            assert.strictEqual(
+              readFileString30,
+              "zipped",
+              "a re-extraction overwrites: unzip -o, or ExtractToDirectory's overwrite overload"
+            );
           })
         )
       );
@@ -953,12 +915,10 @@ describe("ToolInstaller", () => {
       it.effect("fails typed on a 404 and does NOT retry it", () =>
         TestRoot.use(() =>
           Effect.gen(function* () {
-            // A 404 will not fix itself; retrying it three times only makes a
-            // broken url take longer to fail.
             const error = yield* Effect.flip((yield* ToolInstaller).download("https://example.test/gone"));
             assert.strictEqual(error.reason, "downloadFailed");
             assert.strictEqual(error.status, 404);
-            assert.isFalse(error.retryable);
+            assert.isFalse(error.retryable, "a 404 will not fix itself; retrying only makes a broken url fail later");
           })
         )
       );
@@ -986,11 +946,9 @@ describe("ToolInstaller", () => {
       const stalled: typeof globalThis.fetch = Object.assign(() => Promise.withResolvers<Response>().promise, {
         preconnect: () => {},
       });
-      // This block owns its TestClock; no other test shares the clock advanced here.
       it.layer(testLayer({ fetch: stalled }), { timeout: "30 seconds" })((it) => {
         it.effect("a connection that stops moving times out typed, statusless, and retryable", () =>
           Effect.gen(function* () {
-            // A never-settling connection exhausts the five-minute budget and both retries.
             const exit = yield* settle(
               Effect.flip((yield* ToolInstaller).download("https://example.test/stall")),
               TestClock.adjust("6 minutes")
@@ -1029,16 +987,19 @@ describe("ToolInstaller", () => {
               provisioned.directory,
               ToolInstaller.cachePath({ root, tool: "biome", version: "2.3.4", arch: currentHostArchitecture })
             );
-            // For a single binary the cached directory IS the addPath target.
-            assert.strictEqual(provisioned.binDir, provisioned.directory);
+            assert.strictEqual(
+              provisioned.binDir,
+              provisioned.directory,
+              "a single binary's cached directory is the addPath target"
+            );
             const file = join(provisioned.directory, "biome");
             const readFileString32 = yield* fs.readFileString(file);
             assert.strictEqual(readFileString32, binaryBody);
-            // The executable bit is the difference between a cached tool and a
-            // cached file, and it must be ON THE CACHED FILE — a chmod after
-            // caching would mutate a swapped-in entry, and a skipped chmod
-            // ships a binary the runner cannot execute.
-            assert.strictEqual((yield* fs.stat(file)).mode & 0o777, 0o755);
+            assert.strictEqual(
+              (yield* fs.stat(file)).mode & 0o777,
+              0o755,
+              "the cached file is executable; a chmod after caching would mutate a swapped-in entry"
+            );
           })
         )
       );
@@ -1073,10 +1034,6 @@ describe("ToolInstaller", () => {
     }
 
     {
-      // find's own TSDoc warning made real: the tool cache is shared, and a
-      // foreign entry guarantees only the location contract. An entry without
-      // the named binary cannot run the tool, so it is treated as a miss —
-      // answering it as a hit is the shipped-bug shape the warning records.
       const counting = countingFetch(() => new Response(binaryBody, { status: 200 }));
       it.layer(testLayer({ fetch: counting.fetch }), { timeout: "30 seconds" })((it) => {
         it.effect("reinstalls over a foreign hit that is MISSING the binary", () =>
@@ -1093,7 +1050,11 @@ describe("ToolInstaller", () => {
               yield* fs.makeDirectory(directory, { recursive: true });
               yield* fs.writeFileString(join(directory, "other-layout.txt"), "a different writer's idea of biome");
               const provisioned = yield* (yield* ToolInstaller).provisionFile(options);
-              assert.strictEqual(counting.count(), 1, "a hit without the binary must reinstall");
+              assert.strictEqual(
+                counting.count(),
+                1,
+                "a foreign hit without the binary must reinstall: find guarantees only the location"
+              );
               const readFileString34 = yield* fs.readFileString(join(provisioned.directory, "biome"));
               assert.strictEqual(readFileString34, binaryBody);
             })
@@ -1202,8 +1163,6 @@ describe("ToolInstaller", () => {
                 error.subject !== undefined && Str.endsWith("download")(error.subject),
                 "the subject is the file that could not be made executable"
               );
-              // The failure happened BEFORE caching, so the cache must not contain
-              // a non-executable binary for every later run to find.
               const found = yield* Effect.flatMap(ToolInstaller, (installer) => installer.find("biome", "2.3.4"));
               assertNone(found);
             })
@@ -1244,14 +1203,11 @@ describe("ToolInstaller", () => {
       "cachePath is the one member with a default: the static layout over RUNNER_TOOL_CACHE or the off-runner root",
       () =>
         Effect.gen(function* () {
-          // Pure and total, so dying would only punish every test that reads it
-          // through PackageManagerInstaller. The default mirrors `make`'s own
-          // resolution (`internal/runner.ts`), read from the ambient environment
-          // because a double has no ActionEnvironment to ask.
           const root = yield* Config.String("RUNNER_TOOL_CACHE").pipe(Config.withDefault("/tmp/runner-tool-cache"));
           assert.strictEqual(
             ToolInstaller.makeTest().cachePath("node", "22.11.0"),
-            ToolInstaller.cachePath({ root, tool: "node", version: "22.11.0", arch: currentHostArchitecture })
+            ToolInstaller.cachePath({ root, tool: "node", version: "22.11.0", arch: currentHostArchitecture }),
+            "pure and total, so it must not die; it mirrors make's resolution from the ambient environment"
           );
           assert.strictEqual(
             ToolInstaller.makeTest({ cachePath: dual(2, (_tool: string, _version: string) => "/elsewhere") }).cachePath(

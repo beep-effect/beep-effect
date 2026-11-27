@@ -31,13 +31,9 @@ const inputs = Flag.Directory("inputs", { mustExist: true }).pipe(Flag.optional)
 const bundleOut = Flag.Directory("bundle-out", { mustExist: true });
 const carryFrom = Flag.Directory("carry-from", { mustExist: true }).pipe(Flag.optional);
 
-/*
- * `--carry-from <bundle>` lifts the candidate claims an earlier batch already
- * extracted into a rebuilt bundle. It calls no model, so it needs neither the
- * language-model layer nor an API key; `--inputs` runs a fresh extraction batch.
- */
 const carryClaims = Effect.fnUntraced(function* (sourceBundle: string, destinationBundle: string) {
   const path = yield* Path.Path;
+
   // The two stores are opened one after the other, each inside its own scope, so
   // the source is closed before the destination is written.
   const carry = yield* Layer.build(makePracticeKgPgliteLayer(path.join(sourceBundle, "kg.pglite"))).pipe(

@@ -21,8 +21,11 @@ it.effect.prop(
       assert.strictEqual(encodePath(parsed), encoded);
       assert.strictEqual(decodeURIComponent(encodePath(decodeURIComponent(encoded))), parsed);
       assert.strictEqual(Str.split(encoded, "/").length, Str.split(path, "/").length);
-      // Percent encoding is an encoder, not a sanitizer: '%' itself must be escaped.
-      assert.strictEqual(encodePath("%"), "%25");
+      assert.strictEqual(
+        encodePath("%"),
+        "%25",
+        "percent encoding is an encoder, not a sanitizer: '%' itself is escaped"
+      );
     }),
   runs
 );

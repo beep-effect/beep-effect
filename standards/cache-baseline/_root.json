@@ -8,11 +8,11 @@
     "@beep/types#lint"
   ],
   "review": {
-    "reviewer": "Claude Opus 5.5 (route-soundness-repair ROUT-03 slice 2 lane)",
-    "reason": "Re-record the root subject and three packages after their turbo.json files declared the goal-data and fixture inputs on the integration test tasks as well. Configuration review only; no qualification is granted.",
+    "reviewer": "Claude Opus 5.5 (route-soundness-repair PERIH-10 lane)",
+    "reason": "Re-record the root subject and @beep/repo-cli after its turbo.json declared two files its tests read from other packages as test, test:property and coverage inputs. Configuration review only; no qualification is granted.",
     "basis": {
-      "path": "docs/reports/rout-03-slice-2-integration-cache-review-2026-11-26.md",
-      "sha256": "a2f3263d1a19ea8ec0a7fc85945c7d981a13dc039dd2a90a54fdcca2dd16b2ed"
+      "path": "docs/reports/perih-10-cache-review-2026-11-27.md",
+      "sha256": "0b8a240212e02276f0a22638a3c53fa01856ad13d66b9affe21fe2c98a616f06"
     }
   },
   "globalConfiguration": {
@@ -167,8 +167,28 @@
       "sha256": "55c9d20436eb20929b07ff8059f825fcddbc94ffd344d03786f55c4e58d83af2"
     },
     {
+      "path": "packages/architecture-lab/server/turbo.json",
+      "sha256": "fc74b48512cc954d7a2085385688d7e95eed307165f7a680d247275b0e919063"
+    },
+    {
+      "path": "packages/documents/server/turbo.json",
+      "sha256": "fc74b48512cc954d7a2085385688d7e95eed307165f7a680d247275b0e919063"
+    },
+    {
       "path": "packages/drivers/eyecite/turbo.json",
       "sha256": "43c890bca8a83ab00613725a2311dc11a71d2325da9883aa19eff7c6ca04cfe8"
+    },
+    {
+      "path": "packages/epistemic/server/turbo.json",
+      "sha256": "fc74b48512cc954d7a2085385688d7e95eed307165f7a680d247275b0e919063"
+    },
+    {
+      "path": "packages/execution-authority/server/turbo.json",
+      "sha256": "8d49bff251566f281d857b60ff8056f1975171577f434c7fa2166de2c8d6cf70"
+    },
+    {
+      "path": "packages/foundation/modeling/github-reporting/turbo.json",
+      "sha256": "02cb17d362dcc5759c0afdfb515d030f73787d688e896b31845497c936b794f5"
     },
     {
       "path": "packages/foundation/modeling/identity/turbo.json",
@@ -184,7 +204,11 @@
     },
     {
       "path": "packages/law-practice/server/turbo.json",
-      "sha256": "e3493a60b0a67c55b8adce2ec99c057be675a89271dba701965f433da744af67"
+      "sha256": "27ace9370aec52ebba099c6966c82df447311d16179ec8a502db3f9e6f4f2c60"
+    },
+    {
+      "path": "packages/tooling/infra/ci-runners/turbo.json",
+      "sha256": "e75842c0f65b006b1c813bf724d45a895cabe811ea86e7d31cee041ca451862a"
     },
     {
       "path": "packages/tooling/library/ai-sync/turbo.json",
@@ -204,7 +228,11 @@
     },
     {
       "path": "packages/tooling/tool/cli/turbo.json",
-      "sha256": "c58383e26b754b6a0dc5c3a8b7e04ca410a2e59f860cce2fa41366189a66612b"
+      "sha256": "39e84bd5d96dd641e2542038bff3ea8832e50de097cd86df8f9e1fd4db974fcc"
+    },
+    {
+      "path": "packages/workspace/server/turbo.json",
+      "sha256": "fc74b48512cc954d7a2085385688d7e95eed307165f7a680d247275b0e919063"
     },
     {
       "path": "turbo.json",

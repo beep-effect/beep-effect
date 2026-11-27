@@ -46,7 +46,6 @@ describe("InTotoStatement property floor", () => {
   roundTrips("InTotoStatement", InTotoStatement);
 });
 
-// Digest normalization is a parser with a canonical string representation.
 it.effect.prop(
   "digest parsing is idempotent and faithful for uppercase prefixed input",
   [Arbitrary.schema(Sha256Digest)],
@@ -55,7 +54,7 @@ it.effect.prop(
       const parsed = yield* Sha256Digest.parse(`SHA256:${Str.toUpperCase(digest)}`);
       assert.strictEqual(parsed, digest);
       const parsed2 = yield* Sha256Digest.parse(parsed);
-      assert.strictEqual(parsed2, parsed);
+      assert.strictEqual(parsed2, parsed, "a canonical digest string reparses to itself");
       const fromResult3 = yield* Effect.fromResult(Sha256Digest.parseResult(parsed));
       assert.strictEqual(fromResult3, parsed);
     }),

@@ -1,6 +1,3 @@
-// CliEnv.layerTest: the env services a CliEnv.layer would build, from fixed answers, needing nothing and reading no
-// host environment.
-
 import { CliEnv, CliInteractive, CliTheme } from "@beep/cli-kit";
 import { Audience, TerminalEnv } from "@beep/runtime-env";
 import { assert, describe, it } from "@effect/vitest";
@@ -11,7 +8,6 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-/** What a program under the layer observes. */
 const observe = Effect.gen(function* () {
   const terminal = yield* TerminalEnv;
   const audience = yield* Audience;
@@ -29,7 +25,7 @@ const observe = Effect.gen(function* () {
   };
 });
 
-describe("CliEnv.layerTest", () => {
+describe("CliEnv.layerTest builds CliEnv.layer's services from fixed answers, reading no host environment", () => {
   {
     class Observed0 extends Context.Service<Observed0, Effect.Success<typeof observe>>()(
       "@beep/cli-kit/test/CliEnv.layerTest.test/Observed0"
@@ -125,7 +121,6 @@ describe("CliEnv.layerTest", () => {
         Effect.gen(function* () {
           const unset = yield* Observed4;
           assert.deepStrictEqual([unset.interactive, unset.glyphs], [true, "unicode"]);
-          // Control: the same host TERM decides CliInteractive.layer when it reads the ambient provider.
           const ambient = yield* CliInteractive;
           assert.isFalse(ambient, "control: the host's dumb TERM is visible to an ambient read");
         })

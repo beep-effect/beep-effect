@@ -17,7 +17,6 @@ import {
 
 const addon = "@duckdb/node-bindings-win32-x64/duckdb.node";
 
-// A fake disk records every exact path checked.
 const fakeResolver = (present: ReadonlyArray<string>, seen: Array<string>) => (candidate: string) => {
   seen.push(candidate);
   return A.contains(present, candidate);
@@ -42,11 +41,13 @@ describe("NativeAddon", () => {
     const resolved = resolveNativeAddon(
       addon,
       "/opt/ext/practice-kg-mcp",
-      // The addon also exists under the working directory; the resolver must not look there.
+
       fakeResolver([`/opt/ext/node_modules/${addon}`, `${cwd}/node_modules/${addon}`], seen)
     );
     expect(O.getOrNull(resolved)).toBe(`/opt/ext/node_modules/${addon}`);
-    expect(seen).toEqual([`/opt/ext/node_modules/${addon}`]);
+    expect(seen, "Even if an addon exists under cwd, resolution checks only beside the executable.").toEqual([
+      `/opt/ext/node_modules/${addon}`,
+    ]);
   });
 
   it("falls back (None) when the addon is not beside the executable, even if the cwd holds it", () => {
@@ -80,11 +81,13 @@ describe("NativeAddon", () => {
     Effect.gen(function* () {
       const errors: Array<ReadonlyArray<unknown>> = [];
       const recording: Console.Console = { ...console, error: (...args) => errors.push(args) };
-      // Off Windows `bun:ffi` or `kernel32.dll` is unavailable, so registration fails.
+
       const registered = yield* setDllDirectory("/opt/ext/node_modules/@duckdb/node-bindings-linux-x64/").pipe(
         Effect.provideService(Console.Console, recording)
       );
-      expect(registered).toBe(false);
+      expect(registered, "Off Windows, unavailable bun:ffi or kernel32 makes DLL-directory registration fail.").toBe(
+        false
+      );
       expect(errors).toEqual([
         ["practice-kg-mcp: could not add the DuckDB addon folder to the DLL search path; duckdb.dll may fail to load."],
       ]);

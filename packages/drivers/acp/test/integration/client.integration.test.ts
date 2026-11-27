@@ -87,8 +87,6 @@ it.layer(NodeServices.layer, { timeout: "20 seconds" })("effect-acp client", (it
     return yield* spawner.spawn(command);
   });
 
-  // Spawns the generation-2 mock peer and builds a client on it in the test's scope; both end
-  // with the test.
   const spawnClient = Effect.fn("AcpClientIntegrationTest.spawnClient")(function* (
     env?: Record<string, string>,
     options: Omit<AcpClient.AcpClientChildProcessOptions, "handle"> = {}
@@ -98,7 +96,6 @@ it.layer(NodeServices.layer, { timeout: "20 seconds" })("effect-acp client", (it
     return { acp: Context.get(context, AcpClient.AcpClient), handle };
   });
 
-  // Registers the handlers every prompt of the mock peer needs.
   const registerPromptHandlers = Effect.fn("AcpClientIntegrationTest.registerPromptHandlers")(function* (
     acp: AcpClient.AcpClientShape
   ) {
@@ -207,11 +204,13 @@ it.layer(NodeServices.layer, { timeout: "20 seconds" })("effect-acp client", (it
       const error = { code: -32000, message: "Please sign in to the agent", data: { retry: false } };
       const idle = { sessionUpdate: "state_update", state: "idle", stopReason: "error", error } as const;
 
-      // A negotiating client takes the generation-2 path until `initialize` answers.
       const prompt = yield* acp.agent.prompt(helloPrompt("session-1")).pipe(Effect.forkScoped);
-      // The first typed RPC of a connection takes the first typed id.
       const take3 = yield* Queue.take(output);
-      assert.include(take3, `"id":${RPC_REQUEST_ID_START}`);
+      assert.include(
+        take3,
+        `"id":${RPC_REQUEST_ID_START}`,
+        "a negotiating client takes the generation-2 path until initialize answers; its first typed RPC takes the first id"
+      );
       const encodedJsonl = yield* encodeJsonl(SessionUpdateNotification, {
         jsonrpc: "2.0",
         method: "session/update",
@@ -253,9 +252,12 @@ it.layer(NodeServices.layer, { timeout: "20 seconds" })("effect-acp client", (it
       assert.deepStrictEqual(error.code, expected.code);
       assert.deepStrictEqual(error.signal, expected.signal);
 
-      // A success would surface as a defect here; only the failure is compared.
       const pipe5 = yield* acp.raw.request("x/echo", {}).pipe(Effect.flip, Effect.orDie);
-      assert.strictEqual(pipe5, error);
+      assert.strictEqual(
+        pipe5,
+        error,
+        "a success would surface as a defect through orDie; only the failure is compared"
+      );
       const pipe6 = yield* acp.raw.notify("x/notify", {}).pipe(Effect.flip);
       assert.strictEqual(pipe6, error);
       const pipe7 = yield* acp.agent.cancel({ sessionId: "mock-session-1" }).pipe(Effect.flip);
@@ -303,11 +305,14 @@ it.layer(NodeServices.layer, { timeout: "20 seconds" })("effect-acp client", (it
 
       const session = yield* acp.agent.createSession({ cwd: process.cwd(), mcpServers: [] });
       assert.equal(session.sessionId, "mock-session-1");
-      // ACP v2 removed session/set_mode; the client fails it locally.
       const setMode = yield* acp.agent
         .setSessionMode({ sessionId: session.sessionId, modeId: "code" })
         .pipe(Effect.flip);
-      assert.equal(setMode._tag === "AcpRequestError" ? setMode.code : undefined, -32601);
+      assert.equal(
+        setMode._tag === "AcpRequestError" ? setMode.code : undefined,
+        -32601,
+        "ACP v2 removed session/set_mode; the client fails it locally"
+      );
 
       const prompt = yield* acp.agent.prompt(helloPrompt(session.sessionId));
       assert.equal(prompt.stopReason, "end_turn");
@@ -512,9 +517,8 @@ it.layer(NodeServices.layer, { timeout: "20 seconds" })("effect-acp client", (it
       const session = yield* acp.agent.createSession({ cwd: process.cwd(), mcpServers: [] });
       yield* acp.agent.prompt(helloPrompt(session.sessionId));
 
-      // The plan update and the idle state update each reach the healthy handler.
       const got16 = yield* Ref.get(successfulHandlers);
-      assert.equal(got16, 2);
+      assert.equal(got16, 2, "the plan update and the idle state update each reach the healthy handler");
     })
   );
 

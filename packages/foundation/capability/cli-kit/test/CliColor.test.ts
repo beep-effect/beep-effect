@@ -13,8 +13,12 @@ import * as Stdio from "effect/Stdio";
 
 describe("CliColor.enabled", () => {
   const cases: ReadonlyArray<readonly [string, boolean, Record<string, string>, boolean]> = [
-    // force-color-honoured-node-precedence.md: a bare TTY now follows Node's terminal table, so no TERM means no colour
-    ["TTY, no colour variables at all", true, {}, false],
+    [
+      "TTY, no colour variables at all: a bare TTY follows Node's terminal table, so no TERM is no colour",
+      true,
+      {},
+      false,
+    ],
     ["TTY, NO_COLOR unset", true, { TERM: "xterm-256color" }, true],
     [
       "TTY, NO_COLOR empty — fromUnknown's default treats it as unset, same as fromEnv",
@@ -32,12 +36,19 @@ describe("CliColor.enabled", () => {
     ["TTY, NO_COLOR=0 — any non-empty value disables", true, { TERM: "xterm-256color", NO_COLOR: "0" }, false],
     ["not a TTY, NO_COLOR unset", false, {}, false],
     ["not a TTY, NO_COLOR empty", false, { NO_COLOR: "" }, false],
-    // force-color-honoured-node-precedence.md: FORCE_COLOR is honoured, so a forced level beats a missing TTY
-    ["not a TTY, FORCE_COLOR=1 forces colour on", false, { FORCE_COLOR: "1" }, true],
-    // force-color-honoured-node-precedence.md: FORCE_COLOR=0 is "no colour" even on a TTY
+    [
+      "not a TTY, FORCE_COLOR=1 forces colour on: a forced level beats a missing TTY",
+      false,
+      { FORCE_COLOR: "1" },
+      true,
+    ],
     ["TTY, FORCE_COLOR=0 forces colour off", true, { TERM: "xterm-256color", FORCE_COLOR: "0" }, false],
-    // force-color-honoured-node-precedence.md: FORCE_COLOR beats NO_COLOR, as in Node's getColorDepth
-    ["not a TTY, FORCE_COLOR=3 beats NO_COLOR=1", false, { FORCE_COLOR: "3", NO_COLOR: "1" }, true],
+    [
+      "not a TTY, FORCE_COLOR=3 beats NO_COLOR=1, as in Node's getColorDepth",
+      false,
+      { FORCE_COLOR: "3", NO_COLOR: "1" },
+      true,
+    ],
     ["TTY, TERM=dumb", true, { TERM: "dumb" }, false],
   ];
   for (const [label, tty, env, expected] of cases) {
@@ -91,9 +102,8 @@ describe("CliColor.enabled", () => {
   });
 
   it("keeps its exact type", () => {
-    // Type pin: a wider requirement (Terminal, TerminalEnv) or error channel would fail to compile here.
     const pinned = CliColor.enabled satisfies Effect.Effect<boolean, never, Stdio.Stdio>;
-    assert.isDefined(pinned);
+    assert.isDefined(pinned, "a wider requirement (Terminal, TerminalEnv) or error channel would fail to compile");
   });
 });
 
@@ -162,7 +172,6 @@ describe("CliColor.formatterLayer", () => {
     );
   });
 
-  // Core's formatter options pass through beside the colour decision and the overrides.
   const globalFlagDoc = {
     name: "log-level",
     aliases: [],
@@ -221,7 +230,6 @@ describe("CliColor.formatterLayer", () => {
     );
   });
 
-  // A forced colour level reaches the formatter even with no TTY.
   it.layer(
     CliColor.formatterLayer().pipe(
       Layer.provide(Stdio.layerTest({ stdoutIsTerminal: Effect.succeed(false) })),

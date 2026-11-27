@@ -434,8 +434,7 @@ export class XlsxCell extends S.Opaque<XlsxCell, { readonly brand: unique symbol
       S.withConstructorDefault(Effect.succeedNone),
       S.withDecodingDefaultTypeKey(Effect.succeedNone)
     ),
-    // An Opaque field carries no key annotation: `annotateKey` rebuilds the inner struct and drops the brand. The
-    // format's own schema description says what it is.
+    // decision: opaque-fields-take-no-key-annotation
     format: XlsxNumberFormat.pipe(
       S.withConstructorDefault(Effect.sync(() => XlsxNumberFormat.general)),
       S.withDecodingDefaultTypeKey(Effect.sync(() => XlsxNumberFormat.general))
@@ -481,13 +480,11 @@ export class XlsxCell extends S.Opaque<XlsxCell, { readonly brand: unique symbol
   };
 }
 
-/** A dated cell as a file gives it back: a number past the system's last serial, Excel's short date when undated. */
 const canonicalDate = (cell: XlsxCell, serial: number, system: XlsxDateSystem): XlsxCell => {
   if (serial > maxSerial(system)) return XlsxCell.make({ ...cell, value: XlsxNumber.make({ value: serial }) });
   return isDateFormat(cell.format.code) ? cell : XlsxCell.make({ ...cell, format: XlsxNumberFormat.shortDate });
 };
 
-/** A number as a file gives it back: the date it is read as under a date format, within the system's dates. */
 const canonicalNumber = (cell: XlsxCell, value: number, system: XlsxDateSystem): XlsxCell =>
   isDateFormat(cell.format.code) && value >= 0 && value <= maxSerial(system)
     ? XlsxCell.make({ ...cell, value: XlsxDate.make({ serial: value }) })

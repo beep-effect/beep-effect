@@ -48,12 +48,10 @@ const deny = PlatformError.systemError({
   description: "disk said no",
 });
 
-/** Run `body` with the file sink built over a memfs volume, in a scope the test closes itself. */
 const harness = Effect.fn("harness")(function* (options: {
   readonly file: { readonly envVar: string } | { readonly path: string };
   readonly env?: Record<string, string>;
   readonly failFirstAppend?: boolean;
-  /** Provide `CurrentRuntimeEnv` with this CI; omitted, the service is not in the environment at all. */
   readonly ci?: "github-actions" | "generic";
   readonly faults?: Parameters<typeof MemoryFileSystem.makeSync>[1] extends infer O
     ? NonNullable<O> extends { faults?: infer F }
@@ -85,7 +83,6 @@ const harness = Effect.fn("harness")(function* (options: {
     handle,
     out,
     err,
-    /** Run `program` with the built loggers. */
     log: (program: Effect.Effect<void>) =>
       program.pipe(Effect.provideContext(context), Effect.provideService(Console.Console, double)),
     close: Scope.close(scope, Exit.void),
@@ -94,8 +91,8 @@ const harness = Effect.fn("harness")(function* (options: {
 });
 
 const ndjson = (lines: ReadonlyArray<string>) => A.filter(lines, (line) => Str.startsWith("{")(line));
-/** The sink's one error line. CliLogger's plain lines share stderr, so it is picked out by its prefix. */
-const plain = (lines: ReadonlyArray<string>) => A.filter(lines, (line) => Str.startsWith("diagnostics log file")(line));
+const sinkErrorLines = (lines: ReadonlyArray<string>) =>
+  A.filter(lines, (line) => Str.startsWith("diagnostics log file")(line));
 const settle = Effect.forEach(Array.from({ length: 50 }), () => Effect.yieldNow, { concurrency: 1 });
 
 const program = Effect.gen(function* () {
@@ -113,7 +110,7 @@ describe("CliLog.layer file option", () => {
       yield* h.close;
       assert.isDefined(h.file());
       assert.include(h.file() ?? "", "from environment");
-      assert.deepStrictEqual(plain(h.err), []);
+      assert.deepStrictEqual(sinkErrorLines(h.err), []);
     })
   );
 
@@ -133,7 +130,7 @@ describe("CliLog.layer file option", () => {
         yield* h.close;
         assert.include(h.file() ?? "", "explicit path");
         assert.isFalse(h.handle.volume.has("/logs/environment.ndjson"));
-        assert.deepStrictEqual(plain(h.err), []);
+        assert.deepStrictEqual(sinkErrorLines(h.err), []);
       }
     })
   );
@@ -178,8 +175,7 @@ describe("CliLog.layer file option", () => {
         A.filter((l) => l !== "")
       );
       assert.strictEqual(lines.length, 2);
-      // Identical to the stderr line for the same log call, byte for byte.
-      assert.deepStrictEqual(lines, ndjson(h.err));
+      assert.deepStrictEqual(lines, ndjson(h.err), "identical to the stderr line for the same log call, byte for byte");
       assert.deepStrictEqual(
         A.map(lines, (l) => Result.getOrThrowWith(decodeLogLevel(l), identity).level),
         ["DEBUG", "ERROR"]
@@ -194,8 +190,11 @@ describe("CliLog.layer file option", () => {
       yield* h.log(program);
       yield* h.close;
       assert.isUndefined(h.file());
-      // CliLogger still prints the error plainly; nothing is written as NDJSON.
-      assert.deepStrictEqual(ndjson(h.err), []);
+      assert.deepStrictEqual(
+        ndjson(h.err),
+        [],
+        "CliLogger still prints the error plainly; nothing is written as NDJSON"
+      );
     })
   );
 
@@ -220,7 +219,7 @@ describe("CliLog.layer file option", () => {
       yield* unset.log(program);
       yield* unset.close;
       assert.isFalse(unset.handle.volume.has(PATH));
-      assert.deepStrictEqual(plain(unset.err), []);
+      assert.deepStrictEqual(sinkErrorLines(unset.err), []);
     })
   );
 
@@ -235,14 +234,12 @@ describe("CliLog.layer file option", () => {
 
   describe("the failure line is safe to print", () => {
     const ESC = String.fromCharCode(0x1b);
-    // A path a workflow controls through the env var, and an error that echoes it: both carry an escape, a line break
-    // into a V2 command, and a legacy command anywhere in a line.
-    const HOSTILE = `/logs/a${ESC}[31m\n::add-mask::secret\nb ##[error]c.ndjson`;
+    const workflowControlledPath = `/logs/a${ESC}[31m\n::add-mask::secret\nb ##[error]c.ndjson`;
     const hostileFault = PlatformError.systemError({
       _tag: "PermissionDenied",
       module: "FileSystem",
       method: "writeFileString",
-      pathOrDescriptor: HOSTILE,
+      pathOrDescriptor: workflowControlledPath,
       description: `denied${ESC}]8;;x${ESC}\\\n::error::injected`,
     });
     const lines = (entries: ReadonlyArray<string>) => A.flatMap(entries, (entry) => Str.split(entry, /\r\n|\r|\n/));
@@ -259,13 +256,13 @@ describe("CliLog.layer file option", () => {
           Effect.gen(function* () {
             const h = yield* harness({
               file: { envVar: FILE_ENV },
-              env: { [LEVEL_ENV]: "debug", [FILE_ENV]: HOSTILE },
+              env: { [LEVEL_ENV]: "debug", [FILE_ENV]: workflowControlledPath },
               faults: { writeFileString: MemoryFileSystem.failTimes(1, hostileFault) },
               ...(ci === undefined ? {} : { ci }),
             });
             yield* h.log(Effect.logError("first"));
             let spins = 0;
-            while (plain(h.err).length === 0 && spins++ < 1000) yield* Effect.yieldNow;
+            while (sinkErrorLines(h.err).length === 0 && spins++ < 1000) yield* Effect.yieldNow;
             yield* h.close;
             const printed = failureLines(h.err);
             for (const line of printed)
@@ -287,14 +284,11 @@ describe("CliLog.layer file option", () => {
           env: { [LEVEL_ENV]: "debug" },
           failFirstAppend: true,
         });
-        // The first batch fails.
         yield* h.log(Effect.logError("first"));
         let spins = 0;
-        while (plain(h.err).length === 0 && spins++ < 1000) yield* Effect.yieldNow;
-        assert.strictEqual(plain(h.err).length, 1, A.join(h.err, "\n"));
+        while (sinkErrorLines(h.err).length === 0 && spins++ < 1000) yield* Effect.yieldNow;
+        assert.strictEqual(sinkErrorLines(h.err).length, 1, A.join(h.err, "\n"));
 
-        // The program is unaffected: it keeps logging and finishes with its own value. The fault has used up its
-        // one failure, so a healthy sink WOULD write these: they are dropped because the sink disabled itself.
         const exit = yield* Effect.exit(
           h.log(
             Effect.gen(function* () {
@@ -308,15 +302,21 @@ describe("CliLog.layer file option", () => {
         yield* settle;
         yield* h.close;
 
-        const errors = plain(h.err);
+        const errors = sinkErrorLines(h.err);
         assert.strictEqual(errors.length, 1, A.join(errors, "\n"));
         assert.match(
           errors[0] ?? "",
           new RegExp(`^diagnostics log file ${PATH} failed: .*disk said no.*; further file logging disabled$`)
         );
-        assert.isFalse(h.handle.volume.has(PATH), "later lines are dropped, not written");
-        // The stderr sink still recorded every record: only the file went away.
-        assert.strictEqual(ndjson(h.err).length, 3);
+        assert.isFalse(
+          h.handle.volume.has(PATH),
+          "later lines are dropped, not written: the fault used up its one failure, so the sink disabled itself"
+        );
+        assert.strictEqual(
+          ndjson(h.err).length,
+          3,
+          "the stderr sink still recorded every record: only the file went away"
+        );
       })
     );
 
@@ -329,13 +329,12 @@ describe("CliLog.layer file option", () => {
         });
         yield* h.log(Effect.logError("first"));
         let spins = 0;
-        while (plain(h.err).length === 0 && spins++ < 1000) yield* Effect.yieldNow;
-        // Queued after the failure and never given a chance to drain before the scope closes.
+        while (sinkErrorLines(h.err).length === 0 && spins++ < 1000) yield* Effect.yieldNow;
         yield* h.log(Effect.logError("queued one"));
         yield* h.log(Effect.logError("queued two"));
         yield* h.close;
-        assert.strictEqual(plain(h.err).length, 1, A.join(h.err, "\n"));
-        assert.isFalse(h.handle.volume.has(PATH));
+        assert.strictEqual(sinkErrorLines(h.err).length, 1, A.join(h.err, "\n"));
+        assert.isFalse(h.handle.volume.has(PATH), "lines queued after the failure never drain before the scope closes");
       })
     );
   });
@@ -349,13 +348,11 @@ describe("CliLog.layer file option", () => {
           faults: { writeFileString: () => Effect.never },
         });
         yield* h.log(Effect.logError("first"));
-        // Let the drain start its (never finishing) append, then close the scope on a fiber.
         yield* settle;
         const closing = yield* Effect.forkChild(h.close);
         yield* TestClock.adjust("10 seconds");
         yield* Fiber.join(closing);
-        // The interrupt is silent: giving up on a hung filesystem prints no error line.
-        assert.deepStrictEqual(plain(h.err), []);
+        assert.deepStrictEqual(sinkErrorLines(h.err), [], "giving up on a hung filesystem prints no error line");
       })
     );
 
@@ -368,12 +365,12 @@ describe("CliLog.layer file option", () => {
         });
         yield* h.log(Effect.logError("first"));
         let spins = 0;
-        while (plain(h.err).length === 0 && spins++ < 1000) yield* Effect.yieldNow;
+        while (sinkErrorLines(h.err).length === 0 && spins++ < 1000) yield* Effect.yieldNow;
         yield* h.log(Effect.logError("second"));
         yield* settle;
         yield* h.close;
-        assert.strictEqual(plain(h.err).length, 1, A.join(h.err, "\n"));
-        assert.match(plain(h.err)[0] ?? "", /failed: .*disk exploded.*; further file logging disabled$/);
+        assert.strictEqual(sinkErrorLines(h.err).length, 1, A.join(h.err, "\n"));
+        assert.match(sinkErrorLines(h.err)[0] ?? "", /failed: .*disk exploded.*; further file logging disabled$/);
         assert.isFalse(h.handle.volume.has(PATH));
       })
     );
@@ -387,11 +384,11 @@ describe("CliLog.layer file option", () => {
         });
         yield* h.log(Effect.logError("first"));
         let spins = 0;
-        while (plain(h.err).length === 0 && spins++ < 1000) yield* Effect.yieldNow;
+        while (sinkErrorLines(h.err).length === 0 && spins++ < 1000) yield* Effect.yieldNow;
         yield* h.log(Effect.logError("second"));
         yield* settle;
         yield* h.close;
-        assert.strictEqual(plain(h.err).length, 1, A.join(h.err, "\n"));
+        assert.strictEqual(sinkErrorLines(h.err).length, 1, A.join(h.err, "\n"));
         assert.isFalse(h.handle.volume.has("/locked/dir/log.ndjson"));
       })
     );

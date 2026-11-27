@@ -138,9 +138,9 @@ describe("collectStderrTail", () => {
   it.effect(
     "drops the partial first line of a truncated tail so a cut credential never leaks",
     Effect.fnUntraced(function* () {
-      // The 4096-character tail starts 18 characters into the first line, inside the token.
       const credential = "Bearer SECRETTOKENVALUE123\n";
-      const filler = Str.repeat(ACP_STDERR_TAIL_MAX_CHARS - (credential.length - 18))("z");
+      const tailStartInsideToken = 18;
+      const filler = Str.repeat(ACP_STDERR_TAIL_MAX_CHARS - (credential.length - tailStartInsideToken))("z");
       const collector = yield* collectStderrTail(bytes(credential, filler));
       yield* collector.drained;
 

@@ -17,10 +17,9 @@ import * as Str from "effect/String";
 
 const $I = $PracticeSetupId.create("Setup.models");
 
-// The bootstrapper's steps, in the order it runs them.
 const SetupStep = LiteralKit(["claude-desktop", "claude-sign-in", "gateway-extension", "onboarding-handoff"]).pipe(
   $I.annoteSchema("SetupStep", {
-    description: "One bootstrapper step: install Claude, sign in, install the gateway, hand off to onboarding.",
+    description: "Bootstrap sequence: install Claude, sign in, install the gateway, hand off to onboarding.",
   })
 );
 
@@ -399,9 +398,6 @@ export const GatewayInstallState = LiteralKit(["current", "outdated", "missing",
  */
 export type GatewayInstallState = typeof GatewayInstallState.Type;
 
-// The one field read from Claude Desktop's config.json (an undocumented internal):
-// `lastKnownAccountUuid` appears once an account has signed in. Unknown fields are
-// ignored; only the key's presence matters and its value is never logged.
 class ClaudeAccountConfig extends S.Opaque<ClaudeAccountConfig, { readonly brand: unique symbol }>()(
   S.Struct({
     lastKnownAccountUuid: S.optionalKey(S.String).annotateKey({
@@ -409,28 +405,30 @@ class ClaudeAccountConfig extends S.Opaque<ClaudeAccountConfig, { readonly brand
     }),
   }).pipe(
     $I.annoteSchema("ClaudeAccountConfig", {
-      description: "The sign-in marker read from Claude Desktop's config.json; other fields are ignored.",
+      description:
+        "Undocumented config.json sign-in marker; ignore unknown fields and read only lastKnownAccountUuid presence after sign-in, never log its value.",
     })
   )
 ) {}
 
-// Claude Desktop's extension registry, extensions-installations.json (an undocumented
-// internal), keyed by extension id. Entries stay unknown so one odd entry of another
-// extension cannot hide the gateway's, which is decoded on its own.
 class ExtensionInstallations extends S.Opaque<ExtensionInstallations, { readonly brand: unique symbol }>()(
   S.Struct({
-    extensions: S.Record(S.String, S.Unknown).annotateKey({ description: "Installed extensions by extension id." }),
+    extensions: S.Record(S.String, S.Unknown).annotateKey({
+      description: "Installed extensions by extension id.",
+    }),
   }).pipe(
     $I.annoteSchema("ExtensionInstallations", {
-      description: "Claude Desktop's registry of installed extensions; other fields are ignored.",
+      description:
+        "Undocumented extensions-installations.json registry keyed by extension id; leave peer entries unknown and decode the gateway alone so malformed peer entries cannot hide it.",
     })
   )
 ) {}
 
-// One entry of the extension registry; only its version is read.
 class InstalledExtension extends S.Opaque<InstalledExtension, { readonly brand: unique symbol }>()(
   S.Struct({
-    version: S.String.annotateKey({ description: "Version of the installed extension." }),
+    version: S.String.annotateKey({
+      description: "Version of the installed extension.",
+    }),
   }).pipe(
     $I.annoteSchema("InstalledExtension", {
       description: "One installed Claude Desktop extension; other fields are ignored.",
@@ -490,8 +488,6 @@ export const signInStateOf = (text: string): SignInState =>
         : SignInState.Enum["signed-out"],
   });
 
-// State of the gateway's registry entry: unknown when undecodable, current when
-// no version is expected or the versions match, outdated otherwise.
 const installedEntryState =
   (expected: O.Option<string>) =>
   (entry: unknown): GatewayInstallState =>

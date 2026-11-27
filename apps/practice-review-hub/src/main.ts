@@ -11,17 +11,12 @@ import { decodeReviewHubConfig, ReviewNoticeConfig, reviewHubFlags, reviewNotice
 import { makeNoticeLayer, NOTICE_ENV_PREFIX, noticeOutcomeLine } from "./Notice.ts";
 import { makeReviewHubServer } from "./runtime/Layer.ts";
 
-// Prints only the outcome line, which Notice.test.ts checks exactly.
 const printOutcome = flow(noticeOutcomeLine, Effect.flatMap(Console.log));
 
-// Serve until interrupted. Portless injects PORT for practice-review-hub.beep.localhost.
 const serve = Command.make("serve", reviewHubFlags, (flags) =>
   Effect.flatMap(decodeReviewHubConfig(flags), (config) => Layer.launch(makeReviewHubServer(config)))
 ).pipe(Command.withDescription("Serve the review hub's MCP endpoint on 127.0.0.1."));
 
-// Send today's notice if one is due, and print its outcome as one JSON line: a
-// status, the day, and for a sent notice the count it said, never a question.
-// The Claude Code folder goes only into the email, never into this line.
 const notice = Command.make(
   "notice",
   reviewNoticeFlags,

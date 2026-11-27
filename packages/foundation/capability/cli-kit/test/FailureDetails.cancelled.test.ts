@@ -12,8 +12,7 @@ import * as Runtime from "effect/Runtime";
 import * as Str from "effect/String";
 import type { FailureDetails } from "@beep/cli-kit";
 
-/** What a renderer that gives a defect the issue-report treatment prints, once it has checked the kit's flags. */
-const renderer =
+const issueReportRenderer =
   (seen: Array<FailureDetails.Encoded>) =>
   (error: unknown, details: FailureDetails.Encoded): ReadonlyArray<string> => {
     seen.push(details);
@@ -31,7 +30,7 @@ const run = Effect.fn("run")(function* <A, E>(program: Effect.Effect<A, E>) {
     error: (...args: ReadonlyArray<unknown>) => err.push(pipe(args, A.map(String), A.join(" "))),
   });
   const exit = yield* program.pipe(
-    CliRuntime.reportFailures({ render: renderer(seen) }),
+    CliRuntime.reportFailures({ render: issueReportRenderer(seen) }),
     Effect.exit,
     provideBuilt(CliLogger.layer()),
     Effect.provideService(Console.Console, double)

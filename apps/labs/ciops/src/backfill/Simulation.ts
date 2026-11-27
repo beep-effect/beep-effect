@@ -61,7 +61,7 @@ const viewOf = (policy: BackfillPolicy, state: SimulationState): SchedulerView =
     nowMillis: S.Natural.make(state.nowMillis),
     waiting: state.waiting,
     running: A.map(state.running, (entry) => entry.lease),
-    // Leases released before the window opened can no longer move a reading.
+
     finished: A.filter(
       state.finished,
       (lease) => lease.releasedAtMillis > state.nowMillis - policy.fairnessWindowMillis
@@ -99,9 +99,7 @@ const releaseDue = (state: SimulationState): SimulationState =>
     }
   );
 
-// Oversized requests are clamped to the capacity on enqueue, as the live
-// scheduler clamps a request to the machine ceiling.
-const enqueueDue = (policy: BackfillPolicy, state: SimulationState): SimulationState => {
+const enqueueClampedArrivals = (policy: BackfillPolicy, state: SimulationState): SimulationState => {
   const [due, later] = A.span(state.arrivals, (arrival) => arrival.enqueuedAtMillis === state.nowMillis);
   return A.reduce(due, { ...state, arrivals: later }, (next, arrival) => {
     const weightTokens = N.min(arrival.requestedWeightTokens, policy.capacityTokens);
@@ -134,7 +132,6 @@ const enqueueDue = (policy: BackfillPolicy, state: SimulationState): SimulationS
   });
 };
 
-// Each unit is stamped once, on the view at its protection instant, oldest first.
 const protectDue = (policy: BackfillPolicy, state: SimulationState): SimulationState => {
   const due = A.filter(
     queueOrder(viewOf(policy, state), policy),
@@ -195,7 +192,7 @@ const admit = (
 ): SimulationState => {
   const fairness = fairnessReadingFor(viewOf(policy, state), policy, unit);
   const activeTokens = state.activeTokens + unit.weightTokens;
-  // Every queued unit recorded its hold on enqueue.
+
   const holdMillis = HashMap.getUnsafe(state.holds, unit.nonce);
   return {
     ...state,
@@ -238,8 +235,6 @@ const admit = (
   };
 };
 
-// Contenders self-select in queue order, as live contenders do on one scan:
-// the first unit whose verdict is Attempt is admitted, then the view is re-read.
 const nextAdmission = (
   policy: BackfillPolicy,
   verdict: VerdictFunction,
@@ -264,10 +259,6 @@ const admitAll = (policy: BackfillPolicy, verdict: VerdictFunction, state: Simul
   return next;
 };
 
-// Decision instants: arrivals, releases, protection and aging boundaries, and
-// the first instant after each stamped deadline. Fairness usage also drifts
-// between them (running leases accrue, finished ones leave the window); the
-// model does not decide at those moments. See simulateStream's Gotchas.
 const nextInstant = (policy: BackfillPolicy, state: SimulationState): O.Option<number> => {
   const later = (instant: number): O.Option<number> => (instant > state.nowMillis ? O.some(instant) : O.none());
   const candidates = A.getSomes([
@@ -287,7 +278,7 @@ const nextInstant = (policy: BackfillPolicy, state: SimulationState): O.Option<n
 };
 
 const stepAt = (policy: BackfillPolicy, verdict: VerdictFunction, state: SimulationState): SimulationState =>
-  admitAll(policy, verdict, reportBreaches(protectDue(policy, enqueueDue(policy, releaseDue(state)))));
+  admitAll(policy, verdict, reportBreaches(protectDue(policy, enqueueClampedArrivals(policy, releaseDue(state)))));
 
 const validateArrivals = (arrivals: ReadonlyArray<UnitArrival>): Effect.Effect<void, SimulationInputError> =>
   HashSet.size(HashSet.fromIterable(A.map(arrivals, (arrival) => arrival.nonce))) === A.length(arrivals)

@@ -27,8 +27,11 @@ describe("YamlCodec", () => {
       assert.strictEqual(error.operation, "parse");
       assert.isDefined(error.cause);
       assert.notStrictEqual(typeof error.cause, "string");
-      // The underlying YamlParseError survives structurally, not as prose.
-      assert.instanceOf(error.cause, YamlParseError);
+      assert.instanceOf(
+        error.cause,
+        YamlParseError,
+        "the underlying YamlParseError survives structurally, not as prose"
+      );
     })
   );
 
@@ -42,13 +45,8 @@ describe("YamlCodec", () => {
 
   it.effect("never dies on hostile deeply-nested input — trips the composer's nesting-depth cap", () =>
     Effect.gen(function* () {
-      // The composer caps collection-nesting depth at 256
-      // (packages/foundation/modeling/yaml/src/internal/composer/state.ts MAX_NESTING_DEPTH).
-      // 1000 levels of flow-sequence nesting comfortably exceeds that cap
-      // while remaining syntactically valid YAML, so this exercises the
-      // depth guard rather than a plain syntax error.
-      const depth = 1000;
-      const hostile = `${Str.repeat(depth)("[")}1${Str.repeat(depth)("]")}`;
+      const depthBeyondNestingCap = 1000;
+      const hostile = `${Str.repeat(depthBeyondNestingCap)("[")}1${Str.repeat(depthBeyondNestingCap)("]")}`;
       const exit = yield* Effect.exit(YamlCodec.parse(hostile));
       const causeOption = Exit.getCause(exit);
       const failureCause = O.getOrThrow(causeOption);
@@ -56,28 +54,20 @@ describe("YamlCodec", () => {
       assertSome(causeOption, failureCause);
       assert.isTrue(Cause.hasFails(failureCause));
       assert.isFalse(Cause.hasDies(failureCause));
-      // Confirm this trips the depth guard specifically, not some unrelated
-      // syntax failure.
       const error = yield* YamlCodec.parse(hostile).pipe(Effect.asVoid, Effect.flip);
       assert.instanceOf(error.cause, YamlParseError);
       const cause = error.cause;
       if (!S.is(YamlParseError)(cause)) return assert.fail("expected YamlParseError");
-      assert.isTrue(A.some(cause.diagnostics, (d) => d.code === "NestingDepthExceeded"));
+      assert.isTrue(
+        A.some(cause.diagnostics, (d) => d.code === "NestingDepthExceeded"),
+        "valid YAML 1000 deep exceeds the 256 MAX_NESTING_DEPTH cap, so the depth guard fires, not a syntax error"
+      );
     })
   );
 
   it.effect("an alias bomb fails as a typed ConfigCodecError, never a defect — trips the alias-expansion budget", () =>
     Effect.gen(function* () {
-      // Six tiers of ten aliases each. The composer's raw alias-token count
-      // (packages/foundation/modeling/yaml/src/internal/composer/anchors.ts) stays at 60 — well
-      // under the default maxAliasCount of 100 — so this does not trip that
-      // guard. Instead, resolving the aliases multiplies the materialized
-      // node count roughly tenfold per tier (~10^6 nodes for the final
-      // "bomb" key alone), which blows past the alias-expansion budget of
-      // (maxAliasCount + 1) * 10_000 = 1_010_000 output nodes
-      // (packages/foundation/modeling/yaml/src/YamlNode.ts, ALIAS_EXPANSION_FACTOR) — the
-      // "billion laughs" guard — before any heap exhaustion occurs.
-      const tiers = [
+      const sixTiersOfTenAliases = [
         "a0: &a0 [x, x]",
         "a1: &a1 [*a0,*a0,*a0,*a0,*a0,*a0,*a0,*a0,*a0,*a0]",
         "a2: &a2 [*a1,*a1,*a1,*a1,*a1,*a1,*a1,*a1,*a1,*a1]",
@@ -86,29 +76,28 @@ describe("YamlCodec", () => {
         "a5: &a5 [*a4,*a4,*a4,*a4,*a4,*a4,*a4,*a4,*a4,*a4]",
         "bomb: [*a5,*a5,*a5,*a5,*a5,*a5,*a5,*a5,*a5,*a5]",
       ];
-      const bomb = A.join(tiers, "\n");
+      const bomb = A.join(sixTiersOfTenAliases, "\n");
       const exit = yield* Effect.exit(YamlCodec.parse(bomb));
       const causeOption = Exit.getCause(exit);
       const failureCause = O.getOrThrow(causeOption);
       assertExitFailure(exit, failureCause);
       assertSome(causeOption, failureCause);
-      // A defect here would mean the guard threw instead of failing typed.
-      assert.isTrue(Cause.hasFails(failureCause));
-      assert.isFalse(Cause.hasDies(failureCause));
+      assert.isTrue(Cause.hasFails(failureCause), "the guard fails typed");
+      assert.isFalse(Cause.hasDies(failureCause), "a Die reason would mean the guard threw");
       const error = yield* YamlCodec.parse(bomb).pipe(Effect.asVoid, Effect.flip);
       assert.instanceOf(error, ConfigCodecError);
       assert.strictEqual(error.codec, "yaml");
-      // Both the composer's raw alias-token guard and the value-extraction
-      // alias-expansion budget report the same "AliasCountExceeded" code, so
-      // disambiguate on the message: the expansion-budget guard's message
-      // reads "expansion exceeded budget", the raw-token guard's reads
-      // "count exceeded maximum". This confirms the expansion budget fired,
-      // not the (here, unreachable at 60 raw alias tokens) raw-count guard.
       assert.instanceOf(error.cause, YamlParseError);
       const cause = error.cause;
       if (!S.is(YamlParseError)(cause)) return assert.fail("expected YamlParseError");
-      assert.isTrue(A.some(cause.diagnostics, (d) => d.code === "AliasCountExceeded"));
-      assert.isTrue(A.some(cause.diagnostics, (d) => Str.includes("expansion exceeded budget")(d.message)));
+      assert.isTrue(
+        A.some(cause.diagnostics, (d) => d.code === "AliasCountExceeded"),
+        "60 raw alias tokens stay under maxAliasCount 100; ~10^6 expanded nodes exceed the 1_010_000 budget"
+      );
+      assert.isTrue(
+        A.some(cause.diagnostics, (d) => Str.includes("expansion exceeded budget")(d.message)),
+        "both guards report AliasCountExceeded; only the expansion budget says expansion exceeded budget"
+      );
     })
   );
 });

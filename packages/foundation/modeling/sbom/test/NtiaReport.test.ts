@@ -1,11 +1,3 @@
-// The NTIA minimum elements, seven of them, each checked in both directions.
-//
-// The discriminating direction is the negative one: a validator that answers
-// `satisfied: true` unconditionally passes every positive test ever written for
-// it. Every element below therefore gets a document that satisfies it AND a
-// document that does not — and the pair differs in exactly the one field the
-// element is about, so a check reading the wrong field fails.
-
 import { Component, Contact, NtiaReport, Sbom, SbomDocument, SbomMetadata, Supplier } from "@beep/sbom";
 import { assert, describe, it } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -21,7 +13,6 @@ const root = Component.make({
 
 const dep = Component.make({ type: "library", name: "dep", version: "1.0.0" });
 
-/** A document satisfying all seven elements. */
 const compliant = (metadata?: Partial<Parameters<typeof SbomMetadata.make>[0]>) =>
   Sbom.generate({
     root,
@@ -42,7 +33,7 @@ const elementOf = (document: SbomDocument, id: NtiaElementId) => {
 
 const satisfies = (document: SbomDocument, id: NtiaElementId): boolean => elementOf(document, id)?.satisfied === true;
 
-describe("NtiaReport.of — the seven elements", () => {
+describe("NtiaReport.of — each of the seven elements, by a passing and a failing document differing in that one field", () => {
   it("reports every element exactly once, in the published order", () => {
     const ids = A.map(NtiaReport.of(compliant()).elements, (element) => element.id);
     assert.deepStrictEqual(ids, [
@@ -59,8 +50,10 @@ describe("NtiaReport.of — the seven elements", () => {
   it("1. supplier name", () => {
     assert.isTrue(satisfies(compliant(), "supplierName"));
     assert.strictEqual(elementOf(compliant(), "supplierName")?.value, "Acme");
-    // An empty name is a supplier that identifies nobody.
-    assert.isFalse(satisfies(compliant({ supplier: Supplier.make({ name: "  " }) }), "supplierName"));
+    assert.isFalse(
+      satisfies(compliant({ supplier: Supplier.make({ name: "  " }) }), "supplierName"),
+      "an empty name is a supplier that identifies nobody"
+    );
   });
 
   it("2. component name", () => {
@@ -78,33 +71,35 @@ describe("NtiaReport.of — the seven elements", () => {
   it("4. unique identifier — a purl, not merely a string", () => {
     assert.isTrue(satisfies(compliant(), "uniqueIdentifier"));
     assert.strictEqual(elementOf(compliant(), "uniqueIdentifier")?.value, "pkg:npm/%40effected/sbom@0.1.0");
-    // The discriminating negative: present, non-empty, and not a package URL.
     const notAPurl = Sbom.generate({
       root: Component.make({ type: "library", name: "x", version: "1.0.0", purl: "https://example.test/x" }),
       components: [dep],
     });
-    assert.isFalse(satisfies(notAPurl, "uniqueIdentifier"));
+    assert.isFalse(satisfies(notAPurl, "uniqueIdentifier"), "present and non-empty is not a package URL");
   });
 
   it("5. dependency relationship — a declared subject the components relate to", () => {
     assert.isTrue(satisfies(compliant(), "dependencyRelationship"));
     assert.strictEqual(elementOf(compliant(), "dependencyRelationship")?.value, "1 component");
 
-    // A component list with nothing declaring what it is a list OF relates
-    // nothing to anything, which is what this element is about.
     const rootless = SbomDocument.make({
       bomFormat: "CycloneDX",
       specVersion: "1.6",
       version: 1,
       components: [dep],
     });
-    assert.isFalse(satisfies(rootless, "dependencyRelationship"));
+    assert.isFalse(
+      satisfies(rootless, "dependencyRelationship"),
+      "a component list with no declared subject relates nothing to anything"
+    );
   });
 
   it("5b. a package with no dependencies is still compliant", () => {
-    // An empty list is an assertion ("this has no dependencies"), not a gap.
     const standalone = Sbom.generate({ root, components: [] });
-    assert.isTrue(satisfies(standalone, "dependencyRelationship"));
+    assert.isTrue(
+      satisfies(standalone, "dependencyRelationship"),
+      "an empty list asserts there are no dependencies; it is not a gap"
+    );
     assert.strictEqual(elementOf(standalone, "dependencyRelationship")?.value, "0 components");
   });
 
@@ -112,32 +107,34 @@ describe("NtiaReport.of — the seven elements", () => {
     assert.isTrue(satisfies(compliant(), "sbomAuthor"));
     assert.strictEqual(elementOf(compliant(), "sbomAuthor")?.value, "release-bot");
 
-    // The supplier stands in when nobody named an author…
     const bySupplier = Sbom.generate({
       root,
       components: [dep],
       metadata: SbomMetadata.make({ supplier: Supplier.make({ name: "Acme" }) }),
     });
-    assert.isTrue(satisfies(bySupplier, "sbomAuthor"));
+    assert.isTrue(satisfies(bySupplier, "sbomAuthor"), "the supplier stands in when nobody named an author");
     assert.strictEqual(elementOf(bySupplier, "sbomAuthor")?.value, "Acme");
 
-    // …and the publisher when there is no supplier either.
     const byPublisher = Sbom.generate({
       root: Component.make({ type: "library", name: "x", version: "1.0.0", publisher: "Dee" }),
       components: [dep],
     });
-    assert.isTrue(satisfies(byPublisher, "sbomAuthor"));
+    assert.isTrue(satisfies(byPublisher, "sbomAuthor"), "the publisher stands in when there is no supplier either");
     assert.strictEqual(elementOf(byPublisher, "sbomAuthor")?.value, "Dee");
 
-    // Nothing at all.
-    assert.isFalse(satisfies(Sbom.generate({ root, components: [dep] }), "sbomAuthor"));
+    assert.isFalse(
+      satisfies(Sbom.generate({ root, components: [dep] }), "sbomAuthor"),
+      "with no author, supplier or publisher the element is unsatisfied"
+    );
   });
 
   it("7. timestamp — one that is actually a date", () => {
     assert.isTrue(satisfies(compliant(), "timestamp"));
     assert.strictEqual(elementOf(compliant(), "timestamp")?.value, "2026-07-25T00:00:00.000Z");
-    // Present and non-empty is not the same as being a timestamp.
-    assert.isFalse(satisfies(compliant({ timestamp: "last tuesday" }), "timestamp"));
+    assert.isFalse(
+      satisfies(compliant({ timestamp: "last tuesday" }), "timestamp"),
+      "present and non-empty is not the same as being a timestamp"
+    );
     assert.isFalse(satisfies(Sbom.generate({ root, components: [dep] }), "timestamp"));
   });
 
@@ -155,12 +152,12 @@ describe("NtiaReport — the derived verdict", () => {
   });
 
   it("names what is missing by stable id, never by prose", () => {
-    // The ids are what a consumer branches on. The predecessor carried display
-    // strings ("Supplier Name") plus remediation text naming its own config
-    // file — a library cannot know a consumer's config format, and rendering
-    // is the edge's job.
     const report = NtiaReport.of(Sbom.generate({ root, components: [dep] }));
-    assert.deepStrictEqual(report.missing, ["supplierName", "sbomAuthor", "timestamp"]);
+    assert.deepStrictEqual(
+      report.missing,
+      ["supplierName", "sbomAuthor", "timestamp"],
+      "a consumer branches on stable ids; rendering display text belongs to the edge"
+    );
   });
 
   it("reports nothing missing for a compliant document", () => {
@@ -168,12 +165,10 @@ describe("NtiaReport — the derived verdict", () => {
   });
 
   it("is a report, not a failure — a non-compliant document still produces one", () => {
-    // Compliance is a question, not an error: a caller may legitimately emit a
-    // non-compliant SBOM and warn. Gating is the caller's decision to make.
     const report = NtiaReport.of(
       SbomDocument.make({ bomFormat: "CycloneDX", specVersion: "1.6", version: 1, components: [] })
     );
-    assert.instanceOf(report, NtiaReport);
+    assert.instanceOf(report, NtiaReport, "compliance is a question, and gating on it belongs to the caller");
     assert.lengthOf(report.elements, 7);
     assert.lengthOf(report.missing, 7);
   });

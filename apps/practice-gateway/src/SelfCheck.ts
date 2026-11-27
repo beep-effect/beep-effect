@@ -132,8 +132,6 @@ const refusalMessage = Match.type<SelfCheckError>().pipe(
   })
 );
 
-// Prints the refusal line, then fails with the error that tells the main
-// runner the failure is already on stdout.
 const refuse = (error: SelfCheckError) => {
   const message = refusalMessage(error);
   return encodeRefusal(GatewaySelfCheckRefusal.make({ ok: false, message })).pipe(
@@ -169,7 +167,6 @@ export const printGatewaySelfCheck = <R>(
   check: Effect.Effect<GatewaySelfCheckReport, SelfCheckError, R>
 ): Effect.Effect<void, SelfCheckFailure, R> =>
   check.pipe(
-    // The line encodes a value its schema already validated, so an encode failure is a defect.
     Effect.flatMap(flow(encodeReport, Effect.orDie)),
     Effect.matchEffect({ onFailure: refuse, onSuccess: Console.log }),
     Effect.withSpan("PracticeGateway.printSelfCheck")

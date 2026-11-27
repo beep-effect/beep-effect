@@ -32,9 +32,6 @@ import * as SchemaTransformation from "effect/SchemaTransformation";
 
 const $I = $EditorId.create("chat/attachment-model");
 
-// Non-throwing MIME decode: an empty or unrecognized `file.type` becomes a
-// `Result.Failure` (mapped to {@link AttachmentInvalidMimeType}) instead of a
-// thrown `ParseError` escaping the capture pipeline.
 const decodeMimeType = S.decodeUnknownResult(MimeType);
 
 /**
@@ -109,12 +106,6 @@ export type ImageAttachmentMimeType = typeof ImageAttachmentMimeType.Type;
  */
 export const DEFAULT_MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
 
-/**
- * Schema for a real DOM `File` instance.
- *
- * @category schemas
- * @since 0.0.0
- */
 const FileFromSelf = S.declare<File>((u): u is File => "File" in globalThis && u instanceof File).pipe(
   $I.annoteSchema("FileFromSelf", {
     description: "A captured DOM File instance.",
@@ -341,9 +332,7 @@ export const AttachmentFailure = S.Union([AttachmentTooLarge, AttachmentInvalidM
  */
 export type AttachmentFailure = typeof AttachmentFailure.Type;
 
-// Monotonic id source for captured attachments — ephemeral UI identity only, so
-// a simple counter suffices (no persistence, no cross-session stability needed).
-let attachmentSequence = 0;
+let ephemeralAttachmentSequence = 0;
 
 /**
  * The in-memory attachment value (app-local UI shape for v1): a captured file
@@ -458,10 +447,10 @@ export class ComposerAttachment extends S.Opaque<ComposerAttachment, { readonly 
     return Result.match(decodeMimeType(file.type), {
       onFailure: () => Result.fail(AttachmentInvalidMimeType.make({ filename: file.name, mimeType: file.type })),
       onSuccess: (mimeType) => {
-        attachmentSequence += 1;
+        ephemeralAttachmentSequence += 1;
         return Result.succeed(
           ComposerAttachment.make({
-            id: `attachment-${attachmentSequence}-${file.name}`,
+            id: `attachment-${ephemeralAttachmentSequence}-${file.name}`,
             filename: file.name,
             mimeType,
             size: file.size,

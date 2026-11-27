@@ -169,8 +169,6 @@ export const sanitizeStderrExcerpt: {
   );
 });
 
-// A truncated tail can start inside a credential, past the prefix every redaction pattern anchors
-// on, so the partial first line is dropped before the excerpt is sanitized.
 const completeLines = (tail: AcpStderrTail): string =>
   tail.truncated
     ? O.match(Str.indexOf("\n")(tail.text), { onNone: () => "", onSome: (index) => Str.slice(index + 1)(tail.text) })

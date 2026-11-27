@@ -107,6 +107,7 @@ describe("ci binary closure", () => {
         for (const file of [
           CI_BINARY,
           "packages/foundation/modeling/utils/src/Str.ts",
+          "packages/drivers/git/src/Git.ts",
           "bun.lock",
           ".bun-version",
           ".github/workflows/beep-ci-binary.yml",
@@ -147,7 +148,7 @@ describe("ci binary closure", () => {
         const base = yield* digestWith(root, []);
         for (const file of [
           "goals/heavy-pool-diet/PLAN.md",
-          "packages/drivers/git/src/Git.ts",
+          "packages/drivers/github/src/CheckRun.ts",
           "packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts",
           PATTERNS_JSON,
         ]) {

@@ -123,8 +123,6 @@ const missingFrom = (
   categories: ReadonlyArray<MailCategoryName>
 ): ReadonlyArray<MailCategoryName> => A.filter(categories, (category) => !A.contains(envelope.categories, category));
 
-// The starting checkpoint covers a message received before its instant, and one
-// received exactly at it only when the checkpoint lists the message's id.
 const isCovered = (scope: JobScope, envelope: MailEnvelope): boolean =>
   O.exists(
     scope.checkpointAt,
@@ -140,7 +138,6 @@ const tiedIds = (page: MailPage, last: MailEnvelope): ReadonlyArray<MailMessageI
     (envelope) => envelope.messageId
   );
 
-// Ids at the page's last instant; an earlier save at that same instant keeps its ids.
 const boundaryAfter = (previous: O.Option<Boundary>, page: MailPage, last: MailEnvelope): Boundary => ({
   at: last.receivedAt,
   ids: A.union(
@@ -199,7 +196,6 @@ const matterToFile = (scope: JobScope, verdict: Verdict): O.Option<MatterIndexEn
 const isContactOf = (entry: MatterIndexEntry, envelope: MailEnvelope): boolean =>
   A.some(O.toArray(envelope.senderAddress), (address) => A.contains(entry.contactAddresses, address));
 
-// A sender listed under more than one matter says nothing about which matter a file belongs to.
 const isExclusiveContact = (index: MatterIndex, matter: MatterIndexEntry, envelope: MailEnvelope): boolean =>
   isContactOf(matter, envelope) &&
   !A.some(index.entries, (entry) => entry.matterKey !== matter.matterKey && isContactOf(entry, envelope));

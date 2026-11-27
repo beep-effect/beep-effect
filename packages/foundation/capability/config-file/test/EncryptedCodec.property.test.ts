@@ -32,7 +32,6 @@ import { EncryptedCodec, EncryptedCodecKey } from "@beep/config-file/EncryptedCo
 import { JsonCodec } from "@beep/config-file/JsonCodec";
 import { JsoncCodec } from "@beep/config-file/JsoncCodec";
 
-// A real generated key keeps the property inexpensive while exercising AES-GCM.
 const generatedKey = EncryptedCodecKey.fromCryptoKey(
   Effect.promise(() =>
     globalThis.crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"])
@@ -51,14 +50,16 @@ for (const codec of [encryptedJson, encryptedJsonc]) {
         const argument = S.decodeUnknownEffect(S.Json);
         const parsed = yield* codec.parse(encoded);
         const decoded = yield* argument(parsed);
-        assert.isTrue(S.toEquivalence(S.Json)(decoded, value));
+        assert.isTrue(
+          S.toEquivalence(S.Json)(decoded, value),
+          "a generated key skips PBKDF2 yet still runs real AES-GCM"
+        );
         const stringify2 = yield* codec.stringify(decoded);
         const reparsed = yield* codec.parse(stringify2);
         assert.deepStrictEqual(reparsed, decoded);
-        // Normalize the plaintext: ciphertext intentionally changes with each random IV.
         const stringify3 = yield* JsonCodec.stringify(reparsed);
         const stringify4 = yield* JsonCodec.stringify(decoded);
-        assert.strictEqual(stringify3, stringify4);
+        assert.strictEqual(stringify3, stringify4, "compare plaintext, since each random IV changes the ciphertext");
       }),
     runs
   );

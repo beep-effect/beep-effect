@@ -233,19 +233,17 @@ describe("@beep/law-practice-use-cases schema parity", () => {
     })
   );
 
-  // `toLaw` is a declared schema whose guard is the only thing standing between
-  // the port and a non-callable value, so both branches are asserted here.
-  it("accepts only a callable toLaw port", () => {
+  it("accepts a callable toLaw port and rejects a non-callable one through the declared schema's guard", () => {
     pipe(decodeUnknownIrToLawShapeResult({ toLaw: () => Effect.void }), Result.isSuccess, assertTrue);
     pipe(decodeUnknownIrToLawShapeResult({ toLaw: "not-a-function" }), Result.isFailure, assertTrue);
   });
 
-  // Port outputs declare an Effect; the guard checks the runtime value only and
-  // never runs it, so a non-effect is the one input it must reject.
   it("accepts only Effect values as a port output", () => {
     Effect.succeed(1).pipe(isCountOutput, assertTrue);
     Effect.fail("unavailable").pipe(isCountOutput, assertTrue);
-    expect(isCountOutput(1)).toBe(false);
+    expect(isCountOutput(1), "the guard checks the runtime value and never runs it, so a non-effect is rejected").toBe(
+      false
+    );
     expect(isCountOutput(globalThis.Promise.resolve(1))).toBe(false);
     expect(isCountOutput(undefined)).toBe(false);
   });

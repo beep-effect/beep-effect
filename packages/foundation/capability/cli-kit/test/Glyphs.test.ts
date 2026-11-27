@@ -94,9 +94,10 @@ describe("Glyphs.select", () => {
     assert.strictEqual(Glyphs.select({ term: "dumb" }), Glyphs.ascii);
     assert.strictEqual(Glyphs.select({ ascii: "auto", term: "xterm" }), Glyphs.unicode);
     assert.strictEqual(Glyphs.select({ ascii: "auto", term: "DUMB" }), Glyphs.unicode, "TERM is case-sensitive");
-    assert.strictEqual(Glyphs.select({ ascii: "auto" }), Glyphs.unicode, "no term is not dumb");
+    assert.strictEqual(
+      Glyphs.select({ ascii: "auto" }),
+      Glyphs.unicode,
+      "no term is not dumb: select never reads TERM from process.env"
+    );
   });
-
-  // That select never reads the process (TERM in process.env changes nothing) is held for every source module by
-  // boundary.test.ts, which finds no `process.` read anywhere under src.
 });

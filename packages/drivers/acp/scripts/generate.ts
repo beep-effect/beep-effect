@@ -8,9 +8,7 @@ import { pipe } from "effect/Function";
 import * as S from "effect/Schema";
 import type { ExtraRenderer, NamedTransform, SpecSource } from "@beep/codegen-kit";
 
-/** Pinned ACP generation-2 schema release (GitHub prerelease tag). */
 const V2_SCHEMA_RELEASE = "schema-v2.0.0-alpha.9";
-/** Pinned ACP generation-1 schema release (GitHub release tag). */
 const V1_SCHEMA_RELEASE = "schema-v1.26.0";
 
 const packageRoot = `${import.meta.dirname}/..`;
@@ -19,10 +17,6 @@ const $I = $AcpId.create("scripts/generate");
 const releaseAsset = (tag: string, asset: string): string =>
   `https://github.com/agentclientprotocol/agent-client-protocol/releases/download/${tag}/${asset}`;
 
-/**
- * Generation 2 keeps the historical cache paths (`spec/*.unstable.json`) so consumers that read the
- * cache by path keep working; generation 1 caches live under `spec/v1/`.
- */
 const cachedAsset = (tag: string, cacheDir: string, asset: string): SpecSource => ({
   _tag: "url",
   url: releaseAsset(tag, asset),
@@ -31,16 +25,10 @@ const cachedAsset = (tag: string, cacheDir: string, asset: string): SpecSource =
   cachePath: `${packageRoot}/${cacheDir}/${asset}`,
 });
 
+// decision: v2-spec-cache-stays-at-spec-root
 const V2_CACHE_DIR = "spec";
 const V1_CACHE_DIR = "spec/v1";
 
-/**
- * JSON Schema normalizations the pinned specs need before the Effect importer can read them:
- * nullable type arrays, `unevaluatedProperties: true`, forward-compatible `not` discriminator
- * exclusions, discriminated `oneOf` as `anyOf`, base properties that union branches narrow (the
- * `IdleStateUpdate` stop reasons since `schema-v2.0.0-alpha.9` / `schema-v1.26.0`), and `allOf`
- * distribution over unions.
- */
 const acpTransforms: ReadonlyArray<NamedTransform> = [
   "nullableTypeArray",
   "unevaluatedPropertiesOpen",
