@@ -50,6 +50,7 @@ import {
   CiLedgerReport,
   CiLedgerRow,
   CiLedgerRun,
+  CiLedgerRunLogs,
   CiLedgerRunRow,
   CiLedgerSourceRow,
   CiLedgerTestPlan,
@@ -695,25 +696,77 @@ const readJobLog = Effect.fn("CiLedgerReader.readJobLog")(function* (job: CiWork
 const readOptionalLog = (job: O.Option<CiWorkflowJob>) =>
   O.match(job, { onNone: () => Effect.succeedNone, onSome: readJobLog });
 
+const testPlanJobOf = (jobs: ReadonlyArray<CiWorkflowJob>): O.Option<CiWorkflowJob> =>
+  latestJobNamed(jobs, CiSupportJobName.Enum["Test Plan"]);
+
+const catchAllJobsOf = (jobs: ReadonlyArray<CiWorkflowJob>): ReadonlyArray<O.Option<CiWorkflowJob>> =>
+  A.map(CATCH_ALL_PARTITIONS, ([lane, partition]) => latestJobNamed(jobs, ciLaneShardJobName(partition, lane)));
+
+/**
+ * The number of job logs {@link readCiLedgerRunLogs} reads for a run's jobs.
+ *
+ * **Details**
+ *
+ * One for the latest `Test Plan` job and one for each latest catch-all
+ * partition job the run has, so a caller that bounds its GitHub reads can
+ * charge them before reading.
+ *
+ * **Example** (A run without a Test Plan job)
+ *
+ * ```ts
+ * import { ciLedgerLogReads } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(ciLedgerLogReads([])) // 0
+ * ```
+ *
+ * @param jobs - The run's per-attempt job union.
+ * @returns How many job logs the read would request.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const ciLedgerLogReads = (jobs: ReadonlyArray<CiWorkflowJob>): number =>
+  A.length(A.getSomes([testPlanJobOf(jobs), ...catchAllJobsOf(jobs)]));
+
+/**
+ * Read the logs a run's Test Plan join needs: its latest `Test Plan` job and
+ * its latest catch-all partition jobs.
+ *
+ * **Details**
+ *
+ * A log that cannot be read leaves its part absent rather than failing, so the
+ * fold reports those legs as undetermined. `beep ci ledger` and
+ * `beep ci certainty` both read through this, so they join the same logs.
+ *
+ * **Example** (Reference the reader)
+ *
+ * ```ts
+ * import { readCiLedgerRunLogs } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(typeof readCiLedgerRunLogs)
+ * ```
+ *
+ * @param jobs - The run's per-attempt job union.
+ * @returns The run's parsed Test Plan output and partition selection lines.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const readCiLedgerRunLogs = Effect.fn("CiLedger.readRunLogs")(function* (jobs: ReadonlyArray<CiWorkflowJob>) {
+  const planLog = yield* readOptionalLog(testPlanJobOf(jobs));
+  const catchAllLogs = yield* Effect.forEach(catchAllJobsOf(jobs), readOptionalLog, { concurrency: 1 });
+  return CiLedgerRunLogs.make({
+    partitionProofs: A.flatMap(A.getSomes(catchAllLogs), parseCiLedgerPartitionProofs),
+    testPlan: O.flatMap(planLog, parseCiLedgerTestPlan),
+  });
+});
+
 const readRun = Effect.fn("CiLedgerReader.readRun")(function* (runId: number) {
   const github = yield* CiLaneTimingGithubClient;
   const run = yield* github
     .getJson(`repos/{owner}/{repo}/actions/runs/${runId}`)
     .pipe(Effect.flatMap(flow(decodeRun, CiCommandError.mapError(`Cannot decode run ${runId}.`))));
   const read = yield* collectCiWorkflowRunAttemptJobs(run.id, run.run_attempt);
-  const planLog = yield* readOptionalLog(latestJobNamed(read.jobs, CiSupportJobName.Enum["Test Plan"]));
-  const catchAllLogs = yield* Effect.forEach(
-    CATCH_ALL_PARTITIONS,
-    ([lane, partition]) => readOptionalLog(latestJobNamed(read.jobs, ciLaneShardJobName(partition, lane))),
-    { concurrency: 1 }
-  );
-  return CiLedgerRun.make({
-    jobs: read.jobs,
-    partialReads: read.partialReads,
-    partitionProofs: A.flatMap(A.getSomes(catchAllLogs), parseCiLedgerPartitionProofs),
-    run,
-    testPlan: O.flatMap(planLog, parseCiLedgerTestPlan),
-  });
+  const logs = yield* readCiLedgerRunLogs(read.jobs);
+  return CiLedgerRun.make({ ...logs, jobs: read.jobs, partialReads: read.partialReads, run });
 });
 
 /**
