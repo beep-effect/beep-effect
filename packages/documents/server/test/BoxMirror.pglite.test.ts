@@ -20,7 +20,6 @@ import * as Path from "effect/Path";
 import * as SqlClient from "effect/sql/SqlClient";
 
 type Mirror = Context.Service.Shape<typeof BoxMirror>;
-// Uploads twice from two runtimes: a success replays its receipt; a failure names the call and its stage both times.
 const uploadTwice = Effect.fnUntraced(function* (
   mirror: Mirror,
   args: Parameters<Mirror["uploadFile"]>[0],
@@ -30,13 +29,16 @@ const uploadTwice = Effect.fnUntraced(function* (
   if (outcome === "completed") {
     const first = yield* mirror.uploadFile(args);
     const second = yield* mirror.uploadFile(retried);
-    expect(second).toEqual(first);
+    expect(second, "a success uploaded again from another runtime replays its receipt").toEqual(first);
     return;
   }
   const expected = { operation: "uploadFile", stage: outcome === "stale" ? "stale-input" : "uncertain-outcome-held" };
   for (const attempt of [args, retried]) {
     const failure = yield* Effect.flip(mirror.uploadFile(attempt));
-    expect({ operation: failure.operation, stage: failure.stage }).toEqual(expected);
+    expect(
+      { operation: failure.operation, stage: failure.stage },
+      "a failure names the call and its stage on both runtimes"
+    ).toEqual(expected);
   }
 });
 const infrastructure = Layer.mergeAll(PgliteTestLayer, BunServices.layer, DmsMirrorFixtureLayer);
@@ -76,11 +78,12 @@ describe("BoxMirror durable intent receipts", () => {
           yield* uploadTwice(mirror, args, outcome);
           const counts = yield* fixture.counts;
           expect(counts.uploadFile - before.uploadFile).toBe(outcome === "stale" ? 0 : 1);
-          // Stale input fails before any Box request, so no intent is left in doubt.
           const sql = yield* SqlClient.SqlClient;
           const unsettled = yield* sql`SELECT count(*)::int AS n FROM documents_sync_box_receipt
             WHERE operation_id = ${`${args.operationId}/1`} AND result IS NULL`;
-          expect(unsettled).toEqual([{ n: outcome === "uncertain" ? 1 : 0 }]);
+          expect(unsettled, "stale input fails before any Box request, so no intent is left in doubt").toEqual([
+            { n: outcome === "uncertain" ? 1 : 0 },
+          ]);
           if (outcome === "uncertain") {
             const evidence = {
               remoteId: V.RemoteItemId.make("verified-remote"),

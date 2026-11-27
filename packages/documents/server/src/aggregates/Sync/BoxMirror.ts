@@ -37,9 +37,7 @@ const isLocalFailure = (error: D.DmsMirrorUnavailable | BoxMirrorUnavailable): e
   S.is(BoxMirrorUnavailable)(error) && A.contains(localStages, error.stage);
 const encode = S.encodeEffect(S.fromJsonString(Receipt));
 const decode = S.decodeUnknownEffect(S.fromJsonString(Receipt));
-// Fingerprints contain only reference metadata, never bytes or credentials.
-const fingerprint = S.encodeEffect(S.fromJsonString(S.Unknown));
-// `operation` names the Box call; `stage` names where the adapter stopped it before or around that call.
+const metadataFingerprint = S.encodeEffect(S.fromJsonString(S.Unknown));
 const unavailable = (operation: V.MirrorOperation, stage: MirrorFailureStage | null = null) =>
   BoxMirrorUnavailable.make({
     retryable: false,
@@ -47,8 +45,6 @@ const unavailable = (operation: V.MirrorOperation, stage: MirrorFailureStage | n
     operation,
     stage,
   });
-// One client span per adapter operation, under the kernel's `Domain.external` span. It records the
-// operation and, on failure, only where the call stopped: never arguments, paths or Box text.
 const boxCall =
   (operation: VaultSyncBoxOperation) =>
   <A, R>(self: Effect.Effect<A, BoxMirrorUnavailable, R>) =>
@@ -64,6 +60,11 @@ const boxCall =
     );
 /**
  * Resolves the authorized local vault root for a destination at call time.
+ *
+ * **Gotchas**
+ *
+ * The adapter reports a failed `resolve` as a `local-root` failure of the call it is serving, because the resolver
+ * cannot know that call; the operation on the resolver's own error is discarded.
  *
  * **Example** (Inspect the adapter)
  * ```ts
@@ -125,6 +126,15 @@ export const BoxMirrorNoEvidenceLive = Layer.succeed(BoxMirrorEvidence, {
 /**
  * Adapts a destination-scoped DmsMirrorBox or DmsMirrorFixture with durable mutation receipts.
  *
+ * **Details**
+ *
+ * A mutation commits its receipt claim before calling Box, so a second caller of the same operation and generation
+ * can only read the stored result or inspect evidence. A local read failure happens before any Box request, so it
+ * releases the claim and reports its stage; any other failure may have reached Box and stays held as
+ * `uncertain-outcome-held`. Receipt fingerprints hold only reference metadata, never bytes or credentials. Each
+ * operation runs in one `BoxMirror.call` client span under the kernel's `Domain.external` span, which records the
+ * operation and, on failure, only where the call stopped: never arguments, paths or Box text.
+ *
  * **Example** (Inspect the adapter)
  * ```ts
  * import { BoxMirrorLive } from "@beep/documents-server/aggregates/Sync";
@@ -159,7 +169,6 @@ export const BoxMirrorLive = BoxMirror.toLayer(
       relPath: V.VaultRelPath,
       digest: string
     ) {
-      // The resolver cannot know the call it serves; its failure is a local-root stage of this call.
       const configured = yield* roots
         .resolve(destinationId)
         .pipe(Effect.mapError(() => unavailable(verb, "local-root")));
@@ -176,7 +185,6 @@ export const BoxMirrorLive = BoxMirror.toLayer(
       call: Effect.Effect<D.DmsRemoteItem, D.DmsMirrorUnavailable | BoxMirrorUnavailable>
     ) {
       const receiptId = `${operationId}/${generation}`;
-      // Claim is committed before calling Box. A second caller can only inspect evidence.
       const claimed = yield* sql`INSERT INTO documents_sync_box_receipt (operation_id, fingerprint)
       VALUES (${receiptId}, ${fingerprint}) ON CONFLICT DO NOTHING RETURNING operation_id`.pipe(Effect.orDie);
       if (A.isReadonlyArrayEmpty(claimed)) {
@@ -195,8 +203,6 @@ export const BoxMirrorLive = BoxMirror.toLayer(
       }
       const item = yield* call.pipe(
         Effect.catch((error) =>
-          // A local read failure happens before any Box request, so nothing can be in doubt:
-          // release the claim and report it with its stage. Anything else may have reached Box and stays held.
           isLocalFailure(error)
             ? sql`DELETE FROM documents_sync_box_receipt WHERE operation_id = ${receiptId} AND result IS NULL`.pipe(
                 Effect.orDie,
@@ -217,7 +223,7 @@ export const BoxMirrorLive = BoxMirror.toLayer(
       args: { readonly operationId: V.OperationId; readonly passId: string; readonly generation: number },
       call: Effect.Effect<D.DmsRemoteItem, D.DmsMirrorUnavailable | BoxMirrorUnavailable>
     ) {
-      const encoded = yield* fingerprint({ verb, args: Struct.omit(args, ["passId"]) }).pipe(Effect.orDie);
+      const encoded = yield* metadataFingerprint({ verb, args: Struct.omit(args, ["passId"]) }).pipe(Effect.orDie);
       return yield* mutation(verb, args.operationId, args.generation, encoded, call);
     });
     const implementation: Context.Service.Shape<typeof BoxMirror> = {
