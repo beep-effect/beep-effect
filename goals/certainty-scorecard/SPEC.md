@@ -230,11 +230,14 @@ applies. "Reader" is the goal or gated candidate whose acceptance or gate is jud
       `history/certainty-nightly.md`, with their summaries in `history/certainty-nightly/`.
 - [ ] Each report shows push to Yeet-mergeable beside push to every required green, the code and docs classes
       apart, superseded-head share, the main verdict rate, and every row in "Numbers the scorecard reports".
-- [ ] Each report carries a "Not covered" section naming at least: Vercel deployment statuses; per-task
+- [x] Each report carries a "Not covered" section naming at least: Vercel deployment statuses; per-task
       hosted Turbo durations; the hosted concurrent-job ceiling (no admin read); agent seats as admission
       demand; fleet hosts or T3 lanes not yet read; local figures censored before retention; Test Integration
       partition setup versus body and its 1,395-1,551 s outlier legs; Property Laws nightly verdicts
       (`.github/workflows/property-laws-nightly.yml`); runs the compute-profile refusal routed to hosted.
+      Met (`CI_CERTAINTY_NOT_COVERED` in `Certainty.ts`, rendered by every report): the 2026-11-26 nightly,
+      run 46015289067 on 75c299bf25 (after #3609), lists all nine with three more, and the 2026-11-14 to
+      2026-11-20 summaries under `history/certainty-nightly/` list them as well.
 - [x] **Partition jobs fully mapped:** on a post-#3043/#3046 reference run (20 Test Integration partitions, 24 Test Unit
       jobs, Test Plan, four Property Laws slices since #3056) every job maps to a lane or an
       explicit non-lane class (conservation test: mapped plus unknown minutes equal total), the old receipt
