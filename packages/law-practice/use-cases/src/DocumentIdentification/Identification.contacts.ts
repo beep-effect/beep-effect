@@ -50,8 +50,10 @@ const phone = (s: string): O.Option<PhoneNumber> => {
  *
  * **Gotchas**
  *
- * Role mailboxes such as `info@` never form the first rung: they are shared, so two people who share only
- * a role mailbox keep distinct ids.
+ * Role mailboxes such as `info@` never form the first rung: they are shared, so two named people who share
+ * only a role mailbox keep distinct ids. A nameless card's fallback rung takes all its mailboxes, role ones
+ * included and ahead of phone numbers, so two nameless cards whose only mailbox is the same `info@` get
+ * the same id even when their phone numbers differ.
  *
  * **Example** (Normalise no cards)
  *
