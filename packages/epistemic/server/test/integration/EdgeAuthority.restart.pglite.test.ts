@@ -220,7 +220,7 @@ if (!shouldRunPgliteIntegration) {
             );
             expect(
               head.version,
-              "the first scope's PGlite has shut down and this one never migrates: the data files carry the history"
+              "the first scope's PGlite shut down and this one never migrates: the data files carry the history, fsync or not"
             ).toBe(2);
             assertSome(head.supersedesId, written.formerId);
             expect(DateTime.toEpochMillis(head.recordedAt)).toBe(2_000);

@@ -168,14 +168,14 @@ const supersedeFact = Effect.fnUntraced(function* (input: {
 
 const $I = $EpistemicServerId.create("test/RetentionAuthority.pglite.test");
 
-const WindowWidthMillis = RetentionPolicy.fields.hotThroughMillis.check(S.isLessThanOrEqualTo(1_000_000));
-const PolicyArbitrary = Arbitrary.schema(
+const BoundedPolicyPart = RetentionPolicy.fields.hotThroughMillis.check(S.isLessThanOrEqualTo(1_000_000));
+const OrderedPolicyByConstruction = Arbitrary.schema(
   S.Struct({
-    hotThroughMillis: WindowWidthMillis,
-    warmThroughMillis: WindowWidthMillis,
-    coldThroughMillis: WindowWidthMillis,
-    decayScaleMillis: WindowWidthMillis,
-    payloadBudgetBytes: WindowWidthMillis,
+    hotThroughMillis: BoundedPolicyPart,
+    warmThroughMillis: BoundedPolicyPart,
+    coldThroughMillis: BoundedPolicyPart,
+    decayScaleMillis: BoundedPolicyPart,
+    payloadBudgetBytes: BoundedPolicyPart,
   })
 ).pipe(
   Arbitrary.map((parts) =>
@@ -271,7 +271,7 @@ describe("retention authority rebuild", { concurrent: false }, () => {
 
     it.effect.prop(
       "rebuilds disposable retention bytes at two coordinates after full deletion without changing authority",
-      [PolicyArbitrary],
+      [OrderedPolicyByConstruction],
       ([candidate]) =>
         Effect.gen(function* () {
           const scenario = yield* RetentionScenario;
