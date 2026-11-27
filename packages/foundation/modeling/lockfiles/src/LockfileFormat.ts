@@ -52,9 +52,7 @@ export const LockfileFormat = LiteralKit(["bun", "npm", "pnpm", "yarn"]).pipe(
  */
 export type LockfileFormat = typeof LockfileFormat.Type;
 
-// Primary first — filenameFor and fromFilename both read element zero, so the
-// primary spelling has exactly one home.
-const FILENAMES: Readonly<Record<LockfileFormat, readonly [string, ...ReadonlyArray<string>]>> = {
+const FILENAMES: Readonly<Record<LockfileFormat, readonly [primary: string, ...alternates: ReadonlyArray<string>]>> = {
   bun: ["bun.lock", "bun.lockb"],
   npm: ["package-lock.json", "npm-shrinkwrap.json"],
   pnpm: ["pnpm-lock.yaml"],

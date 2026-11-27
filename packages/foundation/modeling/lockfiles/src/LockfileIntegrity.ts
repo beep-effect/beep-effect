@@ -205,7 +205,7 @@ export class LockfileIntegrity extends S.Opaque<LockfileIntegrity, { readonly br
     const manifestNames = MutableHashSet.fromIterable(A.map(manifests, (m) => m.name));
     const missingWorkspaces = A.filter(A.fromIterable(manifestNames), (n) => !MutableHashSet.has(lockfileWsNames, n));
     const extraWorkspaces = A.filter(A.fromIterable(lockfileWsNames), (n) => !MutableHashSet.has(manifestNames, n));
-    const resolvedIndex = resolvedVersions(lockfile);
+    const resolvedIndex = allResolvedVersionsByName(lockfile);
     const unsatisfiedConstraints = A.flatMap(manifests, (manifest) => unsatisfiedRows(manifest, resolvedIndex));
     return LockfileIntegrity.make({
       valid: missingWorkspaces.length === 0 && extraWorkspaces.length === 0 && unsatisfiedConstraints.length === 0,
@@ -216,9 +216,7 @@ export class LockfileIntegrity extends S.Opaque<LockfileIntegrity, { readonly br
   });
 }
 
-// A lockfile can resolve the same name at several versions; keep them all so
-// the verdict never depends on entry order.
-const resolvedVersions = (lockfile: Lockfile): MutableHashMap.MutableHashMap<string, Array<string>> => {
+const allResolvedVersionsByName = (lockfile: Lockfile): MutableHashMap.MutableHashMap<string, Array<string>> => {
   const index = MutableHashMap.empty<string, Array<string>>();
   for (const p of lockfile.packages) {
     const versions = MutableHashMap.get(index, p.name);
@@ -230,9 +228,6 @@ const resolvedVersions = (lockfile: Lockfile): MutableHashMap.MutableHashMap<str
 
 type UnsatisfiedConstraint = (typeof LockfileIntegrity.Encoded)["unsatisfiedConstraints"][number];
 
-// Every declared constraint of one manifest that no parseable resolved
-// candidate satisfies. `workspace:`/`link:`/`file:` specifiers, names the
-// lockfile never resolved and unparseable rows are skipped.
 const unsatisfiedRows = (
   manifest: WorkspaceManifest,
   resolvedIndex: MutableHashMap.MutableHashMap<string, Array<string>>
@@ -257,8 +252,6 @@ const unsatisfiedRows = (
     )
   );
 
-// True only when the range parses, some candidate parses, and no parsed
-// candidate satisfies the range.
 const isUnsatisfied = (constraint: string, candidates: ReadonlyArray<string>): boolean => {
   const range = Exit.getSuccess(decodeRange(constraint));
   const versions = A.getSomes(A.map(candidates, (candidate) => Exit.getSuccess(decodeSemVer(candidate))));

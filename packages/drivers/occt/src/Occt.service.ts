@@ -101,11 +101,10 @@ const makeService = Effect.fn("Occt.makeService")(function* () {
       try: () => buildParts(solid),
       catch: (cause) => OcctError.fromUnknown("solid-build", "The kernel could not build the solid.", cause),
     });
-    // Overlaps read the part shapes, which compounding disposes, so count first.
     return yield* Effect.try({
       try: () => {
-        const partOverlaps = countOverlaps(parts);
-        return summarize({ built: compoundParts(parts), partOverlaps });
+        const overlapsOfUncompoundedParts = countOverlaps(parts);
+        return summarize({ built: compoundParts(parts), partOverlaps: overlapsOfUncompoundedParts });
       },
       catch: (cause) => OcctError.fromUnknown("solid-build", "The kernel could not measure the solid.", cause),
     });

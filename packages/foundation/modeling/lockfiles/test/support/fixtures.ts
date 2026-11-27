@@ -1,7 +1,3 @@
-// These checked-in historical documents are parser input, never install roots.
-// Vite inlines each `.fixture` file's raw UTF-8 text at transform time (the
-// `import.meta.glob` precedent of the markdown corpus), so the suites read the
-// captures without touching a filesystem at test time.
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -10,9 +6,12 @@ import * as Str from "effect/String";
 const FIXTURE_ROOT = "../fixtures/";
 const FIXTURE_SUFFIX = ".fixture";
 
-const raw = import.meta.glob<string>("../fixtures/**/*.fixture", { query: "?raw", import: "default", eager: true });
+const viteInlinedFixtureText = import.meta.glob<string>("../fixtures/**/*.fixture", {
+  query: "?raw",
+  import: "default",
+  eager: true,
+});
 
-// `../fixtures/npm/v1/package-lock.json.fixture` → `npm/v1/package-lock.json`.
 const logicalPathOf = (globKey: string): string =>
   Str.slice(FIXTURE_ROOT.length, globKey.length - FIXTURE_SUFFIX.length)(globKey);
 
@@ -36,7 +35,7 @@ const logicalPathOf = (globKey: string): string =>
  * @since 0.0.0
  */
 export const corpus: Readonly<Record<string, string>> = R.fromEntries(
-  A.map(R.toEntries(raw), ([key, text]) => [logicalPathOf(key), text] as const)
+  A.map(R.toEntries(viteInlinedFixtureText), ([key, text]) => [logicalPathOf(key), text] as const)
 );
 
 /**
