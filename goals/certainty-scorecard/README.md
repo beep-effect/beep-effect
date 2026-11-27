@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `completed-retained` (final PR #3617)
+Lifecycle: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -37,7 +37,7 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P4 Close — slice 17, the closeout PR. Every implementation slice has merged:
+P1 Implement — slice 19 next. These slices have merged:
 
 | Slice | Lever | PR | What it added |
 | --- | --- | --- | --- |
@@ -56,9 +56,12 @@ P4 Close — slice 17, the closeout PR. Every implementation slice has merged:
 | 18 | sibling rows | #3609 | heavy slot-minutes, heavy-queue and heavy-wait p95, Lint Policy wall, Property Laws, first-wave pickup, main cancel actor, replay inputs, the 7-day main horizon |
 
 #3305 moved the per-attempt job reads to 30-job pages. P2 is met: seven certified nights, UTC days 2026-11-14 to
-2026-11-20 (#3605, [`history/certainty-nightly.md`](./history/certainty-nightly.md)). The closeout ticks the
-remaining acceptance criteria against [`history/closeout-evidence-2026-11-27.md`](./history/closeout-evidence-2026-11-27.md)
-and the 2026-11-27 nightly, the first report scored by #3609's code. Wall-time, cache and dist baselines taken
+2026-11-20 (#3605, [`history/certainty-nightly.md`](./history/certainty-nightly.md)). Acceptance criteria 1 and 3 to 9 are ticked
+against [`history/closeout-evidence-2026-11-27.md`](./history/closeout-evidence-2026-11-27.md) and the 2026-11-26 nightly
+(run 46015289067), the first report scored by #3609's code. That report certified, but two rows of "Numbers the
+scorecard reports" exist only outside it: empty-leg runner-minutes (`ci ledger`) and local publish and verify
+(`yeet economics --fleet`). Slice 19 builds both into `beep ci certainty` (decision
+`criterion-2-rows-built-into-certainty`), and the closeout PR follows the first nightly that shows every row. Wall-time, cache and dist baselines taken
 before d8326d55935 (#3208) are not comparable with later readings (checkpoint
 `baselines-before-d8326d5593-not-comparable`), nor are check-lane baselines taken before 3e822c71c5 (#3242).
 
