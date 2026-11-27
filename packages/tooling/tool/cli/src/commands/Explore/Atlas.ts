@@ -427,6 +427,8 @@ const authoredStatusNote = (line: string): O.Option<string> => {
   );
 };
 
+const MARKER_LINE_BREAK_FRAGMENTS = 1;
+
 const linesOutsideGeneratedStatus = (section: ReadonlyArray<string>): O.Option<ReadonlyArray<string>> => {
   const text = A.join(section, "\n");
   return O.map(Result.getSuccess(SectionDocument.parseResult(text, STATUS_DIALECT)), (document) =>
@@ -434,11 +436,9 @@ const linesOutsideGeneratedStatus = (section: ReadonlyArray<string>): O.Option<R
       A.findFirst(document.sections, (placed) => placed.section.key === STATUS_SECTION_ID.key),
       {
         onNone: () => section,
-        // A marker owns its line, so the text before the region ends at a line
-        // break and the text after it starts at one.
         onSome: (placed) => [
-          ...A.dropRight(Str.split("\n")(Str.slice(0, placed.start)(text)), 1),
-          ...A.drop(Str.split("\n")(Str.slice(placed.end)(text)), 1),
+          ...A.dropRight(Str.split("\n")(Str.slice(0, placed.start)(text)), MARKER_LINE_BREAK_FRAGMENTS),
+          ...A.drop(Str.split("\n")(Str.slice(placed.end)(text)), MARKER_LINE_BREAK_FRAGMENTS),
         ],
       }
     )

@@ -472,12 +472,6 @@ export interface GitHubAppMintShape {
 /**
  * Owns the human-operated GitHub App manifest registration flow.
  *
- * **Details**
- *
- * The per-App divergences of the shared flow (log tag, vault item title, the Stored line's
- * closing instruction, and whether `op-doctor` runs before or after a store-failure line) are
- * kept exactly as each App's launcher emitted them.
- *
  * **Example** (Print a manifest)
  *
  * ```ts

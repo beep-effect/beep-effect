@@ -272,9 +272,7 @@ export interface PacketEventStoreShape {
  *
  * Every mutation first checks, under the packet lock, for an interrupted fork replacement, so an
  * absent canonical event directory is never read as a fresh stream; recovery never guesses among
- * backups. `append` checks only the lock's parent, `ops/`, before locking, because that parent
- * stays stable across an event-directory replacement; the stream itself is checked after the
- * lock is acquired.
+ * backups.
  *
  * **Example** (Yield the store inside an Effect)
  *

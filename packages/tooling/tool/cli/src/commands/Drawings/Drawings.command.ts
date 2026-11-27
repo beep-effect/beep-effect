@@ -518,6 +518,8 @@ const intakeIncludeOwnFlag = Flag.Boolean("include-own").pipe(
   Flag.withDefault(false),
   Flag.withDescription("For a conversation: let --pick choose the mailbox's own sent mail (drafts are never chosen)")
 );
+// Intake only reads mail, so it defaults to the docket-intake registration (Mail.ReadWrite on the
+// attorney's mailbox, no Mail.Send) rather than the send-capable M365_OUTBOX one.
 const intakeEnvPrefixFlag = Flag.String("env-prefix").pipe(
   Flag.withDefault("CLOUD_M365_DOCKET"),
   Flag.withDescription(

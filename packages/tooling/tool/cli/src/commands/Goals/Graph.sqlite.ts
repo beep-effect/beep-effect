@@ -251,7 +251,7 @@ const walksFor = (
  * A capability is available once a `completed-retained` packet provides it; a candidate provider
  * of an unavailable requirement is buildable but unfinished. A cycle is named by its root, the
  * least slug each member both reaches and is reached by, itself included. Unlock depth is the
- * breadth-first depth, bounded by the packet count, so both recursive queries terminate.
+ * breadth-first depth.
  *
  * **Example** (Build the query effect for an empty projection)
  *

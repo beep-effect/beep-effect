@@ -637,7 +637,7 @@ export const makeGoalPacketWorkingTreeReader = Effect.fn("Goals.makeGoalPacketWo
 ) {
   const path = yield* Path.Path;
   const base = makeGoalPacketFilesystemReader();
-  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: no kit member lists ignored files; raw stdout keeps NUL records
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-21): no kit member lists ignored files; raw stdout keeps NUL records
   const listed = yield* runRepoCommandCaptureRaw(
     "git",
     ["ls-files", "-z", "--others", "--ignored", "--exclude-standard", "--", GOALS_DIR],
@@ -1793,9 +1793,8 @@ const withoutPrunedFindings = Effect.fn("Goals.withoutPrunedFindings")(function*
  * The findings of a packet the checkout pruned or owns, and a link finding
  * whose target it pruned (see `@beep/repo-cli-kit/CheckoutSubject`), are
  * skipped and counted. A packet whose directory remains is present, so it is
- * checked in full unless the checkout's declaration owns it. The checkout inventory is read only
- * when there is a finding to judge, so a clean run reads nothing more. An exploration finding's
- * slug is already its packet root, `explorations/<slug>`.
+ * checked in full unless the checkout's declaration owns it. An exploration finding's slug is
+ * already its packet root, `explorations/<slug>`.
  *
  * **Gotchas**
  *
@@ -1812,10 +1811,8 @@ const withoutPrunedFindings = Effect.fn("Goals.withoutPrunedFindings")(function*
  *   and silences both staleness-shaped advisories.
  * - Online, a committed closeout is classified from hosted facts, the only completion path that
  *   can block. A legacy row (a final but no committed closeout) whose final merged before the
- *   closeout window reads its stored receipt instead, skipping the thread read. One memoized
- *   completion port serves the whole run, so packets sharing a base branch read its rule-suite
- *   listing once. A committed closeout prints the same line `session open` and `goals explain`
- *   print.
+ *   closeout window reads its stored receipt instead, skipping the thread read. A committed
+ *   closeout prints the same line `session open` and `goals explain` print.
  *
  * **Example** (Verify doctor returns Effect)
  *

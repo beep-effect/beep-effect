@@ -11,5 +11,6 @@ enforcedBy: []
 
 Docgen spawns `node_modules/.bin/turbo` directly and always passes `--no-daemon`, so no process outlives the turbo child.
 Reason: on the fleet image a resident bun wrapper and a daemon spawned inside the child both held process handles after successful runs, which kept the hosted Docgen lane's bun wrapper from exiting (a hang, or SIGABRT at teardown).
-Turbo 2.10 dropped the `--daemon=false` value form; `--no-daemon` is still accepted.
+Spawning turbo from this command also lets the typed lane concurrency setting govern full and affected proofs through one local command surface.
+Turbo 2.10 no longer uses the daemon for `turbo run` and dropped the `--daemon=false` value form; `--no-daemon` is still accepted.
 Rejected: `bunx turbo`, which leaves a resident bun wrapper between the CLI and turbo, and the default daemon.

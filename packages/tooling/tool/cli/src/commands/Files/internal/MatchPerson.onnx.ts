@@ -119,8 +119,9 @@ class Graph {
     if (O.isSome(previous)) return previous.value;
     this.used = HashMap.set(this.used, name, name);
     this.requested.push(name);
+    const collectingPassInput = () => name;
     return O.match(HashMap.get(this.tensors, name), {
-      onNone: () => name,
+      onNone: collectingPassInput,
       onSome: ({ shape, data, dtype }) => this.tensor(name, shape, data, dtype === "F32" ? 1 : 7),
     });
   }
@@ -505,11 +506,6 @@ export const decodeFaceSafetensors = Effect.fn("Files.decodeFaceSafetensors")(fu
 });
 /**
  * Decode a checksum-verified safetensors payload and compile the fixed graph.
- *
- * **Details**
- *
- * The writer emits only the ONNX protobuf fields this fixed graph uses, with little-endian
- * numeric tensor payloads.
  *
  * **Gotchas**
  *

@@ -131,9 +131,7 @@ export interface HarnessLedgerServiceShape {
  * **Gotchas**
  *
  * - `disposition` checks for a successor and appends under the ledger write fence: interleaved
- *   with another writer, two dispositions of one head would fork the chain. `pruneProposals`
- *   with `write` reads the blocking heads and appends under the same fence, so one surface is
- *   never proposed twice.
+ *   with another writer, two dispositions of one head would fork the chain.
  * - An open `proposed` head blocks a fresh proposal under any regime; a human decision blocks
  *   only while it stands under the current harness hash, because evidence gathered under an older
  *   harness has expired. A tombstone never blocks. A decision is dated by `decidedUnder`; a row

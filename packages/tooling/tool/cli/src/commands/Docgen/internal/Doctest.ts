@@ -1018,6 +1018,8 @@ const replaceSourceLine = (
 ): Effect.Effect<ReadonlyArray<string>, DoctestRewriteError> =>
   Effect.fromOption(A.replace(lines, index, replacement), () => error);
 
+const WHOLE_FENCE_MARKER_RUN = /(`{3,}|~{3,}).*$/;
+
 const applyMarkerEdit = (
   file: string,
   lines: ReadonlyArray<string>,
@@ -1035,7 +1037,7 @@ const applyMarkerEdit = (
   return replaceSourceLine(
     lines,
     openingIndex,
-    Str.replace(/(`{3,}|~{3,}).*$/, `$1${plan.expectedInfoString}`)(opening),
+    Str.replace(WHOLE_FENCE_MARKER_RUN, `$1${plan.expectedInfoString}`)(opening),
     DoctestRewriteError.make({
       message: "Opening fence no longer matches the analyzed location.",
       file,
@@ -1234,11 +1236,6 @@ export const DoctestFenceAnalyzerLive = Layer.effect(
 
 /**
  * Supplies the filesystem-backed doctest rewriter used by CLI commands.
- *
- * **Gotchas**
- *
- * Rewriting an opening fence's info string keeps the whole marker run: a four-backtick opener cut
- * to three would let a three-backtick line in the body close the fence.
  *
  * **Example** (Inspect the live rewriter layer)
  *
