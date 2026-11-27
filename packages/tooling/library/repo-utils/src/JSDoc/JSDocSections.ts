@@ -515,11 +515,8 @@ export class ParseJSDocSectionsResult extends S.Opaque<ParseJSDocSectionsResult,
  * **Details**
  *
  * Fence bodies of any language are blanked before sections are read, so a
- * section heading quoted inside code is not read as a section. A text with no
- * run of three backticks or tildes has no fence and skips the parser. When the
- * CommonMark parser refuses the text, a line scanner reads the fences instead:
- * every line between an opening fence and its closer is blanked, to the end of
- * the text for an unterminated fence.
+ * section heading quoted inside code is not read as a section. An unterminated
+ * fence runs to the end of the comment.
  *
  * **Example** (Parse an Example section)
  *

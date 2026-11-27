@@ -167,7 +167,7 @@ describe("detectCycles", () => {
 
       const cycle = O.getOrThrow(A.head(cycles));
       expect(cycle[0], "a cycle path ends on the vertex it starts from").toBe(cycle[cycle.length - 1]);
-      expect(cycle.length, "three distinct vertices plus the repeated start").toBeGreaterThanOrEqual(3);
+      expect(cycle.length, "a three-vertex cycle path has at least three entries").toBeGreaterThanOrEqual(3);
       expect(cycle).toContain("A");
       expect(cycle).toContain("B");
       expect(cycle).toContain("C");

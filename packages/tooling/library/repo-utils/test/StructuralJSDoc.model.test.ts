@@ -35,14 +35,14 @@ const StructuralArbitrary = Arbitrary.schema(StructuralJSDoc);
 describe("StructuralJSDoc", () => {
   it("covers exactly the structural tag family", () => {
     const sortTags = A.sort(Order.String);
-    expect(sortTags(structuralTags), "the union covers exactly the structural tag family as JSDoc names it").toEqual(
+    expect(sortTags(structuralTags), "the union covers exactly the structural tag family").toEqual(
       sortTags(STRUCTURAL_TAGS)
     );
   });
 
   for (const tag of structuralTags) {
     it.effect.prop(
-      `dispatches schema-derived "${tag}" values through the exhaustive matcher`,
+      `dispatches schema-derived "${tag}" values through the exhaustive matcher, one property per member so every branch runs`,
       [Arbitrary.schema(StructuralJSDoc.cases[tag])],
       ([value]) =>
         Effect.gen(function* () {

@@ -189,8 +189,8 @@ const walkConditions = (conditions: UntrustedRecord, captured: O.Option<string>,
  *
  * Selection follows tsc. An exact subpath key decides the subpath even when its
  * targets miss; otherwise, among matching single-`*` patterns, the one with the
- * longest text before the star wins, the earlier on a tie. An object whose keys
- * all start with `.` is a subpath map; any other string, array or condition
+ * longest text before the star wins, the earlier on a tie. A non-empty object whose
+ * keys all start with `.` is a subpath map; any other string, array or condition
  * object is the `"."` target. Conditions are `require`, `types`, `node` and
  * `default`, walked in the map's insertion order.
  *

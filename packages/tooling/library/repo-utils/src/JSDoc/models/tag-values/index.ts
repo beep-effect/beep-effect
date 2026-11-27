@@ -343,6 +343,12 @@ const TypeScriptEnc = S.Union([S.toEncoded(OverloadValue)]);
  * Provides `.cases`, `.match`, `.guards`, and `.isAnyOf` for dispatching on
  * the parsed `_tag` discriminant.
  *
+ * **Gotchas**
+ *
+ * Each member is its class's `S.toEncoded` side, because `S.toTaggedUnion`
+ * needs object ASTs. A `TagValue` is therefore the encoded shape, not a class
+ * instance.
+ *
  * **Example** (Guarding param tag values)
  *
  * ```ts
@@ -356,7 +362,6 @@ const TypeScriptEnc = S.Union([S.toEncoded(OverloadValue)]);
  * @category models
  * @since 0.0.0
  */
-// decision: tag-value-union-of-encoded-sub-unions
 export const TagValue = S.Union([
   StructuralEnc,
   AccessModifierEnc,

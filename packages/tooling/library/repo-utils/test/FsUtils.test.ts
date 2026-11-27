@@ -548,9 +548,7 @@ describe("FsUtils", () => {
           if (Result.isSuccess(probe)) {
             yield* fs.chmod(`${tmpDir}/locked`, 0o755);
             return yield* Effect.sync(() =>
-              ctx.skip(
-                'OS does not enforce directory read permission for this process (uid 0 or CAP_DAC_OVERRIDE); the injected-fault cases cover the error branch. ctx.skip throws inside Effect.sync, so @effect/vitest first logs one ERROR "test is skipped; abort execution" line: that line is not a failure'
-              )
+              ctx.skip("OS does not enforce directory read permission for this process (uid 0 or CAP_DAC_OVERRIDE)")
             );
           }
 

@@ -553,7 +553,7 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
           ),
           Tuple.make(
             "packages/tooling/library/repo-cli-kit/src/tsmorph/ProjectFactory.ts",
-            "0cba005db0ea7e2389ce41a3a972bac2eae2db3507407951508fdf91d3d57036"
+            "72a3e84db0011a14d4c3cdbd0dd08f7958d70a63af85073e418a84df7e51772e"
           ),
           Tuple.make(
             "packages/foundation/capability/walker/src/Descend.ts",

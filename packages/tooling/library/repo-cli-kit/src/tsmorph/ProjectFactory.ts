@@ -19,11 +19,9 @@ type RepoTsMorphProjectInput = {
  *
  * **Gotchas**
  *
- * Only compiler options are read from the tsconfig: its include paths are never
- * enumerated, because even `skipAddingFilesFromTsConfig` walks them and races
- * with generated-docs cleanup. Only the glob matches are added, file by file,
- * since `addSourceFilesAtPaths` also registers parent directories, excluded
- * docs among them.
+ * Only compiler options are read from the tsconfig: its `include` and `files`
+ * entries are ignored and only the `sourceFileGlobs` matches are loaded. No
+ * parent directory of a matched file is registered with the project.
  *
  * **Example** (Load project from source globs)
  *
