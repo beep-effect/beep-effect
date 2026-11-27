@@ -5,10 +5,6 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-// This role file deliberately owns both runtime discovery (the config-provider
-// concern a `.config.ts` role would normally hold) and child-process execution:
-// a Security process is only ever spawned against a verified pin, so the two
-// concerns share one module rather than one reaching into the other.
 import * as Config from "effect/Config";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -44,6 +40,7 @@ const decodePluginMetadata = S.decodeEffect(PluginMetadata);
  * @category configuration
  * @since 0.0.0
  */
+// decision: security-runtime-owns-discovery-and-execution
 export const securityRuntime = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;

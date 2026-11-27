@@ -862,10 +862,6 @@ class CiWorkflowRunsPage extends S.Opaque<CiWorkflowRunsPage, { readonly brand: 
 const decodeCiWorkflowRunsPage = S.decodeUnknownEffect(CiWorkflowRunsPage);
 const decodeCiWorkflowJobsValue = S.decodeUnknownEffect(CiWorkflowJobsPage);
 
-/**
- * Number of retries after the first attempt, so a transient GitHub API failure
- * is attempted five times in total before it becomes a {@link CiCommandError}.
- */
 const GH_API_TRANSIENT_RETRY_COUNT = 4;
 
 const GhApiTransientKind = LiteralKit(["transport", "secondary-rate-limit"]).pipe(
@@ -875,29 +871,11 @@ const GhApiTransientKind = LiteralKit(["transport", "secondary-rate-limit"]).pip
 );
 type GhApiTransientKind = typeof GhApiTransientKind.Type;
 
-/**
- * Backoff base per transient class, doubled on every retry and jittered
- * upward by 0–20% so a fan-out of eight concurrent page fetches does not retry
- * in lockstep. The jitter is one-sided so the base is a floor: a secondary
- * rate limit never retries before the full minute GitHub asks for.
- * Transport blips clear in milliseconds (250ms → 2s); a secondary rate limit
- * needs minutes (GitHub asks for at least one minute before the first retry,
- * then exponential growth), so it waits 1m → 8m instead.
- */
 const GH_API_TRANSIENT_BASE_DELAY: Record<GhApiTransientKind, Duration.Duration> = {
   transport: Duration.millis(250),
   "secondary-rate-limit": Duration.minutes(1),
 };
 
-/**
- * What marks a failed read as a transport-class transient failure: the 502,
- * 503 and 504 gateway statuses, a failure with no status at all, or a reason
- * naming a broken connection (`bad record MAC`, a connection reset, an
- * unexpected EOF, a timeout; octokit reports a request that never reached
- * GitHub as a status-500 failure whose reason is the network error). Every other
- * failure, including 4xx and a 5xx GitHub itself answered, fails immediately.
- * Observed once per several thousand paginated GETs under a fan-out of eight.
- */
 const GH_API_TRANSPORT_STATUSES: ReadonlyArray<number> = [502, 503, 504];
 const GH_API_TRANSPORT_REASON_PATTERNS: ReadonlyArray<RegExp> = [
   /bad record MAC/iu,
@@ -906,11 +884,6 @@ const GH_API_TRANSPORT_REASON_PATTERNS: ReadonlyArray<RegExp> = [
   /\btimed out\b|\btimeout\b/iu,
 ];
 
-/**
- * A secondary rate limit is only trusted when GitHub's documented message
- * arrives with the documented 403 or 429 status; the phrase alone under any
- * other status is not a rate limit.
- */
 const GH_API_SECONDARY_RATE_LIMIT_PATTERN = /secondary rate limit/iu;
 const GH_API_RATE_LIMIT_STATUSES: ReadonlyArray<number> = [403, 429];
 
@@ -922,7 +895,6 @@ const isTransportFailure = (error: GitHubError): boolean =>
   hasStatusIn(error, GH_API_TRANSPORT_STATUSES) ||
   A.some(GH_API_TRANSPORT_REASON_PATTERNS, (pattern) => pattern.test(error.reason));
 
-// The kit's own retry is off for these reads (`retry: "off"`), so this table is the only one.
 const classifyGithubApiTransient = (error: GitHubError): O.Option<GhApiTransientKind> =>
   hasStatusIn(error, GH_API_RATE_LIMIT_STATUSES) && GH_API_SECONDARY_RATE_LIMIT_PATTERN.test(error.reason)
     ? O.some("secondary-rate-limit")
@@ -1440,8 +1412,6 @@ export const CiLaneTimingWindowGuardReason = LiteralKit([
   })
 );
 
-// The bounds judged from the decoded interval and the clock alone, before any
-// GitHub read; `population-change` needs the ruleset history.
 const CiLaneTimingWindowBoundReason = CiLaneTimingWindowGuardReason.pick(["future-cutoff", "short-span"]);
 
 type CiLaneTimingWindowBoundReason = typeof CiLaneTimingWindowBoundReason.Type;
@@ -1617,8 +1587,6 @@ class CiLaneTimingDurationRow extends S.Opaque<CiLaneTimingDurationRow, { readon
     jobName: S.NonEmptyString,
     pickupSeconds: S.Option(NonNegativeTimingSeconds),
     runAttempt: S.tag(1),
-    // Workflow-run `created_at` to the reporting job's `completed_at` (the last shard's, for an aggregator
-    // skipped on success); an optional key so rows encoded before the column existed decode to `None`.
     verdictWaitSeconds: NonNegativeTimingSeconds.pipe(
       S.OptionFromOptionalKey,
       S.withConstructorDefault(Effect.succeedNone)
@@ -1871,7 +1839,8 @@ export class CiLaneTimingPickupStat extends S.Opaque<CiLaneTimingPickupStat, { r
  * CI-active while it has at least one run in flight; `main` counts like any
  * other branch. The sweep records, per UTC day, the largest number of runs in
  * flight at once and the largest number of distinct branches in flight at
- * once. Repair decision 3 (`goals/ci-lane-economics/research/repair-decision-3.md`)
+ * once; a day with nothing in flight has no row.
+ * Repair decision 3 (`goals/ci-lane-economics/research/repair-decision-3.md`)
  * caps admitted load at six CI-active branches and asks every window-4 census
  * to carry this column so a pass or breach can be attributed to the cap, a
  * governor leak, or capacity.
@@ -1954,7 +1923,6 @@ export class CiLaneTimingWindowReport extends S.Opaque<CiLaneTimingWindowReport,
 
 const CI_LANE_TIMING_RULESET_ID = 10_240_248;
 const CI_LANE_TIMING_CHARTER = Duration.minutes(20);
-// The shard pickup tripwire the census was built with: goals/ci-lane-economics/GOAL.md, breach above 5m00s.
 const CI_LANE_TIMING_QUEUE_TRIPWIRE = Duration.minutes(5);
 
 class CiLaneTimingQueueTripwireChange extends S.Opaque<
@@ -1971,27 +1939,20 @@ class CiLaneTimingQueueTripwireChange extends S.Opaque<
   )
 ) {}
 
-// Every change to the tripwire, oldest first. A window is judged against the newest change effective at or before
-// its `--since`, so an earlier admission document re-renders with the limit it was written under.
+// decision: shard-pickup-tripwire-anchor
 const CI_LANE_TIMING_QUEUE_TRIPWIRE_CHANGES: ReadonlyArray<CiLaneTimingQueueTripwireChange> = [
-  // Operator decision 2026-11-13, "Shards overflow to the self-hosted pool only past a 10-minute hosted wait"
-  // (the design admits shard pickup up to that threshold):
-  // goals/ci-lane-economics/decisions/2026-11-13-shards-overflow-to-the-self-hosted-pool-only-past-a-10-minute-hosted-wait.md
   CiLaneTimingQueueTripwireChange.make({
     effectiveFrom: DateTime.makeUnsafe("2026-11-13T00:00:00Z"),
     limit: Duration.minutes(10),
   }),
 ];
 
-// The limit in force for a window starting at `since`; with no window, the newest limit.
 const queueTripwireFor = (since: O.Option<DateTime.Utc>): Duration.Duration =>
   A.reduce(CI_LANE_TIMING_QUEUE_TRIPWIRE_CHANGES, CI_LANE_TIMING_QUEUE_TRIPWIRE, (limit, change) =>
     O.exists(since, (start) => DateTime.isLessThan(start, change.effectiveFrom)) ? limit : change.limit
   );
 
-// Repair decision 3, ruling 2: the orchestration doctrine admits at most six CI-active branches.
 const CI_LANE_TIMING_ADMITTED_BRANCH_CAP = 6;
-// GitHub lists at most 1000 workflow runs per query; a wider span has to be split before paging.
 const CI_WORKFLOW_RUNS_LIST_CAP = 1000;
 const CI_WORKFLOW_RUNS_MIN_SPLIT_SPAN = Duration.hours(1);
 const CI_LANE_TIMING_JOB_FETCH_CONCURRENCY = 8;
@@ -2042,16 +2003,9 @@ export class CiLaneTimingRatifiedPopulation extends S.Opaque<
 ) {}
 
 const CI_LANE_TIMING_RATIFIED_POPULATIONS: ReadonlyArray<CiLaneTimingRatifiedPopulation> = [
-  // JSDoc Ratchet promoted; goals/ci-lane-economics/research/admission-week-p95.md.
   CiLaneTimingRatifiedPopulation.make({ contextCount: 18, ratifiedOn: "2026-09-03", versionId: 48_600_030 }),
-  // Heavy / Coverage Regression removed at 2026-09-12T01:46:53.354Z; ratified for the next window.
   CiLaneTimingRatifiedPopulation.make({ contextCount: 17, ratifiedOn: "2026-09-22", versionId: 49_479_116 }),
-  // Heavy / Lint Policy removed at 2026-09-25T14:46:59.802Z; ratified for the window-3 census.
   CiLaneTimingRatifiedPopulation.make({ contextCount: 16, ratifiedOn: "2026-10-01", versionId: 50_918_272 }),
-  // Knip removed 2026-10-14T17:55:21.339Z; beep-reviewer (2026-10-14 to 2026-10-27) and Heavy / Effect Diagnostics
-  // (2026-10-15 to 2026-10-27) came and went in between. Version 54940515 is effective 2026-10-27T09:49:40.844Z;
-  // ratified 2026-11-02 for the window-4 census: goals/ci-lane-economics/PLAN.md (Population ratification
-  // 2026-11-02) and SPEC.md Decision Log D2; the census itself lands as research/admission-week-4-p95.md.
   CiLaneTimingRatifiedPopulation.make({ contextCount: 15, ratifiedOn: "2026-11-02", versionId: 54_940_515 }),
 ];
 
@@ -2092,7 +2046,6 @@ class CiEffectiveLaneSpec extends S.Opaque<CiEffectiveLaneSpec, { readonly brand
 
 const specShardNames = (spec: CiEffectiveLaneSpec): ReadonlyArray<string> => A.dedupe(A.flatten(spec.shardLayouts));
 
-// A job is one of the spec's shards under any name the lane map gives a shard (`ciShardJobNames`).
 const isSpecShardJobNamed = (spec: CiEffectiveLaneSpec, jobName: string): boolean =>
   A.some(specShardNames(spec), (shardName) => isCiShardJobNamed(jobName, shardName));
 
@@ -2100,8 +2053,6 @@ const isSpecShardJobNamed = (spec: CiEffectiveLaneSpec, jobName: string): boolea
 // from the affected partitions only.
 const CI_TEST_PLAN_JOB_NAME = CiSupportJobName.Enum["Test Plan"];
 
-// #3005 merged: heavy.yml's single `Heavy / Test Integration` job became hosted shards plus a fail-closed
-// aggregate of the same name in check.yml.
 const CI_TEST_INTEGRATION_SHARDED_SINCE = DateTime.makeUnsafe("2026-11-09T17:15:26Z");
 
 // The layout whose every shard has an attempt-one job in this run; the newest layout wins a tie (a layout
@@ -2138,13 +2089,9 @@ const effectiveShardLayout = (
   spec: CiEffectiveLaneSpec
 ): O.Option<ReadonlyArray<string>> => O.orElse(completeShardLayout(jobs, spec), () => plannedShardLayout(jobs, spec));
 
-// `Heavy / <lane>` reports the required context `<lane>` in the census.
 const normalizeRequiredLaneName = (name: string): string =>
   Str.startsWith(HEAVY_CONTEXT_PREFIX)(name) ? Str.slice(Str.length(HEAVY_CONTEXT_PREFIX))(name) : name;
 
-// A sharded lane's spec, named from the lane map: the aggregator is the lane's reporting job, the census lane is
-// that context without the heavy prefix, and each layout lists the partitions whose `<family> (<partition>)` jobs
-// ran together.
 const effectiveLaneSpec = (
   lane: PartitionedCiLane,
   partitionLayouts: A.NonEmptyReadonlyArray<A.NonEmptyReadonlyArray<string>>,
@@ -2164,9 +2111,7 @@ const CI_EFFECTIVE_LANE_SPECS: ReadonlyArray<CiEffectiveLaneSpec> = [
   effectiveLaneSpec(
     "test-unit",
     [
-      // #1195 (2026-09-22) to 2026-11-02: four repo-cli quarters and two unit bins.
       ["repo-cli-1", "repo-cli-2", "repo-cli-3", "repo-cli-4", "unit-a", "unit-b"],
-      // From 2026-11-02 (ci-lane-economics D4): six repo-cli shards and four unit bins.
       [
         "repo-cli-1",
         "repo-cli-2",
@@ -2179,7 +2124,6 @@ const CI_EFFECTIVE_LANE_SPECS: ReadonlyArray<CiEffectiveLaneSpec> = [
         "unit-c",
         "unit-d",
       ],
-      // From 2026-11-08: @beep/law-practice-server leaves unit-d for three Vitest shards of its own.
       [
         "repo-cli-1",
         "repo-cli-2",
@@ -2195,8 +2139,6 @@ const CI_EFFECTIVE_LANE_SPECS: ReadonlyArray<CiEffectiveLaneSpec> = [
         "unit-c",
         "unit-d",
       ],
-      // From 2026-11-09: LPT shard plans widen repo-cli to eleven and law-practice-server to twelve
-      // slices, and the unit bins are repacked into seven, every Test Unit job sized under ten minutes.
       [
         "repo-cli-1",
         "repo-cli-2",
@@ -2229,8 +2171,6 @@ const CI_EFFECTIVE_LANE_SPECS: ReadonlyArray<CiEffectiveLaneSpec> = [
         "unit-f",
         "unit-g",
       ],
-      // From 2026-11-10: sharded Test Unit jobs run two Vitest workers, so repo-cli needs nine slices
-      // and law-practice-server eight; the seven unit bins are unchanged.
       [
         "repo-cli-1",
         "repo-cli-2",
@@ -2260,13 +2200,9 @@ const CI_EFFECTIVE_LANE_SPECS: ReadonlyArray<CiEffectiveLaneSpec> = [
     ],
     { plannedBy: CI_TEST_PLAN_JOB_NAME }
   ),
-  // Before #3005 the lane was heavy.yml's single `Heavy / Test Integration` job; `shardedSince` measures those
-  // runs by that job's own span. Property Laws is not a required context and has no spec.
   effectiveLaneSpec(
     "test-integration",
     [
-      // #3005 (2026-11-09T17:15Z): sixteen @beep/law-practice-server integration shards and the int-rest
-      // catch-all; from #3030 (2026-11-10T00:15Z) a pull request allocates only the planned subset.
       [
         "lps-int-1",
         "lps-int-2",
@@ -2286,8 +2222,6 @@ const CI_EFFECTIVE_LANE_SPECS: ReadonlyArray<CiEffectiveLaneSpec> = [
         "lps-int-16",
         "int-rest",
       ],
-      // From #3029 (2026-11-10T00:53Z): shards sized at their files' worst measured seconds, nineteen
-      // law-practice-server partitions.
       [
         "lps-int-1",
         "lps-int-2",
@@ -2528,8 +2462,6 @@ const collectCiWorkflowWindowRunPages = Effect.fn("Ci.collectCiWorkflowWindowRun
     CiCommandError.mapError(`Failed to decode ${event} workflow-runs page ${pageNumber}.`)
   );
   if (pageNumber === 1 && page.total_count > CI_WORKFLOW_RUNS_LIST_CAP && windowSpanIsSplittable(options)) {
-    // The listing stops at 1000 runs no matter how many pages are asked for, so a busier span is halved
-    // until every half fits; the half-open bounds keep a run from landing in both halves.
     const midpoint = DateTime.makeUnsafe(
       Math.floor((DateTime.toEpochMillis(options.since) + DateTime.toEpochMillis(options.until)) / 2)
     );
@@ -2663,7 +2595,6 @@ export const collectCiWorkflowRunAttemptJobs = Effect.fn("Ci.collectCiWorkflowRu
     attempts,
     (attempt) =>
       readAttempt(attempt, CI_WORKFLOW_JOBS_PAGE_SIZE).pipe(
-        // A page of 100 jobs with their steps is the payload GitHub 502s on; smaller pages of the same attempt succeed.
         Effect.catch(() => readAttempt(attempt, CI_WORKFLOW_JOBS_FALLBACK_PAGE_SIZE)),
         Effect.map((jobs) => ({ attempt, jobs, failure: O.none<string>() })),
         Effect.catch((error: CiCommandError) =>
@@ -2727,7 +2658,6 @@ export const collectRequiredContexts = Effect.fn("Ci.collectRequiredContexts")(f
   if (O.isSome(version)) {
     const endpoint = `repos/{owner}/{repo}/rulesets/${CI_LANE_TIMING_RULESET_ID}/history/${version.value.version_id}`;
     const json = yield* github.getJson(endpoint);
-    // Only required-status-check rules count, and each must carry its parameters.
     const parameters = yield* decodeCiRulesetSnapshot(json).pipe(
       Effect.flatMap((snapshot) =>
         Effect.forEach(
@@ -2849,11 +2779,6 @@ const rulesetPopulationChange = (
   });
 };
 
-// Snapshot the version in force at the window start plus every version that
-// took effect inside `(since, until)`; a version effective exactly at `since`
-// governs the whole window, so it is the starting population, not a change. The last snapshot is the window-end
-// population the census measures; each in-window snapshot is diffed against
-// the one before it so a mid-window change can be named, not just detected.
 const resolveWindowPopulation = Effect.fn("Ci.resolveWindowPopulation")(function* (options: CiLaneTimingWindowOptions) {
   const collectCiRulesetHistory1 = yield* collectCiRulesetHistory();
   const history = A.sort(collectCiRulesetHistory1, rulesetHistoryOrder);
@@ -2905,9 +2830,6 @@ const laterAttemptRowForJob = (
     runId: run.id,
   });
 
-// What an author or the merge gate waits for one required context: the run's `created_at` (never the
-// re-dispatch-rewritten `run_started_at`) to the reporting job's completion. Typed to attempt-one jobs because a
-// re-run job's completion would add the time before someone clicked re-run; a negative span is a garbled record.
 const attemptOneVerdictWaitSeconds = (run: CiWorkflowWindowRun, job: CiWorkflowAttemptOneJob): O.Option<number> =>
   pipe(
     epochMillis(job.completed_at),
@@ -2972,7 +2894,6 @@ const attemptOneJobNamed = (
   return A.length(matches) === 1 ? A.head(matches) : O.none();
 };
 
-// The one attempt-one job that ran this shard, under any name the lane map gives a shard.
 const attemptOneShardJob = (
   jobs: ReadonlyArray<CiWorkflowAttemptOneJob>,
   shardName: string
@@ -2994,10 +2915,6 @@ const incompleteEffectiveRow = (run: CiWorkflowWindowRun, spec: CiEffectiveLaneS
     runId: run.id,
   });
 
-// Skip on success (goals/ci-lane-economics, 2026-11-13): an aggregator that took no runner because every shard
-// of its run passed concludes `skipped`, which GitHub counts as a passing required check. Only that pairing is a
-// pass; a skipped aggregator beside any shard that did not succeed stays a failure, and runs from before the
-// change, whose aggregators always ran, read as they did.
 const isAggregatorSkippedOnSuccess = (
   aggregator: O.Option<CiWorkflowAttemptOneJob>,
   shardJobs: ReadonlyArray<CiWorkflowAttemptOneJob>
@@ -3025,13 +2942,11 @@ const effectiveFailureRow = (
   });
 };
 
-// Every millisecond timestamp the jobs carry, or `None` when any is missing.
 const allEpochMillis = (timestamps: ReadonlyArray<string | null>): O.Option<ReadonlyArray<number>> => {
   const millis = A.getSomes(A.map(timestamps, epochMillis));
   return A.length(millis) === A.length(timestamps) ? O.some(A.sort(millis, Order.Number)) : O.none();
 };
 
-// The verdict ends when the aggregator reports, or, for one skipped on success, when the last shard did.
 const effectiveVerdictEndMillis = (
   aggregator: O.Option<CiWorkflowAttemptOneJob>,
   shardJobs: ReadonlyArray<CiWorkflowAttemptOneJob>,
@@ -3108,9 +3023,6 @@ const effectiveDurationRow = (
     : effectiveSpanRow(run, spec, shardJobs, effectiveVerdictEndMillis(aggregator, shardJobs, skippedOnSuccess));
 };
 
-// A run created before the lane's first shard layout ran it as the aggregator job alone; with no complete or
-// planned layout it yields the ordinary lane's rows for that job (none when the job is absent), so pre-shard
-// windows read exactly as they did before the lane had a spec.
 const unshardedRunRows = (
   run: CiWorkflowWindowRun,
   jobs: ReadonlyArray<CiWorkflowAttemptOneJob>,
@@ -3238,7 +3150,6 @@ const isDurationWindowRow = S.is(CiLaneTimingDurationRow);
 const isAttributionWindowRow = S.is(CiLaneTimingAttributionRow);
 const isPickupWindowRow = S.is(CiLaneTimingPickupRow);
 
-// A p95 that is absent or at least 20m00s breaches its measure; an empty population fails closed.
 const charterBreach = (
   measure: CiLaneTimingCharterMeasure,
   p95Seconds: O.Option<number>
@@ -3388,7 +3299,8 @@ const reportFromRows = Effect.fn("Ci.reportFromLaneTimingWindowRows")(function* 
  * reusable-workflow prefix, replaces sharded `Lint`, `Test Unit` and
  * `Test Integration` aggregator spans with their effective critical paths
  * (a `Test Integration` run older than its shards keeps the single job's own
- * span), records each successful row's verdict wait, and rejects any required-context
+ * span; an aggregator that concluded `skipped` passes only when every shard of
+ * its run succeeded), records each successful row's verdict wait, and rejects any required-context
  * set whose normalized cardinality is not a ratified population size. With no
  * ruleset version to look up, it accepts any count in the ratified table; the
  * windowed collector pins the exact count for the resolved version. The
@@ -3599,9 +3511,6 @@ const renderRulesetPopulationChange = (change: CiRulesetPopulationChange): strin
 const CI_LANE_TIMING_POPULATION_CHANGE_CONSEQUENCE =
   "this census measures the window-end population for the whole window";
 
-// One stamp per in-window version, rendered above every output format: the
-// title names whether the population moved, the sentence names the version,
-// its effective instant, the version it replaced, and the contexts it moved.
 const renderPopulationChangeTitle = (change: CiRulesetPopulationChange): string =>
   isRequiredContextChange(change) ? "Required contexts changed inside the window." : "Ruleset edit inside the window.";
 
@@ -3677,7 +3586,6 @@ class CiLaneTimingInFlightRun extends S.Opaque<CiLaneTimingInFlightRun, { readon
   )
 ) {}
 
-// A run without both in-flight bounds (an older fixture, a run GitHub never started) carries no load.
 const inFlightRunFor = (run: CiWorkflowWindowRun): O.Option<CiLaneTimingInFlightRun> =>
   O.map(O.all([run.run_started_at, run.updated_at]), ([startedAt, updatedAt]) =>
     CiLaneTimingInFlightRun.make({
@@ -3729,7 +3637,6 @@ const observeDayPeak = (state: DayPeakState, millis: number): DayPeakState => {
   const day = utcDayOf(millis);
   const branches = HashMap.size(state.live);
   const recorded = HashMap.get(state.peaks, day);
-  // A midnight tick with nothing in flight does not open a zero row: quiet days stay absent.
   if (state.liveRuns === 0 && O.isNone(recorded)) {
     return state;
   }
@@ -4344,8 +4251,6 @@ const refuseCiLaneTimingWindowPopulationChange = (
     : Effect.void;
 };
 
-// Fold the history-backed judgement into the interval verdict so the preview
-// banner names a population change next to any breached bound.
 const withCiLaneTimingWindowPopulation = (
   verdict: CiLaneTimingWindowGuardVerdict,
   report: CiLaneTimingWindowReport

@@ -24,9 +24,6 @@ import { CiLaneId } from "./CiLane.ts";
 
 const $I = $RepoCliId.create("commands/Ci/Route");
 
-// An optional string that decodes from an absent key and constructs as None by default; the
-// shape every optional text field of the route shares (owning package, detail, conclusion,
-// timestamps, cost source).
 const OptionalText = S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone));
 
 /**
@@ -971,6 +968,7 @@ export class RouteLaneCost extends S.Opaque<RouteLaneCost, { readonly brand: uni
  * Purity is judged over the head's tree kinds (its kinds without `commits`):
  * a tree kind is pure when it is the head's only tree kind, and `commits` is
  * pure only on a head with no tree kind; every other occurrence is mixed.
+ * A head counts once per row however many jobs or attempts the lane ran.
  *
  * **Example** (One pure head on one lane)
  *

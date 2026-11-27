@@ -164,9 +164,6 @@ export const makeRouteReadBudget = Effect.fnUntraced(function* (
     return yield* Effect.provideService(call, RateLimitSink, { record: observe(inner) });
   });
 
-  // The held bucket and its reset while the capture identity's core bucket is below its floor; none
-  // admits the call. Until a response names the identity, any user's core bucket below its floor holds,
-  // because the capture reads as this host's `gh` login.
   const heldBucket = (owner: GithubBudgetLedgerShape, who: O.Option<GithubIdentityLabel>) =>
     O.match(who, {
       onSome: (known) => Effect.map(owner.reserve(BucketKey.make({ identity: known, resource: "core" })), A.of),

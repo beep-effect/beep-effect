@@ -77,12 +77,6 @@ export const CodexTriageLedgerEncoder = Context.Reference<
   (ledger: CodexTriageLedger) => Effect.Effect<typeof CodexTriageLedger.Encoded, S.SchemaError>
 >($I`CodexTriageLedgerEncoder`, { defaultValue: () => encodeCodexTriageLedger });
 
-/**
- * Marker written wherever a phase must supply judgment the capture cannot.
- *
- * @param phase - Packet phase that will supply the missing judgment.
- * @returns The italic pending marker for that phase.
- */
 const pendingIn = (phase: string): string => `_pending ${phase}_`;
 
 const VALIDATION_PHASE = "P2";
@@ -92,12 +86,6 @@ const json = (value: unknown): string => `${Result.getOrThrowWith(encodePrettyJs
 
 const lines = (value: ReadonlyArray<string>): string => `${A.join(value, "\n")}\n`;
 
-/**
- * Every phrase and document set that differs by capture source, in one table.
- *
- * Renderers index this by `plan.source` so a new source adds one row here
- * instead of another conditional in each document.
- */
 const captureSourceCopy: Record<
   CodexCaptureSource,
   {
@@ -168,24 +156,12 @@ const captureSourceCopy: Record<
   },
 };
 
-/**
- * Severities carrying at least one finding, in canonical declaration order.
- *
- * @param counts - Per-severity totals.
- * @returns Present severities paired with their totals.
- */
 const presentSeverities = (counts: CodexSeverityCounts): ReadonlyArray<readonly [string, number]> =>
   A.map(
     A.filter(CodexFindingSeverity.literals, (severity) => (counts[severity] ?? 0) > 0),
     (severity) => [severity, counts[severity] ?? 0] as const
   );
 
-/**
- * Renders `13 Medium, 7 Low, 7 Informational`.
- *
- * @param counts - Per-severity totals.
- * @returns A comma-joined summary, or `"no"` when the capture was empty.
- */
 const severityPhrase = (counts: CodexSeverityCounts): string => {
   const present = presentSeverities(counts);
   return A.isReadonlyArrayNonEmpty(present)
@@ -310,9 +286,6 @@ const manifestDocument = (plan: CodexPacketPlan): PacketDocument => {
         `jq . goals/${plan.slug}/ops/triage.json`,
         `test "$(find goals/${plan.slug}/findings -maxdepth 1 -name 'CSF-*.md' | wc -l | tr -d ' ')" = ${capturedCount}`,
         `git diff --check -- goals/${plan.slug}`,
-        // Advisory rather than a CLI gate: this repository squash-merges, so a
-        // finding's source commit is often absent from the branch even when the
-        // finding is entirely valid. The executing agent reads the output.
         `jq -r '.findings[].commit' goals/${plan.slug}/ops/triage.json | while read -r c; do git merge-base --is-ancestor "$c" HEAD || echo "not-an-ancestor: $c"; done`,
         "bun run beep lint reflection-artifacts",
       ],
@@ -339,8 +312,6 @@ const triageDocument = Effect.fnUntraced(function* (plan: CodexPacketPlan) {
       captureMethod: captureSourceCopy[plan.source].captureMethodPolicy,
       note: `Generated skeleton. ownerArea, verdict, and lane are absent until ${VALIDATION_PHASE} assigns them.`,
     }),
-    // Lanes are a P3 partition over confirmed findings; inventing them at
-    // capture time would assert a root-cause grouping nobody has established.
     lanes: {},
     findings: A.map(plan.records, (record) =>
       CodexTriageFinding.make({
@@ -394,8 +365,6 @@ const findingDocument = (record: CodexFindingRecord): PacketDocument =>
       "",
       "## Public Summary",
       "",
-      // The CSV description is unsanitized report text and stays in ignored
-      // raw/. Writing a summary is a judgment step, not a copy step.
       `${pendingIn(VALIDATION_PHASE)} — write a sanitized summary from the raw report.`,
       "",
       "## Current-HEAD Validation",
@@ -526,8 +495,6 @@ const goalDocument = (plan: CodexPacketPlan): PacketDocument => {
       "",
       "Repo root: the current working directory. Do not assume an absolute path.",
       "",
-      // Deliberately a count, never a per-finding list: GOAL.md has a hard
-      // 4000-char doctor gate and a list would breach it on a large batch.
       `Outcome: fix and close the ${capturedCount} Codex security findings captured on`,
       `${plan.capturedAt} for \`${plan.repository}\`: ${severityPhrase(CodexSeverityCounts.make(plan.severityCounts))}.`,
       "Ship one Yeet-driven PR to mergeable, merge it, then resolve the exact captured",
@@ -778,18 +745,6 @@ const sourcesDocument = (plan: CodexPacketPlan): PacketDocument => {
   });
 };
 
-/**
- * Report bodies, one file per finding, under ignored `raw/reports/`.
- *
- * The body is written verbatim beneath a `CSF-NNN` heading so P2 can validate
- * against exactly what Codex reported. It is never escaped or merged into a
- * tracked document: these files exist because the tracked records deliberately
- * carry only sanitized metadata.
- *
- * @param plan - The resolved plan supplying assigned identities.
- * @param reports - Report bodies keyed by Codex identity.
- * @returns One untracked document per finding that has a report body.
- */
 const rawReportDocuments = (
   plan: CodexPacketPlan,
   reports: ReadonlyArray<{
@@ -801,35 +756,31 @@ const rawReportDocuments = (
 ): ReadonlyArray<PacketDocument> => {
   const recordFor = (codexId: string) => A.findFirst(plan.records, (record) => record.codexId === codexId);
 
-  return A.map(
-    A.filter(reports, (report) => O.isSome(recordFor(report.codexId))),
-    (report) => {
-      // Safe by the filter above; the plan and the reports come from the same
-      // decode, so every report has exactly one assigned record.
-      const record = O.getOrElse(recordFor(report.codexId), () => plan.records[0]!);
-      return PacketDocument.make({
-        path: `raw/reports/${record.id}.md`,
-        tracked: false,
-        // Report text is external prose that legitimately quotes local paths;
-        // hits are surfaced to the operator rather than refusing the ingest.
-        scan: "report",
-        contents: lines([
-          `# ${record.id}: ${record.title}`,
-          "",
-          `- Codex ID: \`${record.codexId}\``,
-          `- Severity: ${record.severity}`,
-          `- Source commit: \`${record.commit}\``,
-          `- Detected at: ${report.detectedAt}`,
-          `- Relevant paths: ${report.relevantPaths}`,
-          "",
-          plan.source === "security-cloud-csv"
-            ? "## Captured summary (Validation, Evidence, and Attack-path analysis require detail enrichment)"
-            : "## Report",
-          "",
-          report.description,
-        ]),
-      });
-    }
+  return A.getSomes(
+    A.map(reports, (report) =>
+      O.map(recordFor(report.codexId), (record) =>
+        PacketDocument.make({
+          path: `raw/reports/${record.id}.md`,
+          tracked: false,
+          scan: "report",
+          contents: lines([
+            `# ${record.id}: ${record.title}`,
+            "",
+            `- Codex ID: \`${record.codexId}\``,
+            `- Severity: ${record.severity}`,
+            `- Source commit: \`${record.commit}\``,
+            `- Detected at: ${report.detectedAt}`,
+            `- Relevant paths: ${report.relevantPaths}`,
+            "",
+            plan.source === "security-cloud-csv"
+              ? "## Captured summary (Validation, Evidence, and Attack-path analysis require detail enrichment)"
+              : "## Report",
+            "",
+            report.description,
+          ]),
+        })
+      )
+    )
   );
 };
 
@@ -864,7 +815,14 @@ const rawGitignoreDocument = (): PacketDocument =>
  *
  * Everything under `raw/` is untracked by construction. Report bodies are
  * external prose that legitimately quotes developer-local paths, so they are
- * written there and never merged into a tracked document.
+ * written there and never merged into a tracked document; a scan hit in one is
+ * reported, never a refusal.
+ *
+ * The triage ledger starts with no lanes and no verdicts: lanes partition
+ * confirmed findings later, and capture time has no root-cause grouping. The
+ * generated check that each finding's commit is an ancestor of `HEAD` only
+ * prints `not-an-ancestor`, never fails: the repository squash-merges, so a
+ * valid finding's commit is often absent from the branch.
  *
  * **Example** (Rendering a packet for an empty capture)
  *

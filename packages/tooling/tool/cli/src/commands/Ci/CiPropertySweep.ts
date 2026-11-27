@@ -127,7 +127,6 @@ const decodeReceipt = S.decodeUnknownEffect(S.fromJsonString(PropertySweepReceip
 const testFilesUnder = Effect.fnUntraced(function* (directory: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  // A package with no test directory has no property files; any other failure to read it is an error.
   const entries = yield* fs.readDirectory(directory, { recursive: true }).pipe(
     Effect.catchIf(
       (error) => error.reason._tag === "NotFound",
@@ -146,7 +145,6 @@ const testFilesUnder = Effect.fnUntraced(function* (directory: string) {
   );
 });
 
-// Which of a package's test files draw from an arbitrary.
 const propertyFilesOf = Effect.fnUntraced(function* (directory: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -164,7 +162,6 @@ const propertyFilesOf = Effect.fnUntraced(function* (directory: string) {
   );
 });
 
-// The unit script names the integration exclude, so those files belong to the integration lane.
 const isLeftToIntegration = (file: string, unitScript: O.Option<string>): boolean =>
   Str.startsWith(INTEGRATION_DIRECTORY)(file) && O.exists(unitScript, Str.includes(INTEGRATION_EXCLUDE));
 

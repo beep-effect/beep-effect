@@ -78,18 +78,6 @@ const {
   toIdentityAccessorName,
 } = CreatePackageIdentityRegistration;
 
-// ── Constants ─────────────────────────────────────────────────────────────────
-
-/**
- * Build ordered template directory candidates for create-package execution.
- *
- * @param baseDir - Directory of the currently executing command module.
- * @param path - Path service used to compose normalized candidate paths.
- * @returns Candidate directories in preferred lookup order.
- * @category models
- * @since 0.0.0
- */
-
 const templateDirCandidates = (baseDir: string, path: Path.Path): ReadonlyArray<string> => {
   const join = (...on: A.NonEmptyArray<string>) => path.join(baseDir, ...on);
   return A.make(join("..", "..", "..", "src", "commands", "CreatePackage", "templates"), join("templates"));
@@ -139,12 +127,6 @@ export const resolveCreatePackageTemplateDir = Effect.fn(function* (
   });
 });
 
-/**
- * Valid package types.
- *
- * @category configuration
- * @since 0.0.0
- */
 const VALID_TYPES = ["library", "tool", "app"] as const;
 const VALID_APP_KINDS = ["nextjs", "vite", "service", "tauri", "runtime-proof"] as const;
 const VALID_FAMILIES = ["drivers", "ecosystem", "foundation", "tooling"] as const;
@@ -334,12 +316,6 @@ const PackageName = S.String.check(S.isPattern(PACKAGE_NAME_PATTERN)).pipe(
 const PACKAGE_TEST_FILE = "test/index.test.ts";
 const PACKAGE_TEST_PLACEHOLDER_FILE = "test/.gitkeep";
 
-/**
- * Mapping from template source to output path.
- *
- * @category configuration
- * @since 0.0.0
- */
 const PACKAGE_TEMPLATE_SPECS: ReadonlyArray<TemplateSpec> = [
   TemplateSpec.make({
     templateName: "tsconfig.json.hbs",
@@ -387,14 +363,11 @@ const STORIES_TEMPLATE_SPECS: ReadonlyArray<TemplateSpec> = [
   STORIES_DIRECTORY_TSCONFIG_TEMPLATE_SPEC,
 ];
 
-// [templateName, outputPath] data pair backing one TemplateSpec.
 type TemplateSpecPair = readonly [templateName: string, outputPath: string];
 
-// Expand [templateName, outputPath] data pairs into TemplateSpec values.
 const templateSpecsFrom = (pairs: ReadonlyArray<TemplateSpecPair>): ReadonlyArray<TemplateSpec> =>
   A.map(pairs, ([templateName, outputPath]) => TemplateSpec.make({ templateName, outputPath }));
 
-// LICENSE/README/AGENTS docs shared by every real app scaffold.
 const REAL_APP_DOC_TEMPLATE_PAIRS: ReadonlyArray<TemplateSpecPair> = [
   ["LICENSE.hbs", "LICENSE"],
   ["app-real-README.md.hbs", "README.md"],
@@ -403,12 +376,6 @@ const REAL_APP_DOC_TEMPLATE_PAIRS: ReadonlyArray<TemplateSpecPair> = [
 
 const CHECK_TSCONFIG_TEMPLATE_PAIR: TemplateSpecPair = ["tsconfig.check.json.hbs", "tsconfig.check.json"];
 
-// Scaffolds whose `build` is the `noEmit` check (`tsrs -p tsconfig.check.json`)
-// write nothing to disk, so they declare `build.outputs: []`; otherwise Turbo
-// warns "no output files found" on every root build. Like every build that is
-// not declaration-only, they also keep `check` off their own build: the root
-// `check` task depends on `build`, which only a declaration-only package's
-// check reuses (`bun run beep lint package-scripts` enforces the override).
 const NOEMIT_TURBO_TEMPLATE_PAIR: TemplateSpecPair = ["app-noemit-turbo.json.hbs", "turbo.json"];
 const NOEMIT_TURBO_TEMPLATE_SPEC = TemplateSpec.make({
   templateName: NOEMIT_TURBO_TEMPLATE_PAIR[0],
@@ -416,8 +383,6 @@ const NOEMIT_TURBO_TEMPLATE_SPEC = TemplateSpec.make({
 });
 const NOEMIT_TURBO_FILE = NOEMIT_TURBO_TEMPLATE_PAIR[1];
 
-// Bundler apps (`next build`, `vite build`) keep `check` off their own build,
-// which would otherwise run the whole bundle before every type-check.
 const BUNDLER_TURBO_TEMPLATE_PAIR: TemplateSpecPair = ["app-bundler-turbo.json.hbs", "turbo.json"];
 
 const NEXTJS_APP_TEMPLATE_SPECS: ReadonlyArray<TemplateSpec> = templateSpecsFrom([
@@ -453,12 +418,6 @@ const TAURI_APP_TEMPLATE_SPECS: ReadonlyArray<TemplateSpec> = templateSpecsFrom(
   ...REAL_APP_DOC_TEMPLATE_PAIRS,
 ]);
 
-// `tauri::generate_context!()` opens `src-tauri/icons/icon.png` while the macro
-// expands, so a Tauri crate does not compile without a real icon on disk — no
-// `bundle.icon` value avoids this, including `[]` and `bundle.active: false`.
-// The icon is therefore a generated file, and being binary it is copied
-// verbatim rather than rendered. Authors replace it in place; regeneration
-// never clobbers an existing icon.
 const TAURI_APP_ASSET_SPECS: ReadonlyArray<StaticAssetSpec> = A.of(
   StaticAssetSpec.make({ assetName: "assets/tauri-icon.png", outputPath: "src-tauri/icons/icon.png" })
 );
@@ -510,10 +469,6 @@ const SERVICE_APP_TEMPLATE_SPECS: ReadonlyArray<TemplateSpec> = templateSpecsFro
   ...REAL_APP_DOC_TEMPLATE_PAIRS,
 ]);
 
-/**
- * Decoded scaffold-mode selector threaded through template, file, directory,
- * and manifest planning so lab/kind dispatch never travels as loose booleans.
- */
 class ScaffoldShape extends S.Opaque<ScaffoldShape, { readonly brand: unique symbol }>()(
   S.Struct({
     appKind: S.OptionFromOptionalKey(AppKind),
@@ -531,11 +486,6 @@ const packageTemplateSpecsFor = (withStoriesTsconfig: boolean): ReadonlyArray<Te
     ? pipe(A.make(PACKAGE_TEMPLATE_SPECS, STORIES_TEMPLATE_SPECS), A.flatten)
     : PACKAGE_TEMPLATE_SPECS;
 
-// A library ships one alias smoke test: the entry point starts as an empty
-// barrel, but the per-package test-typecheck fails closed without a test file,
-// and the test proves the `@beep/*` alias resolves from the first commit. The
-// runtime-proof app reuses the package shape without a root `@beep/*` alias,
-// so it keeps the empty `test/` placeholder instead.
 const PACKAGE_TEST_TEMPLATE_SPEC = TemplateSpec.make({
   templateName: "test-index.test.ts.hbs",
   outputPath: PACKAGE_TEST_FILE,
@@ -559,8 +509,6 @@ const templateSpecsFor = (shape: ScaffoldShape): ReadonlyArray<TemplateSpec> =>
     })
   );
 
-// Only the Tauri kinds carry verbatim assets today; every other scaffold is
-// fully expressible as rendered text.
 const assetSpecsFor = (shape: ScaffoldShape): ReadonlyArray<StaticAssetSpec> =>
   pipe(
     shape.appKind,
@@ -569,12 +517,6 @@ const assetSpecsFor = (shape: ScaffoldShape): ReadonlyArray<StaticAssetSpec> =>
     O.getOrElse(A.empty<StaticAssetSpec>)
   );
 
-/**
- * Ordered list of all generated files for dry-run and summary output.
- *
- * @category configuration
- * @since 0.0.0
- */
 const PACKAGE_FILES = [
   "package.json",
   "tsconfig.json",
@@ -718,12 +660,6 @@ const filesFor = (shape: ScaffoldShape): ReadonlyArray<string> =>
     (files) => (shape.lab ? pipe(A.make(files, LAB_EXTRA_FILES), A.flatten) : files)
   );
 
-/**
- * Root-relative directories created for each package.
- *
- * @category configuration
- * @since 0.0.0
- */
 const PACKAGE_DIRECTORIES = ["src", "test", "docs"] as const;
 const STORIES_DIRECTORIES = ["stories"] as const;
 const NEXTJS_APP_DIRECTORIES = ["src", "src/app", "test"] as const;
@@ -770,7 +706,6 @@ const isRealAppKind = (appKind: O.Option<AppKind>): boolean =>
 
 const templateService = createTemplateService();
 const fileGenerationPlanService = createFileGenerationPlanService();
-// ── Template context ──────────────────────────────────────────────────────────
 
 /**
  * **Example** (Run the create-package command)
@@ -822,24 +757,6 @@ export class TemplateContext extends S.Opaque<TemplateContext, { readonly brand:
   )
 ) {}
 
-/**
- * Validate an optional parent directory override like `packages/foundation/modeling`.
- *
- * Must be repo-relative, normalized, and free of traversal segments.
- *
- * @param value - Parent directory override to validate.
- * @returns True when the override is safe and repo-relative.
- */
-/**
- * Compute the path from a package directory back to repo root.
- *
- * Examples:
- * - `packages/tooling/tool/cli` maps to `../../`
- * - `packages/foundation/primitive/types` maps to `../../../../`
- *
- * @param packagePath - Repo-relative package path.
- * @returns Relative path from the package directory to repo root.
- */
 const toRootRelative = (packagePath: string): string => Str.repeat("../", A.length(Str.split(packagePath, "/")));
 
 const readRootPackageJsonDocument = Effect.fn(function* (repoRoot: string) {
@@ -950,32 +867,11 @@ const rootWorkspaceEntryNeeded = Effect.fn(function* (repoRoot: string, packageP
   return !isPathCoveredByWorkspacePatterns(WorkspacePatterns.fromManifest(packageJson), packagePath);
 });
 
-/**
- * Portless route label for an app scaffold: labs get the `<name>.labs.beep`
- * namespace, every other app keeps the flat `<name>.beep` label.
- *
- * @param name - Package name that leads the portless host label.
- * @param lab - Whether the scaffold targets the labs namespace.
- * @returns The portless label used by generated `dev` scripts.
- */
 const portlessLabelFor = (name: string, lab: boolean): string => (lab ? `${name}.labs.beep` : `${name}.beep`);
 
-/**
- * Convert the trailing-slash `rootRelative` prefix into the slash-free
- * `rootDir` form used by app tsconfig templates (`../../` becomes `../..`).
- *
- * @param rootRelative - Trailing-slash repo-root prefix from the template context.
- * @returns The prefix without its trailing slash.
- */
 const toRootDirRelative = (rootRelative: string): string =>
   Str.endsWith("/")(rootRelative) ? Str.slice(0, Str.length(rootRelative) - 1)(rootRelative) : rootRelative;
 
-/**
- * First applicable `--lab` misuse refusal, if any (lab-apps P2-D20).
- *
- * @param options - Decoded create-package flag facts consulted by the refusal rules.
- * @returns The first refusal message, or none when `--lab` usage is legal.
- */
 const labFlagRefusal = (options: {
   readonly appKind: O.Option<AppKind>;
   readonly description: string;
@@ -1005,10 +901,6 @@ const labFlagRefusal = (options: {
     O.map(([, message]) => message)
   );
 
-/**
- * Refuse reusing a retired package name unless `--reuse-retired-name` is set;
- * returns whether a retired name is being intentionally reused.
- */
 const ensureRetiredNameAllowed = Effect.fn(function* (repoRoot: string, name: string, reuseRetiredName: boolean) {
   const retiredNames = yield* readRetiredPackageNames(repoRoot).pipe(
     Effect.mapError(DomainError.newCause(`Failed to read the retired-packages registry at "${RETIRED_REGISTRY_PATH}"`))
@@ -1025,10 +917,6 @@ const ensureRetiredNameAllowed = Effect.fn(function* (repoRoot: string, name: st
   return retired && reuseRetiredName;
 });
 
-/**
- * Refuse lab scaffolding while the root workspaces lack the `apps/labs/*`
- * glob (lab-apps D5 zero-root-churn: labs never append per-lab entries).
- */
 const ensureLabsWorkspaceGlobCovers = Effect.fn(function* (repoRoot: string, packagePath: string) {
   const missing = yield* rootWorkspaceEntryNeeded(repoRoot, packagePath);
   if (missing) {
@@ -1038,11 +926,6 @@ const ensureLabsWorkspaceGlobCovers = Effect.fn(function* (repoRoot: string, pac
   }
 });
 
-/**
- * Build the planned `lab.manifest.json` file for a new lab (lab-apps P2-D2):
- * purpose from `--description`, created today, disposition `active`, and no
- * Postgres schema (labs opt in later by hand-editing the manifest).
- */
 const labManifestPlannedFile = Effect.fn(function* (description: string) {
   const manifest = LabManifest.make({
     schemaVersion: "lab-manifest/v1",
@@ -1055,19 +938,6 @@ const labManifestPlannedFile = Effect.fn(function* (description: string) {
   return PlannedFile.make({ relativePath: LAB_MANIFEST_FILENAME, content: `${content}\n` });
 });
 
-/**
- * Format the freshly-scaffolded tree so a generated package passes its own
- * `beep:lint` with no hand edits.
- *
- * Templates and JSON renderers cannot reliably predict biome's line-width
- * decisions — an injected plugin array or an `include` list formats one way in
- * the template and another way under `biome check`. Formatting the output is
- * the durable fix: it holds for every app kind and survives future template
- * edits, instead of hand-tuning each array until the next one drifts.
- *
- * Advisory by design: a formatter that cannot run must not fail a scaffold that
- * is otherwise complete, so a non-zero exit warns and continues.
- */
 const formatGeneratedPackage = Effect.fn("CreatePackage.formatGeneratedPackage")(function* (
   repoRoot: string,
   outputDir: string
@@ -1080,9 +950,6 @@ const formatGeneratedPackage = Effect.fn("CreatePackage.formatGeneratedPackage")
     stdio: "ignore",
   }).pipe(Effect.mapError(DomainError.newCause(`Failed to spawn bunx ${A.join(args, " ")}.`)));
 
-  // Reported unconditionally rather than warned-on-failure. The pass is advisory
-  // either way, and a failure-only branch is a line no test can reach without
-  // making `bunx biome` fail on demand, which the ratchet reads as a regression.
   yield* Console.log(
     `[create-package] biome format pass over ${outputDir} exited ${exitCode}; if nonzero, run "bun run beep:lint:fix" in the package.`
   );
@@ -1112,6 +979,11 @@ const refreshBunLockfile = Effect.fn("CreatePackage.refreshBunLockfile")(functio
  * {@link registerScaffoldedWorkspaces}, without the tsconfig sync and the
  * lockfile refresh.
  *
+ * **Gotchas**
+ *
+ * The root manifest and the identity registry are each read, merged and rewritten under one
+ * cross-process lock, so two registrations in the same checkout never drop each other's entries.
+ *
  * **Example** (Register the entries of a generated context)
  *
  * ```ts
@@ -1134,9 +1006,6 @@ export const registerScaffoldedWorkspaceEntries = Effect.fn("CreatePackage.regis
   function* (repoRoot: string, packagePaths: ReadonlyArray<string>) {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    // The root manifest and the identity registry are each read, merged and
-    // rewritten: hold one cross-process lock over both updates so two
-    // registrations in the same checkout cannot overwrite each other's entries.
     const lockDirectory = path.join(repoRoot, ".beep", "locks");
     yield* fs
       .makeDirectory(lockDirectory, { recursive: true })
@@ -1257,11 +1126,36 @@ export const registerScaffoldedWorkspaces = Effect.fn("CreatePackage.registerSca
   return registered;
 });
 
-// ── Command ───────────────────────────────────────────────────────────────────
-
 /**
  * CLI command that scaffolds a new package with templates, a Schema-validated
  * `package.json`, root workspace registration, identity registration, and shared repo config synchronization.
+ *
+ * **Details**
+ *
+ * - Every create checks the retired-name registry, dry runs included. `--reuse-retired-name`
+ *   reuses a retired name and removes its registry entry, since a live package listed as retired
+ *   would also block a later `delete-package` of the recreated name.
+ * - `--lab` mints a lab app below `apps/labs` and needs the root `apps/labs/*` workspace glob,
+ *   because labs never add per-lab workspace entries. A path inside `apps/labs` without `--lab`
+ *   is refused, since it would skip every lab rule and leave a misplaced workspace.
+ * - A lab gets a `lab.manifest.json` (purpose from `--description`, created today, disposition
+ *   `active`, no Postgres schema until edited by hand), the `<name>.labs.beep` portless label
+ *   where other apps get `<name>.beep`, and no `coverage` script.
+ * - A library ships one alias smoke test: its entry point starts as an empty barrel, and the
+ *   per-package test typecheck fails without a test file. The runtime-proof app has no root
+ *   package alias, so it keeps an empty `test/` placeholder.
+ * - A scaffold whose build is the `noEmit` check declares `build.outputs: []` in its
+ *   `turbo.json`, so Turbo does not warn "no output files found". It and every bundler app keep
+ *   `check` off their own build.
+ * - A Tauri app gets a generated binary `src-tauri/icons/icon.png`, copied verbatim and never
+ *   clobbered: `tauri::generate_context!()` opens it while the macro expands, and no
+ *   `bundle.icon` value, `[]` and `bundle.active: false` included, avoids that. Replace it in
+ *   place.
+ * - Each generated manifest declares only the dependencies its emitted files import, plus
+ *   `bun-types`, which `tsconfig.test.json` lists.
+ * - The written tree is biome-formatted, so the package passes its own `beep:lint` with no hand
+ *   edits. The pass is advisory: its exit code is printed and a nonzero one never fails the
+ *   scaffold.
  *
  * **Example** (Run the create-package command)
  *
@@ -1336,8 +1230,6 @@ export const createPackageCommand = Command.make(
       )
     ),
   },
-  // Pre-existing complexity debt: this handler predates the fallow audit gate
-  // and only re-entered the diff via a one-line registry fix (2026-06-12).
   // fallow-ignore-next-line complexity -- legacy scaffold handler keeps flag validation and file planning in one transaction (cognitive 92). Owner: @beep/repo-cli. Exit: remove when create-package moves to the operation-plan executor.
   Effect.fn(function* (config) {
     const {
@@ -1356,7 +1248,6 @@ export const createPackageCommand = Command.make(
       withStoriesTsconfig,
     } = config;
 
-    // ── Validate type ──────────────────────────────────────────────────
     if (!isPackageType(type)) {
       return yield* DomainError.make({
         message: `Invalid package type "${type}". Must be one of: ${A.join(VALID_TYPES, ", ")}`,
@@ -1386,7 +1277,6 @@ export const createPackageCommand = Command.make(
       ? yield* Effect.asSome(decodeAppKindEffect(appKindOption))
       : O.none();
 
-    // ── Validate lab mode (lab-apps P2-D20) ────────────────────────────
     if (lab) {
       const refusal = labFlagRefusal({ appKind, description, packageType, parentDirOverride });
       if (O.isSome(refusal)) {
@@ -1394,7 +1284,6 @@ export const createPackageCommand = Command.make(
       }
     }
 
-    // ── Validate family/kind ──────────────────────────────────────────
     if (Str.isNonEmpty(familyOption) && P.not(isPackageFamily)(familyOption)) {
       return yield* DomainError.make({
         message: `Invalid package family "${familyOption}". Must be one of: ${A.join(VALID_FAMILIES, ", ")}`,
@@ -1504,14 +1393,12 @@ export const createPackageCommand = Command.make(
       });
     }
 
-    // ── Validate package name ─────────────────────────────────────────
     if (!S.is(PackageName)(name)) {
       return yield* DomainError.make({
         message: `Invalid package name "${name}". Must start with a lowercase letter or underscore, contain only [a-z0-9._-].`,
       });
     }
 
-    // ── Resolve directory name ─────────────────────────────────────────
     const dirName = Str.isNonEmpty(dirNameOverride) ? dirNameOverride : name;
     if (Str.isNonEmpty(dirNameOverride) && !S.is(PackageName)(dirName)) {
       return yield* DomainError.make({
@@ -1519,7 +1406,6 @@ export const createPackageCommand = Command.make(
       });
     }
 
-    // ── Resolve parent directory ───────────────────────────────────────
     if (O.isSome(requestedPackageFamily) && Str.isNonEmpty(parentDirOverride)) {
       const kindHint = O.isSome(packageKind) ? ` --kind ${packageKind.value}` : "";
       return yield* DomainError.make({
@@ -1557,27 +1443,18 @@ export const createPackageCommand = Command.make(
     }
     const packagePath = `${parentDir}/${dirName}`;
 
-    // ── Resolve services ───────────────────────────────────────────────
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
 
-    // ── Discover repo root ─────────────────────────────────────────────
     const repoRoot = yield* findRepoRoot();
     const identityPackagesFilePath = yield* resolveIdentityPackagesFilePath(repoRoot);
 
-    // ── Retired-name gate (every create, dry-run included) ─────────────
     const retiredNameReused = yield* ensureRetiredNameAllowed(repoRoot, name, reuseRetiredName);
 
-    // ── Labs membership guard (lab-apps D5 zero-root-churn) ────────────
     if (lab) {
       yield* ensureLabsWorkspaceGlobCovers(repoRoot, packagePath);
     }
 
-    // The inverse of the D5 guard: `--parent-dir apps/labs` without `--lab`
-    // would land inside the labs root while skipping every lab construction
-    // rule (manifest, labs portless label, generated identity segment,
-    // ceremony exemptions), leaving a workspace the identity-registry lint
-    // classifies as misplaced.
     if (!lab && isLabsWorkspacePath(packagePath)) {
       return yield* DomainError.make({
         message: `"${packagePath}" is inside the ${LABS_WORKSPACE_ROOT} root, which only lab apps may occupy. Pass --lab to mint it as a lab app, or choose a --parent-dir outside ${LABS_WORKSPACE_ROOT}.`,
@@ -1586,10 +1463,8 @@ export const createPackageCommand = Command.make(
 
     const scaffoldShape = ScaffoldShape.make({ appKind, lab, withStoriesTsconfig });
 
-    // ── Determine output directory ─────────────────────────────────────
     const outputDir = path.join(repoRoot, packagePath);
 
-    // ── Check if directory already exists (skip for dry-run) ───────────
     if (!dryRun) {
       const alreadyExists = yield* fs.exists(outputDir).pipe(Effect.orElseSucceed(thunkFalse));
       if (alreadyExists) {
@@ -1599,7 +1474,6 @@ export const createPackageCommand = Command.make(
       }
     }
 
-    // ── Dry-run: preview output and bootstrap repo mutations ───────────
     if (dryRun) {
       const workspaceEntryNeeded = yield* rootWorkspaceEntryNeeded(repoRoot, packagePath);
       const identityLine = yield* lab
@@ -1637,7 +1511,6 @@ export const createPackageCommand = Command.make(
       return;
     }
 
-    // ── Build template context ─────────────────────────────────────────
     const currentYear = `${DateTime.getPartUtc(DateTime.nowUnsafe(), "year")}`;
     const rootRelative = toRootRelative(packagePath);
     const portlessLabel = portlessLabelFor(name, lab);
@@ -1673,7 +1546,6 @@ export const createPackageCommand = Command.make(
       ...languageServicePluginProfiles,
     });
 
-    // ── Render templates and generate plan ─────────────────────────────
     const templateDir = yield* resolveCreatePackageTemplateDir();
     const templateFiles = yield* templateService.renderTemplates(
       TemplateRenderRequest.make({
@@ -1757,7 +1629,6 @@ export const createPackageCommand = Command.make(
       })
     );
 
-    // ── Execute plan and repo mutations ────────────────────────────────
     yield* fileGenerationPlanService.executePlan(plan);
     yield* formatGeneratedPackage(repoRoot, outputDir);
 
@@ -1773,9 +1644,6 @@ export const createPackageCommand = Command.make(
         verbose: false,
       })
     );
-    // Sanctioned reuse restores the name's provenance: leaving the entry behind
-    // would leave the registry claiming a live package is retired, and would
-    // wedge the later `delete-package` retirement of the recreated name.
     const retiredNameCleared = retiredNameReused
       ? yield* RetiredNameRegistry.removeRetiredPackageName(repoRoot, `@beep/${name}`)
       : false;
@@ -1784,7 +1652,6 @@ export const createPackageCommand = Command.make(
       yield* refreshBunLockfile(repoRoot);
     }
 
-    // ── Print summary ──────────────────────────────────────────────────
     yield* printLines([
       `Created package @beep/${name} at ${outputDir}`,
       `Files created:`,
@@ -1861,8 +1728,6 @@ export const createPackageCommand = Command.make(
   })
 ).pipe(Command.withDescription("Create a new package or app workspace following Effect v4 conventions"));
 
-// ── Template generators ────────────────────────────────────────────────────
-
 const generateEcosystemPackageJson = Effect.fn("CreatePackage.generateEcosystemPackageJson")(function* <
   const BaseManifest extends object,
   const Scripts extends object,
@@ -1897,8 +1762,6 @@ const generateEcosystemPackageJson = Effect.fn("CreatePackage.generateEcosystemP
     devDependencies: {
       "@types/node": "catalog:",
       "@effect/vitest": "catalog:",
-      // tsconfig.test.json lists `bun-types`; the type resolver needs its declaration
-      // unless the package declares it.
       "bun-types": "catalog:",
       effect: "catalog:",
     },
@@ -1908,9 +1771,6 @@ const generateEcosystemPackageJson = Effect.fn("CreatePackage.generateEcosystemP
   return `${json}\n`;
 });
 
-// ── Manifest builders ─────────────────────────────────────────────────────
-
-// Shared identity/repository fields for every generated package.json manifest.
 const baseManifestFor = (name: string, description: string, packagePath: string) => ({
   name: `@beep/${name}`,
   version: "0.0.0",
@@ -1928,24 +1788,17 @@ const baseManifestFor = (name: string, description: string, packagePath: string)
 
 type BaseManifest = ReturnType<typeof baseManifestFor>;
 
-// Inputs shared by the per-app-kind manifest builders.
 type AppManifestContext = {
   readonly baseManifest: BaseManifest;
   readonly portlessLabel: string;
   readonly lab: boolean;
 };
 
-// Portless-wrapped dev script for app manifests.
 const portlessDev = (portlessLabel: string, command: string): string => `portless ${portlessLabel} ${command}`;
 
-// Portless-wrapped strict-port Vite dev script (vite and tauri web shells).
 const portlessViteDev = (portlessLabel: string, defaultPort: string): string =>
   portlessDev(portlessLabel, `sh -c 'vite --host 127.0.0.1 --port "\${PORT:-${defaultPort}}" --strictPort'`);
 
-// Script table shared by every real app manifest; kind-specific entries layer on top.
-// Labs carry no `coverage` script: ratified lab-apps-lifecycle row 7 requires both
-// the coverage-discovery/disposition exclusions AND omitting the script from lab
-// templates (research/04-governance-gates.md: "Never give labs a `coverage` script").
 const appBaseScripts = (dev: string, build: string, lab: boolean) => ({
   ...scaffoldPackageScripts(lab ? "lab" : "app", []),
   dev,
@@ -1953,35 +1806,20 @@ const appBaseScripts = (dev: string, build: string, lab: boolean) => ({
   ...(lab ? {} : { coverage: "bunx vitest run --coverage" }),
 });
 
-// Lab-only workspace dependencies layered onto Next.js lab app manifests.
-// Only what the emitted templates actually consume: `@beep/repo-configs` in
-// next.config.ts, `@beep/ui` via postcss.config.mjs and the globals.css import.
-// Declare only dependencies used by the generated lab — labs
-// are ceremony-exempt, never code-law exempt (D2). Lab authors add what they
-// import, like any other workspace.
 const NEXTJS_LAB_DEPENDENCIES: Readonly<Record<string, string>> = {
   "@beep/repo-configs": "workspace:^",
   "@beep/ui": "workspace:^",
 };
 
-// Lab-only workspace dependencies layered onto Vite lab app manifests.
-// `@beep/ui` only: postcss.config.mjs re-exports its config and
-// src/styles/globals.css imports its stylesheet. See NEXTJS_LAB_DEPENDENCIES.
 const VITE_LAB_DEPENDENCIES: Readonly<Record<string, string>> = {
   "@beep/ui": "workspace:^",
 };
 
-// Lab-conditional dependency fragment (empty outside lab mode).
 const labDependenciesFor = (
   lab: boolean,
   dependencies: Readonly<Record<string, string>>
 ): Readonly<Record<string, string>> => (lab ? dependencies : {});
 
-// Dev-dependency table shared by React-flavored app manifests.
-// No `@effect/vitest`: the React app test templates use plain `vitest` plus
-// @testing-library. Only the `service` kind's test imports it, and that kind
-// declares it in its own devDependencies. Declaring it here adds an unused dependency to the
-// generated app.
 const REACT_APP_DEV_DEPENDENCIES = {
   "@testing-library/dom": "catalog:",
   "@testing-library/react": "catalog:",
@@ -1992,7 +1830,6 @@ const REACT_APP_DEV_DEPENDENCIES = {
   typescript: "catalog:",
 };
 
-// Vite-stack additions layered onto the React app dev dependencies.
 const VITE_APP_DEV_DEPENDENCIES = {
   ...REACT_APP_DEV_DEPENDENCIES,
   "@vitejs/plugin-react": "catalog:",
@@ -2008,7 +1845,6 @@ const VITE_APP_DEV_DEPENDENCIES = {
 // failure moves whenever a dependency table changes.
 type AppManifestBuilder = (ctx: AppManifestContext) => unknown;
 
-// package.json manifest for a Next.js app workspace.
 const nextjsAppManifest: AppManifestBuilder = ({ baseManifest, lab, portlessLabel }: AppManifestContext) => ({
   ...baseManifest,
   scripts: {
@@ -2024,7 +1860,6 @@ const nextjsAppManifest: AppManifestBuilder = ({ baseManifest, lab, portlessLabe
   devDependencies: REACT_APP_DEV_DEPENDENCIES,
 });
 
-// package.json manifest for a Vite app workspace.
 const viteAppManifest: AppManifestBuilder = ({ baseManifest, lab, portlessLabel }: AppManifestContext) => ({
   ...baseManifest,
   scripts: appBaseScripts(portlessViteDev(portlessLabel, "5173"), "vite build", lab),
@@ -2036,7 +1871,6 @@ const viteAppManifest: AppManifestBuilder = ({ baseManifest, lab, portlessLabel 
   devDependencies: VITE_APP_DEV_DEPENDENCIES,
 });
 
-// package.json manifest for a service app workspace.
 const serviceAppManifest: AppManifestBuilder = ({ baseManifest, lab, portlessLabel }: AppManifestContext) => ({
   ...baseManifest,
   scripts: appBaseScripts(
@@ -2045,24 +1879,17 @@ const serviceAppManifest: AppManifestBuilder = ({ baseManifest, lab, portlessLab
     lab
   ),
   dependencies: {
-    // src/Api.ts imports the identity accessor; main.ts imports platform-bun
-    // and effect. `@beep/schema`/`@beep/utils` are not imported by any emitted
-    // file (the `S` in the templates is `effect/Schema`), so declaring them
-    // would add unused dependencies to the first service app.
     "@beep/identity": "workspace:^",
     "@effect/platform-bun": "catalog:",
     effect: "catalog:",
   },
   devDependencies: {
-    // test/health.test.ts provides its server and client through `it.layer`,
-    // so no test-utils layer helper is imported (no extra dependency is needed).
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:",
     typescript: "catalog:",
   },
 });
 
-// package.json manifest for a Tauri app workspace.
 const tauriAppManifest: AppManifestBuilder = ({ baseManifest, lab, portlessLabel }: AppManifestContext) => ({
   ...baseManifest,
   scripts: {
@@ -2080,7 +1907,6 @@ const tauriAppManifest: AppManifestBuilder = ({ baseManifest, lab, portlessLabel
   },
 });
 
-// App kinds that emit a dedicated app manifest; runtime-proof falls through to the package manifest.
 const appManifestBuilderFor = (kind: AppKind): O.Option<AppManifestBuilder> =>
   Match.value(kind).pipe(
     Match.when("nextjs", () => O.some(nextjsAppManifest)),
@@ -2094,15 +1920,11 @@ const appManifestBuilderFor = (kind: AppKind): O.Option<AppManifestBuilder> =>
     Match.exhaustive
   );
 
-// Encode a manifest object to its pretty package.json payload with trailing newline.
 const encodeManifestJson = (manifest: unknown): Effect.Effect<string, DomainError | S.SchemaError> =>
   Effect.map(encodePackageJsonCanonicalPrettyEffect(manifest), (json) => `${json}\n`);
 
-// Script table for library/tool package manifests.
-// Labs are runnable apps and render through `appBaseScripts`; the package renderer never sees them.
 type PackageScriptsKind = Exclude<ScriptsPackageKind, "lab">;
 
-// The stories check extends the own-source check, which a declaration-only build serves.
 const STORIES_CHECK = "tsrs -p tsconfig.check.json && bun run beep:check:tests && bun run beep:check:stories";
 const storiesCheck = (scripts: Readonly<Record<string, string>>): string =>
   pipe(
@@ -2146,31 +1968,11 @@ export const CreatePackageScripts = {
   package: packageScripts,
 };
 
-// Dependency table for library/tool package manifests (tools also get platform-node).
 const packageDependencies = (type: PackageType): Readonly<Record<string, string>> => ({
   effect: "catalog:",
   ...(packageTypeEquivalence(type, "tool") ? { "@effect/platform-node": "catalog:" } : {}),
 });
 
-/**
- * Build a pretty-printed `package.json` string for a new package.
- *
- * Constructs the package manifest object with standard scripts, exports map,
- * and publish configuration, then encodes it through the repo-utils canonical
- * package.json encoder to guarantee structural validity and stable formatting.
- *
- * @param name - The unscoped package name (e.g. `"my-utils"`). Will be prefixed with `@beep/`.
- * @param type - One of `"library"`, `"tool"`, or `"app"`. Tools receive an extra `@effect/platform-node` dependency.
- * @param description - Human-readable package description for the `"description"` field.
- * @param packagePath - Package path relative to repo root (e.g. `"packages/tooling/library/my-utils"`).
- * @param packageMetadata - Optional canonical family/kind metadata for the `"beep"` field.
- * @param shape - Decoded scaffold shape (app kind, lab mode, stories tsconfig opt-in).
- * @param portlessLabel - Portless route label used by app `dev` scripts (`<name>.beep` or `<name>.labs.beep`).
- * @param ecosystemEffectPeerVersion - Exact root-catalog Effect version for ecosystem package peers.
- * @returns A JSON string (with trailing newline) ready to be written to disk.
- * @category utilities
- * @since 0.0.0
- */
 const generatePackageJson: (
   name: string,
   type: PackageType,
@@ -2250,8 +2052,6 @@ const generatePackageJson: (
       devDependencies: {
         "@types/node": "catalog:",
         "@effect/vitest": "catalog:",
-        // tsconfig.test.json lists `bun-types`; the type resolver needs its declaration
-        // unless the package declares it.
         "bun-types": "catalog:",
       },
     });

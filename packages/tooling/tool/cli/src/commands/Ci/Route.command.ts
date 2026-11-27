@@ -97,7 +97,6 @@ export const ROUTE_CORPUS_DEFAULT_SINCE = "2026-09-01";
 
 const DEFAULT_WORKFLOWS: ReadonlyArray<string> = ["Check", "Heavy"];
 
-// A repo CLI outside a repository is a defect, not a route failure the user can act on.
 const RouteGitFromRepo: Layer.Layer<
   RouteGit,
   never,
@@ -111,9 +110,6 @@ const RouteGitFromRepo: Layer.Layer<
   )
 );
 
-// The classifier, git and corpus layers are leaves; the route needs WaveOrder and the
-// workspaces' ChangeDetector; the census reader needs the classifier and git. provideMerge
-// keeps every dependency satisfied in order instead of racing them in one mergeAll.
 const routeLayers = Layer.mergeAll(
   VerificationRouteLive.pipe(Layer.provide(Layer.mergeAll(WaveOrder.Default, Workspaces.layerWithGit()))),
   RouteCensusReaderLive
@@ -149,7 +145,6 @@ const renderSpend = (spend: RouteReadSpend): string =>
 
 const minutes = (ms: number): string => `${(ms / 60000).toFixed(1)} min`;
 
-// Encoding a value this command just built cannot fail by contract; a failure is a defect.
 const encodeJson = <Sch extends S.Top>(
   schema: Sch,
   value: Sch["Type"]
@@ -302,9 +297,7 @@ const captureCommand = Command.make(
   })
 ).pipe(Command.withDescription("Capture (or extend) the digest-pinned corpus of hosted runs"));
 
-// census and replay differ only in which reader method runs and how the report prints. The
-// `Command.make` calls stay literal because the knowledge doctor derives the documented command
-// surface statically from bound string names; only the handler body is shared.
+// decision: route-command-surface-stays-literal
 const runCorpusReport = <A, Sch extends S.Top & { readonly Type: A; readonly EncodingServices: never }>(
   read: (reader: RouteCensusShape, loaded: RouteCorpusLoaded) => Effect.Effect<A, RouteError>,
   schema: Sch,
@@ -322,8 +315,6 @@ const runCorpusReport = <A, Sch extends S.Top & { readonly Type: A; readonly Enc
     yield* routeFailure(program);
   });
 
-// The knowledge doctor resolves this identifier to its Flag initializer, so sharing it keeps the
-// command surface statically derivable.
 const corpusFlag = Flag.String("corpus").pipe(
   Flag.withDefault(`${ROUTE_CORPUS_DEFAULT_DIR}/${ROUTE_CORPUS_RECEIPT_FILE}`),
   Flag.withDescription("Corpus receipt path, relative to the repository root")
@@ -347,8 +338,6 @@ const replayCommand = Command.make(
   runCorpusReport((reader, loaded) => reader.replay(loaded), RouteReplaySchema, renderReplay)
 ).pipe(Command.withDescription("Replay the route over the corpus and print its recall with base-green attribution"));
 
-// The route command tree without its services; `ciRouteCommand` provides the live
-// layers once at the parent, which dispatches every subcommand inside them.
 const ciRouteCommandDefinition = Command.make("route", {}, () =>
   printLines([
     "Verification route commands:",

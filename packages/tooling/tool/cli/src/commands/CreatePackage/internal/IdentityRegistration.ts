@@ -43,21 +43,6 @@ export const IDENTITY_PACKAGE_NAME = "@beep/identity" as const;
  */
 export const IDENTITY_PACKAGES_EXPORT_PATH = ["src", "packages.ts"] as const;
 
-/**
- * Resolve the repo-relative identity package composer file path.
- *
- * **Example** (Resolve packages file path)
- *
- * ```ts
- * import { resolveIdentityPackagesFilePath } from "@beep/repo-cli/commands/CreatePackage/internal/IdentityRegistration"
- *
- * const result = resolveIdentityPackagesFilePath("/repo")
- * console.log(result) // rendered command output
- * ```
- *
- * @category utilities
- * @since 0.0.0
- */
 const resolveIdentityPackagesFilePath = Effect.fn(function* (repoRoot: string) {
   const path = yield* Path.Path;
   const workspaceDirectories1 = yield* workspaceDirectories(repoRoot);
@@ -72,7 +57,6 @@ const resolveIdentityPackagesFilePath = Effect.fn(function* (repoRoot: string) {
   return path.relative(repoRoot, path.join(identityWorkspaceDir.value, ...IDENTITY_PACKAGES_EXPORT_PATH));
 });
 
-// Adds the package's composer segment and typed accessor to the registry file.
 const registerIdentityIn = (packageName: string) => (sourceFile: SourceFile) => {
   const composersDeclaration =
     sourceFile.getVariableDeclaration("generatedComposers") ?? sourceFile.getVariableDeclarationOrThrow("composers");
@@ -93,25 +77,6 @@ const registerIdentityIn = (packageName: string) => (sourceFile: SourceFile) => 
   }
 };
 
-/**
- * Add a package segment and typed identity export to `@beep/identity`.
- *
- * **Example** (Register package identity export)
- *
- * ```ts
- * import { ensureIdentityPackageRegistration } from "@beep/repo-cli/commands/CreatePackage/internal/IdentityRegistration"
- * import * as Effect from "effect/Effect";
- * // Provide FileSystem to run the effect.
- * const program = ensureIdentityPackageRegistration(
- *   "packages/common/identity/src/registered-packages.ts",
- *   "@beep/schema"
- * )
- * console.log(Effect.isEffect(program)) // true
- * ```
- *
- * @category utilities
- * @since 0.0.0
- */
 const ensureIdentityPackageRegistration = Effect.fn(function* (
   identityPackagesFilePath: string,
   packageName: string,
@@ -144,12 +109,6 @@ const removeComposeSlugArguments = (call: CallExpression, packageName: string): 
 const ROOT_LEAF_CALLEE = "$I.create";
 const LEGACY_COMPOSERS_READ_PREFIX = "composers.$";
 
-/**
- * Read the slug literal of a registry leaf initializer, `$I.create("<slug>")`.
- *
- * @param declaration - Variable declaration whose initializer is inspected.
- * @returns The single string-literal argument of a root `$I.create(...)` call.
- */
 const rootLeafSlug = (declaration: VariableDeclaration): O.Option<string> =>
   pipe(
     O.fromNullishOr(declaration.getInitializerIfKind(SyntaxKind.CallExpression)),
@@ -176,14 +135,12 @@ const hasPureAnnotation = (declaration: VariableDeclaration): boolean =>
     )
   );
 
-// Pre-leaf registry form: the export reads a property off the merged `composers` object.
 const readsLegacyComposers = (declaration: VariableDeclaration): boolean =>
   pipe(
     O.fromNullishOr(declaration.getInitializer()),
     O.exists((initializer) => Str.startsWith(LEGACY_COMPOSERS_READ_PREFIX)(initializer.getText()))
   );
 
-// The package slug a typed `Identity.IdentityComposer<"@beep/<slug>">` annotation names.
 const typedExportSlug = (declaration: VariableDeclaration): O.Option<string> =>
   pipe(
     O.fromNullishOr(declaration.getTypeNode()),
@@ -191,19 +148,13 @@ const typedExportSlug = (declaration: VariableDeclaration): O.Option<string> =>
     O.flatMap((match) => O.fromNullishOr(match[1]))
   );
 
-// Whether a declaration's name is the accessor for a slug, tolerating manual casing aliases.
 const isAccessorNamedFor = (declaration: VariableDeclaration, slug: string): boolean =>
   accessorExportPattern(slug).test(`export const ${declaration.getName()}`);
 
-// Whether the registry reader accepts a declaration as the export of `slug`: typed for that slug,
-// or named its accessor. A vocabulary composer such as `$QaId = $I.create("qa")` under another
-// name is neither, so a package whose slug equals its literal never claims it.
 const isRegistryExportFor = (declaration: VariableDeclaration, slug: string): boolean =>
   O.exists(typedExportSlug(declaration), Str.equivalence(slug)) || isAccessorNamedFor(declaration, slug);
 
 const removeAccessorExportStatements = (sourceFile: SourceFile, packageName: string): void => {
-  // Whole token: `composers.$XId` must not match a `composers.$XIdentityId` sibling. Kept so a
-  // pre-leaf registry still loses its legacy reads; a leaf matches by its type or accessor name.
   const readsComposerAccessor = mentionsToken(`composers.${toIdentityAccessorName(packageName)}`);
   for (const declaration of sourceFile.getVariableDeclarations()) {
     const statement = declaration.getVariableStatement();
@@ -214,32 +165,6 @@ const removeAccessorExportStatements = (sourceFile: SourceFile, packageName: str
   }
 };
 
-/**
- * Remove a package segment and every dedicated identity export from `@beep/identity`.
- *
- * **Details**
- *
- * The removal visits every `$I.compose(...)` declaration so it also supports the
- * generated labs group when that P2 writer lands. An export is removed when it is
- * typed for the package or named its accessor (manual casing aliases included),
- * and a legacy `composers.$X` read by its token. A vocabulary composer that only
- * shares the slug as its `$I.create` literal, under another name, is kept.
- *
- * **Example** (Build an identity removal effect)
- *
- * ```ts
- * import { CreatePackageIdentityRegistration } from "@beep/repo-cli/commands/CreatePackage/internal/IdentityRegistration"
- * import * as Effect from "effect/Effect";
- * const program = CreatePackageIdentityRegistration.removeIdentityPackageRegistration(
- *   "packages/foundation/modeling/identity/src/packages.ts",
- *   "example"
- * )
- * console.log(Effect.isEffect(program)) // true
- * ```
- *
- * @category utilities
- * @since 0.0.0
- */
 const removeIdentityPackageRegistration = Effect.fn("IdentityRegistration.removeIdentityPackageRegistration")(
   function* (identityPackagesFilePath: string, packageName: string) {
     const tsMorphService = yield* TSMorphService;
@@ -250,21 +175,6 @@ const removeIdentityPackageRegistration = Effect.fn("IdentityRegistration.remove
   }
 );
 
-/**
- * Check whether `@beep/identity` needs a package composer registration.
- *
- * **Example** (Check registration needed)
- *
- * ```ts
- * import { identityPackageRegistrationNeeded } from "@beep/repo-cli/commands/CreatePackage/internal/IdentityRegistration"
- *
- * const result = identityPackageRegistrationNeeded("export {}", "$RepoCliId")
- * console.log(result) // rendered command output
- * ```
- *
- * @category utilities
- * @since 0.0.0
- */
 const identityPackageRegistrationNeeded = Effect.fn(function* (
   repoRoot: string,
   identityPackagesFilePath: string,
@@ -283,46 +193,9 @@ const identityPackageRegistrationNeeded = Effect.fn(function* (
 
 const BEEP_SCOPE_PREFIX = "@beep/";
 
-/**
- * Match a dedicated composer export for a package, tolerating manual casing
- * aliases such as `$LangExtractId` for the mechanical `$LangextractId`.
- *
- * **Example** (Match export with casing)
- *
- * ```ts
- * import { CreatePackageIdentityRegistration } from "@beep/repo-cli/commands/CreatePackage/internal/IdentityRegistration"
- *
- * const pattern = CreatePackageIdentityRegistration.accessorExportPattern("repo-cli")
- * console.log(pattern.test("export const $RepoCliId")) // true
- * ```
- *
- * @param packageName - Workspace package slug (without the `@beep/` scope).
- * @returns A case-insensitive pattern matching the dedicated export statement.
- * @category utilities
- * @since 0.0.0
- */
 const accessorExportPattern = (packageName: string): RegExp =>
   new RegExp(`export const \\$${Str.pascalCase(packageName)}Id\\b`, "i");
 
-/**
- * Filter workspace package slugs missing either their `$I.compose(...)`
- * segment or dedicated export in the identity registry content.
- *
- * **Example** (Filter unregistered package slugs)
- *
- * ```ts
- * import { CreatePackageIdentityRegistration } from "@beep/repo-cli/commands/CreatePackage/internal/IdentityRegistration"
- *
- * const missing = CreatePackageIdentityRegistration.missingIdentityRegistrations("export {}", ["repo-cli"])
- * console.log(missing) // ["repo-cli"]
- * ```
- *
- * @param registryContent - Current text of the identity `packages.ts` file.
- * @param packageNames - Workspace package slugs to check.
- * @returns The slugs that still need registration.
- * @category utilities
- * @since 0.0.0
- */
 const missingIdentityRegistrations = (
   registryContent: string,
   packageNames: ReadonlyArray<string>
@@ -332,14 +205,6 @@ const missingIdentityRegistrations = (
     (name) => !Str.includes(`"${name}"`)(registryContent) || !accessorExportPattern(name).test(registryContent)
   );
 
-/**
- * Read every string-literal argument text from one call expression.
- *
- * @param call - Call expression whose arguments are inspected.
- * @returns The literal texts of the call's string-literal arguments.
- * @category getters
- * @since 0.0.0
- */
 const stringLiteralArgumentTexts = (call: CallExpression): ReadonlyArray<string> =>
   A.flatMap(call.getArguments(), (argument) =>
     pipe(
@@ -349,44 +214,18 @@ const stringLiteralArgumentTexts = (call: CallExpression): ReadonlyArray<string>
     )
   );
 
-/**
- * Read composer slugs declared by every `$I.compose(...)` group in registry source.
- *
- * @param registryContent - Current text of the identity `packages.ts` file.
- * @returns Sorted composer slugs found across every compose group.
- * @category getters
- * @since 0.0.0
- */
 const registeredIdentityComposerSlugs = (registryContent: string): ReadonlyArray<string> => {
   const project = new Project({ useInMemoryFileSystem: true });
   const sourceFile = project.createSourceFile("packages.ts", registryContent);
   return A.sort(A.flatMap(composeCallExpressions(sourceFile), stringLiteralArgumentTexts), Order.String);
 };
 
-// The package slug a legacy `composers.$X` read targets, matched against the compose groups first.
 const legacyExportSlug = (declaration: VariableDeclaration, composerSlugs: ReadonlyArray<string>): string =>
   pipe(
     A.findFirst(composerSlugs, (slug) => accessorExportPattern(slug).test(`export const ${declaration.getName()}`)),
     O.getOrElse(() => pipe(Str.slice(1, -2)(declaration.getName()), Str.kebabCase))
   );
 
-/**
- * Pair each registry export declaration with the package slug it registers.
- *
- * **Details**
- *
- * A registry export is an exported declaration typed
- * `Identity.IdentityComposer<"@beep/<slug>">`, an untyped `$I.create("<slug>")`
- * leaf whose slug a compose group lists, a legacy `composers.$X` read, or any
- * other export named the accessor of a listed slug (an untyped
- * `generatedComposers.$XId` or `RepoPkgs.$XId` read). Untyped root composers
- * over a non-package segment (vocabulary composers such as `$QaId`) are not
- * registry exports.
- *
- * @param sourceFile - Parsed identity `packages.ts` source.
- * @param composerSlugs - Slugs every `$I.compose(...)` group lists.
- * @returns One `[declaration, slug]` pair per registry export, in file order.
- */
 const registryExportDeclarations = (
   sourceFile: SourceFile,
   composerSlugs: ReadonlyArray<string>
@@ -400,8 +239,6 @@ const registryExportDeclarations = (
       O.orElse(() =>
         readsLegacyComposers(declaration) ? O.some(legacyExportSlug(declaration, composerSlugs)) : O.none()
       ),
-      // Any other export named a slug's accessor, such as an untyped `generatedComposers.$XId` or
-      // `RepoPkgs.$XId` read, is that slug's export, so the leaf check reports the non-leaf form.
       O.orElse(() => A.findFirst(composerSlugs, (composerSlug) => isAccessorNamedFor(declaration, composerSlug)))
     );
     return pipe(
@@ -417,21 +254,12 @@ const registryExports = (registryContent: string) => {
   return registryExportDeclarations(sourceFile, registeredIdentityComposerSlugs(registryContent));
 };
 
-/**
- * Read package slugs represented by dedicated exported identity composers.
- *
- * @param registryContent - Current text of the identity `packages.ts` file.
- * @returns Sorted package slugs of every registry export (pure leaves and legacy reads).
- * @category getters
- * @since 0.0.0
- */
 const registeredIdentityExportSlugs = (registryContent: string): ReadonlyArray<string> =>
   A.sort(
     A.map(registryExports(registryContent), ([, slug]) => slug),
     Order.String
   );
 
-// Every way one registry export departs from the canonical pure leaf for its slug.
 const leafProblems = (declaration: VariableDeclaration, slug: string): ReadonlyArray<string> => {
   const leafSlug = rootLeafSlug(declaration);
   return A.filter(
@@ -458,34 +286,6 @@ const leafProblems = (declaration: VariableDeclaration, slug: string): ReadonlyA
   );
 };
 
-/**
- * Report registry exports that are not the canonical independent pure leaf
- * for their slug.
- *
- * **Details**
- *
- * The canonical leaf is `export const $XId: Identity.IdentityComposer<"@beep/<slug>">`
- * initialized by a pure-annotated `$I.create("<slug>")` call (see
- * `typedIdentityExportBlock`). Each leaf's `$I.create` literal must equal its
- * slug, carry the pure annotation and keep its typed annotation, so a bundle
- * that imports one composer drops every other slug and the compose groups.
- *
- * **Example** (Report a leaf whose literal drifted)
- *
- * ```ts
- * import { CreatePackageIdentityRegistration } from "@beep/repo-cli/commands/CreatePackage/internal/IdentityRegistration"
- *
- * const rows = CreatePackageIdentityRegistration.identityLeafMismatches(
- *   'export const $AId: Identity.IdentityComposer<"@beep/a"> = $I.create("b");'
- * )
- * console.log(rows) // [["$AId", "a", "..."]]
- * ```
- *
- * @param registryContent - Current text of the identity `packages.ts` file.
- * @returns One `[accessor, slug, detail]` row per non-canonical registry export, in file order.
- * @category getters
- * @since 0.0.0
- */
 const identityLeafMismatches = (
   registryContent: string
 ): ReadonlyArray<readonly [accessor: string, slug: string, detail: string]> =>
@@ -496,22 +296,6 @@ const identityLeafMismatches = (
       : A.empty();
   });
 
-/**
- * Enumerate every `@beep/*` workspace package as `[slug, directory]` entries,
- * sorted by slug.
- *
- * **Example** (Collect workspace package entries)
- *
- * ```ts
- * import { CreatePackageIdentityRegistration } from "@beep/repo-cli/commands/CreatePackage/internal/IdentityRegistration"
- * import * as Effect from "effect/Effect";
- * const program = CreatePackageIdentityRegistration.collectWorkspaceIdentityEntries("/repo")
- * console.log(Effect.isEffect(program)) // true
- * ```
- *
- * @category utilities
- * @since 0.0.0
- */
 const collectWorkspaceIdentityEntries = Effect.fn("IdentityRegistration.collectWorkspaceIdentityEntries")(function* (
   repoRoot: string
 ) {
@@ -532,6 +316,37 @@ const collectWorkspaceIdentityEntries = Effect.fn("IdentityRegistration.collectW
 
 /**
  * Internal identity registration surface used by the create-package command.
+ *
+ * **Details**
+ *
+ * - `resolveIdentityPackagesFilePath` resolves the repo-relative identity composer file path.
+ * - `ensureIdentityPackageRegistration` adds a package's compose segment and typed identity
+ *   export. `identityPackageRegistrationNeeded` reports whether that is still needed, and
+ *   `missingIdentityRegistrations` keeps the slugs missing their segment or dedicated export.
+ * - `removeIdentityPackageRegistration` removes the package's segment from every `$I.compose(...)`
+ *   group, every export typed for the package or named its accessor, and a legacy
+ *   `composers.$X` read matched by whole token (`composers.$XId` never matches
+ *   `composers.$XIdentityId`).
+ * - `accessorExportPattern` matches a dedicated export case-insensitively, so a manual alias such
+ *   as `$LangExtractId` for the mechanical `$LangextractId` counts.
+ * - `registeredIdentityComposerSlugs` returns the sorted slugs of every compose group, and
+ *   `registeredIdentityExportSlugs` the sorted slugs of every registry export.
+ * - A registry export is an exported declaration typed `Identity.IdentityComposer<"@beep/<slug>">`,
+ *   an untyped `$I.create("<slug>")` leaf whose slug a compose group lists, a legacy
+ *   `composers.$X` read, or any other export named a listed slug's accessor (an untyped
+ *   `generatedComposers.$XId` or `RepoPkgs.$XId` read, which the leaf check then reports).
+ * - `identityLeafMismatches` returns one `[accessor, slug, detail]` row per registry export that
+ *   is not the canonical leaf: typed, initialized by a pure-annotated `$I.create("<slug>")` whose
+ *   literal equals the slug (see `typedIdentityExportBlock`), so a bundle importing one composer
+ *   drops every other slug and the compose groups.
+ * - `collectWorkspaceIdentityEntries` lists every beep-scoped workspace as `[slug, directory]`,
+ *   sorted by slug.
+ *
+ * **Gotchas**
+ *
+ * A vocabulary composer such as `$QaId = $I.create("qa")`, under a name that is not the slug's
+ * accessor, is never a registry export, so removing or checking a package whose slug equals that
+ * literal leaves it alone.
  *
  * **Example** (Access identity registration helpers)
  *

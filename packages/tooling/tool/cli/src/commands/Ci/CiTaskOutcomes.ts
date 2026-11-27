@@ -381,8 +381,6 @@ export type TurboSummaryView = typeof SummaryView.Type;
 
 const decodeSummary = S.decodeUnknownEffect(S.fromJsonString(SummaryView));
 
-// Turbo writes `exitCode: null` for a task that started and has no exit code (killed, or a build failure with no
-// code), which the record cannot tell apart, so it is `unknown`; a task with no exit code key never ran.
 const outcomeOf = (task: typeof SummaryTask.Type): RouteTaskOutcome =>
   Match.value(task.execution?.exitCode).pipe(
     Match.when(Match.undefined, () => RouteTaskOutcome.Enum["not-run"]),
@@ -391,9 +389,6 @@ const outcomeOf = (task: typeof SummaryTask.Type): RouteTaskOutcome =>
     Match.orElse(() => RouteTaskOutcome.Enum.fail)
   );
 
-// A task several invocations list keeps its strongest evidence: a failure anywhere is a failure, and a task that
-// started without exiting (`unknown`) is never masked by a pass or a not-run elsewhere, which would charge a
-// killed task's red to the harness. A pass beats a task that never ran.
 const OUTCOME_RANK: Readonly<Record<RouteTaskOutcome, number>> = { fail: 3, unknown: 2, pass: 1, "not-run": 0 };
 
 /**

@@ -77,8 +77,6 @@ const preflightName = "preservation-preflight.json";
 const inheritedLossName = "inherited-loss.jsonl";
 const partialSuffix = ".preservation-partial";
 const hashChunkBytes = 1024 * 1024;
-// Bar v2 stops-and-reports rather than spinning: after this many attempts the
-// last unapproved row (changed-during-copy / resume-discarded) stands terminal.
 const maxAttemptsPerObject = 5;
 const utf8Encoder = new TextEncoder();
 const decodeSha256 = S.decodeUnknownEffect(Sha256Hex);
@@ -148,8 +146,6 @@ const ioError =
       path,
     });
 
-// Decodes each non-empty line of a JSON Lines document in order; the first
-// line that fails becomes a `PreservationArchiveIoError` for `operation`.
 const decodeJsonLines = <Row, E, R>(
   text: string,
   decode: (line: string) => Effect.Effect<Row, E, R>,
@@ -1605,6 +1601,12 @@ const sourceMatchesVerificationReport = Effect.fn("Preservation.sourceMatchesVer
 /**
  * Run the approved T7 preservation archive operation after refreshing capacity
  * and reconciling the collector and inherited-loss ledgers.
+ *
+ * **Details**
+ *
+ * An object whose copy changed during the copy, or whose resume was discarded,
+ * is copied again up to five attempts in total. The run then stops and reports
+ * rather than spinning: the last unapproved row stands as the terminal one.
  *
  * **Example** (Build an archive-run effect)
  *

@@ -27,6 +27,29 @@ import * as S from "effect/Schema";
 const $I = $RepoCliId.create("commands/Codex/Findings.scan");
 
 /**
+ * **Details**
+ *
+ * - `private-home-path`: a home or user directory on Linux, macOS or Windows,
+ *   which discloses the local username and usually the project tree under it.
+ * - `email-address`: a local part, an at sign and an alphabetic TLD, so scoped
+ *   package names, JSDoc tags and version specs such as `cli@1.0.0` never match.
+ *   The CSV parser already drops the PII columns; this rule is the control that
+ *   survives a parser change that reintroduces them, since a GitHub noreply
+ *   address still discloses the account name.
+ * - `secret-shaped-value`: an assignment-shaped `SECRET`, `TOKEN` or `API_KEY`
+ *   label, or an `sk-` key; the bare words in policy prose do not match.
+ * - `auth-header`: an authorization or cookie header name in prose, JSON or
+ *   code, the quoted `{"cookie": ...}` form included.
+ * - `session-cookie`: a session-cookie name of the ChatGPT origin, which a
+ *   snippet reading `document.cookie` carries.
+ * - `signed-url-param`: a presigned or capability URL parameter whose value is
+ *   at least 8 characters, so a bare `?sig=1` does not match.
+ * - `bidi-control`: a bidirectional or invisible format character, which can
+ *   reverse how a generated table row renders in a reviewer's diff.
+ * - `spreadsheet-formula`: a formula sigil at the start of one payload field,
+ *   which a spreadsheet re-export would execute; it is anchored, so a Markdown
+ *   body's `-` bullet does not match.
+ *
  * **Example** (Naming a rule)
  *
  * ```ts
@@ -108,54 +131,28 @@ export class SensitiveTextHit extends S.Opaque<SensitiveTextHit, { readonly bran
 ) {}
 
 const rules: ReadonlyArray<{ readonly code: SensitiveTextCode; readonly pattern: RegExp }> = [
-  // Private home and user paths across platforms. Each leaks the local username
-  // and usually the project tree beneath it, which the packet sanitation policy
-  // forbids in tracked records of a public repository.
   { code: "private-home-path", pattern: /\/home\/[A-Za-z0-9_.-]+/u },
   { code: "private-home-path", pattern: /\/Users\/[A-Za-z0-9_.-]+/u },
   { code: "private-home-path", pattern: /[A-Za-z]:[\\/]Users[\\/][A-Za-z0-9_.-]+/u },
   { code: "private-home-path", pattern: /(?:^|[\s"'`(=:])~[\\/]/u },
   { code: "private-home-path", pattern: /(?:^|[\s"'`(=:])~[A-Za-z0-9_.-]+[\\/]/u },
   { code: "private-home-path", pattern: /%(?:USERPROFILE|HOMEPATH|HOMEDRIVE)%/iu },
-  // Every CSV export carries an `author_email` — in practice a GitHub
-  // `<digits>+<user>@users.noreply.github.com` address, which still discloses
-  // the account name. The parser drops the PII columns outright, so this rule
-  // is defense in depth: it is the control that survives a future parser change
-  // that reintroduces them. A local part is required before `@`, so scoped
-  // package names (`@beep/schema`) and JSDoc tags (`@category`) do not match,
-  // and the alphabetic TLD floor keeps version specs (`cli@1.0.0`) out.
   { code: "email-address", pattern: /[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}/u },
   { code: "onepassword-ref", pattern: /op:\/\//u },
-  // Assignment-shaped labels or key-like values only. Bare words such as TOKEN
-  // appear in benign policy prose, and broader matching produced false
-  // positives on metric names in the lane this was ported from.
   { code: "secret-shaped-value", pattern: /(?:\b(?:SECRET|TOKEN|API[_-]?KEY)\b\s*[=:]|sk-[A-Za-z0-9_-]{12,})/iu },
-  // Header names in prose, JSON, or code form. The trailing optional quote is
-  // what catches the serialized `{"cookie": "..."}` shape that a bare
-  // `name:` matcher misses.
   {
     code: "auth-header",
     pattern: /\b(?:authorization|proxy-authorization|set-cookie|cookie)\b["']?\s*[:=]/iu,
   },
   { code: "bearer-credential", pattern: /\b(?:Bearer|Basic)\s+[A-Za-z0-9._~+/=-]{8,}/u },
   { code: "jwt-token", pattern: /\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b/u },
-  // Session-cookie names specific to this origin, which a snippet reading
-  // `document.cookie` would carry even though no rule above matches them.
   { code: "session-cookie", pattern: /(?:__Secure-|__Host-|__cf_bm=|_puid=|oai-did=|oai-sc=)/u },
-  // Presigned and capability URLs. The length floor keeps a bare `?sig=1`
-  // style query parameter from tripping the rule.
   {
     code: "signed-url-param",
     pattern:
       /[?&](?:X-Amz-Signature|X-Amz-Credential|X-Amz-Security-Token|sig|signature|token|access_token|api[_-]?key)=[A-Za-z0-9%_.~+/-]{8,}/iu,
   },
-  // Bidirectional and invisible format characters, which can reverse how a
-  // generated table row renders in a reviewer's diff.
   { code: "bidi-control", pattern: /[‎‏‪-‮⁦-⁩]/u },
-  // A leading formula sigil turns a captured value into executable content the
-  // moment anything re-exports it to a spreadsheet. The anchor is deliberate:
-  // this fires on an individual payload field, not on a Markdown document whose
-  // body merely contains a `-` bullet.
   { code: "spreadsheet-formula", pattern: /^[=+\-@\t\r]/u },
 ];
 

@@ -28,8 +28,6 @@ import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("commands/CreatePackage/ConfigUpdater");
 
-// ── Types ────────────────────────────────────────────────────────────────────
-
 /**
  * Summary of which root configuration files were modified during a config update pass.
  *
@@ -149,8 +147,6 @@ export class ConfigUpdateBatchResult extends S.Opaque<ConfigUpdateBatchResult, {
   )
 ) {}
 
-// ── Internal helpers ─────────────────────────────────────────────────────────
-
 const stringArrayEquivalence = S.toEquivalence(S.Array(S.String));
 const JsoncUnknownObject = S.Record(S.String, S.Unknown).pipe(
   $I.annoteSchema("JsoncUnknownObject", {
@@ -222,10 +218,6 @@ const aliasTargetsForTarget = (target: ConfigUpdateTarget) => ({
     target.wildcardAliasTarget ?? defaultAliasTargetsForPackage(target.packagePath).wildcardAliasTarget,
 });
 
-/**
- * Read → transform → write-if-changed. Returns `true` when the file was
- * actually modified.
- */
 const modifyFileString: {
   (
     filePath: string,
@@ -249,8 +241,6 @@ const modifyFileString: {
     return true;
   })
 );
-
-// ── Public API ───────────────────────────────────────────────────────────────
 
 /**
  * Add a project reference to `tsconfig.packages.json`.
@@ -287,7 +277,6 @@ export const updateTsconfigPackages: {
         const parsed = yield* parseJsoncObject(content, filePath);
         const references = readReferences(parsed);
 
-        // Idempotency: skip if reference already present
         if (A.some(references, hasReferencePath(packagePath))) {
           return content;
         }
@@ -352,7 +341,6 @@ export const updateTsconfigPaths: {
         const hasBaseAlias = pathValuesEqual(paths[alias], [rootAliasTarget]);
         const hasWildcardAlias = pathValuesEqual(paths[`${alias}/*`], [wildcardAliasTarget]);
 
-        // Idempotency: skip if both aliases already present
         if (hasBaseAlias && hasWildcardAlias) {
           return content;
         }

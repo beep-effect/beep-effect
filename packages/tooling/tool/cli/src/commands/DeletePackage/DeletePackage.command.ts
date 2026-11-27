@@ -148,9 +148,6 @@ const findDeletedTargetPath = Effect.fn("DeletePackage.findDeletedTargetPath")(f
   return O.none<string>();
 });
 
-// P2-D18: a labs directory with a missing or corrupt lab.manifest.json WARNS
-// and proceeds with no lab facts in BOTH check and apply modes, so
-// delete-package stays the cheap escape valve for half-created labs.
 const resolveLabFacts = Effect.fn("DeletePackage.resolveLabFacts")(function* (repoRoot: string, relativeDir: string) {
   if (!isLabsWorkspacePath(relativeDir)) return O.none<LabTargetFacts>();
   const fs = yield* FileSystem.FileSystem;
@@ -367,12 +364,6 @@ export const removeShapeTestRow = Effect.fn("DeletePackage.removeShapeTestRow")(
 
 const CRLF = "\r\n";
 
-// Remove the package's key from a changeset's YAML frontmatter through the YAML edit layer, so a
-// quoted or escaped key is matched by its YAML value. A removal re-serializes the whole block with LF
-// line endings (`YamlFormat.modify`): sibling entries are normalized (`key:   minor` becomes
-// `key: minor`), trailing blank lines inside the block are dropped, and a comment line directly above
-// the removed key goes with it even when its text names surviving keys. A block whose recorded
-// terminator (`block.newline`) is CRLF gets its CRLFs back; the body is never touched.
 const stripPackageFromFrontmatter = Effect.fn("DeletePackage.stripPackageFromFrontmatter")(function* (
   file: string,
   content: string,
@@ -425,6 +416,14 @@ const pruneChangesetFile = Effect.fn("DeletePackage.pruneChangesetFile")(functio
  * is gated by {@link DeletionNotePolicy}: private and labs deletions are ceremony-exempt
  * and emit no changeset.
  *
+ * **Gotchas**
+ *
+ * The key is removed through the YAML edit layer, so a quoted or escaped key matches by its value.
+ * A removal re-serializes the whole frontmatter block with LF endings: sibling entries are
+ * normalized (`key:   minor` becomes `key: minor`), blank lines inside the block are dropped,
+ * and a comment line directly above the removed key goes with it. A block whose terminator was
+ * CRLF gets its CRLFs back, and the body is never touched.
+ *
  * **Example** (Build a labs-exempt rewrite effect)
  *
  * ```ts
@@ -475,17 +474,6 @@ const runStep = Effect.fn("DeletePackage.runStep")(function* (
   if (exitCode !== 0) return yield* DomainError.newMessage(`${label} failed with exit code ${exitCode}.`);
 });
 
-// Every writer stays zero-only except the fallow health baseline: fallow
-// exposes no write-only mode and exits 1 on pre-existing findings even though
-// the --save-baseline write succeeded (P1 round-trip proof), so that one step
-// tolerates exit 1 iff its verified output was provably written. Exit >= 2 is
-// a real fallow fault and always fails.
-//
-// The coverage baseline is deliberately NOT in this table. Its writer re-runs
-// the repo-wide coverage suite (~12 minutes, and coupled to every test in the
-// repo passing) to compute what is, for a leaf deletion, a pure row removal —
-// so the delete path subtracts the target's rows schema-first instead
-// (receipt 9, lab-apps-lifecycle).
 const BASELINE_WRITER_STEPS: ReadonlyArray<BaselineWriterStep> = [
   BaselineWriterStep.make({ label: "fallow boundaries", args: ["run", "beep", "fallow", "boundaries", "--write"] }),
   BaselineWriterStep.make({
@@ -568,9 +556,6 @@ const runBaselineWriters = Effect.fn("DeletePackage.runBaselineWriters")(functio
   repoRoot: string,
   packageName: string
 ) {
-  // Coverage first, and not as a shell step: the target's rows are removed
-  // from the committed baseline in-process, which is what a repo-wide
-  // regeneration would produce for a leaf target without the coverage rerun.
   yield* Console.log(`[delete-package] coverage baseline subtraction: ${packageName}`);
   yield* subtractPackageFromCoverageRegressionBaseline(repoRoot, packageName).pipe(
     Effect.mapError(DomainError.newCause("coverage baseline subtraction failed."))
@@ -604,7 +589,15 @@ const runBaselineWriters = Effect.fn("DeletePackage.runBaselineWriters")(functio
  * output's `(mtime, size)` stamp changed or the file was created; everything
  * else — including every exit `>= 2` — is `failed`. `run` is the full writer
  * stage: coverage-baseline subtraction first, then the shell steps in table
- * order.
+ * order. The subtraction removes the target's rows from the committed coverage
+ * baseline in-process, which is what a repo-wide regeneration would produce for
+ * a leaf target, without re-running the coverage suite.
+ *
+ * **Gotchas**
+ *
+ * Only the fallow health baseline tolerates exit 1: fallow has no write-only mode and exits 1 on
+ * pre-existing findings even after its `--save-baseline` write succeeds. Every other writer must
+ * exit 0.
  *
  * **Example** (Classify a finding exit without a written baseline)
  *
@@ -677,7 +670,6 @@ type DeletePackageHandlerOptions = {
 const planPrintPrefix = (options: DeletePackageHandlerOptions): string =>
   options.dryRun ? "[dry-run]" : options.check ? "[check]" : "[delete-package]";
 
-// The committed `--acknowledge` file, resolved against the repository root and decoded as JSONC.
 const readAcknowledgements = Effect.fn("DeletePackage.readAcknowledgements")(function* (
   repoRoot: string,
   file: O.Option<string>
@@ -762,7 +754,6 @@ const runCheckMode = Effect.fn("DeletePackage.runCheckMode")(function* (
   );
 });
 
-// Post-apply doctor residue lines: every non-clean observation prints before the reported failure.
 const reportResidueObservations = (observations: ReadonlyArray<RegistrationObservation>) =>
   Effect.forEach(
     A.filter(observations, (item) => !Str.equivalence(item.status, "clean")),
@@ -770,8 +761,6 @@ const reportResidueObservations = (observations: ReadonlyArray<RegistrationObser
     { concurrency: 1, discard: true }
   );
 
-// The accepted consent-required lab data-resource observation carries the
-// manual DROP SCHEMA step; surface it so the manual step is never silent.
 const reportConsentRequiredObservations = (observations: ReadonlyArray<RegistrationObservation>) =>
   Effect.forEach(
     A.filter(observations, (item) => Str.equivalence(item.status, "consent-required")),
@@ -810,9 +799,6 @@ const handler = Effect.fn("DeletePackage.handler")(function* (options: DeletePac
         "[delete-package] --identity-major requested; the deletion note remains empty until an identity release policy writer is ratified."
       );
 
-    // P2-D16: the data phase is print-only — policy gates ran in preflight and
-    // the live DROP executor is deferred, so the manual step is printed here
-    // whether or not consent was given.
     const dataSurface = A.findFirst(surfacesForTarget(plan.target), RegistrationSurface.guards["data-resource"]);
     const dataSlug = pipe(plan.target.packageName, Str.replace("@beep/", Str.empty));
     yield* O.match(dataSurface, {
@@ -845,9 +831,6 @@ const handler = Effect.fn("DeletePackage.handler")(function* (options: DeletePac
     yield* removeWorkspaceLiteral(repoRoot, plan.target.packagePath);
     yield* rewritePendingChangesets(repoRoot, plan.target.packageName, deletionNotePolicy);
     yield* fs.remove(path.join(repoRoot, plan.target.packagePath), { recursive: true, force: true });
-    // Belt-and-braces reconstructive inverse: the flat removal above already
-    // swept the compose call, and the labs segment sync re-renders both
-    // generated regions from the now-smaller apps/labs/* catalog.
     if (isLabsWorkspacePath(plan.target.packagePath))
       yield* LabIdentitySegment.syncLabIdentitySegment(repoRoot).pipe(
         Effect.mapError(DomainError.newCause("labs identity-segment sync failed after tree removal."))
@@ -894,6 +877,11 @@ const handler = Effect.fn("DeletePackage.handler")(function* (options: DeletePac
  * Accepted hits print under `[delete-package] ACK`; a stale, miscounted,
  * edge-matching or wrong-target entry refuses, and the doctor reads the same
  * file. No flag overrides an unacknowledged dependent.
+ *
+ * A directory below `apps/labs` whose `lab.manifest.json` is missing or corrupt warns and
+ * proceeds with no lab facts in both check and apply modes, so a half-created lab can still be
+ * deleted. Apply never drops a lab's Postgres schema: it prints the manual `DROP SCHEMA` step
+ * whether or not consent was given.
  *
  * **Example** (Preview a deletion)
  *

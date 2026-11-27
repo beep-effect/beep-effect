@@ -171,8 +171,6 @@ export class ClassifyDiff extends S.Opaque<ClassifyDiff, { readonly brand: uniqu
  */
 export type RouteReadAt<R = never> = (ref: string, path: string) => Effect.Effect<O.Option<string>, RouteError, R>;
 
-// The kit's decoded change kinds, back to the name-status letters the classifier keys on (`renamed` and `copied`
-// are split below; `--no-renames` keeps them out of the live listing).
 const KIT_STATUS_LETTERS: Readonly<
   Record<Exclude<NameStatusEntry["status"], "renamed" | "copied">, ChangedPathStatus>
 > = {
@@ -270,8 +268,6 @@ const isPacketPath = (facts: PathFacts): boolean => A.some(PACKET_ROOTS, (root) 
 const hasTestSuffix = (facts: PathFacts): boolean =>
   A.some(TEST_FILE_SUFFIXES, (suffix) => Str.endsWith(suffix)(facts.name));
 
-// A test path is a test-suffixed file, or a file under a `test` directory that is not inside the
-// owner's `src/`: `src/internal/test/*.ts` compiles into `dist`, so it is source, not test.
 const isTestPath = (facts: PathFacts): boolean =>
   hasTestSuffix(facts) ||
   (A.contains(facts.directories, "test") &&
@@ -326,7 +322,8 @@ const PATH_RULES: ReadonlyArray<readonly [ChangeAtomKind, P.Predicate<PathFacts>
  * files, `standards/` JSON baselines, tests, other markdown, sources under the
  * owner's `src/`, scratchpad files outside `scratchpad/src/`, and media.
  * Anything else is `unknown`. A file under a `test` directory inside the
- * owner's `src/` is source, not test, unless its name has a test suffix.
+ * owner's `src/` compiles into `dist`, so it is source, not test, unless its
+ * name has a test suffix.
  *
  * **Gotchas**
  *
@@ -445,7 +442,6 @@ const describeChange = (subject: string, change: KeyedChange, showValues: boolea
       ),
   });
 
-// One side of a keyed field family: a missing field reads as `{}`, a present non-object as `None`.
 const familyObject = (value: O.Option<unknown>): O.Option<ManifestObject> =>
   O.match(value, {
     onNone: () => O.some(R.empty<string, unknown>()),
@@ -455,8 +451,6 @@ const familyObject = (value: O.Option<unknown>): O.Option<ManifestObject> =>
 const familySides = (change: KeyedChange): O.Option<readonly [ManifestObject, ManifestObject]> =>
   O.all([familyObject(change.before), familyObject(change.after)]);
 
-// A field that only appears or disappears as `{}` has no keyed entries, yet the
-// presence itself is the change (an empty `exports` map blocks every entry point).
 const entriesOrField = <A>(entries: ReadonlyArray<A>, field: () => A): ReadonlyArray<A> =>
   A.isReadonlyArrayNonEmpty(entries) ? entries : [field()];
 
@@ -668,7 +662,6 @@ const readWorkspace = Effect.fnUntraced(function* <R>(
   };
 });
 
-// Ancestor directories of a path, deepest first, excluding the repository root.
 const ancestorDirectories = (path: string): ReadonlyArray<string> =>
   pipe(
     A.dropRight(Str.split("/")(path), 1),
@@ -745,7 +738,6 @@ const classifyEntry = Effect.fnUntraced(function* <R>(
   );
 });
 
-// Memoize a read source for one classification, so a manifest read for ownership is not re-read for its diff.
 const memoizeReadAt = Effect.fnUntraced(function* <R>(readAt: RouteReadAt<R>) {
   const cache = yield* Ref.make(HashMap.empty<string, O.Option<string>>());
   const read: RouteReadAt<R> = (ref, path) => {
@@ -778,7 +770,6 @@ const atomOrder: Order.Order<ChangeAtom> = Order.combine(
 
 const CLASSIFY_CONCURRENCY = 8;
 
-// The pseudo-path of the one atom that stands for the commits a head adds over its base.
 const COMMITS_PATH = "<commits>";
 const isPositive = (count: number): boolean => count > 0;
 const shortSha = Str.slice(0, 12);
@@ -795,7 +786,9 @@ const shortSha = Str.slice(0, 12);
  * it yields one atom per changed field family (`scripts`, `exports`,
  * `catalog`/`catalogs`/`workspaces.catalog`, each dependency field split into
  * version, added and removed, then each other top-level field), whose detail
- * lists the changed entries in key order. Every other path yields exactly one
+ * lists the changed entries in key order. A family that only appears or
+ * disappears as `{}` still yields its atom, since the presence is the change
+ * (an empty `exports` map blocks every entry point). Every other path yields exactly one
  * atom from {@link pathAtomKind}. When `diff.commits` is positive, one
  * `commits` atom (path `<commits>`, no `pkg`, detail
  * `<n> commit(s) <base12>..<head12>`) follows the path atoms, so a head whose
@@ -866,7 +859,6 @@ const routeGitErrors: GitCommandErrorAdapter<RouteError> = {
   onTruncated: O.some((commandLine: string) => RouteError.new("git", `${commandLine} printed truncated output.`)),
 };
 
-// Read a blob at a commit: `ls-tree` decides presence (an absent path is not a git failure), `show` reads it.
 const gitReadAt =
   (repoRoot: string): RouteReadAt<Git> =>
   (ref, path) =>
@@ -930,8 +922,9 @@ const classifyCommitRange = Effect.fn("RouteClassify.classifyCommitRange")(funct
  * {@link ChangeSet} carries the resolved shas), lists the diff with
  * `git diff --name-status -z --no-renames`, counts the added commits with
  * `git rev-list --count <base>..<head>`, and reads files at either commit
- * with `git ls-tree` and `git show`. Only a failing git command is
- * an error (`RouteError` reason `git`).
+ * with `git ls-tree` and `git show`; `ls-tree` decides presence, so an absent
+ * path reads as `None`. Only a failing git command is an error (`RouteError`
+ * reason `git`).
  *
  * **Example** (Provide the live classifier)
  *

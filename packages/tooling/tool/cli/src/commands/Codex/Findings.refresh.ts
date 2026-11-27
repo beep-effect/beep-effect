@@ -1136,10 +1136,6 @@ const verifyMovedAsideSnapshot = Effect.fnUntraced(function* (
   original: ReadonlyArray<PacketSnapshotFile>
 ) {
   const fs = yield* FileSystem.FileSystem;
-  // Close the last comparison-to-rename race: a writer could change the
-  // packet after the preflight snapshot but immediately before this move.
-  // Compare the moved-aside bytes before promotion so that version is
-  // restored rather than silently replaced when it differs.
   const canonicalBackupDir = yield* fs
     .realPath(backupDir)
     .pipe(
@@ -1187,8 +1183,6 @@ const cleanupRefreshStaging = Effect.fnUntraced(function* (packetDir: string, st
   const backupExists = yield* fs.exists(backupDir).pipe(Effect.orElseSucceed(() => false));
   const packetExists = yield* fs.exists(packetDir).pipe(Effect.orElseSucceed(() => false));
   if (backupExists && !packetExists) {
-    // The backup is the only surviving copy in this state. Restore it or
-    // leave it in place for recovery; cleanup must never delete it.
     yield* fs.rename(backupDir, packetDir).pipe(Effect.ignore);
   }
   yield* fs.remove(stagingDir, { recursive: true, force: true }).pipe(Effect.ignore);
@@ -1231,6 +1225,16 @@ const commitRefreshSnapshot = Effect.fnUntraced(function* (
 /**
  * Reconcile and atomically promote a full-snapshot refresh.
  *
+ * **Details**
+ *
+ * Even a refresh with no new findings validates the manifest's catalog against
+ * the incoming ledger, so raw evidence cannot switch provider contracts under an
+ * unchanged manifest. The packet is staged in full and compared with the
+ * snapshot read at the start; at promotion the moved-aside packet is compared
+ * once more, so a writer that changed it in that last window gets its version
+ * restored rather than silently replaced. When a failure leaves only the
+ * backup, cleanup restores it or leaves it in place, never deletes it.
+ *
  * **Example** (Inspect the refresh operation)
  *
  * ```ts
@@ -1263,8 +1267,6 @@ export const refreshCodexFindingsPacket = Effect.fnUntraced(function* (options: 
     );
   }
   const appended = yield* validateReconciliation(options.plan, options.source);
-  // Validate even a no-new-findings refresh: raw evidence must not silently
-  // switch provider contracts while the authored manifest remains unchanged.
   const manifestFile = yield* requireSnapshotFile(original, "ops/manifest.json");
   const manifest = yield* decodeRefreshManifestText(manifestFile.contents);
   yield* validateManifestCatalog(manifest, options.source.ledger);

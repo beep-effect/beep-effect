@@ -264,9 +264,6 @@ export const codexIdFromFindingUrl = (url: string): O.Option<string> => {
   return /^[0-9a-f]{32}$/.test(tail) ? O.some(tail) : O.none();
 };
 
-// The export's `description` column is a quoted cell that may carry commas and
-// newlines, so RFC 4180 handling is mandatory: `@beep/csv` reads it with the
-// comma fixed, never a guessed delimiter.
 const csvReadOptions = CsvCodecOptions.default.read;
 
 const cellAt = (row: ReadonlyArray<string>, column: (typeof CODEX_CSV_COLUMNS)[number]): string =>
@@ -275,8 +272,6 @@ const cellAt = (row: ReadonlyArray<string>, column: (typeof CODEX_CSV_COLUMNS)[n
 const decodeSeverity = S.decodeUnknownOption(CodexCsvSeverity);
 const decodeStatus = S.decodeUnknownOption(CodexCsvStatus);
 
-// Only the source-qualified Diff scan identity is verified by a real export.
-// A new source namespace must be admitted with its own fixture, never stripped.
 class SecurityCloudCsvRow extends S.Opaque<SecurityCloudCsvRow, { readonly brand: unique symbol }>()(
   S.Struct({
     "Finding ID": SecurityCloudFindingId,
@@ -342,21 +337,6 @@ const decodeSecurityCloudRow = Effect.fn("CodexFindings.decodeSecurityCloudRow")
   };
 });
 
-/**
- * Decode one data row into its tracked projection and its raw report body.
- *
- * **Details**
- *
- * The two halves are returned separately on purpose. `finding` is the only
- * shape any tracked renderer accepts; `report` carries the unsanitized report
- * text and relevant paths and is reachable only by the ignored `raw/` writer.
- * Personal-data columns are read by neither. `index` is zero-based over data
- * rows, so the reported line number adds two to account for the header.
- *
- * @param row - Raw cells of one data row.
- * @param index - Zero-based position of the row among data rows.
- * @returns The tracked projection paired with its raw report body.
- */
 const decodeRow = Effect.fnUntraced(function* (row: ReadonlyArray<string>, index: number) {
   const line = index + 2;
   if (A.length(row) !== A.length(CODEX_CSV_COLUMNS)) {
@@ -408,6 +388,13 @@ const matchesCsvColumns = (actual: ReadonlyArray<string>, expected: ReadonlyArra
  * duplicated finding identity, so every downstream stage receives a payload
  * that already reconciles.
  *
+ * **Details**
+ *
+ * The export is read as RFC 4180 CSV with the comma fixed, never a guessed
+ * delimiter: the `description` cell is quoted and may carry commas and
+ * newlines. Every row of one export names the same repository, so it is read
+ * from the first data row.
+ *
  * **Gotchas**
  *
  * `findings` carries no description, author, or assignee — it is the tracked
@@ -446,9 +433,6 @@ export const decodeCodexFindingsCsv = Effect.fnUntraced(function* (text: string)
   const legacy = matchesCsvColumns(header, CODEX_CSV_COLUMNS);
   const securityCloud = matchesCsvColumns(header, SECURITY_CLOUD_CSV_COLUMNS);
   if (!legacy && !securityCloud) {
-    // A signed-out export is an HTML login document, which lands here rather
-    // than as a parse crash. Both cases mean "no usable export", so the
-    // operator gets one instruction instead of a stack trace.
     return yield* CodexFindingsIngestError.make({
       reason: Str.includes("<html")(Str.toLowerCase(Str.slice(0, 400)(text)))
         ? "auth-expired"
@@ -488,8 +472,6 @@ export const decodeCodexFindingsCsv = Effect.fnUntraced(function* (text: string)
     source,
     findings,
     reports,
-    // Every row of one export names the same repository; the head row is the
-    // only place it needs to be read from.
     repository: O.getOrElse(A.head(repositories), () => ""),
     statuses: A.dedupe(A.map(findings, (finding) => finding.codexStatus)),
   };

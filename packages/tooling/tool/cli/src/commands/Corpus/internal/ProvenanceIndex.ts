@@ -41,15 +41,8 @@ const now = DateTime.now.pipe(Effect.map(DateTime.formatIso));
 const bump = (counts: Record<string, number>, key: string) => {
   counts[key] = (counts[key] ?? 0) + 1;
 };
-// Backslashes are name bytes in pffexport trees (Outlook attachment display
-// names); only `/` separates segments, so no normalization happens here.
 const relative = (path: Path.Path, root: string, file: string) => P.CorpusRelativePath.make(path.relative(root, file));
 
-// `boundary` is the directory a resolved entry may not escape; the census
-// passes the corpus home so symlinks from `organized/` into `raw/` resolve
-// to their canonical path (and dedupe there) instead of failing the walk.
-// Because in-boundary symlinks are followed, `visited` holds every canonical
-// directory already walked: a link back to an ancestor is skipped, not looped.
 const walk = Effect.fn("Provenance.walk")(function* (
   boundary: string,
   root: string,
@@ -89,7 +82,6 @@ const writeSyncedFile = (nodeFs: typeof import("node:fs"), file: string, content
 };
 
 const bestEffortCleanup = (remove: () => void): void => {
-  // The write error remains authoritative.
   Result.try(remove);
 };
 
@@ -449,7 +441,6 @@ const sniffBatch = Effect.fn("Provenance.sniffBatch")(function* (batch: Readonly
   const mime = yield* capture(command, ["-b", "--mime-type", "--print0", "-f", "-"], input);
   const ext = yield* capture(command, ["-b", "--extension", "--print0", "-f", "-"], input);
   if (mime.code !== 0 || ext.code !== 0) return yield* CorpusCommandError.make({ message: "file(1) batch failed." });
-  // With -b, file(1) emits verdict lines; --print0 adds filename NULs only without -b.
   const mimes = Str.split(Str.trim(mime.stdout), /\0?\r?\n/);
   const extensions = Str.split(Str.trim(ext.stdout), /\0?\r?\n/);
   if (mimes.length !== batch.length || extensions.length !== batch.length)
@@ -473,6 +464,12 @@ const sniff = Effect.fn("Provenance.sniff")(function* (paths: ReadonlyArray<stri
 });
 /**
  * Byte-only file identification through `file(1)`.
+ *
+ * **Gotchas**
+ *
+ * A custom `command` must answer like file(1) under `-b`: one verdict line per
+ * input. `--print0` adds NUL separators only without `-b`, so lines are split
+ * on an optional NUL before each line break.
  *
  * **Example** (Provide a custom binary)
  *
@@ -549,27 +546,6 @@ export const AttachmentRepairJournalLive = Layer.effect(
   })
 );
 
-/**
- * Determine a clipped-name repair without reading file contents or changing state.
- *
- * **Example** (Complete a PDF name)
- *
- * ```ts
- * import { proposeAttachmentRepair } from "@beep/repo-cli/commands/Corpus/internal/ProvenanceIndex"
- *
- * const result = proposeAttachmentRepair("1_report.p", "application/pdf", ["pdf"])
- * console.log(result.proposedFileName) // "1_report.pdf"
- * ```
- *
- * @param name - The on-disk attachment name including its `N_` ordinal prefix.
- * @param mime - The byte-signature MIME type reported by `file --mime-type`.
- * @param extensions - Lower-case extension candidates from `file --extension`.
- * @returns The clip analysis, flags, decision, and proposed name for the attachment.
- * @category utilities
- * @since 0.0.0
- */
-// Extension candidates for MIME types where `file --extension` prints `???`.
-// Order matters: the first entry completes a fully eaten extension.
 const fallbackExtensionsByMime: Readonly<Record<string, ReadonlyArray<string>>> = {
   "application/gzip": ["gz"],
   "application/msword": ["doc", "dot"],
@@ -700,9 +676,25 @@ const proposal = (name: string, mime: string, extensions: ReadonlyArray<string>)
 };
 
 /**
- * Pure clipped-name proposal with data-first and pipeable signatures.
- * **Example** (Complete a PDF) `proposeAttachmentRepair("1_report.p", "application/pdf", ["pdf"])`
+ * Determine a clipped-name repair without reading file contents or changing state.
  *
+ * **Details**
+ *
+ * Data-first and pipeable (`proposeAttachmentRepair(mime, extensions)(name)`).
+ *
+ * **Example** (Complete a PDF name)
+ *
+ * ```ts
+ * import { proposeAttachmentRepair } from "@beep/repo-cli/commands/Corpus/internal/ProvenanceIndex"
+ *
+ * const result = proposeAttachmentRepair("1_report.p", "application/pdf", ["pdf"])
+ * console.log(result.proposedFileName) // "1_report.pdf"
+ * ```
+ *
+ * @param name - The on-disk attachment name including its `N_` ordinal prefix.
+ * @param mime - The byte-signature MIME type reported by `file --mime-type`.
+ * @param extensions - Lower-case extension candidates from `file --extension`.
+ * @returns The clip analysis, flags, decision, and proposed name for the attachment.
  * @category utilities
  * @since 0.0.0
  */
@@ -853,6 +845,13 @@ const outputRoot = Effect.fn("Provenance.outputRoot")(function* (root: string, o
 
 /**
  * Stream each staging tree to an index and aggregate summary.
+ *
+ * **Gotchas**
+ *
+ * A backslash in a pffexport name (an Outlook attachment display name) is a
+ * name byte, never a separator: only `/` separates segments, and relative paths
+ * are not normalized.
+ *
  * **Example** (Build an index program)
  * ```ts
  * import { indexMailExportTrees } from "@beep/repo-cli/commands/Corpus/internal/ProvenanceIndex"
@@ -993,8 +992,6 @@ const applyProposal = Effect.fn("Provenance.applyProposal")(function* (
   const path = yield* Path.Path;
   const journal = yield* AttachmentRepairJournal;
   if (row.proposedFileName === undefined) return yield* CorpusCommandError.make({ message: "Missing proposed name." });
-  // Only the POSIX separator and NUL are unsafe here: pffexport keeps Windows
-  // backslashes inside attachment names, and the rename stays in one directory.
   if (/[/\0]/.test(row.proposedFileName))
     return yield* CorpusCommandError.make({
       message: `Unsafe magic extension proposal for ${row.relativePath} -> ${row.proposedFileName}`,
@@ -1074,6 +1071,13 @@ const scanAttachments = Effect.fn("Provenance.scanAttachments")(function* (
 
 /**
  * Plan, apply, or undo byte-signature attachment extension repairs.
+ *
+ * **Gotchas**
+ *
+ * A proposed name is refused only for a `/` or a NUL: pffexport keeps Windows
+ * backslashes inside attachment names, and a repair renames within one
+ * directory.
+ *
  * **Example** (Build a plan)
  * ```ts
  * import { repairAttachmentExtensions } from "@beep/repo-cli/commands/Corpus/internal/ProvenanceIndex"
@@ -1138,6 +1142,14 @@ const writeMetadataBatches = Effect.fn("Provenance.writeMetadataBatches")(functi
 
 /**
  * Batch document metadata reads with bounded concurrency and serialize output rows.
+ *
+ * **Details**
+ *
+ * Batches run in waves of `concurrency`, so the full census is never held in
+ * memory. A symlink inside the corpus home resolves to its canonical path and is
+ * deduplicated there (links from `organized/` into `raw/` included) instead of
+ * failing the walk; a link back to a directory already walked is skipped.
+ *
  * **Example** (Build a census)
  * ```ts
  * import { runMetadataCensus } from "@beep/repo-cli/commands/Corpus/internal/ProvenanceIndex"
@@ -1177,7 +1189,6 @@ export const runMetadataCensus = Effect.fn("Provenance.runMetadataCensus")(funct
         files.push(candidate);
       })
     );
-    // Bound each concurrent wave so the full census is never retained in memory.
     for (const wave of A.chunksOf(A.chunksOf(files, options.batchSize), options.concurrency)) {
       const batches = yield* Effect.forEach(wave, (batch) => reader.readBatch(options.corpusRoot, label, batch), {
         concurrency: options.concurrency,

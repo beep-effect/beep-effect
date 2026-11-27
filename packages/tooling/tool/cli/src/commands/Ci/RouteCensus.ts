@@ -83,13 +83,9 @@ const PRE_PUSH_LANE_PREFIX = "quality:";
 // The pre-push specs are read for their ids and declaration order only; no
 // step runs, so the repository root they would run in is a placeholder.
 const PRE_PUSH_SPEC_ROOT = ".";
-// Heads classified at once; each classification spawns git.
 const ROUTE_HEAD_CONCURRENCY = 4;
-// Missing head commits fetched by sha at once.
 const ROUTE_FETCH_CONCURRENCY = 4;
-// Shas per `git cat-file --batch-check` call, keeping argv and output small.
 const ROUTE_BATCH_CHECK_CHUNK = 500;
-// A head whose commit cannot be fetched is routed as one unknown atom at this path.
 const UNRESOLVED_HEAD_PATH = "<unresolved head>";
 const UNRESOLVED_MERGE_BASE = "<unresolved>";
 
@@ -197,9 +193,6 @@ export const ROUTE_SETUP_STEP_NAMES: ReadonlyArray<string> = [
   "Verify coverage runtime features",
 ];
 const SETUP_STEP_NAMES: HashSet.HashSet<string> = HashSet.fromIterable(ROUTE_SETUP_STEP_NAMES);
-// An aggregate job checks its shards' results in one step: `Require every Lint shard`, `Require every
-// planned Test Unit shard`, `Require every planned Test Integration partition`, `Require every Property
-// Laws slice`.
 const AGGREGATE_STEP_PREFIX = "Require every ";
 
 /**
@@ -320,12 +313,9 @@ export const routeStepClass = (name: string): RouteStepClass =>
 const isFailureText = (conclusion: O.Option<string>): boolean =>
   O.exists(conclusion, (value) => Str.Equivalence(value, "failure"));
 
-// A step that stopped its job without failing: it never concluded, or it was cancelled (a timeout, a lost
-// runner).
 const isUnfinishedStep = (step: HostedStep): boolean =>
   O.match(step.conclusion, { onNone: () => true, onSome: (value) => Str.Equivalence(value, "cancelled") });
 
-// The step a failed job stopped in: its first failed step, else its first unfinished one.
 const stoppingStep = (job: HostedJob): O.Option<HostedStep> =>
   O.flatMap(job.steps, (steps) =>
     O.orElse(
@@ -338,7 +328,6 @@ const redOriginOf = (job: HostedJob): RouteRedOrigin => {
   const tasks = O.getOrElse(job.tasks, A.empty<HostedTaskOutcome>);
   const tasksPassed =
     A.isReadonlyArrayNonEmpty(tasks) && A.every(tasks, (task) => RouteTaskOutcome.is.pass(task.outcome));
-  // A failed job whose every recorded task passed failed outside its tasks.
   const ownWork = (origin: RouteRedOrigin): RouteRedOrigin => (tasksPassed ? RouteRedOrigin.Enum.harness : origin);
   return A.some(tasks, (task) => RouteTaskOutcome.is.fail(task.outcome))
     ? RouteRedOrigin.Enum.task
@@ -882,7 +871,6 @@ export const ensureRouteHeads = (
     if (A.isReadonlyArrayEmpty(shas)) {
       return A.empty<string>();
     }
-    // Every head already local means no network at all: a local report runs offline.
     const missingCommits1 = yield* git.missingCommits(shas);
     if (A.isReadonlyArrayEmpty(missingCommits1)) {
       return A.empty<string>();
@@ -943,8 +931,6 @@ export interface RouteGitShape {
  */
 export class RouteGit extends Context.Service<RouteGit, RouteGitShape>()($I`RouteGit`) {}
 
-// The failed-run wording the route error carries for a `Git` failure: the exit code when git ran,
-// the refusal or unknown-object reason otherwise.
 // Every pull request head, mirrored under `refs/remotes/pull/*` (forced, since a head moves on each push).
 const PULL_HEADS_REFSPEC = "+refs/pull/*/head:refs/remotes/pull/*";
 
@@ -966,7 +952,8 @@ const describeGitFailure = (error: GitCommandError | NotARepositoryError | Unkno
  * refs after a branch is deleted), then `git cat-file --batch-check` over the
  * heads, then `git fetch --no-write-fetch-head origin <sha>` for each head still
  * missing (a head a force-push replaced has no pull ref but stays fetchable by
- * sha). Both fetches run on the patient (15-minute) `Git` instance. `mergeBase`
+ * sha), which leaves `FETCH_HEAD` to concurrent readers of the clone. Both
+ * fetches run on the patient (15-minute) `Git` instance. `mergeBase`
  * reads stdout only, so a git warning on stderr never becomes part of the sha.
  *
  * **Example** (Build the git reads for a checkout)
@@ -996,7 +983,6 @@ export const makeRouteGit = Effect.fn("RouteGit.make")(function* (
   const kit = yield* Git;
   const patient = yield* patientGit;
   const spawnFailed = (commandLine: string) => RouteError.mapError("git", `Failed to spawn ${commandLine}.`);
-  // A fetch's exit code, or the capture's spawn failure: a kit failure carrying an exit code is that code.
   const fetchExit =
     (invocation: GitInvocation) =>
     <R>(fetch: Effect.Effect<void, GitKitError, R>): Effect.Effect<number, RouteError, R> =>
@@ -1052,7 +1038,6 @@ export const makeRouteGit = Effect.fn("RouteGit.make")(function* (
     }),
     ensureHeads: ensureRouteHeads({
       fetchCommit: Effect.fn("RouteGit.fetchCommit")(function* (sha: string) {
-        // `FETCH_HEAD` stays untouched for concurrent readers of the clone.
         const fetch = { ref: sha, noWriteFetchHead: true } as const;
         const exitCode = yield* patient
           .fetch(repoRoot, fetch)
@@ -1190,7 +1175,6 @@ type HeadEvidence = {
   readonly unknownRedNames: ReadonlyArray<string>;
 };
 
-// Failed jobs no rule maps to a lane: a replay cannot tell whether one hid a skipped red.
 const unknownRedJobNames = (runs: ReadonlyArray<HostedRun>): ReadonlyArray<string> =>
   A.dedupe(
     A.map(
@@ -1204,7 +1188,6 @@ const unknownRedJobNames = (runs: ReadonlyArray<HostedRun>): ReadonlyArray<strin
     )
   );
 
-// Sound by totality: `unknown` reaches every lane, so the route runs everything for the head.
 const unresolvedHeadAtom = (headSha: string): ChangeAtom =>
   ChangeAtom.make({
     kind: "unknown",
@@ -1257,14 +1240,6 @@ const CENSUS_ROW_ORDER: Order.Order<RouteCensusRow> = Order.combineAll([
   Order.mapInput(Order.String, (row: RouteCensusRow) => row.lane),
 ]);
 
-// Each head adds its per-lane machine time to the (kind, lane) row of every
-// kind it contains, as pure or mixed time. Purity is judged over the tree
-// kinds K' (the head's kinds without `commits`, which nearly every head
-// carries): a tree kind is pure when K' is exactly that kind, and `commits`
-// is pure only on a head with no tree kind at all (an empty-tree head).
-// Otherwise the time is mixed, so `commits` still shows mixed time on every
-// head with tree changes. A head counts once per row however many jobs or
-// attempts the lane ran.
 const censusRows = (heads: ReadonlyArray<HeadEvidence>): ReadonlyArray<RouteCensusRow> => {
   const rows = A.reduce(heads, HashMap.empty<string, RouteCensusRow>(), (acc, head) => {
     const kinds = headKinds(head.atoms);
@@ -1300,7 +1275,6 @@ const lanesConcluded = (
     )
   );
 
-// The failed lane jobs whose red is charged to their lane (`charged`), or charged to none.
 const failedLaneJobs = (
   jobs: ReadonlyArray<readonly [CiLaneId, HostedJob]>,
   charged: boolean
@@ -1326,7 +1300,9 @@ const NEWEST_FIRST: Order.Order<HostedRun> = Order.mapInput(
  * Pull-request heads are the corpus runs with event `pull_request`, grouped
  * by head sha in corpus order; the base candidates are the `push` runs on
  * `main`. Both methods first make every head present (`ensureHeads`), then
- * classify each head against its merge base. The replay's base run is the
+ * classify each head against its merge base. The replay also fetches the
+ * `main` push heads the checkout lacks; one still missing cannot be an
+ * ancestor candidate, so its base evidence is unknown. The replay's base run is the
  * `main` push run of the merge base itself, else the latest `main` push run
  * whose head is an ancestor of the merge base; a lane is green there when one
  * of its jobs succeeded. With no base run every skipped red counts
@@ -1426,8 +1402,6 @@ export const makeRouteCensusReader: Effect.Effect<
   const replay = Effect.fn("RouteCensusReader.replay")(function* (corpus: RouteCorpusLoaded) {
     const heads = yield* headEvidence(corpus);
     const mainRuns = A.filter(corpus.runs, isMainPushRun);
-    // Main commits the checkout lacks are fetched by sha; one that stays missing
-    // cannot be an ancestor candidate, so its base evidence reads as unknown.
     const mainShas = A.dedupe(A.map(A.sort(mainRuns, NEWEST_FIRST), (run) => run.headSha));
     const ensureHeads3 = yield* git.ensureHeads(mainShas);
     const missingMain = HashSet.fromIterable(ensureHeads3);
@@ -1444,14 +1418,12 @@ export const makeRouteCensusReader: Effect.Effect<
       return O.map(ancestor, mainRunsAt);
     });
 
-    // Each head's replay row with the names of the failed jobs that could hide a skipped red on it.
     const replayed = yield* Effect.forEach(
       heads,
       Effect.fnUntraced(function* (head: HeadEvidence) {
         const required = requiredLanes(head.atoms);
         const skipped = skippedLanes(required);
         const base = head.resolved ? yield* baseRuns(head.mergeBase) : O.none<ReadonlyArray<HostedRun>>();
-        // Only reds charged to a lane count; aggregate, setup and harness reds stay apart as unknown.
         const red = laneSet(failedLaneJobs(head.jobs, true));
         const uncharged = failedLaneJobs(head.jobs, false);
         const unchargedLanes = laneSet(uncharged);
@@ -1479,7 +1451,6 @@ export const makeRouteCensusReader: Effect.Effect<
                 !O.exists(baseRed, HashSet.has(lane))
             ),
         });
-        // Only a head that skipped lanes can hide a skipped red behind an unmatched job name.
         const unknownRedNames = A.appendAll(
           A.isReadonlyArrayNonEmpty(skipped) ? head.unknownRedNames : A.empty<string>(),
           A.map(

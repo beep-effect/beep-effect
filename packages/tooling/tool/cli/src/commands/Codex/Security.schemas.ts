@@ -47,15 +47,8 @@ export const SECURITY_PACKAGE_VERSION = "0.1.27";
  */
 export const SECURITY_PLUGIN_VERSION = "0.1.95";
 
-/**
- * Every remote spelling GitHub and the upstream seal can produce for one repository:
- * `https://`, `http://`, `ssh://[user@]`, and scp-style `git@github.com:`; host
- * case-insensitive; one terminal `.git` is treated as a transport suffix,
- * followed by at most one trailing slash.
- */
 const GITHUB_REMOTE = /^(?:https?:\/\/|ssh:\/\/(?:[^@/]+@)?|git@)github\.com[:/]([^?#]+?)(?:\.git)?\/?$/i;
 
-// The preceding pattern check guarantees the mandatory slug capture.
 const remoteSlug = Str.replace(GITHUB_REMOTE, "$1");
 
 /**
@@ -65,7 +58,9 @@ const remoteSlug = Str.replace(GITHUB_REMOTE, "$1");
  * The upstream seal writes scheme URLs (`ssh://git@github.com/owner/repo.git`)
  * while a local checkout's origin is often scp-style (`git@github.com:owner/repo.git`).
  * Both, plus `https://` and `http://`, decode to the same slug; encoding renders
- * the canonical `https://github.com/owner/repo.git` form.
+ * the canonical `https://github.com/owner/repo.git` form. The `ssh://` form may
+ * carry a user, the host is case-insensitive, and one terminal `.git` is a
+ * transport suffix followed by at most one trailing slash.
  *
  * **Gotchas**
  * Bare and `.git`-suffixed URLs identify the same slug only when the repository
