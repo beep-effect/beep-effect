@@ -35,15 +35,14 @@ import {
   queryInput,
 } from "./helpers/Retention.ts";
 
-// Generate ordered windows constructively; filtering equal size-zero integers exhausts the generator.
-const PolicyPositive = RetentionPolicy.fields.hotThroughMillis.check(S.isLessThanOrEqualTo(1_000_000));
-const PolicyArbitrary = Arbitrary.schema(
+const BoundedPolicyPart = RetentionPolicy.fields.hotThroughMillis.check(S.isLessThanOrEqualTo(1_000_000));
+const OrderedPolicyByConstruction = Arbitrary.schema(
   S.Struct({
-    hotThroughMillis: PolicyPositive,
-    warmThroughMillis: PolicyPositive,
-    coldThroughMillis: PolicyPositive,
-    decayScaleMillis: PolicyPositive,
-    payloadBudgetBytes: PolicyPositive,
+    hotThroughMillis: BoundedPolicyPart,
+    warmThroughMillis: BoundedPolicyPart,
+    coldThroughMillis: BoundedPolicyPart,
+    decayScaleMillis: BoundedPolicyPart,
+    payloadBudgetBytes: BoundedPolicyPart,
   })
 ).pipe(
   Arbitrary.map((parts) =>
@@ -56,19 +55,22 @@ const PolicyArbitrary = Arbitrary.schema(
 );
 
 describe("retention reporting", () => {
-  it.effect.prop("keeps every schema-generated candidate inert without approval", [PolicyArbitrary], ([policy]) =>
-    Effect.gen(function* () {
-      const value1 = yield* S.decodeEffect(RetentionQuery)(queryInput);
-      const argument = generateRetentionReport(value1, O.some(policy));
-      const madeSnapshot = yield* makeSnapshot();
-      const report = yield* argument.pipe(provideFixture(madeSnapshot, O.none()));
-      expect(report.admission.state).toBe("inert");
-      assertNone(report.pressureRatio);
-      for (const row of report.rows) {
-        expect(row.tier).toBe("unclassified");
-        assertNone(row.decay);
-      }
-    })
+  it.effect.prop(
+    "keeps every schema-generated candidate inert without approval",
+    [OrderedPolicyByConstruction],
+    ([policy]) =>
+      Effect.gen(function* () {
+        const value1 = yield* S.decodeEffect(RetentionQuery)(queryInput);
+        const argument = generateRetentionReport(value1, O.some(policy));
+        const madeSnapshot = yield* makeSnapshot();
+        const report = yield* argument.pipe(provideFixture(madeSnapshot, O.none()));
+        expect(report.admission.state).toBe("inert");
+        assertNone(report.pressureRatio);
+        for (const row of report.rows) {
+          expect(row.tier).toBe("unclassified");
+          assertNone(row.decay);
+        }
+      })
   );
   it.effect(
     "preserves both as-of axes, dispositions, tenant scope and explicit absence without activating policy",
@@ -252,8 +254,10 @@ describe("retention reporting", () => {
   it.effect("sanitizes corrupted policy and report values at serialization boundaries", () =>
     Effect.gen(function* () {
       const policy = yield* S.decodeEffect(RetentionPolicy)(policyInput);
-      // Simulate a JavaScript caller corrupting a value after schema admission.
-      expect(Reflect.set(policy, "payloadBudgetBytes", 0)).toBe(true);
+      expect(
+        Reflect.set(policy, "payloadBudgetBytes", 0),
+        "a JavaScript caller corrupts the policy after schema admission"
+      ).toBe(true);
       const value16 = yield* S.decodeEffect(RetentionQuery)(queryInput);
       const argument2 = generateRetentionReport(value16, O.some(policy));
       const madeSnapshot3 = yield* makeSnapshot();

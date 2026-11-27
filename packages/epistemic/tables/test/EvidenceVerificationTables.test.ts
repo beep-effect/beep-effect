@@ -97,10 +97,6 @@ const evidence = evidenceFor(evidenceId, verifiedAnchor.anchor);
 const frozenManifestationDigest = "c6365048617fc9931cb0232ec17fce6d8a2c87d153a4e590bdcfedd4c44570b3";
 const frozenRow = `{"createdAt":7,"rowVersion":1,"updatedAt":8,"createdByPrincipal":{"component":"Runtime","kind":"System"},"deletedAt":null,"deletedByPrincipal":null,"schemaVersion":"0.0.0","source":"System","updatedByPrincipal":{"component":"Runtime","kind":"System"},"orgId":1,"evidenceId":4,"manifestationKey":"${frozenManifestationDigest}","verifiedAnchor":{"anchor":{"startChar":0,"endChar":16,"quote":"controlling fact"},"source":{"scopeRef":"matter:example","sourceRef":"source:office-action","locator":"sources/office-action.txt","sourceDigest":"sha256:3a6eb0790f39ac87c94f3856b2dd2c5d110e6811602261a9a923d3bb23adc8b7","textDigest":"sha256:3a6eb0790f39ac87c94f3856b2dd2c5d110e6811602261a9a923d3bb23adc8b7","extractor":{"name":"utf8","version":"1"},"normalizationVersion":"1"}},"entityType":"EpistemicEvidenceVerification","publicId":"epistemic_evidence_verification_a7","id":7}`;
 
-// The manifestation key hashes RFC 8785 bytes from the canonical digest owner,
-// which refuses an unpaired surrogate. Schema-derived free text (quotes,
-// source refs, versions) can hold one; the key function then fails typed, in
-// its SchemaError channel, with a message naming the owner's refusal.
 const manifestationKeyOrRefusal = (manifestation: EvidenceVerificationManifestation) =>
   Result.mapError(
     manifestationKeyFor(manifestation.evidenceId, TextAnchorVerificationReceipt.make(manifestation.verifiedAnchor)),
@@ -150,7 +146,10 @@ describe("EvidenceVerificationTable", () => {
     ([manifestation]) => {
       Result.match(manifestationKeyOrRefusal(manifestation), {
         onFailure: (refusal) => {
-          expect(refusal).toMatch(/LoneSurrogate at "\/verifiedAnchor\//);
+          expect(
+            refusal,
+            "the RFC 8785 digest owner refuses an unpaired surrogate in free text, failing typed in SchemaError"
+          ).toMatch(/LoneSurrogate at "\/verifiedAnchor\//);
         },
         onSuccess: (manifestationKey) => {
           const verification = Result.getOrThrow(

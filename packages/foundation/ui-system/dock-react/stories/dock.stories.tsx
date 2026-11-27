@@ -44,8 +44,6 @@ const NotesPanel = (props: DockPanelProps) => (
 
 const components: Readonly<Record<string, DockRenderer>> = { notes: NotesPanel };
 
-// Pin the story host to fixed dimensions so play geometry never depends on
-// the test viewport; throws when the story markup is missing its host.
 const pinHost = (canvasElement: HTMLElement, width: string, height?: string): HTMLElement => {
   const host = canvasElement.querySelector<HTMLElement>("[data-dock-story]");
   if (host === null) throw new Error("Missing dock story host");
@@ -57,9 +55,9 @@ const pinHost = (canvasElement: HTMLElement, width: string, height?: string): HT
 const openOverflowMenu = (trigger: HTMLElement): Effect.Effect<void> =>
   trigger.getAttribute("aria-expanded") === "true" ? Effect.void : Effect.promise(() => userEvent.click(trigger));
 
-// Query a live handle at execution time (not construction time) so retried
-// attempts never reuse a node a strip re-measure has detached.
-const queried = (find: () => HTMLElement | null, missing: string): Effect.Effect<HTMLElement, string> =>
+const OVERFLOW_MENU_MOUNT_DELAY = Duration.millis(100);
+
+const queryOnEachRun = (find: () => HTMLElement | null, missing: string): Effect.Effect<HTMLElement, string> =>
   Effect.suspend(() => O.fromNullOr(find()).pipe(Effect.fromOption(() => missing)));
 
 const workspace = PopulatedWorkspace.make({
@@ -223,8 +221,6 @@ const DockStory = (props: {
   </div>
 );
 
-// A selector that stops matching is a story bug, not a geometry bug: fail loud
-// before any geometry assertion runs.
 const requireElement = (canvasElement: HTMLElement, selector: string): HTMLElement => {
   const element = canvasElement.querySelector<HTMLElement>(selector);
   if (element === null) {
@@ -233,7 +229,6 @@ const requireElement = (canvasElement: HTMLElement, selector: string): HTMLEleme
   return element;
 };
 
-// Every positioned dock box must resolve its --dock-* properties through the package stylesheet.
 const expectPositionedByDockProperties = (box: HTMLElement): void => {
   const computed = getComputedStyle(box);
   void expect(computed.position).toBe("absolute");
@@ -269,20 +264,18 @@ export const Workspace: Story = {
     void expect(canvas.getByText("Notes")).toBeVisible();
     void expect(canvas.getByText("Outline")).toBeVisible();
     void expect(canvas.getByText("Terminal")).toBeVisible();
-    // "Scratch" appears twice by design — floating header chrome plus the tab —
-    // so text queries are ambiguous. Assert each surface through its own
-    // handle; the tab's accessible name also concatenates its close button's
-    // label, hence the regex.
-    void expect(canvas.getByRole("tab", { name: /Scratch/ })).toBeVisible();
+    void expect(
+      canvas.getByRole("tab", { name: /Scratch/ }),
+      "Scratch titles both the floating header and the tab, whose name also holds its close label"
+    ).toBeVisible();
     void expect(canvasElement.querySelector("[data-floating-title]")).toHaveTextContent("Scratch");
-    // The adapter only writes geometry as --dock-* custom properties; the package stylesheet
-    // (`@beep/dock-react/dock.css`) has to turn them into positioned, sized boxes. A missing
-    // import or a selector that stops matching leaves every pane static, and only a real
-    // browser with the stylesheet loaded can see that.
     const root = requireElement(canvasElement, "[data-dock-root]");
     const group = requireElement(canvasElement, "[data-dock-root] > section[data-group-id]");
     const floating = requireElement(canvasElement, "[data-dock-root] > [data-floating-pane]");
-    void expect(getComputedStyle(root).position).toBe("relative");
+    void expect(
+      getComputedStyle(root).position,
+      "only a real browser with dock.css loaded turns the --dock-* properties into positioned boxes"
+    ).toBe("relative");
     expectPositionedByDockProperties(group);
     expectPositionedByDockProperties(floating);
     void expect(getComputedStyle(group).display).toBe("flex");
@@ -316,13 +309,13 @@ export const CustomTabs: Story = {
     Effect.runPromise(
       Effect.gen(function* () {
         const canvas = within(canvasElement);
-        // This story is about custom tab renderers, not overflow: pin a host
-        // wide enough for all three chips at any test viewport, then await
-        // the (measurement-driven) strip settling with everything visible.
         pinHost(canvasElement, "960px");
         yield* Effect.promise(() =>
           waitFor(() => {
-            expect(canvas.getByTestId("chip-story-tab-alpha")).toBeVisible();
+            expect(
+              canvas.getByTestId("chip-story-tab-alpha"),
+              "a 960px host fits all three chips at any viewport once the strip settles"
+            ).toBeVisible();
             expect(canvas.getByTestId("chip-story-tab-beta")).toBeVisible();
             expect(canvas.getByTestId("chip-story-tab-gamma")).toBeVisible();
           })
@@ -343,11 +336,14 @@ export const ConstrainedSash: Story = {
         if (sash === null || panel === null) {
           throw new Error("Missing constrained sash story geometry");
         }
-        // Pin the host and wait out the same measurement race as
-        // DropQuadrants, then read the sash position at gesture time — a
-        // cached box can drift from a mid-play re-measure.
         pinHost(canvasElement, "960px", "640px");
-        yield* Effect.promise(() => waitFor(() => expect(panel.getBoundingClientRect().width).toBeGreaterThan(100)));
+        yield* Effect.promise(() =>
+          waitFor(() =>
+            expect(panel.getBoundingClientRect().width, "the pinned layout settles before the gesture").toBeGreaterThan(
+              100
+            )
+          )
+        );
         const sashBox = (): DOMRect => sash.getBoundingClientRect();
         yield* Effect.promise(() =>
           userEvent.pointer([
@@ -373,26 +369,17 @@ export const TabOverflow: Story = {
         const canvas = within(canvasElement);
         pinHost(canvasElement, "320px");
         yield* Effect.promise(() => canvas.findByRole("button", { name: /overflowed tabs/ }));
-        // The pinned strip keeps re-measuring after the trigger first
-        // appears, and each measure pass can re-mount it — so a handle
-        // captured once goes stale and its clicks dispatch into a detached
-        // node (CI's full chromium re-measures later than the local headless
-        // shell, which is why only CI saw the menu never open). Every attempt
-        // therefore re-queries both the trigger and the menu item fresh.
         const deltaActive = (): boolean =>
           canvasElement.querySelector("[data-panel-id='story-overflow-delta']")?.getAttribute("data-active") === "true";
         const activateOverflowDelta = Effect.gen(function* () {
           if (deltaActive()) return;
-          const trigger = yield* queried(
+          const trigger = yield* queryOnEachRun(
             () => canvas.queryByRole("button", { name: /overflowed tabs/ }),
             "overflow trigger not mounted"
           );
           yield* openOverflowMenu(trigger);
-          // The open flag is registry-backed, so the menu mounts on the next
-          // render rather than inside the trigger's click turn. Give that
-          // render a frame, then query a fresh item handle for this attempt.
-          yield* Effect.sleep(Duration.millis(100));
-          const item = yield* queried(
+          yield* Effect.sleep(OVERFLOW_MENU_MOUNT_DELAY);
+          const item = yield* queryOnEachRun(
             () => canvas.queryByRole("menuitem", { name: "Overflow Delta" }),
             "Overflow Delta menu item did not mount"
           );
@@ -418,25 +405,15 @@ export const DropQuadrants: Story = {
         if (source === null || target === null) throw new Error("Missing quadrant story geometry");
         const root = canvasElement.querySelector<HTMLElement>("[data-testid='dockview-react']");
         if (root === null) throw new Error("Missing dock root");
-        // Pin the host so the quadrant math never depends on the test
-        // viewport, then wait out the ResizeObserver measurement race. The
-        // root follows the pinned host synchronously (CSS), while the groups
-        // follow it a frame later (ResizeObserver → geometry), so the wait
-        // asserts the projected geometry itself: two equal groups spanning the
-        // root minus the gap, at the root's height. A weaker bound (any
-        // width above the pre-pin size) let the first pointer probe fire on
-        // the pre-pin layout — vitest's default 414px viewport — and the
-        // recorded root-relative pointer landed inside the source group once
-        // the re-layout settled, which compiles to no preview at all.
         pinHost(canvasElement, "960px", "640px");
-        // Never cache boxes: a mid-play re-measure (viewport settle, strip
-        // measurement) moves the live geometry away from any snapshot, so
-        // expected and actual must derive from the same read.
         const targetBox = (): DOMRect => target.getBoundingClientRect();
         yield* Effect.promise(() =>
           waitFor(() => {
             const rootBox = root.getBoundingClientRect();
-            expect(targetBox().width).toBeCloseTo((rootBox.width - QUADRANT_STORY_GAP_PX) / 2, 0);
+            expect(
+              targetBox().width,
+              "groups follow the pinned root a ResizeObserver frame later; probing earlier hits the pre-pin layout"
+            ).toBeCloseTo((rootBox.width - QUADRANT_STORY_GAP_PX) / 2, 0);
             expect(targetBox().height).toBeCloseTo(rootBox.height, 0);
           })
         );

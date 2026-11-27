@@ -43,8 +43,6 @@ const accentOnDark = (identity: BrandIdentity): MarkPaint =>
     lens: identity.dark.surface["0"],
   });
 
-// On a light surface the dark-scheme frame (near-white) disappears; the light foreground
-// keeps the glasses outline legible, with light lenses inside it.
 const accentOnLight = (identity: BrandIdentity): MarkPaint =>
   MarkPaint.make({
     stroke: identity.light.brand["400"],
@@ -68,6 +66,11 @@ const favicon = (identity: BrandIdentity): MarkPaint =>
  * the parity test, which fails when a checked-in file no longer matches its render.
  * The PNG icon set is not generated here; it is rasterised from `assets/favicon.svg`.
  *
+ * **Gotchas**
+ *
+ * `assets/mark.svg` paints its stroke with the explicit accent, because a file loaded through
+ * `<img>` or an asset URL cannot inherit `currentColor`. Inline consumers use `BeepMark` instead.
+ *
  * **Example** (List generated paths)
  *
  * ```ts
@@ -86,8 +89,6 @@ export const renderBrandAssets = (identity: BrandIdentity): ReadonlyArray<Render
   RenderedAsset.make({ path: "styles/brand.css", content: renderThemeCss(identity) }),
   RenderedAsset.make({
     path: "assets/mark.svg",
-    // The standalone file is consumed through <img> and asset URLs where currentColor cannot
-    // inherit, so the stroke is the explicit accent; inline consumers use BeepMark instead.
     content: renderMarkSvg(
       MarkSvgRequest.make({ mark: identity.mark, size: identity.mark.viewBox, paint: accentOnDark(identity) })
     ),

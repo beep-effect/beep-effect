@@ -80,13 +80,6 @@ const requireHead = <Row>(rows: ReadonlyArray<Row>, what: string): Effect.Effect
     })
   );
 
-/**
- * Insert the claim and evidence rows the edge endpoints point at, and answer
- * with the identity every command in one scenario shares. Each scenario seeds
- * its own endpoints, so the database-assigned ids differ and the digest — and
- * therefore the logical edge — is scenario-local even though the suite shares
- * one database.
- */
 const seedScenario = Effect.fnUntraced(function* (scenario: number) {
   yield* migrateEpistemicEdge();
   const db = yield* makeDrizzle();
@@ -175,15 +168,14 @@ const supersedeFact = Effect.fnUntraced(function* (input: {
 
 const $I = $EpistemicServerId.create("test/RetentionAuthority.pglite.test");
 
-// Generate ordered windows constructively; filtering equal size-zero integers exhausts the generator.
-const PolicyPositive = RetentionPolicy.fields.hotThroughMillis.check(S.isLessThanOrEqualTo(1_000_000));
-const PolicyArbitrary = Arbitrary.schema(
+const BoundedPolicyPart = RetentionPolicy.fields.hotThroughMillis.check(S.isLessThanOrEqualTo(1_000_000));
+const OrderedPolicyByConstruction = Arbitrary.schema(
   S.Struct({
-    hotThroughMillis: PolicyPositive,
-    warmThroughMillis: PolicyPositive,
-    coldThroughMillis: PolicyPositive,
-    decayScaleMillis: PolicyPositive,
-    payloadBudgetBytes: PolicyPositive,
+    hotThroughMillis: BoundedPolicyPart,
+    warmThroughMillis: BoundedPolicyPart,
+    coldThroughMillis: BoundedPolicyPart,
+    decayScaleMillis: BoundedPolicyPart,
+    payloadBudgetBytes: BoundedPolicyPart,
   })
 ).pipe(
   Arbitrary.map((parts) =>
@@ -279,7 +271,7 @@ describe("retention authority rebuild", { concurrent: false }, () => {
 
     it.effect.prop(
       "rebuilds disposable retention bytes at two coordinates after full deletion without changing authority",
-      [PolicyArbitrary],
+      [OrderedPolicyByConstruction],
       ([candidate]) =>
         Effect.gen(function* () {
           const scenario = yield* RetentionScenario;
@@ -314,11 +306,10 @@ describe("retention authority rebuild", { concurrent: false }, () => {
                   expect(report.admission.state).toBe("inert");
                   const bytes = yield* fs.readFile(path.join(store, "report.json"));
                   const text = yield* fs.readFile(path.join(store, "report.txt"));
-                  // Destroy the complete store, including an unrelated derived cache artifact.
                   yield* fs.writeFileString(path.join(store, "derived.cache"), "disposable");
                   yield* fs.remove(store, { recursive: true });
                   const exists4 = yield* fs.exists(store);
-                  expect(exists4).toBe(false);
+                  expect(exists4, "the whole store is destroyed, including an unrelated derived cache").toBe(false);
                   const rebuilt = yield* rebuildRetentionStore(store, query, O.some(candidate));
                   const readFile5 = yield* fs.readFile(path.join(store, "report.json"));
                   expect(readFile5).toEqual(bytes);

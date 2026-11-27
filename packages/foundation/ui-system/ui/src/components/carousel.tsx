@@ -66,14 +66,7 @@ const readCarouselState = (api: CarouselApi): CarouselState =>
     ? { canScrollNext: false, canScrollPrev: false }
     : { canScrollNext: api.canScrollNext(), canScrollPrev: api.canScrollPrev() };
 
-// Process-unique scope generator. `React.useId()` is only unique within a
-// single React root (default `identifierPrefix`), so two independent roots
-// (e.g. SSR/hydration) can collide on their first carousel and share these
-// module-scoped `Atom.family` entries. This monotonic counter, captured once
-// per mounted instance via `useRef`, guarantees a unique key across every root
-// that shares this module's atom-family cache. The key is never serialized for
-// hydration (the atoms hold client-only Embla state), so it needs no
-// server/client consistency — only per-instance stability and uniqueness.
+// decision: carousel-scope-process-counter
 let carouselScopeCounter = 0;
 const nextCarouselScope = (): string => {
   carouselScopeCounter += 1;
@@ -88,9 +81,6 @@ const carouselApiAtom = Atom.family((_scope: string) => Atom.make<CarouselApi>(u
 
 const carouselSetApiAtom = Atom.family((_scope: string) => Atom.make<CarouselProps["setApi"]>(undefined));
 
-// Stable per-instance side-effect atom: subscribes to the embla `api` and wires
-// the select/reInit listeners exactly once per `api` change, restoring the prior
-// `[api]` dependency semantics without recreating an atom on every render.
 const carouselEffectAtom = Atom.family((scope: string) =>
   Atom.make((get) => {
     const stateAtom = carouselStateAtom(scope);
@@ -200,9 +190,7 @@ function Carousel({
   children,
   ...props
 }: React.ComponentProps<"div"> & CarouselProps) {
-  // Lazily allocate a process-unique scope once per instance and keep it stable
-  // across renders. This avoids `React.useId()` cross-root collisions that would
-  // otherwise alias these module-scoped atoms between independent React roots.
+  // decision: carousel-scope-process-counter
   const scopeRef = React.useRef<string | null>(null);
   if (scopeRef.current === null) {
     scopeRef.current = nextCarouselScope();
@@ -219,11 +207,6 @@ function Carousel({
     plugins
   );
 
-  // Bridge render values into the per-instance atoms from a committed effect
-  // boundary (not the render body) so the writes never run during a discarded
-  // or replayed render under Strict/Concurrent Mode. The stable
-  // `carouselEffectAtom` subscribes to `api` and wires the select/reInit
-  // listeners exactly once per `api` change.
   React.useLayoutEffect(() => {
     pushSetApi(setApi);
     pushApi(api);

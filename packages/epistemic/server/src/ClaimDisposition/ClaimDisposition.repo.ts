@@ -140,11 +140,13 @@ export const makeDrizzleClaimDispositionRepository = Effect.fn("Epistemic.ClaimD
       const insert = yield* Effect.fromResult(toClaimDispositionInsert(disposition)).pipe(
         repositoryUnavailable("record")
       );
-      const rows = yield* db.insert(dispositionTable).values(insert).returning().pipe(repositoryUnavailable("record"));
-      // The database assigns the SERIAL id, so the returned row is the
-      // authority; the argument only stands in if the driver returned none.
+      const rowsWithSerialId = yield* db
+        .insert(dispositionTable)
+        .values(insert)
+        .returning()
+        .pipe(repositoryUnavailable("record"));
       return yield* pipe(
-        rows,
+        rowsWithSerialId,
         A.head,
         O.match({
           onNone: () => Effect.succeed(disposition),

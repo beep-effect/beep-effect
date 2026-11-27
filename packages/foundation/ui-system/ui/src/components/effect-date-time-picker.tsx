@@ -155,12 +155,8 @@ const isBeforeDateTime = (value: DateTime.DateTime, comparing: DateTime.DateTime
 const isAfterDateTime = (value: DateTime.DateTime, comparing: DateTime.DateTime): boolean =>
   value.epochMilliseconds > comparing.epochMilliseconds;
 
-// makeUnsafe rejects NaN since effect 4.0.0-beta.104; fromEpochSeconds still admits it, and the
-// MUI picker adapter contract requires an invalid-date sentinel rather than null.
 const createInvalidDateTime = (): DateTime.DateTime => DateTime.fromEpochSeconds(Number.NaN);
 
-// MUI passes "UTC", "default"/"system" (the local zone), or an IANA name; an unknown name
-// leaves the value unchanged.
 const applyTimezone = (value: DateTime.DateTime, timezone: PickersTimezone): DateTime.DateTime => {
   if (timezone === "UTC") {
     return DateTime.toUtc(value);
@@ -333,6 +329,12 @@ const formatExactToken = (value: DateTime.DateTime, locale: string, formatString
  * picker boundary. This adapter performs the MUI-specific month indexing,
  * timezone, formatting, and JavaScript `Date` conversions internally so
  * application state does not need to store `Date`.
+ *
+ * **Gotchas**
+ *
+ * `getInvalidDate` returns a NaN-epoch `DateTime`, the invalid-date sentinel the MUI
+ * adapter contract requires instead of `null`. It is built with
+ * `DateTime.fromEpochSeconds`, because `DateTime.makeUnsafe` rejects NaN.
  *
  * **Example** (Verify month index boundary)
  *

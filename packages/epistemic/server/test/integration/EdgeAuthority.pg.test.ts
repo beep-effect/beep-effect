@@ -1,23 +1,3 @@
-// External-Postgres true-race lane (opt-in). Proves the S5 concurrency rule against a
-// REAL server with genuinely parallel connections, driving the production repository
-// rather than raw SQL: two superseders over one open head, two creators of one new key,
-// and one writer that skips the locking rule entirely.
-//
-// PGlite cannot host this: the in-process driver is single-connection, so nothing there
-// can contend. The lane is gated on its OWN variable — BEEP_TEST_DATABASE_URL points the
-// shared harness at a single-connection pglite-socket server with no btree_gist, which can
-// neither load the extension nor race.
-//
-//   docker run -d --name beep-epistemic-pg -e POSTGRES_PASSWORD=postgres -p 55433:5432 \
-//     pgvector/pgvector:pg17
-//   BEEP_EPISTEMIC_PG_URL=postgres://postgres:postgres@localhost:55433/postgres \
-//     npx vitest run test/integration/EdgeAuthority.pg.test.ts
-//   docker rm -f beep-epistemic-pg
-//
-
-// The blocker observes both writer backend IDs waiting on database locks before
-// releasing its row. The bounded observer uses database-time polling and a live
-// watchdog; TestClock cannot establish native PostgreSQL contention.
 import * as NodeURL from "node:url";
 import * as NodeUtil from "node:util";
 import { CandidateClaim, Evidence } from "@beep/epistemic-domain";
@@ -47,21 +27,18 @@ import { expectBothWritersWaiting } from "./PostgresLock.test-kit.ts";
 import type { EdgeVersion } from "@beep/epistemic-domain/entities/EdgeVersion";
 import type { EdgeAuthorityError, EdgeAuthorityRepositoryShape } from "@beep/epistemic-use-cases/EdgeAuthority";
 
-// Config boot snapshot of the lane selector, per the makePgliteIntegrationGate precedent:
-// Node-safe and law-clean, and the operator exports the variable before the process starts.
 const { BEEP_EPISTEMIC_PG_URL: externalUrl = "" } = process.env;
 
 const migrationsFolder = NodeURL.fileURLToPath(new URL("../../../../_internal/db-admin/drizzle", import.meta.url));
 const migrationsSchema = "epistemic_edge_journal";
 
-// Four connections: the blocker holds one and each contending writer takes its own, so
-// the race is real rather than pool-serialized.
+const unpooledRaceConnections = 4;
 const makeExternalLayer = () =>
   makeDrizzleLayer().pipe(
     Layer.provideMerge(
       PgClient.layerFrom(
         PgClient.make({
-          maxConnections: 4,
+          maxConnections: unpooledRaceConnections,
           url: Redacted.make(externalUrl),
         })
       )
@@ -76,8 +53,7 @@ const decodeSupersede = S.decodeUnknownEffect(SupersedeEdgeFact);
 
 const systemPrincipal = { component: "Runtime", kind: "System" } as const;
 
-// Raw SQL reads snake_case columns straight from the server, so transforms stay off.
-const currentSql = Effect.map(Effect.service(SqlClient.SqlClient), (client) => client.withoutTransforms());
+const rawSnakeCaseSql = Effect.map(Effect.service(SqlClient.SqlClient), (client) => client.withoutTransforms());
 
 const requireHead = <Row>(rows: ReadonlyArray<Row>, what: string): Effect.Effect<Row> =>
   pipe(
@@ -100,10 +76,6 @@ const encodedIdentity = (claimId: number, evidenceId: number, scenario: string) 
     target: { evidenceId, kind: "evidence" },
   }) as const;
 
-/**
- * Seed the endpoint rows one race points at. Every race seeds its own pair, so the
- * database-assigned ids differ and each race owns a distinct logical edge.
- */
 const seedScenario = Effect.fnUntraced(function* (scenario: string, fixture: number) {
   const db = yield* makeDrizzle();
   const argument = db.insert(DbSchema.candidateClaim);
@@ -195,13 +167,7 @@ const partitionOutcomes = (outcomes: ReadonlyArray<Result.Result<EdgeVersion, Ed
   ),
 });
 
-/**
- * Two repository INSTANCES, not two calls on one. The in-process write semaphore is
- * per-instance, so a single instance would serialize the two writers locally and prove
- * nothing about the database. Separate instances model separate processes, which is the
- * only contention the backstops actually have to survive.
- */
-const twoWriters = Effect.fnUntraced(function* () {
+const twoRepositoryInstances = Effect.fnUntraced(function* () {
   const first = yield* makeDrizzleEdgeAuthorityRepository();
   const second = yield* makeDrizzleEdgeAuthorityRepository();
   return [first, second] as const;
@@ -213,15 +179,15 @@ const contend = (
 ) => Effect.all([Effect.result(run(writers[0], 0)), Effect.result(run(writers[1], 1))], { concurrency: "unbounded" });
 
 if (externalUrl.length === 0) {
-  describe.skip("Epistemic EdgeAuthority external Postgres races — BEEP_EPISTEMIC_PG_URL not set", () => {});
+  describe.skip("Epistemic EdgeAuthority external Postgres races — BEEP_EPISTEMIC_PG_URL not set (the pglite-socket harness cannot race)", () => {});
 } else {
-  describe("Epistemic EdgeAuthority external Postgres races", { concurrent: false }, () => {
+  describe("Epistemic EdgeAuthority races on parallel Postgres connections, which single-connection PGlite cannot host", {
+    concurrent: false,
+  }, () => {
     it.layer(
       Layer.effectDiscard(
         Effect.gen(function* () {
-          const sql = yield* currentSql;
-          // The whole db-admin folder is applied, so the reset drops everything it owns
-          // and the journal with it; the lane is then re-runnable against one container.
+          const sql = yield* rawSnakeCaseSql;
           yield* sql`DROP SCHEMA IF EXISTS public CASCADE`;
           yield* sql`CREATE SCHEMA public`;
           yield* sql`DROP SCHEMA IF EXISTS ${sql.unsafe(migrationsSchema)} CASCADE`;
@@ -235,7 +201,7 @@ if (externalUrl.length === 0) {
       it.effect(
         "resets the database and applies the epistemic-edge migration on real Postgres",
         Effect.fnUntraced(function* () {
-          const sql = yield* currentSql;
+          const sql = yield* rawSnakeCaseSql;
 
           const constraints = yield* sql<{ readonly conname: string }>`
             SELECT conname FROM pg_constraint
@@ -246,27 +212,21 @@ if (externalUrl.length === 0) {
             SELECT indexname FROM pg_indexes WHERE indexname = 'epistemic_edge_open_head_idx'
           `;
 
-          expect(A.map(constraints, (row) => row.conname)).toEqual([
-            "epistemic_edge_logical_version_unique",
-            "epistemic_edge_no_overlap",
-          ]);
+          expect(
+            A.map(constraints, (row) => row.conname),
+            "the reset drops the journal too, so the lane re-runs against one container"
+          ).toEqual(["epistemic_edge_logical_version_unique", "epistemic_edge_no_overlap"]);
           expect(A.map(indexes, (row) => row.indexname)).toEqual(["epistemic_edge_open_head_idx"]);
         }),
         120_000
       );
 
-      // Race A — two superseders over one open head on separate connections. A third
-      // connection holds the head's row lock until both writers are parked inside their own
-      // FOR UPDATE, so the overlap is guaranteed rather than hoped for. When the blocker
-      // commits, one writer closes the head and inserts; the other re-evaluates under READ
-      // COMMITTED and finds the head it was promised is gone. Deterministic: one version
-      // increment, one typed conflict, intact lineage, no partial write.
       it.effect(
         "race A: concurrent supersession is deterministic — one writer wins, the other gets a typed conflict",
         Effect.fnUntraced(function* () {
           const scenario = yield* seedScenario("race-a", 11);
-          const sql = yield* currentSql;
-          const writers = yield* twoWriters();
+          const sql = yield* rawSnakeCaseSql;
+          const writers = yield* twoRepositoryInstances();
 
           const argument2 = writers[0];
           const recordFact3 = yield* recordFact(scenario.identity, { amount: "100" }, 1_000, 1_000);
@@ -301,7 +261,6 @@ if (externalUrl.length === 0) {
                     sql
                       .withTransaction(
                         Effect.gen(function* () {
-                          // Pin each writer to the connection whose PID we acknowledge.
                           const rows = yield* sql<{ readonly pid: number }>`SELECT pg_backend_pid()::int AS pid`;
                           const backend = yield* requireHead(rows, "the writer backend PID");
                           yield* Deferred.succeed(index === 0 ? firstPid : secondPid, backend.pid);
@@ -321,9 +280,9 @@ if (externalUrl.length === 0) {
 
           const { failures, successes } = partitionOutcomes(raced);
 
-          expect(A.length(successes)).toBe(1);
+          expect(A.length(successes), "the blocker parks both writers inside FOR UPDATE, so they overlap").toBe(1);
           expect(A.map(successes, (version) => version.version)).toEqual([2]);
-          expect(A.length(failures)).toBe(1);
+          expect(A.length(failures), "the loser re-reads under READ COMMITTED and finds its head gone").toBe(1);
           pipe(A.every(failures, SupersessionConflict.is), assertTrue);
 
           const versions = yield* sql<{ readonly n: number }>`
@@ -344,15 +303,12 @@ if (externalUrl.length === 0) {
         120_000
       );
 
-      // Race B — two creators of one brand-new key. There is nothing to lock, so the
-      // application rule cannot serialize them at all: the database backstop is the entire
-      // guarantee, and it holds.
       it.effect(
         "race B: concurrent creation is deterministic — the second open head is rejected by a backstop",
         Effect.fnUntraced(function* () {
           const scenario = yield* seedScenario("race-b", 12);
-          const sql = yield* currentSql;
-          const writers = yield* twoWriters();
+          const sql = yield* rawSnakeCaseSql;
+          const writers = yield* twoRepositoryInstances();
 
           const raced = yield* contend(writers, (writer, index) =>
             recordFact(scenario.identity, { attempt: `${index}` }, 1_000 + index, 1_000 + index).pipe(
@@ -363,14 +319,15 @@ if (externalUrl.length === 0) {
           const { failures, successes } = partitionOutcomes(raced);
 
           expect(A.length(successes)).toBe(1);
-          expect(A.length(failures)).toBe(1);
+          expect(
+            A.length(failures),
+            "a brand-new key has nothing to lock; the database backstop is the guarantee"
+          ).toBe(1);
           pipe(A.every(failures, SupersessionConflict.is), assertTrue);
-          // Both creators derive version 1 and the same public ID. Either
-          // unique index can reject the loser before another backstop does;
-          // every equivalent duplicate must retain the typed conflict.
-          expect(NodeUtil.inspect(failures, { depth: 12 })).toMatch(
-            /epistemic_edge_(?:open_head_idx|no_overlap|logical_version_unique|version_public_id_unique_idx)/u
-          );
+          expect(
+            NodeUtil.inspect(failures, { depth: 12 }),
+            "both creators derive version 1 and one public id, so any equivalent unique index may reject the loser"
+          ).toMatch(/epistemic_edge_(?:open_head_idx|no_overlap|logical_version_unique|version_public_id_unique_idx)/u);
 
           const rows = yield* sql<{ readonly n: number }>`
             SELECT COUNT(*)::int AS n FROM epistemic_edge_version WHERE logical_key = ${scenario.logicalKey}
@@ -380,15 +337,12 @@ if (externalUrl.length === 0) {
         120_000
       );
 
-      // Race C — a writer that skips the repository, and therefore the locking rule,
-      // entirely. The exclusion constraint still refuses the overlap, which is why the rule
-      // is a fast path and the constraint is the guarantee. Probe stays LAST.
       it.effect(
-        "race C: a lock-skipping writer inserting an overlapping closed interval is rejected",
+        "race C, run last: a lock-skipping writer inserting an overlapping closed interval is rejected",
         Effect.fnUntraced(function* () {
           const scenario = yield* seedScenario("race-c", 13);
-          const sql = yield* currentSql;
-          const writers = yield* twoWriters();
+          const sql = yield* rawSnakeCaseSql;
+          const writers = yield* twoRepositoryInstances();
 
           const argument3 = writers[0];
           const recordFact4 = yield* recordFact(scenario.identity, { state: "held" }, 1_000, 1_000);
@@ -411,7 +365,10 @@ if (externalUrl.length === 0) {
             )
           `);
 
-          expect(NodeUtil.inspect(violation, { depth: 12 })).toContain("epistemic_edge_no_overlap");
+          expect(
+            NodeUtil.inspect(violation, { depth: 12 }),
+            "the exclusion constraint is the guarantee; the repository's locking rule is a fast path"
+          ).toContain("epistemic_edge_no_overlap");
         }),
         120_000
       );

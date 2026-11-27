@@ -22,8 +22,6 @@ import * as MutableRef from "effect/MutableRef";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
-// Counts violation constructions through the validator's factory seam, so the
-// capped-request case can prove generation stops instead of truncating late.
 const violationsMade = MutableRef.make(0);
 const CountingViolationFactory = Layer.effect(BoundedShaclViolationFactory)(
   Effect.map(BoundedShaclViolationFactory, (live) =>
@@ -73,8 +71,6 @@ const dataset = makeDataset([
 ]);
 
 describe("@beep/epistemic-server bounded SHACL validator", () => {
-  // Boots only the bounded SHACL layer over a counting violation factory — no
-  // other slice, no runtime.
   it.layer(CountingShaclValidation, { timeout: "10 seconds" })("claim gate over the bounded SHACL validator", (it) => {
     it.effect(
       "admits a well-formed claim and advances candidate -> shape_valid",
@@ -164,7 +160,10 @@ describe("@beep/epistemic-server bounded SHACL validator", () => {
         const limited = yield* service.validate(request);
         expect(limited.violations).toHaveLength(1);
         pipe(limited.truncated, assertTrue);
-        expect(MutableRef.get(violationsMade)).toBe(1);
+        expect(
+          MutableRef.get(violationsMade),
+          "a capped request stops generating violations, not truncating late"
+        ).toBe(1);
         MutableRef.set(violationsMade, 0);
         const unlimited = yield* service.validate(ShaclValidationRequest.make({ ...request, maxResults: O.none() }));
         expect(unlimited.violations).toHaveLength(3);

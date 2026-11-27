@@ -33,7 +33,6 @@ const evidenceInput = {
 };
 
 describe("@beep/epistemic-server", () => {
-  // Boots only the composed epistemic server layer (gate + transition over SHACL).
   it.layer(EpistemicServerLive, { timeout: "10 seconds" })("EpistemicServerLive", (it) => {
     it.effect(
       "boots and admits + advances a claim end-to-end",

@@ -46,6 +46,11 @@ const DatePickerScope = makeScopedAtom((defaultValue: Date | undefined) =>
  * A single-date picker composed from {@link Popover} and {@link Calendar}. Supports
  * both controlled (`value` + `onValueChange`) and uncontrolled (`defaultValue`) usage.
  *
+ * **Gotchas**
+ *
+ * Passing the `value` prop at all makes the picker controlled, even as `value={undefined}`;
+ * a controlled parent that resets `value` to `undefined` clears the selection.
+ *
  * **Example** (Import DatePicker component)
  *
  * ```tsx
@@ -68,8 +73,6 @@ function DatePicker(props: DatePickerProps) {
 function DatePickerInner(props: DatePickerProps) {
   const { value, onValueChange, placeholder = "Pick a date", disabled = false, className } = props;
   const [state, setState] = useAtom(DatePickerScope.use());
-  // Detect controlledness by prop presence so a parent that starts controlled
-  // with `value={undefined}` (and any later reset to `undefined`) is honored.
   const isControlled = P.hasProperty(props, "value");
   const selected = isControlled ? value : state.internalValue;
 

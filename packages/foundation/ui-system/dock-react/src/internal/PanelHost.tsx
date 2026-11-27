@@ -62,6 +62,7 @@ export const PanelPortal = (props: {
   );
 };
 
+// decision: content-host-imperative-dom
 export const ContentHost = (props: {
   readonly graph: DockAtomGraph;
   readonly groupId: GroupId;
@@ -70,7 +71,6 @@ export const ContentHost = (props: {
   const workspace = useAtomValue(props.graph.workspaceAtom);
   const attach = (host: HTMLDivElement | null): (() => void) | undefined => {
     if (P.isNull(host)) return undefined;
-    // crispen: imperative DOM ownership stays explicit at this lifecycle boundary; replace only when Atom owns a keyed child collection.
     for (const panel of props.graph.registry.get(props.graph.panelsAtom)) {
       if (
         O.exists(DockWorkspace.findTabsForPanel(workspace, panel.id), ({ groupId }) =>

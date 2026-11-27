@@ -143,15 +143,16 @@ describe("DockviewReact", { concurrent: false }, () => {
       const pane = screen.getByTestId("dockview-react").querySelector<HTMLElement>("[data-group-id='group-1']");
       expect(pane?.style.getPropertyValue("--dock-width")).toBe("800px");
       expect(pane?.style.getPropertyValue("--dock-height")).toBe("400px");
-      // Styling contract: the adapter writes only --dock-* custom properties
-      // inline; src/dock.css (keyed by data-dock-root) owns every rule.
       const root = screen.getByTestId("dockview-react");
       expect(root.hasAttribute("data-dock-root")).toBe(true);
       const inlineProperties = A.flatMap(A.fromIterable(root.querySelectorAll<HTMLElement>("[style]")), (node) =>
         A.fromIterable(node.style)
       );
       expect(A.isArrayNonEmpty(inlineProperties)).toBe(true);
-      expect(A.filter(inlineProperties, P.not(Str.startsWith("--dock-")))).toEqual([]);
+      expect(
+        A.filter(inlineProperties, P.not(Str.startsWith("--dock-"))),
+        "the adapter writes only --dock-* properties inline; dock.css owns every rule"
+      ).toEqual([]);
     })
   );
 

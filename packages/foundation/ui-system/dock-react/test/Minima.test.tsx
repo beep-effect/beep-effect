@@ -97,10 +97,11 @@ describe("dock title minima", { concurrent: false }, () => {
     Effect.gen(function* () {
       const graph = yield* mount("wyvern", { titleMinima });
       yield* graph.awaitIdle;
-      // Capture failure no longer collapses to unclamped proportional (16px
-      // here): the synchronous estimate holds the floor — "wyvern" is 6 chars
-      // at the 7px estimate with zero default chrome, so 42px.
-      yield* Effect.promise(() => waitFor(() => expect(width()).toBe(42)));
+      yield* Effect.promise(() =>
+        waitFor(() =>
+          expect(width(), "on capture failure the estimate holds: 6 chars of 'wyvern' at 7px, zero chrome").toBe(42)
+        )
+      );
     })
   );
 });

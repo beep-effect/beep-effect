@@ -73,11 +73,6 @@ export class ReactContextInvariantError extends S.TaggedError<
   })
 ) {}
 
-// `missingPipeableSignature` relates the data-first return to the data-last
-// inner return, and a naked type parameter resolves away before that comparison
-// can succeed. This distributive conditional stays deferred while being the
-// identity for every instantiation, so both overloads keep the caller's exact
-// context type and the two returns still relate.
 type RequiredReactContext<Value> = Value extends unknown ? Value : never;
 
 /**

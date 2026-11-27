@@ -81,9 +81,6 @@ export const Vertical: Story = {
     orientation: "vertical",
     className: "max-w-md rounded-lg border md:min-w-112.5",
   },
-  // react-resizable-panels forces an inline `height: 100%` on the group, so a height
-  // class on the group is ignored; for a vertical split the height must come from a
-  // sized parent or the flex-grow panels collapse to zero.
   render: (args) => (
     <div className="h-100">
       <ResizablePanelGroup {...args}>

@@ -36,9 +36,6 @@ import type { Table } from "drizzle-orm";
 
 const digest = (fill: string): string => Str.repeat(64)(fill);
 
-// A selected row always carries every column; the insert projection leaves the
-// nullable ones optional, so the row shape fills them with the null the
-// database would return.
 const asSelectedRow = (insert: ExecutionDecisionInsert): ExecutionDecisionRow => ({
   ...insert,
   prevHash: insert.prevHash ?? null,
@@ -94,9 +91,6 @@ const outcome = decodeOutcome({
   settlement: "completed",
 });
 
-// The payload-capable drizzle column types this ledger must never grow. The
-// UsageRecord table's `metadata: jsonb` is the precedent escape hatch these
-// tables exist to not have.
 const payloadCapableColumnTypes: ReadonlyArray<string> = ["PgJsonb", "PgJson", "PgBytea"];
 
 const columnFacts = (table: Table): Readonly<Record<string, { readonly columnType: string; readonly name: string }>> =>
@@ -105,9 +99,7 @@ const columnFacts = (table: Table): Readonly<Record<string, { readonly columnTyp
     name: column.name,
   }));
 
-// The record schemas encode instances, so an unencodable record has to stay an
-// instance: clone onto the same prototype and corrupt one sealed field.
-const withUnencodableHash = <A extends object>(record: A): A =>
+const instanceWithUnencodableHash = <A extends object>(record: A): A =>
   Object.assign(Object.create(Object.getPrototypeOf(record)), record, { hash: 42 });
 
 const converterFailure = <A, E>(result: Result.Result<A, E>): Effect.Effect<E, A> =>
@@ -122,10 +114,7 @@ const expectConverterFailure = (
   expect(Str.isNonEmpty(error.reason)).toBe(true);
 };
 
-// `defaultFormatter` renders a `message: ""` annotation verbatim, so this is a
-// real SchemaError whose rendered message is empty - the input the `fromSchema`
-// fallback branch is written for.
-const emptyMessageSchemaError = S.decodeUnknownResult(S.String.annotate({ message: "" }))(0).pipe(
+const realSchemaErrorWithEmptyMessage = S.decodeUnknownResult(S.String.annotate({ message: "" }))(0).pipe(
   Result.flip,
   Effect.fromResult
 );
@@ -139,25 +128,28 @@ describe("ExecutionRecordTables", () => {
   it("exposes exactly the decision columns and no payload-capable column", () => {
     const facts = columnFacts(executionDecisionTable);
 
-    // Exact column set: a payload column cannot be added unnoticed.
-    expect(A.sort(R.keys(facts), Order.String)).toEqual([
-      "audience",
-      "decidedAt",
-      "destinationDigest",
-      "grantSetDigest",
-      "hash",
-      "operationDigest",
-      "policyRevision",
-      "prevHash",
-      "reason",
-      "runKey",
-      "seq",
-      "sinkClass",
-      "verdict",
-    ]);
+    expect(A.sort(R.keys(facts), Order.String), "exact column set: a payload column cannot be added unnoticed").toEqual(
+      [
+        "audience",
+        "decidedAt",
+        "destinationDigest",
+        "grantSetDigest",
+        "hash",
+        "operationDigest",
+        "policyRevision",
+        "prevHash",
+        "reason",
+        "runKey",
+        "seq",
+        "sinkClass",
+        "verdict",
+      ]
+    );
 
     for (const fact of R.values(facts)) {
-      expect(payloadCapableColumnTypes).not.toContain(fact.columnType);
+      expect(payloadCapableColumnTypes, "the ledger must never grow a payload-capable column type").not.toContain(
+        fact.columnType
+      );
     }
   });
 
@@ -260,7 +252,9 @@ describe("ExecutionRecordTables", () => {
       const recorded = yield* outcome;
       const outcomeInsert = yield* Effect.fromResult(toExecutionOutcomeInsert(recorded));
 
-      const converterFailure5 = yield* converterFailure(toExecutionDecisionInsert(withUnencodableHash(decision)));
+      const converterFailure5 = yield* converterFailure(
+        toExecutionDecisionInsert(instanceWithUnencodableHash(decision))
+      );
       expectConverterFailure(converterFailure5, "toDecisionInsert");
       const converterFailure6 = yield* converterFailure(
         fromExecutionDecisionRow({
@@ -269,7 +263,9 @@ describe("ExecutionRecordTables", () => {
         } as unknown as ExecutionDecisionRow)
       );
       expectConverterFailure(converterFailure6, "fromDecisionRow");
-      const converterFailure7 = yield* converterFailure(toExecutionOutcomeInsert(withUnencodableHash(recorded)));
+      const converterFailure7 = yield* converterFailure(
+        toExecutionOutcomeInsert(instanceWithUnencodableHash(recorded))
+      );
       expectConverterFailure(converterFailure7, "toOutcomeInsert");
       const converterFailure8 = yield* converterFailure(
         fromExecutionOutcomeRow({
@@ -284,7 +280,7 @@ describe("ExecutionRecordTables", () => {
   it.effect(
     "falls back to a generic reason when the schema failure renders empty",
     Effect.fnUntraced(function* () {
-      const schemaError = yield* emptyMessageSchemaError;
+      const schemaError = yield* realSchemaErrorWithEmptyMessage;
       expect(schemaError.message).toBe("");
 
       const converterError = ExecutionRecordConverterError.fromSchema("fromDecisionRow", schemaError);

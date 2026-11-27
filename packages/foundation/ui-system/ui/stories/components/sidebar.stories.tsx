@@ -54,8 +54,6 @@ const navItems: ReadonlyArray<NavItem> = [
 
 const skeletonRows = A.makeBy(5, (index) => index);
 
-// Shared icon-and-title menu button reused wherever a story renders navItems
-// without per-button props (tooltips stay inline in IconCollapsible).
 const NavItemButton = ({ item }: { readonly item: NavItem }) => (
   <SidebarMenuButton isActive={item.isActive ?? false}>
     <item.icon />
@@ -63,8 +61,6 @@ const NavItemButton = ({ item }: { readonly item: NavItem }) => (
   </SidebarMenuButton>
 );
 
-// Shared nav-group scaffold for the layout-variant stories; stories that
-// exercise per-item extras (tooltips, badges, actions) keep their own markup.
 const NavMenuGroup = ({ label }: { readonly label?: undefined | string }) => (
   <SidebarGroup>
     {label === undefined ? null : <SidebarGroupLabel>{label}</SidebarGroupLabel>}

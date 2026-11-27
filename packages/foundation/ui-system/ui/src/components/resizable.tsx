@@ -13,6 +13,12 @@ import type * as React from "react";
 /**
  * Resizable panel group component.
  *
+ * **Gotchas**
+ *
+ * react-resizable-panels sets an inline `height: 100%` on the group, so a height class on it is
+ * ignored. A vertical group takes its height from a sized parent; without one its panels
+ * collapse to zero.
+ *
  * **Example** (Import ResizablePanelGroup)
  *
  * ```tsx
@@ -68,7 +74,6 @@ interface ResizableHandleProps extends React.ComponentProps<typeof Separator> {
 function ResizableHandle({ withHandle, orientation = "horizontal", className, ...props }: ResizableHandleProps) {
   const isVertical = orientation === "vertical";
 
-  // Style the separator itself as the visual handle - no children to avoid event interference
   return (
     <Separator
       data-slot="resizable-handle"

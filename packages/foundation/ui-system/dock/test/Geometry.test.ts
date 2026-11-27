@@ -250,10 +250,10 @@ describe("per-group minimum lookup", () => {
     const options = GeometryOptions.make({ gap: 3, minGroupExtent: 30 });
     const geometry = project(nested, { container: box, options });
     const [one, two, three] = geometry.groups;
-    // Outer trailing side REQUIRES 30 + 3 + 30 = 63, so the outer clamp
-    // yields 35/63 (a scalar clamped level-by-level would give 49/49 and
-    // squeeze the inner groups to 23px each, violating the minimum).
-    expect(one?.box.width).toBe(35);
+    expect(
+      one?.box.width,
+      "the outer trailing side needs 30 + 3 + 30 = 63; a level-by-level clamp would give 49/49"
+    ).toBe(35);
     expect(two?.box.width).toBe(30);
     expect(three?.box.width).toBe(30);
     expect(three?.box.left).toBe(71);
@@ -342,10 +342,6 @@ describe("per-panel constraints", () => {
       groupTwo,
       constrainedPanel("height-floor", PanelConstraints.make({ minHeight: O.some(40) }))
     );
-    // Title-strip width floors (386px each) far exceed the 99px-tall container.
-    // Summed vertically they would read as infeasible and abandon clamping,
-    // leaving the bottom group at the raw 19px; horizontally-scoped minima keep
-    // the vertical clamp honest and lift it to its 40px minHeight.
     const geometry = project(split("vertical", 8_000, tabsOne, constrained), {
       container: box,
       minima: () => 386,
@@ -353,7 +349,7 @@ describe("per-panel constraints", () => {
     });
     const [top, bottom] = geometry.groups;
     expect(top?.box.height).toBe(56);
-    expect(bottom?.box.height).toBe(40);
+    expect(bottom?.box.height, "386px width minima would read as infeasible and leave the raw 19px").toBe(40);
     expect((top?.box.height ?? 0) + 3 + (bottom?.box.height ?? 0)).toBe(box.height);
   });
 

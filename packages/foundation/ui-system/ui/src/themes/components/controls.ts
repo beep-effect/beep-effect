@@ -82,7 +82,7 @@ const Unradio = styled("span")(({ theme }) => ({
   },
 }));
 
-const iconSize = 24; // 1.5rem icon size
+const iconSize = 24;
 
 /**
  * Controls theme theme value.

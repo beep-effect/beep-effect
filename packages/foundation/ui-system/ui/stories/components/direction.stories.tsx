@@ -2,10 +2,6 @@ import { DirectionProvider, useDirection } from "@beep/ui/components/direction";
 import { expect, within } from "storybook/test";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
-/**
- * A consumer that reads the active text direction from context via `useDirection`
- * and mirrors it onto a `dir` attribute so the surrounding layout flips for RTL.
- */
 const DirectionPreview = () => {
   const direction = useDirection();
   return (

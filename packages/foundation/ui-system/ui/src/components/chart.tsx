@@ -13,8 +13,6 @@ import * as RechartsPrimitive from "recharts";
 import { ReactContextInvariantOptions, requireReactContext } from "../lib/react-invariant.ts";
 import type { TooltipValueType } from "recharts";
 
-// The two color schemes a series may set a color for. The theme stylesheet sets
-// `color-scheme` on `:root` and `.dark`, so `light-dark()` picks the matching one.
 type ChartTheme = "light" | "dark";
 
 const INITIAL_DIMENSION = { width: 320, height: 200 } as const;
@@ -74,6 +72,19 @@ function useChart() {
 /**
  * Responsive chart wrapper that provides the chart config context and theme CSS variables.
  *
+ * **Details**
+ *
+ * Each config key becomes a `--color-<key>` custom property on the container's `style`, ahead
+ * of the caller's own style, so the colors are in the server markup and no stylesheet is
+ * generated at runtime.
+ *
+ * **Gotchas**
+ *
+ * A per-theme series color resolves through CSS `light-dark()`, so it follows the page's
+ * `color-scheme`; the theme stylesheet sets it on `:root` and `.dark`. A config key that is not
+ * ASCII letters, digits, hyphen or underscore gets no color property, and a color that could
+ * close the declaration or its style attribute is dropped.
+ *
  * **Example** (Line chart with config context)
  *
  * ```tsx
@@ -116,9 +127,6 @@ function ChartContainer({
 }) {
   const uniqueId = React.useId();
   const chartId = `chart-${id ?? Str.replace(/:/g, "")(uniqueId)}`;
-  // The series colors are custom properties named after the config keys, so they cannot be a
-  // literal style object. They ride on the container's props instead: present in the server
-  // markup, and diffed by React when the config changes. No stylesheet is generated at runtime.
   const surfaceProps = chartSurfaceProps(config, style);
 
   return (
@@ -141,16 +149,12 @@ function ChartContainer({
   );
 }
 
-// Conservative CSS identifier: only ASCII letters, digits, hyphen, underscore.
-// Config keys become custom property names, so anything else is skipped.
 const CSS_IDENTIFIER_PATTERN = /^[A-Za-z0-9_-]+$/;
 
 const CSS_VALUE_BREAKOUT_PATTERN = /[;{}<>\\]|\/\*|\*\//;
 
 const isSafeCssIdentifier = (value: string): boolean => O.isSome(Str.match(CSS_IDENTIFIER_PATTERN)(value));
 
-// A config color is attacker-influenced input: reject anything that could close the
-// declaration or the style attribute it is rendered into.
 const isSafeCssColorValue = (value: string): boolean => O.isNone(Str.match(CSS_VALUE_BREAKOUT_PATTERN)(value));
 
 /**
@@ -193,7 +197,6 @@ const chartColorProperties = (config: ChartConfig): ReadonlyArray<readonly [stri
       : [[`--color-${key}`, itemConfig.color]];
   });
 
-// The container's `style` prop: the series color properties first, then the caller's own style.
 const chartSurfaceProps = (
   config: ChartConfig,
   style: React.CSSProperties | undefined

@@ -158,10 +158,14 @@ const ensureUnique = (
   });
 
 /** Provides reason-specific diagnostics for public workspace invariants. */
-// crispen: the public schema already enforces identity uniqueness; this Effect
-// pass remains until schema filters can preserve the exact typed boundary reason.
 /**
  * Validates reason-specific workspace invariants at a public boundary.
+ *
+ * **Details**
+ *
+ * The public schema already enforces identity uniqueness. This pass repeats the
+ * check so a violation fails with its exact typed `DockInvariantViolation` reason,
+ * which schema filters cannot yet preserve; it can go once they can.
  *
  * **Example** (Validate populated workspace)
  *
@@ -873,9 +877,10 @@ const movePanelForest = Effect.fn("DockReducer.movePanelForest")(function* (
       A.findFirstIndex(panels, (candidate) => S.toEquivalence(PanelId)(candidate.id, panel.id))
     );
     const without = A.remove(panels, current);
-    const index = N.clamp(command.target.index.value, { minimum: 0, maximum: A.length(without) });
-    if (Eq.equals(current, index)) return unchanged(state, envelope, "panel-position-unchanged");
-    const reordered = O.getOrThrow(A.insertAt(without, index, panel)); // crispen: total after clamp; use total insert when available.
+    const clampedIndex = N.clamp(command.target.index.value, { minimum: 0, maximum: A.length(without) });
+    if (Eq.equals(current, clampedIndex)) return unchanged(state, envelope, "panel-position-unchanged");
+    // decision: clamped-insert-until-total-insert
+    const reordered = O.getOrThrow(A.insertAt(without, clampedIndex, panel));
     const next = DockWorkspace.replaceAtGroup(
       state,
       source.groupId,
@@ -883,7 +888,7 @@ const movePanelForest = Effect.fn("DockReducer.movePanelForest")(function* (
     );
     return yield* changed(state, envelope, (revision) => [
       DockWorkspace.withRevision(next, revision),
-      PanelReorderedEvent.make({ panelId: panel.id, groupId: source.groupId, index: S.Natural.make(index) }),
+      PanelReorderedEvent.make({ panelId: panel.id, groupId: source.groupId, index: S.Natural.make(clampedIndex) }),
     ]);
   }
   const removed = O.match(TabsNode.remove(source, panel.id), {

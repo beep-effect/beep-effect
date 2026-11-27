@@ -84,8 +84,8 @@ const approvalAtom = runtime.fn<void>()(
         reviewedBy: reviewer,
       })
     );
-    // Retain the approved basis as history even if another input arrived while hashing.
-    get.set(inputAtom, ExplainClaimEvidence.make({ ...get(inputAtom), review: O.some(review) }));
+    const inputAfterHashing = get(inputAtom);
+    get.set(inputAtom, ExplainClaimEvidence.make({ ...inputAfterHashing, review: O.some(review) }));
     return review;
   }),
   { concurrent: false }
