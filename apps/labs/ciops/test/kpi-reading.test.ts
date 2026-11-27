@@ -551,7 +551,10 @@ describe("@beep/ciops KPI reading", () => {
         expect(sha256Of12).toBe(adoptionTableSha256);
         const table = yield* moduleAdoptionDecoder(new TextDecoder().decode(bytes));
         const renderAdoptionTable13 = yield* renderAdoptionTable(table);
-        expect(renderAdoptionTable13).toBe(new TextDecoder().decode(bytes));
+        expect(
+          renderAdoptionTable13,
+          "The module-hoisted decoder round-trips the table; no-inline-schema-compile forbids compiling a codec in the test body."
+        ).toBe(new TextDecoder().decode(bytes));
         const probes = yield* (yield* CiOpsKpi).probes(kpiReadingInput(repoRoot));
         expect(
           A.map(table.rows, (row) => `${row.changeEventId} ${row.mergeCommit} ${row.resolvedHeadSha}`)

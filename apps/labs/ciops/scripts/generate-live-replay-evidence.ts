@@ -14,6 +14,10 @@ import {
 } from "@/projection/Evidence";
 import type { LiveEvidenceRun } from "@/projection/Evidence";
 
+// The pin's typed constants (P2 Ruling 9) live in `Evidence.ts`, shared with the
+// end-to-end test. The run asserts both digests against the files and the window
+// members against MANIFEST.yaml's `admission_roots[0].window` and
+// `loss_population.chain_counts` before replay.
 const paths = run4FleetLiveEvidencePaths;
 
 // decision: opt-in-evidence-writes

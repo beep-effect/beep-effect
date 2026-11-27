@@ -163,7 +163,7 @@ export class Cq020 {
     const sparqlBlock = /^ {2}sparql: \|\n((?: {4}.*\n)+)/m.exec(section);
     expect(
       sparqlBlock,
-      "CQ-020 must retain its explicit SPARQL block; only provisional term spellings adapt in memory; packet CQ, seed, registry and frozen extraction remain read-only"
+      "CQ-020 must retain its explicit SPARQL block; the shared Oxigraph harness adapts only provisional terms and episode binding in memory; packet CQ, seed, registry and frozen extraction remain read-only"
     ).not.toBeNull();
     const query = A.reduce(provisionalCq020Terms, dedentCommonIndent(sparqlBlock?.[1] ?? ""), (text, term) =>
       Str.replace(new RegExp(`\\bciops:${term}\\b`, "g"), `ciops-prov:${term}`)(text)

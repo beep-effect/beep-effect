@@ -13,6 +13,8 @@ import { GateOrderHandoffRef, PlanEpisodeInput } from "@/projection/Schemas";
 const goldenPath = "test/fixtures/lane-plan-v1.ttl";
 const writeScript: EvidenceWriteScript = EvidenceWriteScript.Enum["evidence:lane-plan:write"];
 
+// The pinned handoff digest (P2 Ruling 2) and the fixed episode id no admission document uses
+// (contract §8.3). Paths are relative to the lab directory, where the package scripts run.
 const pinnedSha256 = Sha256Hex.make("705f3e754a51c6750529ccec1021293c82fce0994709a18906b863609a0a2198");
 const episodeId = "lane-plan-golden-1";
 

@@ -16,6 +16,11 @@ import { decodeJournalLines, replayTailWaits } from "@/backfill/JournalReplay";
 import { ReplayArmSpec, ReplayEtaEstimator, ReplayReport, SimulationInputError } from "@/backfill/Schemas";
 import { PosInt } from "@/projection/PosInt";
 
+// SCHE-06 tail-wait A/B (PLAN slice 12): replay a recorded admission journal
+// root (its `journal-archive/*.ndjson` day segments, then `journal.ndjson`)
+// through every arm and print the aggregate report as JSON. Usage:
+//   bun run scripts/backfill-ab.ts <admission-root> [--since <epoch-millis>] [--eta-permille <n>]
+// The report holds counts and wait quantiles only: no paths, origins or nonces.
 const encodeReport = S.encodeUnknownEffect(S.fromJsonString(ReplayReport));
 
 const flagNumber = (argv: ReadonlyArray<string>, flag: string, fallback: number, valid: (value: number) => boolean) =>
@@ -46,7 +51,7 @@ const arms = A.flatMap([10, 8, 6, 5], (capacity) =>
   )
 );
 
-const replayRecordedJournal = Effect.gen(function* () {
+const program = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const argv = process.argv.slice(2);
@@ -103,7 +108,7 @@ const platform = Layer.mergeAll(BunFileSystem.layer, BunPath.layer);
 BunRuntime.runMain(
   platform.pipe(
     Layer.build,
-    Effect.flatMap((context) => Effect.provide(replayRecordedJournal, context)),
+    Effect.flatMap((context) => Effect.provide(program, context)),
     Effect.scoped
   )
 );

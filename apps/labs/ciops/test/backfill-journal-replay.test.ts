@@ -149,14 +149,12 @@ describe("SCHE-06 journal replay", () => {
         ]
       );
 
-      assertNone(A.getUnsafe(stream.arrivals, 2).etaMillis);
-      assertSome(A.getUnsafe(stream.arrivals, 3).etaMillis, 30_000);
+      const singleReleasedSampleEta = A.getUnsafe(stream.arrivals, 2).etaMillis;
+      assertNone(singleReleasedSampleEta);
+      const twoReleasedSamplesP90 = A.getUnsafe(stream.arrivals, 3).etaMillis;
+      assertSome(twoReleasedSamplesP90, 30_000);
       strictEqual(A.getUnsafe(stream.arrivals, 4).checkoutKey, "legacy");
-      deepStrictEqual(
-        [stream.skipped, stream.spanMillis],
-        [1, 40_000],
-        "d has only a released hold, below minSamples; c sees a and b, whose 10s and 30s p90 is 30s"
-      );
+      deepStrictEqual([stream.skipped, stream.spanMillis], [1, 40_000]);
       deepStrictEqual(stream.recordedWaits, [0, 0, 1_000, 1_000, 0]);
       deepStrictEqual(arrivalsFromJournal([], estimator).arrivals, []);
 

@@ -44,6 +44,10 @@ const ApiGroup = HttpApiGroup.make("ciops").add(HttpApiEndpoint.get("health", "/
 /**
  * Top-level `HttpApi` contract for the CI-operations lab health endpoint.
  *
+ * **Gotchas**
+ *
+ * Keep ApiGroup private: Api is its only consumer, and exporting an unimported lab group fails the unused-export gate.
+ *
  * **Example** (Inspect the API identifier)
  *
  * ```ts

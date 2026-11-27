@@ -126,8 +126,6 @@ export const rankChain = (lanes: ReadonlyArray<HandoffLane>): ReadonlyArray<Lane
   );
 };
 
-// Graph.addEdge throws on a missing endpoint and the laneId-keyed index would collapse a repeated lane id into a
-// false cycle, so both are rejected first as caller defects (contract §8.1: a duplicate laneId is never a cycle).
 const requireCoherentLanes = Effect.fnUntraced(function* (
   lanes: ReadonlyArray<HandoffLane>,
   precedences: ReadonlyArray<LanePrecedence>
@@ -172,14 +170,12 @@ const buildLaneGraph = (
 const cycleWitness = (graph: Graph.DirectedGraph<string, LanePrecedence>, cycle: Graph.CycleResult) =>
   A.getSomes(A.map(A.dropRight(cycle.path, 1), (index) => Graph.getNode(graph, index)));
 
-// findCycle runs before topo because topo throws a GraphError on a cycle.
 const failOnCycle = (graph: Graph.DirectedGraph<string, LanePrecedence>): Effect.Effect<void, CyclicPlanError> =>
   O.match(Graph.findCycle(graph), {
     onNone: () => Effect.void,
     onSome: (cycle) => Effect.fail(CyclicPlanError.make({ cycleNodes: cycleWitness(graph, cycle) })),
   });
 
-// Nodes are inserted in declaration order, so agreement with rank order is a real check, not a tautology.
 const requireRankAgreement = Effect.fnUntraced(function* (
   lanes: ReadonlyArray<HandoffLane>,
   order: ReadonlyArray<string>
@@ -201,9 +197,12 @@ const requireRankAgreement = Effect.fnUntraced(function* (
  * edges follow the precedence list. A cycle fails `CyclicPlanError` with the
  * witness's lane ids (the closing repeat dropped; a self-loop is one id). The
  * topological order becomes 0-based lane steps after a self-check against the
- * rank order.
+ * rank order. Declaration-order insertion makes agreement with rank a real check rather than a tautology.
  *
  * **Gotchas**
+ *
+ * Graph.addEdge throws on a missing endpoint, and duplicate lane ids collapse the node index into a false cycle; reject both as caller defects before graph construction.
+ * Find a cycle before topological sorting, because Graph.topo throws GraphError on cyclic input.
  *
  * An acyclic precedence list that forces an order other than the rank order,
  * a precedence naming a lane outside `lanes`, or a repeated `laneId` in

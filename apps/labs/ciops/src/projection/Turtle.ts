@@ -218,6 +218,7 @@ const serializeLanePlan = (plan: LanePlanProposal): TurtleDocument => {
  * document carries the prefix block and the sorted provisional section only.
  * The specification IRI encodes the tuple `(s7-lane-plan/v1, handoffSha256,
  * orderRule, scope)`; the scope is never emitted as a scope term.
+ * The precedence edges repeat laneStepIndex order; they supply no independent ordering evidence.
  *
  * **Gotchas**
  *
