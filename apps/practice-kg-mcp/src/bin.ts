@@ -7,7 +7,6 @@
  * @since 0.0.0
  */
 
-// First import: DuckDB's native addon must resolve beside the executable (#1959).
 import "./NativeAddon.install.ts";
 import { loadPracticeKgBundleContext, PracticeKgHostError } from "@beep/law-practice-server/PracticeKgHost";
 import * as Bool from "effect/Boolean";
@@ -93,7 +92,6 @@ const serve = Effect.fnUntraced(function* (flags: BundleFlags) {
   );
 });
 
-// The self-check never builds the stdio server layer, so stdin is left alone.
 const check = (flags: BundleFlags) =>
   resolveBundle(flags).pipe(
     Effect.catchTag("ConfigError", (cause) =>

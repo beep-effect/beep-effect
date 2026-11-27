@@ -36,7 +36,7 @@ import {
 } from "./Bootstrap.schemas.ts";
 import { GOAL_DECISION_TARGETS, renderGoalDecisionBlock } from "./Decisions.projection.ts";
 import { GoalPlanInputError, GoalPlanOperationalError } from "./Goals.errors.ts";
-import { isCapabilitySlug } from "./Goals.schemas.ts";
+import { GOAL_HANDOFF_CLAUSE, isCapabilitySlug } from "./Goals.schemas.ts";
 import { listExplorationPacketFiles, listGoalPackets } from "./Inventory.ts";
 import { materializeExpectFlag, materializeWriteFlag, requireOneMode, writeReviewedPlan } from "./Materialize.ts";
 import { canonicalJsonText, canonicalJsonTextPretty, sha256Hex } from "./PacketCore/PacketDigest.ts";
@@ -201,7 +201,7 @@ const manifestPayload = Effect.fnUntraced(function* (input: BootstrapInput) {
         path: "GOAL.md",
         targetChars: 3500,
         maxChars: 4000,
-        command: `/goal follow the instructions in ${packetPath}/GOAL.md`,
+        command: `/goal follow the instructions in ${packetPath}/GOAL.md${GOAL_HANDOFF_CLAUSE}`,
       },
     ],
     provides: input.provides,
@@ -242,7 +242,7 @@ ${input.mission}
 Use this command for execution-capable sessions:
 
 \`\`\`text
-/goal follow the instructions in goals/${input.slug}/GOAL.md
+/goal follow the instructions in goals/${input.slug}/GOAL.md${GOAL_HANDOFF_CLAUSE}
 \`\`\`
 
 \`GOAL.md\` is the compact launcher. \`SPEC.md\` remains the normative contract.

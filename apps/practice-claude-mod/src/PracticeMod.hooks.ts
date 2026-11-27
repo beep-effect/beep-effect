@@ -122,17 +122,15 @@ const runWith =
       )
     );
 
-// One writer at a time: the band and the slash commands can overlap, and
-// each dispatch builds its own VerdictLog over the shared plugin store.
+// decision: shared-plugin-write-permits
 const verdictWrites = Semaphore.makeUnsafe(1);
-// The same for starting and stopping the timer: overlapping starts must not
-// install two tickers, and overlapping stops must write one interval.
+
+// decision: shared-plugin-write-permits
 const timerWrites = Semaphore.makeUnsafe(1);
 
 const LockedText = "This answer is locked; the verdict was not saved.";
 const SaveFailedText = "The verdict could not be saved. Try again.";
 
-// A failed save is shown as a toast: a band press has no command reply.
 const toastText =
   ($: Engine) =>
   (text: string): Effect.Effect<string> =>
@@ -523,8 +521,6 @@ export const timeCommand =
       Effect.gen(function* () {
         const host = yield* ModHost;
         return yield* Match.value(Str.trim(args)).pipe(
-          // Start holds the same permit as stop: the running check re-runs under it,
-          // so two overlapping starts cannot both install a ticker.
           Match.when("start", () =>
             Effect.gen(function* () {
               if (pipe(MutableRef.get(timer), O.isSome)) return { text: "Timer is already running." };

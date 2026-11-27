@@ -42,9 +42,11 @@ describe("BlobStore property floor", () => {
         const decoded = yield* S.decodeEffect(S3Config)(encoded);
         assert.deepStrictEqual(encoded, required);
         assert.deepStrictEqual(decoded, required);
-        // Exact optional keys (EF-40): an optional key is omitted, never undefined.
         for (const key of ["endpoint", "sessionToken", "prefix"]) {
-          assert.isFalse(S.is(S3Config)({ ...required, [key]: undefined }));
+          assert.isFalse(
+            S.is(S3Config)({ ...required, [key]: undefined }),
+            "exact optional keys: an absent S3Config option is omitted, never undefined"
+          );
         }
       }),
     runs

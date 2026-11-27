@@ -79,7 +79,6 @@ it.effect.prop(
   ([variable, service]) =>
     Effect.gen(function* () {
       const fields = S.Struct({ variable: S.String, service: S.String });
-      // These canonical identifiers contain neither sentence delimiter. The inverse reads the actual renderer output.
       const parseDiagnostic = (text: string) => {
         const match = /^(.*?) is not set — the (.*?) is only reachable from a `uses:` step, never from `run:`$/s.exec(
           text
@@ -89,7 +88,11 @@ it.effect.prop(
       const formatDiagnostic = (value: typeof fields.Type) => misconfiguredDetail(value.variable, value.service);
       const text = formatDiagnostic({ variable, service });
       const parsed = yield* parseDiagnostic(text);
-      assert.deepStrictEqual(parsed, { variable, service });
+      assert.deepStrictEqual(
+        parsed,
+        { variable, service },
+        "base64url identifiers hold neither sentence delimiter, so parsing the real renderer output inverts it"
+      );
       const reformatted = formatDiagnostic(parsed);
       assert.strictEqual(reformatted, text);
       const parsedDiagnostic = yield* parseDiagnostic(reformatted);

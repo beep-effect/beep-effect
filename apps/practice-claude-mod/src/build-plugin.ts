@@ -57,14 +57,14 @@ const json = flow(
   Str.concat("\n")
 );
 
+// decision: static-plugin-entry-shape
 const bundle = (entry: string, outfile: string) =>
   Effect.tryPromise({
     try: () => {
-      const child = Bun.spawn(
-        // Unminified: the engine reads `$` and `on` by name in the bundled module.
-        ["bun", "build", entry, "--target=browser", "--format=esm", `--outfile=${outfile}`],
-        { stderr: "pipe", stdout: "pipe" }
-      );
+      const child = Bun.spawn(["bun", "build", entry, "--target=browser", "--format=esm", `--outfile=${outfile}`], {
+        stderr: "pipe",
+        stdout: "pipe",
+      });
       return child.exited.then((code) =>
         code === 0
           ? undefined
@@ -76,6 +76,7 @@ const bundle = (entry: string, outfile: string) =>
     catch: (cause) => (S.is(PluginBuildFailed)(cause) ? cause : PluginBuildFailed.make({ message: String(cause) })),
   });
 
+// decision: static-plugin-entry-shape
 const program = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -88,9 +89,6 @@ const program = Effect.gen(function* () {
   yield* fs.makeDirectory(path.join(plugin, "hooks"), { recursive: true });
   yield* fs.makeDirectory(path.join(dist, ".claude-plugin"), { recursive: true });
 
-  // Claude Code reads the hooks module statically: `register` must be a
-  // function declaration and every hook a function literal, so the entry is
-  // generated here and calls the Effect-first bodies in PracticeMod.hooks.ts.
   const entryDir = path.join(dist, ".entry");
   const entry = path.join(entryDir, "register.js");
   const hooksJs = path.join(plugin, "hooks", "register.js");
@@ -143,9 +141,7 @@ const program = Effect.gen(function* () {
   );
   yield* bundle(entry, hooksJs);
   yield* fs.remove(entryDir, { recursive: true });
-  // The bundler emits top-level bindings as `var`; the engine follows `$`
-  // only through functions bound by `const` or declared with `function`.
-  // Function-valued bindings are never reassigned, so `const` is safe.
+
   const bundled = yield* fs.readFileString(hooksJs);
   yield* fs.writeFileString(hooksJs, Str.replace(TopLevelFunctionVar, "const $1 = $2")(bundled));
 
@@ -171,7 +167,6 @@ const program = Effect.gen(function* () {
     })
   );
 
-  // The engine runs the plugin's *.test.ts with `claude plugin test`.
   yield* fs.makeDirectory(path.join(plugin, "test"), { recursive: true });
   const tests = yield* fs.readDirectory(path.join(appRoot, "plugin-test"));
   yield* Effect.forEach(
@@ -180,7 +175,6 @@ const program = Effect.gen(function* () {
     { concurrency: 1, discard: true }
   );
 
-  // Skills are plugin components discovered from their directories.
   const skills = path.join(appRoot, "skills");
   const pluginSkills = path.join(plugin, "skills");
   yield* fs.makeDirectory(pluginSkills, { recursive: true });

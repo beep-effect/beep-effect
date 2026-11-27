@@ -19,13 +19,18 @@ describe("internal/pnpmExe", () => {
     it("musl only distinguishes on linux, and only where pnpm ships a musl build", () => {
       assert.deepStrictEqual(pnpmExeTarget("Linux", "x64", true), O.some("linux-x64-musl"));
       assert.deepStrictEqual(pnpmExeTarget("Linux", "arm64", true), O.some("linux-arm64-musl"));
-      // Ignored off linux — the host libc is a linux fact.
-      assert.deepStrictEqual(pnpmExeTarget("macOS", "arm64", true), O.some("darwin-arm64"));
+      assert.deepStrictEqual(
+        pnpmExeTarget("macOS", "arm64", true),
+        O.some("darwin-arm64"),
+        "musl is ignored off linux: the host libc is a linux fact"
+      );
       assert.deepStrictEqual(pnpmExeTarget("Windows", "x64", true), O.some("win32-x64"));
-      // A glibc-only arch has no musl twin, and the glibc binary cannot run
-      // on musl, so it offers no candidate (the wrapper's own rule).
       assert.deepStrictEqual(pnpmExeTarget("Linux", "riscv64", false), O.some("linux-riscv64"));
-      assert.deepStrictEqual(pnpmExeTarget("Linux", "riscv64", true), O.none());
+      assert.deepStrictEqual(
+        pnpmExeTarget("Linux", "riscv64", true),
+        O.none(),
+        "a glibc-only arch has no musl twin and its glibc binary cannot run on musl (the wrapper's own rule)"
+      );
     });
 
     it("answers None for a platform or arch pnpm publishes no binary for", () => {
@@ -49,9 +54,12 @@ describe("internal/pnpmExe", () => {
     });
 
     it("takes the strongest of several space-separated entries, regardless of order", () => {
-      // sha256 listed FIRST: position must not win over strength.
       const listed = `${sri("sha256", "pnpm")} ${sri("sha512", "pnpm")}  ${sri("sha1", "pnpm")}`;
-      assert.deepStrictEqual(strongestSri(listed), O.some({ algorithm: "sha512", hex: hex("sha512", "pnpm") }));
+      assert.deepStrictEqual(
+        strongestSri(listed),
+        O.some({ algorithm: "sha512", hex: hex("sha512", "pnpm") }),
+        "sha256 is listed first: position must not win over strength"
+      );
       assert.deepStrictEqual(
         strongestSri(`${sri("sha1", "pnpm")} ${sri("sha384", "pnpm")}`),
         O.some({ algorithm: "sha384", hex: hex("sha384", "pnpm") })
@@ -67,10 +75,10 @@ describe("internal/pnpmExe", () => {
       assert.deepStrictEqual(strongestSri("md5-AAAA"), O.none());
       assert.deepStrictEqual(strongestSri("sha512"), O.none());
       assert.deepStrictEqual(strongestSri("sha512-not*base64!"), O.none());
-      // A usable entry beside an unusable one still answers.
       assert.deepStrictEqual(
         strongestSri(`md5-AAAA ${sri("sha256", "x")}`),
-        O.some({ algorithm: "sha256", hex: hex("sha256", "x") })
+        O.some({ algorithm: "sha256", hex: hex("sha256", "x") }),
+        "a usable entry beside an unusable one still answers"
       );
     });
   });

@@ -1,20 +1,3 @@
-// The confinement invariants, as tests rather than promises.
-//
-// `@azure/storage-blob` is the only heavy dependency this package has, and the
-// requirement is structural: a consumer that imports only `ActionOutputs` — a
-// module that appends to a runner file — must be unable to link a blob storage
-// client. One module imports it (`internal/azureBlob.ts`), and only the three
-// services whose protocols hand back a signed Azure URL reach that module:
-// `ActionCache`, `Artifact` and `BlobStore.githubCache`.
-//
-// The claims are checked by walking the RUNTIME import graph of `src` from
-// Vite-inlined source text (`test/support/sourceGraph.ts` over
-// `@beep/test-utils/ImportGraph`), so the suite needs no filesystem and runs
-// under Node and Bun. Type-only edges are erased and skipped. What this does
-// not prove is that a downstream bundler drops an unreferenced module; that
-// rests on `"sideEffects": []` (asserted below) plus module-per-file output.
-// What it does prove is the part this package controls: no edge exists.
-
 import { assert, describe, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -23,7 +6,6 @@ import * as Str from "effect/String";
 import manifest from "../package.json" with { type: "json" };
 import { builtinsOf, runtimeClosure, runtimeEdgesOf, sourceModules, sourceOf } from "./support/sourceGraph.ts";
 
-/** Every `src` module, so a new module is a deliberate edit to this list. */
 const MODULES = [
   "Action.ts",
   "ActionCache.ts",
@@ -68,13 +50,10 @@ const MODULES = [
   "internal/twirp.ts",
 ];
 
-/** The one module that imports `@azure/storage-blob`. */
 const AZURE_BOUNDARY = "internal/azureBlob.ts";
 
-/** The services the confinement rule permits to reach Azure, and only these. */
 const AZURE_SERVICES = ["ActionCache.ts", "Artifact.ts", "BlobStore.githubCache.ts"];
 
-/** Every module a consumer can name without linking a blob client. */
 const LIGHT_MODULES = A.filter(
   MODULES,
   (module) => module !== "index.ts" && module !== AZURE_BOUNDARY && !A.contains(AZURE_SERVICES, module)
@@ -86,13 +65,16 @@ const packagesOf = (entry: string) => Effect.map(runtimeClosure(entry), (closure
 
 const reaches = (entry: string, pkg: string) => Effect.map(packagesOf(entry), A.some(names(pkg)));
 
-/** The modules among `entries` whose closure reaches `pkg`. */
 const reachingAmong = (entries: ReadonlyArray<string>, pkg: string) =>
   Effect.filter(entries, (entry) => reaches(entry, pkg));
 
 describe("the source scan", () => {
   it("reads every src module", () => {
-    assert.deepStrictEqual(sourceModules, MODULES);
+    assert.deepStrictEqual(
+      sourceModules,
+      MODULES,
+      "MODULES lists every src module, so a new module is a deliberate edit"
+    );
   });
 
   it("counts literal builtin loads in code and not in prose", () => {
@@ -106,7 +88,11 @@ describe("the source scan", () => {
       "\n"
     );
     assert.deepStrictEqual(builtinsOf(fixture), ["node:crypto"]);
-    assert.deepStrictEqual(runtimeEdgesOf(fixture), ["effect/Effect", "node:crypto"]);
+    assert.deepStrictEqual(
+      runtimeEdgesOf(fixture),
+      ["effect/Effect", "node:crypto"],
+      "the walk follows the runtime import graph, so a type-only edge is erased and skipped"
+    );
   });
 });
 
@@ -120,10 +106,12 @@ describe("bundle reachability", () => {
 
   it.effect("the three permitted services DO reach @azure/storage-blob, through the boundary", () =>
     Effect.gen(function* () {
-      // The control: without it every negative below could pass because the
-      // walker is blind rather than because the edge is absent.
       const reachingAmong1 = yield* reachingAmong(AZURE_SERVICES, "@azure/storage-blob");
-      assert.deepStrictEqual(reachingAmong1, AZURE_SERVICES);
+      assert.deepStrictEqual(
+        reachingAmong1,
+        AZURE_SERVICES,
+        "the control: their protocols hand back signed Azure URLs; without it a blind walker passes every negative"
+      );
       for (const entry of AZURE_SERVICES) {
         assert.include((yield* runtimeClosure(entry)).modules, AZURE_BOUNDARY);
       }
@@ -133,53 +121,59 @@ describe("bundle reachability", () => {
   it.effect("no other module reaches @azure/storage-blob", () =>
     Effect.gen(function* () {
       const reachingAmong2 = yield* reachingAmong(LIGHT_MODULES, "@azure/storage-blob");
-      assert.deepStrictEqual(reachingAmong2, []);
+      assert.deepStrictEqual(
+        reachingAmong2,
+        [],
+        "a consumer importing only a light module such as ActionOutputs must be unable to link a blob storage client"
+      );
     })
   );
 
   it.effect("the entry point reaches Azure, and that is correct", () =>
     Effect.gen(function* () {
-      // `src/index.ts` re-exports the three heavy services, so of course it
-      // reaches Azure. The property that matters is the one above: every light
-      // module is reachable WITHOUT it.
       const reaches3 = yield* reaches("index.ts", "@azure/storage-blob");
-      assert.isTrue(reaches3);
+      assert.isTrue(
+        reaches3,
+        "index.ts re-exports the three heavy services; what matters is that each light module is reachable without it"
+      );
     })
   );
 
   it("no light module imports a heavy one directly", () => {
-    // Deliberately RAW source: a specifier appearing only in a comment fails
-    // the test, a spurious alarm and never a silent pass. It sees only DIRECT
-    // imports; the transitive half is the `no other module` test above.
     for (const entry of LIGHT_MODULES) {
       for (const heavy of A.append(AZURE_SERVICES, "azureBlob.ts")) {
-        assert.notInclude(sourceOf(entry), `/${heavy}"`, `${entry} imports ${heavy}`);
+        assert.notInclude(
+          sourceOf(entry),
+          `/${heavy}"`,
+          `${entry} imports ${heavy} (raw source, direct imports only: a mention in a comment alarms, never passes)`
+        );
       }
     }
   });
 
   it.effect("each pinned module reaches exactly the packages it is expected to", () =>
     Effect.gen(function* () {
-      // Exact edge sets, so a stray value import fails here rather than in a
-      // consumer's bundle. The default runtime (`Action.ts`) reaches no Azure
-      // and no installer vocabulary; the shared internals reach `effect` and
-      // the Twirp client and nothing heavier.
       const actual = yield* Effect.forEach(
         R.keys(EXPECTED_PACKAGES),
         (module) => Effect.map(packagesOf(module), (packages) => [module, packages] as const),
         { concurrency: 1 }
       );
-      assert.deepStrictEqual(R.fromEntries(actual), EXPECTED_PACKAGES);
+      assert.deepStrictEqual(
+        R.fromEntries(actual),
+        EXPECTED_PACKAGES,
+        "exact edge sets, so a stray value import fails here rather than in a consumer's bundle"
+      );
     })
   );
 
   it.effect("no module reaches the markdown engine", () =>
     Effect.gen(function* () {
-      // The reporting suite ships as `@beep/github-reporting`, whose own
-      // reachability test pins its markdown edges; this package does not
-      // import it.
       const reachingAmong4 = yield* reachingAmong(MODULES, "@beep/markdown");
-      assert.deepStrictEqual(reachingAmong4, []);
+      assert.deepStrictEqual(
+        reachingAmong4,
+        [],
+        "the reporting suite ships as @beep/github-reporting, pinning its own markdown edges; nothing here imports it"
+      );
     })
   );
 
@@ -191,21 +185,19 @@ describe("bundle reachability", () => {
   );
 
   it("node builtins are loaded only by the sanctioned modules", () => {
-    // `node:crypto` behind the synchronous and streaming digests and SigV4's
-    // HMAC, which Effect Crypto does not expose; `node:fs` and
-    // `node:child_process` behind the detached spawn, whose children must
-    // inherit native descriptors and outlive the Effect scope.
     assert.deepStrictEqual(
       A.filter(MODULES, (module) => A.some(runtimeEdgesOf(sourceOf(module)), Str.startsWith("node:"))),
-      ["DetachedProcess.ts", "internal/digest.ts", "internal/sigv4.ts"]
+      ["DetachedProcess.ts", "internal/digest.ts", "internal/sigv4.ts"],
+      "node:crypto backs digests and SigV4 HMAC (absent from Effect Crypto); detached children inherit native fds"
     );
   });
 
   it("the package declares itself side-effect free", () => {
-    // Without this a bundler must assume evaluating an unreferenced module
-    // matters, and keeps it. The repo spells it as an empty list, which
-    // bundlers read the same as upstream's `false`.
-    assert.deepStrictEqual(manifest.sideEffects, []);
+    assert.deepStrictEqual(
+      manifest.sideEffects,
+      [],
+      "without it a bundler keeps any module whose evaluation might matter; the scan proves only that no edge exists"
+    );
   });
 
   it.effect("every runtime dependency is declared", () =>
@@ -221,7 +213,6 @@ describe("bundle reachability", () => {
   );
 });
 
-/** The exact runtime packages each pinned module reaches. */
 const EXPECTED_PACKAGES: Readonly<Record<string, ReadonlyArray<string>>> = {
   "Action.ts": [
     "@beep/github-commands",

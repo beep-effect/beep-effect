@@ -103,7 +103,6 @@ export interface CiOpsKpiShape {
  */
 export class CiOpsKpi extends Context.Service<CiOpsKpi, CiOpsKpiShape>()($I`CiOpsKpi`) {}
 
-// The stub ignores its input: every call fails typed.
 const readNotImplemented = Effect.fn("CiOpsKpi.read")(function* (): Effect.fn.Return<KpiReading, CiOpsKpiError> {
   return yield* KpiNotImplementedError.make({ operation: "read" });
 });
@@ -154,13 +153,11 @@ const decodeAdoptionTable = S.decodeEffect(S.fromJsonString(AdoptionTable));
 
 const pinKey = (pin: PinnedKpiInput): string => `${pin.role}\u0000${pin.path}\u0000${pin.sha256}`;
 
-// The table's pins and the reading's non-table pins must be the same set.
 const pinsAgree = (tablePins: ReadonlyArray<PinnedKpiInput>, sourcePins: ReadonlyArray<PinnedKpiInput>): boolean => {
   const sorted = (pins: ReadonlyArray<PinnedKpiInput>) => A.sort(A.map(pins, pinKey), Order.String);
   return A.makeEquivalence<string>(Equal.equals)(sorted(tablePins), sorted(sourcePins));
 };
 
-// Directory part of a repo-relative path ("" for a bare file name).
 const directoryOf = (path: string): string =>
   Str.slice(
     0,
@@ -168,7 +165,6 @@ const directoryOf = (path: string): string =>
   )(path);
 
 const makeLive = (fs: FileSystem.FileSystem, crypto: Digest.Digest["Service"]) => {
-  // Reads raw bytes, checks their SHA-256 against the pin before any decode, then decodes UTF-8.
   const readVerified = Effect.fnUntraced(function* (
     role: KpiInputRole,
     path: string,
@@ -213,8 +209,7 @@ const makeLive = (fs: FileSystem.FileSystem, crypto: Digest.Digest["Service"]) =
     return [facts.captureInstant, journals] as const;
   });
 
-  // The ledger is never parsed: its bytes must hash to the pin and to the constant table's digest.
-  const checkLedger = Effect.fnUntraced(function* (
+  const verifyLedgerBytes = Effect.fnUntraced(function* (
     input: KpiReadingInput
   ): Effect.fn.Return<void, KpiInputReadError | KpiDigestMismatchError | KpiInputDecodeError> {
     const pin = yield* pinFor(input, "change-event-ledger");
@@ -244,14 +239,13 @@ const makeLive = (fs: FileSystem.FileSystem, crypto: Digest.Digest["Service"]) =
     return table;
   });
 
-  // Every pin but the adoption table: ledger check, attempt journals, merged admission sources.
   const readSources = Effect.fnUntraced(function* (
     input: KpiReadingInput
   ): Effect.fn.Return<
     readonly [DateTime.Utc, ReadonlyArray<FleetJournal>, ReadonlyArray<KpiAdmissionRow>],
     CiOpsKpiError
   > {
-    yield* checkLedger(input);
+    yield* verifyLedgerBytes(input);
     const [captureInstant, journals] = yield* readJournals(input);
     const canonicalPin = yield* pinFor(input, "fleet-admission-journal");
     const snapshotPin = yield* pinFor(input, "admission-snapshot");

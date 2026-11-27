@@ -130,11 +130,9 @@ type IntakeProgram = (
 
 const isDocketIntakeError = S.is(DocketIntakeError);
 
-// Pipeline and adapter failures end the process with their own exit code: 3 when Graph throttled.
 const asCommandError = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
   Effect.catchIf(effect, isDocketIntakeError, (error) => Effect.fail(DocketIntakeCommandError.fromIntake(error)));
 
-// One JSON line on standard output; logs go to standard error.
 const printJson =
   <A>(encode: (value: A) => Effect.Effect<string, S.SchemaError>) =>
   (value: A) =>
@@ -148,7 +146,6 @@ const printBackfillReport = printJson(S.encodeEffect(S.fromJsonString(DocketBack
 
 const pollOptions = (limit: O.Option<number>) => DocketPollOptions.make({ maxMessages: limit });
 
-// Build a layer for the length of one program and run the program with what it provides.
 const runWith = <A, E, R, ROut, E2, R2>(
   program: Effect.Effect<A, E, R>,
   layer: Layer.Layer<ROut, E2, R2>
@@ -159,7 +156,6 @@ const runWith = <A, E, R, ROut, E2, R2>(
     Effect.scoped
   );
 
-// The start of a first run: `--since`, else DOCKET_INTAKE_START_AT, else now.
 const startOf = Effect.fnUntraced(function* (config: DocketIntakeAppConfig, flagged: O.Option<DateTime.Utc>) {
   const now = yield* DateTime.now;
   return DateTime.formatIso(
@@ -172,6 +168,10 @@ const startOf = Effect.fnUntraced(function* (config: DocketIntakeAppConfig, flag
 
 /**
  * The handler of each command.
+ *
+ * **Gotchas**
+ *
+ * Pipeline and adapter failures preserve their own exit codes, including 3 for Graph throttling. Reports use one JSON line on stdout and logs use stderr.
  *
  * **Example** (Build the handlers over the live wiring)
  *
@@ -186,7 +186,6 @@ const startOf = Effect.fnUntraced(function* (config: DocketIntakeAppConfig, flag
  * @since 0.0.0
  */
 export const makeHandlers = <E1, R1, E2, R2, E3, R3>(wiring: DocketIntakeWiring<E1, R1, E2, R2, E3, R3>) => {
-  // Build the pipeline for this process, seed the cursor on a first run, then run the program.
   const withIntake = Effect.fnUntraced(function* (flagged: O.Option<DateTime.Utc>, program: IntakeProgram) {
     const config = yield* DocketIntakeAppConfigFromEnv;
     const startAt = yield* startOf(config, flagged);
@@ -198,8 +197,7 @@ export const makeHandlers = <E1, R1, E2, R2, E3, R3>(wiring: DocketIntakeWiring<
     );
   });
 
-  // Undo writes under the state lock: the file store takes it when it is built.
-  const lockedJournal = (config: DocketIntakeAppConfig) => {
+  const journalUnderStoreLock = (config: DocketIntakeAppConfig) => {
     const options = DocketFileStoreOptions.make({ directory: config.stateDirectory });
     return makeDocketFileJournalLayer(options).pipe(Layer.provideMerge(makeDocketFileStoreLayer(options)));
   };
@@ -285,7 +283,7 @@ export const makeHandlers = <E1, R1, E2, R2, E3, R3>(wiring: DocketIntakeWiring<
       const report = yield* asCommandError(
         flags.dryRun
           ? runWith(undoDryRun(config, flags.run), graph)
-          : runWith(undoRun(config, flags.run), Layer.merge(graph, lockedJournal(config)))
+          : runWith(undoRun(config, flags.run), Layer.merge(graph, journalUnderStoreLock(config)))
       );
       yield* printUndoReport(report);
     }),
