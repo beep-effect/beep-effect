@@ -221,6 +221,14 @@ complete. Report the exact commands and outcomes.
 - Preserve `null` on encoded persistence boundaries where the storage contract
   requires it.
 - Use schema transformations for deterministic type-shaping conversions.
+- Decode a boundary value into the Effect type that means it, with the schema
+  `effect/Schema` ships (`S.DateTimeUtcFromString`, `S.DurationFromMillis`,
+  `S.URLFromString`, `S.BigDecimalFromString`, `S.Redacted`, ...), instead of
+  keeping the string or number it arrived as.
+- Describe a field with a key annotation (`S.annotateKey`, `$I.annoteKey`),
+  first in the field's pipe, never with `.annotate(...)`. On a field whose
+  schema is an `S.Opaque` class, convert or default first: `S.annotateKey`
+  returns the plain struct type and the field would lose its brand.
 - Do not scatter `??`, null checks, trim/case conversion, default-object
   spreads, or native JSON parsing through business logic.
 
@@ -266,8 +274,18 @@ complete. Report the exact commands and outcomes.
 - Use `S.toTaggedUnion("<field>")` for custom fields such as `kind`, `type`,
   `status`, `family`, or `profile`.
 - Use `S.TaggedUnion(...)` only for canonical `_tag` unions.
-- Nest discriminated values only when the domain actually contains a nested
-  decision. Do not create nesting solely to demonstrate an API.
+- Layer unions, one question per layer. A value that answers two questions
+  (which kind, and what state) holds the second union as a field of the first
+  one's members. Never encode both answers in product tags such as
+  `"video-locked"`, and never as two flags on one struct.
+- Order the layers the way code chooses: the answer that selects a service,
+  renderer or table is the outer layer. A field true of every answer sits on
+  the layer above; a member holding only its tag is normal.
+- Read the tree in the other order with a typed `S.refine` over a type guard,
+  not a second parallel tree.
+- A literal that no answer attaches data to, and that code only stores, shows
+  or compares, stays a `LiteralKit` field. Add a layer only for a question the
+  domain asks.
 - Branch exhaustively with the schema-derived matcher or Effect `Match`.
 
 ### Effect owns fallibility and runtime boundaries
@@ -507,9 +525,7 @@ class JobQueued extends S.Opaque<JobQueued, { readonly brand: unique symbol }>()
       description: "Job waiting to be processed.",
     })
   )
-) {
-  static readonly thunkThis = () => JobQueued;
-}
+) {}
 
 class JobCompleted extends S.Opaque<JobCompleted, { readonly brand: unique symbol }>()(
   S.Struct({
@@ -521,13 +537,9 @@ class JobCompleted extends S.Opaque<JobCompleted, { readonly brand: unique symbo
       description: "Successfully completed job.",
     })
   )
-) {
-  static readonly thunkThis = () => JobCompleted;
-}
+) {}
 
-export const Job = JobKind.mapMembers(
-  ([queued, completed]) => Tuple.make(JobQueued, JobCompleted)
-).pipe(
+export const Job = JobKind.mapMembers(() => Tuple.make(JobQueued, JobCompleted)).pipe(
   S.toTaggedUnion("kind"),
   $I.annoteSchema("Job", {
     description: "Job lifecycle state discriminated by `kind`.",
@@ -543,14 +555,116 @@ export const summarizeJob = Job.match({
 ```
 
 **Carve-out:** Preserve a required external bag shape at the transport edge,
-then decode it into the internal tagged model. Use nested tagged values only
-for a real nested domain choice.
+then decode it into the internal tagged model.
 
 **Proof:** Construct every case through `Job.cases`, test every guard, and
 exercise the exhaustive matcher. Adding a case must create a compile-time
 obligation at every exhaustive match.
 
-### Pattern 5: Call codecs as Effect/Schema free functions; attach only domain helpers
+### Pattern 5: Layer unions, one question per layer
+
+**Rationale:** A tagged union answers one question about a value. When a
+value answers two, two small unions (the second held as a field of the first
+one's members) keep each question's cases, constructors and matches separate.
+A new answer to either question is then a compile error at that question's
+matches only.
+
+**Smell:**
+
+```ts
+interface Media {
+  readonly kind: "image" | "video";
+  readonly locked: boolean;
+  readonly urls?: ReadonlyArray<string>;
+  readonly seconds?: number;
+}
+
+// or the same two questions folded into one tag
+type MediaTag = "image-full" | "image-locked" | "video-full" | "video-locked";
+```
+
+**Target:**
+
+```ts
+import { LiteralKit } from "@beep/schema";
+import * as Identity from "@beep/identity";
+import * as A from "effect/Array";
+import * as S from "effect/Schema";
+import * as Tuple from "effect/Tuple";
+
+// Illustrative package composer; no registered workspace package is assumed.
+const { $PackageNameId } = Identity.make("package-name");
+
+const $I = $PackageNameId.create("relative/path/from/package/src");
+
+const AccessKind = LiteralKit(["full", "locked"]);
+
+class AccessFull extends S.Opaque<AccessFull, { readonly brand: unique symbol }>()(
+  S.Struct({
+    kind: S.tag("full"),
+    urls: S.NonEmptyArray(S.NonEmptyString),
+  }).pipe($I.annoteSchema("AccessFull", { description: "Every rendition can be fetched." }))
+) {}
+
+class AccessLocked extends S.Opaque<AccessLocked, { readonly brand: unique symbol }>()(
+  S.Struct({
+    kind: S.tag("locked"),
+  }).pipe($I.annoteSchema("AccessLocked", { description: "The item exists and nothing can be fetched." }))
+) {}
+
+export const Access = AccessKind.mapMembers(() => Tuple.make(AccessFull, AccessLocked)).pipe(
+  S.toTaggedUnion("kind"),
+  $I.annoteSchema("Access", { description: "What the viewer may fetch of one item." })
+);
+
+const MediaKind = LiteralKit(["image", "video"]);
+
+class MediaImage extends S.Opaque<MediaImage, { readonly brand: unique symbol }>()(
+  S.Struct({
+    kind: S.tag("image"),
+    access: Access,
+  }).pipe($I.annoteSchema("MediaImage", { description: "A still image." }))
+) {}
+
+class MediaVideo extends S.Opaque<MediaVideo, { readonly brand: unique symbol }>()(
+  S.Struct({
+    kind: S.tag("video"),
+    access: Access,
+    seconds: S.Natural,
+  }).pipe($I.annoteSchema("MediaVideo", { description: "A video and its running time." }))
+) {}
+
+export const Media = MediaKind.mapMembers(() => Tuple.make(MediaImage, MediaVideo)).pipe(
+  S.toTaggedUnion("kind"),
+  $I.annoteSchema("Media", { description: "One gallery item, by kind and then by access." })
+);
+
+const fetchable = Access.match({
+  full: ({ urls }) => `${A.length(urls)} files`,
+  locked: () => "locked",
+});
+
+export const describeMedia = Media.match({
+  image: ({ access }) => `image, ${fetchable(access)}`,
+  video: ({ access, seconds }) => `video of ${seconds}s, ${fetchable(access)}`,
+});
+```
+
+Order the layers the way code chooses: the answer that selects a service,
+renderer or table is the outer one. To read the tree in the other order
+("every locked item, of any kind"), refine it with a type guard
+(`Media.pipe(S.refine(isLocked, annotations))`); do not build a second tree.
+
+**Carve-out:** A literal that no answer attaches data to, and that code only
+stores, shows or compares, stays a `LiteralKit` field; `LiteralKit.match` is
+already exhaustive over it. Add a layer only for a question the domain asks.
+
+**Proof:** Construct every case of every layer through `.cases`, exercise the
+nested matcher, and assert that a state the layers exclude (a locked item
+that lists URLs) cannot survive a decode. Decoding drops an undeclared key; it
+does not refuse the input.
+
+### Pattern 6: Call codecs as Effect/Schema free functions; attach only domain helpers
 
 **Rationale:** Guards, decoders, encoders and equivalences are upstream free
 functions over the schema (`S.is`, `S.decodeUnknownOption`,
@@ -599,7 +713,7 @@ create an import cycle.
 **Proof:** `bun run beep lint schema-first` reports no `SFV4-codec-static`
 occurrence, and the schema remains constructible and decodable.
 
-### Pattern 6: Keep decoding and JSON in Effect/Schema
+### Pattern 7: Keep decoding and JSON in Effect/Schema
 
 **Rationale:** External data is fallible. The boundary should expose that
 fallibility rather than conceal it behind assertions, native JSON calls, or
@@ -638,7 +752,7 @@ non-throwing. Do not default to synchronous throwing codecs.
 **Proof:** Test valid input, malformed JSON, structurally invalid input, and
 typed error translation at the owning boundary.
 
-### Pattern 7: Prove schemas with generated data and laws
+### Pattern 8: Prove schemas with generated data and laws
 
 **Rationale:** Examples prove anecdotes. Schema-derived properties test claims
 across the modeled domain and expose over-broad or impossible schemas.
@@ -648,7 +762,6 @@ For every changed named schema:
 ```ts
 import { expect, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
-import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const MySchema = S.Struct({ id: S.String });
@@ -692,7 +805,7 @@ idempotence or canonical-form laws instead of equality after round trip.
 generated values satisfy their source schema; all claimed round-trip,
 invariant, default, transform, codec, and equivalence laws pass.
 
-### Pattern 8: Port semantics with a disposition ledger
+### Pattern 9: Port semantics with a disposition ledger
 
 **Rationale:** A file-copy checklist misses behavior, while an unbounded
 "redesign" silently drops features. A semantic ledger permits local

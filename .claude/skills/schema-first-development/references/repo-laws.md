@@ -145,6 +145,12 @@ Use:
 - `S.decodeTo(...)`
 - `SchemaTransformation.transform(...)`
 - `SchemaTransformation.transformEffect(...)`
+- `S.withDecodingDefaultTypeKey(...)`
+
+`S.withDecodingDefaultKey` takes the default as an encoded value, which then
+decodes; `S.withDecodingDefaultTypeKey` takes it as a decoded value. Use the
+`Type` form when the field has a transformation and the default is easier to
+state after it.
 
 Prefer:
 
@@ -241,8 +247,9 @@ Use:
   boundary invariants
 - `S.TaggedUnion(...).cases` / `.guards` / `.isAnyOf` / `.match`
 - `S.toTaggedUnion(...).cases` / `.guards` / `.isAnyOf` / `.match`
-- `LiteralKit.Enum`, `.is`, `.match`, `.matchOrElse`, and `.toTaggedUnion`, plus the
-  inherited `S.Literals` members `.literals` and `.pick(...)`
+- `LiteralKit.Enum`, `.is`, `.match`, `.matchOrElse`, and `.toTaggedUnion`, the
+  kit-returning subsets `.pick(...)` and `.omit(...)`, plus the inherited
+  `S.Literals` members `.literals` and `.mapMembers(...)`
 - `MappedLiteralKit.From`, `.To`, and `.Pairs` for directional literal maps
 
 Avoid ad-hoc duplicate helpers when the schema already expresses the domain
@@ -284,11 +291,14 @@ S.makeFilter(Str.includes("/"), $I.annote("ContainsSlashCheck", {
 - Use `S.toTaggedUnion("<field>")` for discriminator fields such as `kind`,
   `type`, `status`, `subtype`, `decision`, `profile`, or `family`.
 - Use `S.TaggedUnion(...)` only for canonical `_tag` unions.
-- Prefer `LiteralKit + mapMembers + Tuple.evolve + S.toTaggedUnion(...)` for
-  reusable literal domains, and prefer the schema-derived `.match` helper when
+- Prefer `LiteralKit + mapMembers + S.toTaggedUnion(...)` for reusable literal
+  domains. Inside `mapMembers`, `Tuple.evolve([() => A, () => B])` replaces
+  members one position at a time and `() => Tuple.make(A, B)` replaces the
+  whole tuple; both are accepted. Prefer prefer the schema-derived `.match` helper when
   branching directly on the tagged union.
-- Use `LiteralKit.Enum`, `.literals`, and `.pick(...)` instead of duplicate
-  literal arrays or enum-like constants.
+- Use `LiteralKit.Enum`, `.literals`, `.pick(...)` and `.omit(...)` instead of
+  duplicate literal arrays or enum-like constants. `.pick` and `.omit` return a
+  kit, so never re-wrap a subset in `LiteralKit(...)`.
 - Spell a fixed tag with the tagged constructors: `S.TaggedStruct("X", {...})`,
   not `S.Struct({ _tag: S.Literal("X"), ... })`; `S.TaggedClass` /
   `S.TaggedError`, not `S.Class` / `S.Error` with a `_tag` field; and
@@ -298,6 +308,31 @@ S.makeFilter(Str.includes("/"), $I.annote("ContainsSlashCheck", {
   `Class.extend` `_tag` has no tagged form, so it uses `S.tag`. Optional keys,
   `S.tagDefaultOmit`, `S.Literals`, `LiteralKit`, brand chains and literals
   behind `S.suspend` are different shapes and stay as they are.
+
+## 9a. Layered Unions: One Question Per Layer
+
+A tagged union answers one question about a value. A value that answers two
+questions holds two unions, the second as a field of the first one's members,
+never one union whose tags are the product of both domains and never one
+struct with two flags and a bag of optional fields.
+
+- Order the layers the way code chooses: the question whose answer selects a
+  service, renderer or table is the outer layer.
+- A field true of every answer sits on the layer above; a field true of one
+  answer sits in that answer's member. A member holding only its tag is normal.
+- Branch with nested schema-derived `.match` calls, one per layer. Do not
+  write `a.kind === "x" && a.status === "y"`.
+- A literal field that no answer attaches data to, and that code only stores,
+  shows or compares, stays a `LiteralKit` field. Lift it into a union when an
+  answer gains a field or a sibling field is meaningful only under some
+  answers.
+- A tree has one nesting order. Read it in the other order with a typed
+  refinement (`Union.pipe(S.refine(guard, annotations))` over a type guard),
+  not a second parallel tree with conversions between the two.
+- Add a layer only for a question the domain asks.
+
+Construction, a worked example and the gotchas are in `pattern-catalog.md`
+section 6a.
 
 ## 9b. Source Schemas Must Be Precise Enough to Generate Test Data
 

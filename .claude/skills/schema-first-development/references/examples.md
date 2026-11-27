@@ -16,7 +16,7 @@ Use this file when you need:
 
 What to copy:
 
-- `RelativePlanPath` for annotated schema filters
+- `RelativePlanPathChecks` for an annotated `S.makeFilterGroup`
 - `PlannedFile` for a clean branded `S.Opaque` object model
 - `GenerationActionKind` for annotated literal-kit usage
 
@@ -119,7 +119,7 @@ File:
 Use this file when you need:
 
 - a discriminator such as `category`, `mode`, `section`, or `kind`
-- `LiteralKit + mapMembers + Tuple.evolve + S.toTaggedUnion(...)`
+- `LiteralKit + mapMembers + S.toTaggedUnion(...)`, with `Tuple.evolve` inside `mapMembers`
 - schema-derived `.match` helpers for branch sites
 
 What to copy:
@@ -133,7 +133,34 @@ Why it matters:
   domains that become tagged unions
 - it keeps the case set anchored to the literal domain instead of a raw union
 
-## 6. Test Proofs for Underused Schema Capabilities
+## 6. Layered Unions
+
+Files:
+
+- `scratchpad/osdk/src/ValueFormat/ValueFormat.model.ts`
+- `scratchpad/int/locator.ts`
+
+Use these files when you need:
+
+- a union whose members hold another union as a field
+- nested schema-derived `.match` calls, one per layer
+- tag-only members beside members that carry data
+
+What to copy:
+
+- `ValueFormat` → `NumberFormat` → `DurationFormatStyle`, three layers each
+  closed with `mapMembers` and `S.toTaggedUnion`
+- `PropertyOrConstant`, one small union reused as a field by several members
+- `Locator`, discriminated by `platform`, whose members hold a per-site target
+  union discriminated by `kind`
+
+Why it matters:
+
+- each layer answers one question, so a new case is a compile error at the
+  matches of that layer only
+- the outer layer is the question code chooses by first
+
+## 7. Test Proofs for Underused Schema Capabilities
 
 Files:
 
@@ -164,6 +191,8 @@ Why it matters:
 - Need a `kind` or `type` tagged union:
   Start with `packages/tooling/tool/cli/src/commands/CreatePackage/FileGenerationPlanService.ts`
   or `packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.schemas.ts`
+- Need a union inside a union:
+  Start with `scratchpad/osdk/src/ValueFormat/ValueFormat.model.ts`
 - Need a static API refresher:
   Start with `packages/foundation/modeling/schema/test/LiteralKit.test.ts`
 - Need schema-derived property test scaffolding:

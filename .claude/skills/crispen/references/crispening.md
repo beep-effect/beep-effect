@@ -3,8 +3,8 @@
 Two parts: **A. the toolkit** (what to reach for, with real signatures + the noise it
 kills + a live usage site), and **B. the moves** (before→after transforms distilled from
 the `@beep/md` / `@beep/lexical-schema` crispening). Import combinators as a namespace:
-`import { LiteralKit, MappedLiteralKit, SchemaUtils } from "@beep/schema"`. Line anchors
-are current-as-written; trust the *symbol*, re-`rg` if a number drifted.
+`import { LiteralKit, MappedLiteralKit, SchemaUtils } from "@beep/schema"`. Live sites
+name a file and a symbol; `rg` the symbol to find it.
 
 ---
 
@@ -20,7 +20,7 @@ Source: `packages/foundation/modeling/schema/src/{SchemaUtils,LiteralKit,MappedL
 | `S.withConstructorDefault(Effect.succeed(v))` | upstream; constant default at construction | `version: 1` / `format: ""` at construction (wire stays required) | `Lexical.model.ts` |
 | `S.withConstructorDefault(Effect.succeed(v))` + `S.withDecodingDefaultTypeKey(Effect.succeed(v))` | upstream pair; bind a constructed `v` to one const first | double-wiring a default for **both** make and missing-key decode | `ScanState.ts` |
 | `S.withConstructorDefault(Effect.succeed(empty))` + `S.withDecodingDefaultType(Effect.succeed(empty))` | upstream pair over one `const empty = A.empty<T>()` | repeated `[]` default wiring on array fields | `Md.model.ts` |
-| `SchemaUtils.BoolKeyDefaultFalse` / `BoolKeyDefaultTrue` | annotated boolean field defaulting make + missing key | `O.getOrElse(O.fromUndefinedOr(...), thunkFalse)` plumbing | `Md.model.ts:1101,1468` |
+| `SchemaUtils.BoolKeyDefaultFalse` / `BoolKeyDefaultTrue` | annotated boolean field defaulting make + missing key | `O.getOrElse(O.fromUndefinedOr(...), thunkFalse)` plumbing | `Md.model.ts` |
 | `S.withDecodingDefaultTypeKey(Effect.succeed(v))` | upstream decode-only default for a missing key; encode stays strict | a decode fallback that must NOT leak into the encoded shape; the v4 form of `S.optionalWith(s, { exact, default })` | `effect/Schema` |
 
 > `S.withConstructorDefault` alone is **constructor-only**, so the encoded/wire
@@ -34,10 +34,10 @@ Source: `packages/foundation/modeling/schema/src/{SchemaUtils,LiteralKit,MappedL
 
 | Symbol | Signature (abridged) | Kills | Live site |
 |--------|----------------------|-------|-----------|
-| in-body `static readonly is = S.is(Self)` | attach on `S.Class`/`S.TaggedClass` (they lose piped statics) | a free-floating guard next to the class | `Md.model.ts:873` (`Heading.is`) |
+| in-body `static readonly is = S.is(Self)` | a class body static on an `S.Opaque` or `S.Class` schema (a piped annotation drops statics) | a free-floating guard next to the class | `Md.model.ts` (`Heading.is`) |
 | `S.is` / `S.decodeUnknownOption` / `S.toEquivalence` | upstream free functions over the schema | a hand-written guard, decoder or `===` comparison | call at the use site; Effect caches parsers per AST |
-| `SchemaUtils.withStatics` | `dual` `(self, (schema) => methods) => self & methods` | ad-hoc `Object.assign(schema, {...})` + domain helpers lost on `.annotate`; never for codecs (`SFV4-codec-static`) | `SchemaUtils/withStatics.ts:91` |
-| `SchemaUtils.withLiteralKitStatics` | `(literalKit) => (self) => self & kitHelpers` | LiteralKit helpers lost by a derivation such as `S.brand`; annotations already preserve them | `SchemaUtils/withLiteralKitStatics.ts:37` |
+| `SchemaUtils.withStatics` | `dual` `(self, (schema) => methods) => self & methods` | ad-hoc `Object.assign(schema, {...})` + domain helpers lost on `.annotate`; never for codecs (`SFV4-codec-static`) | `SchemaUtils/withStatics.ts` |
+| `SchemaUtils.withLiteralKitStatics` | `(literalKit) => (self) => self & kitHelpers` | LiteralKit helpers lost by a derivation such as `S.brand`; annotations already preserve them | `SchemaUtils/withLiteralKitStatics.ts` |
 
 > Codec statics (`withCodecStatics`, codec facades attached with `withStatics`) were
 > retired under the Upstream-First Foundation/Modeling decision: a decode/guard wall
@@ -47,7 +47,7 @@ Source: `packages/foundation/modeling/schema/src/{SchemaUtils,LiteralKit,MappedL
 
 | Symbol | API | Kills | Live site |
 |--------|-----|-------|-----------|
-| `LiteralKit([...])` | `.Enum`, `.is`, `.match`, `.toTaggedUnion`; inherited `S.Literals` `.literals`, `.pick(...)`, `.mapMembers(...)` | duplicate literal arrays + enum-like objects + ad-hoc literal guards; N near-identical nodes | `Lexical.model.ts:755` (`HeadingTag`) |
+| `LiteralKit([...])` | `.Enum`, `.is`, `.match`, `.matchOrElse`, `.toTaggedUnion`; kit-returning `.pick(...)`, `.omit(...)`; inherited `S.Literals` `.literals`, `.mapMembers(...)` | duplicate literal arrays + enum-like objects + ad-hoc literal guards; N near-identical nodes | `Lexical.model.ts` (`HeadingTag`) |
 | `MappedLiteralKit([[from,to]])` | `.From.Enum` (from→to), `.To.Enum` (to→from), `.Pairs`, `.is` | a hand-written bidirectional lookup table + its inverse | code/protocol maps (e.g. `level↔"h1".."h6"`, SQLSTATE) |
 
 > **Key-stringification gotcha.** Non-string literals become string helper keys:
@@ -109,7 +109,7 @@ Never pass a bare identifier equal to the tag.
 | `Effect.fn("Name")(function* …)` / `Effect.fnUntraced(...)` | production (traced) / tests + hot paths (untraced) — never `(a) => Effect.gen(...)`. |
 | `dual(2, impl)` | public 2–3-arg helpers get data-first + data-last for free (EF-18). |
 | `flow(...)` | passthrough `pipe` callbacks; direct helper refs over trivial lambdas. |
-| `Arbitrary.schema(Schema)` (`effect/Arbitrary`) + `it.prop` (`@effect/vitest`) | derive test data from the schema; delete hand fixtures. `Md.test.ts:120`, `Lexical.model.test.ts:85` |
+| `Arbitrary.schema(Schema)` (`effect/Arbitrary`) + `it.prop` (`@effect/vitest`) | derive test data from the schema; delete hand fixtures. `Md.test.ts`, `Lexical.model.test.ts` |
 
 ---
 
@@ -120,9 +120,9 @@ Distilled from `packages/foundation/modeling/md/src/` and `.../lexical/src/`.
 **1. Six heading nodes → one `Heading{ level }`.** Kills ~20 repeated match arms + the
 `headingConstructors`/`headingMarkerCount` lookup tables.
 ```ts skip-type-checking
-// before: H1..H6 as six S.TaggedClass nodes, six render arms, two lookup tables
+// before: H1..H6 as six tagged nodes, six render arms, two lookup tables
 // after:
-export const HeadingLevel = LiteralKit([1,2,3,4,5,6]).pipe($I.annoteSchema("HeadingLevel", { … }));  // Md.model.ts:830
+export const HeadingLevel = LiteralKit([1,2,3,4,5,6]).pipe($I.annoteSchema("HeadingLevel", { … }));
 export class Heading extends S.Opaque<Heading, { readonly brand: unique symbol }>()(
   S.TaggedStruct("heading", { level: HeadingLevel.annotateKey({ … }), children: … })
     .pipe($I.annoteSchema("Heading", { … }))
@@ -143,7 +143,7 @@ export class Heading extends S.Opaque<Heading, { readonly brand: unique symbol }
 ```ts skip-type-checking
 // before: new ParagraphNode({ ...ParagraphDefaults, children })  // version:1, direction:none, format:"", indent:0 …
 // after (fields carry their own defaults):
-version: LexicalNodeVersion.pipe(S.withConstructorDefault(Effect.succeed(1))),                 // Lexical.model.ts
+version: LexicalNodeVersion.pipe(S.withConstructorDefault(Effect.succeed(1))),
 format:  ElementFormat.pipe(S.withConstructorDefault(Effect.succeed<ElementFormat>(""))),
 indent:  LexicalIndentDepth.pipe(S.withConstructorDefault(Effect.succeed<number>(0))),
 direction: SomeDirection.pipe(S.withConstructorDefault(Effect.succeedNone)),
@@ -180,7 +180,7 @@ import * as Arbitrary from "effect/Arbitrary";
 const Document = S.Struct({ text: S.String });
 declare const encode: (doc: typeof Document.Type) => string;
 declare const decode: (input: string) => typeof Document.Type;
-const DocumentArbitrary = Arbitrary.schema(Document);              // Md.test.ts:120
+const DocumentArbitrary = Arbitrary.schema(Document);
 it.prop("round-trips losslessly", [DocumentArbitrary], ([doc]) => {
   expect(decode(encode(doc))).toEqual(doc);
 }, { arbitrary: fcRuns(50) });
@@ -190,7 +190,7 @@ it.prop("round-trips losslessly", [DocumentArbitrary], ([doc]) => {
 **7. Module role split.** Behavior moves off the schema class; `.model.ts` stays pure,
 breaking the model↔utils cycle.
 ```
-Md.model.ts    — schemas only (S.TaggedClass, LiteralKit, SchemaUtils.*)
+Md.model.ts    — schemas only (S.Opaque over S.TaggedStruct, LiteralKit, SchemaUtils.*)
 Md.behavior.ts — pure projections (plain-text, run segmentation)
 Md.escape.ts   — escaping / URL sanitization (trust boundary — stays explicit + tested)
 Md.render.ts   — render adapters (Match.tagsExhaustive matchers)
@@ -207,3 +207,20 @@ breaks every value-form consumer: tests and `**Example**` blocks must now call t
 the guard/decode/example call sites in the same change. For typed `Effect<A,E,R>` values,
 skip the factory: declare at the consumer with a typed guard,
 `S.declare((u): u is Effect.Effect<A, E, R> => Effect.isEffect(u))`.
+
+**9. Two flags and a bag of optionals → layered unions.** One union per question; the
+second union is a field of the first one's members.
+```ts skip-type-checking
+// before: { kind: "image" | "video"; locked: boolean; urls?: string[]; seconds?: number }
+//         if (m.kind === "video" && !m.locked && m.urls) …            // repeated at every reader
+// after:
+export const Access = AccessKind.mapMembers(() => Tuple.make(AccessFull, AccessLocked)).pipe(S.toTaggedUnion("kind"));
+export const Media = MediaKind.mapMembers(() => Tuple.make(MediaImage, MediaVideo)).pipe(S.toTaggedUnion("kind"));
+// MediaImage = { kind: "image", access: Access }; MediaVideo adds `seconds`
+const fetchable = Access.match({ full: ({ urls }) => A.length(urls), locked: () => 0 });
+export const files = Media.match({ image: ({ access }) => fetchable(access), video: ({ access }) => fetchable(access) });
+```
+The absorbed invariant: a locked item cannot hold a URL. Proof to keep: a decode of a
+locked item that lists URLs yields none (decoding drops the key, it does not refuse it).
+Leave a literal that no case attaches data to as a `LiteralKit` field. Full recipe and
+gotchas: `schema-first-development` → `references/pattern-catalog.md` section 6a.

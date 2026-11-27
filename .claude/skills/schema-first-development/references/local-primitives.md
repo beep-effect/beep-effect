@@ -55,10 +55,11 @@ What it gives you:
 - schema value
 - `.Enum`
 - `.is`
-- `match`
+- `.match` and `.matchOrElse`
 - `.toTaggedUnion(...)` for direct literal-to-member tagged unions
-- the inherited `S.Literals` members: `.literals`, `.pick(...)`, and
-  `.mapMembers(...)` for tagged-union assembly
+- `.pick(...)` and `.omit(...)`, which return a kit over the subset
+- the inherited `S.Literals` members `.literals` and `.mapMembers(...)` for
+  tagged-union assembly
 
 Good fits:
 
@@ -174,7 +175,6 @@ Use `@beep/schema` when:
 
 - the repo already has a shared primitive for the concept
 - the domain is a reusable literal set
-- the error should be schema-backed
 - transformation or validation logic already exists locally
 
 ## Common Pitfalls

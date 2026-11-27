@@ -39,7 +39,8 @@ Keep `Schema` as the source of truth for pure data models.
 3. Check local Effect v4 source for nontrivial Schema API choices.
    `.repos/effect` points to `$HOME/YeeBois/references/effect/effect`, the Effect
    child of the reference workspace; Effect `main` is v4.
-- Start with `.repos/effect/packages/effect/SCHEMA.md`.
+- Start with `.repos/effect/packages/effect/SCHEMA.md`, and `ARBITRARY.md`
+  beside it for generated test data.
 - Confirm behavior in `.repos/effect/packages/effect/src/Schema.ts` or the
   specialized module (`SchemaAST`, `SchemaGetter`, `SchemaIssue`,
   `SchemaRepresentation`, `SchemaTransformation`) when using advanced APIs.
@@ -94,8 +95,9 @@ Keep `Schema` as the source of truth for pure data models.
   statics. See `references/repo-laws.md` section 2.
 - Use named intermediate schemas for reused concepts.
 - Prefer `LiteralKit` for named literal domains: its keyed API (`.Enum`,
-  `.is`, `match`, `.toTaggedUnion(...)`) plus the `S.Literals` members it
-  inherits (`.literals`, `.pick(...)`, `.mapMembers(...)`). Use `S.Literals`
+  `.is`, `.match`, `.matchOrElse`, `.toTaggedUnion(...)`), its kit-returning subsets
+  (`.pick(...)`, `.omit(...)`), plus the `S.Literals` members it inherits
+  (`.literals`, `.mapMembers(...)`). Use `S.Literals`
   for anonymous inline unions never referenced by name.
 - Prefer `MappedLiteralKit` when a protocol/code mapping needs both encoded and
   decoded literal helper surfaces.
@@ -106,6 +108,13 @@ Keep `Schema` as the source of truth for pure data models.
   payload bag.
 - Decode external optional/nullish case bags into internal tagged models when
   compatibility requires the wire shape.
+- Layer unions, one question per layer: a value that answers two questions
+  (which kind, and what state) holds the second union as a field of the first
+  one's members, never product tags (`"video-locked"`) or two flags on one
+  struct. Order layers the way code chooses, branch with nested `.match`, and
+  read the tree in the other order with a typed `S.refine`, not a second
+  tree. A literal no answer attaches data to stays a `LiteralKit` field. See
+  `references/pattern-catalog.md` section 6a.
 - Use `S.toTaggedUnion("<field>")` for discriminators such as `kind`,
   `status`, `type`, `subtype`, `profile`, or `family`.
 - Use `S.TaggedUnion(...)` only for canonical `_tag` object unions.
@@ -142,6 +151,10 @@ Keep `Schema` as the source of truth for pure data models.
   `S.OptionFromOptionalKey` it is dropped from generated JSON Schema. An
   optional field that starts absent is
   `X.pipe(S.annotateKey({ description }), S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone))`.
+  When `X` is an `S.Opaque` class, `S.annotateKey` returns its plain struct
+  type and the field loses the brand: convert first
+  (`X.pipe(S.OptionFromOptionalKey, ...)`) and let the class's own annotation
+  describe it.
   Give no default to identity, authority, provenance or money, or to a field
   whose empty value is the widest one (EF-34).
 - Prefer built-in schema constructors and checks before `S.makeFilter(...)`.
