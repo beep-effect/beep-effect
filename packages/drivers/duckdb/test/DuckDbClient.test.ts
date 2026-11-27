@@ -190,10 +190,9 @@ describe("DuckDbClient", { concurrent: false }, () => {
         assert.deepStrictEqual(unprepared14, []);
         const value15 = yield* sql`INSERT INTO multi_stmt VALUES (2); INSERT INTO multi_stmt VALUES (3)`;
         assert.deepStrictEqual(value15, []);
-        // second run hits the cached RunDirect entry
         yield* sql`INSERT INTO multi_stmt VALUES (2); INSERT INTO multi_stmt VALUES (3)`;
         const value16 = yield* sql`SELECT count(*) AS n FROM multi_stmt`;
-        assert.deepStrictEqual(value16, [{ n: 5 }]);
+        assert.deepStrictEqual(value16, [{ n: 5 }], "the repeated text ran again through its cached RunDirect entry");
       })
     );
 
@@ -444,12 +443,11 @@ describe("DuckDbClient", { concurrent: false }, () => {
       "reads an out-of-range TIMESTAMPTZ as its UTC string under a non-UTC host offset",
       Effect.fnUntraced(function* () {
         const sql = yield* SqlClient.SqlClient;
-        // The upstream class captures the host offset once at module load;
-        // pin it to +05:30 so the read runs as if the process TZ were not UTC.
         const row = yield* Effect.acquireUseRelease(
           Effect.sync(() => {
             const saved = DuckDBTimestampTZValue.timezoneOffsetInMinutes;
-            DuckDBTimestampTZValue.timezoneOffsetInMinutes = 330;
+            const hostOffsetPlus0530 = 330;
+            DuckDBTimestampTZValue.timezoneOffsetInMinutes = hostOffsetPlus0530;
             return saved;
           }),
           () =>
@@ -461,9 +459,11 @@ describe("DuckDbClient", { concurrent: false }, () => {
               DuckDBTimestampTZValue.timezoneOffsetInMinutes = saved;
             })
         );
-        assert.deepStrictEqual(row, [
-          { big: "294247-01-10 04:00:54.775806+00", small: "290309-12-22 (BC) 00:00:00+00" },
-        ]);
+        assert.deepStrictEqual(
+          row,
+          [{ big: "294247-01-10 04:00:54.775806+00", small: "290309-12-22 (BC) 00:00:00+00" }],
+          "DuckDBTimestampTZValue captures the host offset at module load, so the test patches that field, not TZ"
+        );
       })
     );
 
@@ -565,9 +565,12 @@ describe("DuckDbClient", { concurrent: false }, () => {
         assert.strictEqual(reasonOf(flip52)._tag, "UnknownError");
         const flip53 = yield* Effect.flip(sql.unsafe("SELECT ? AS x", [[1, "a"]]));
         assert.strictEqual(reasonOf(flip53)._tag, "UnknownError");
-        // A ragged list (a list item next to a scalar item) mixes kinds too.
         const flip54 = yield* Effect.flip(sql.unsafe("SELECT ? AS x", [[[1], 2]]));
-        assert.strictEqual(reasonOf(flip54)._tag, "UnknownError");
+        assert.strictEqual(
+          reasonOf(flip54)._tag,
+          "UnknownError",
+          "a ragged list (a list next to a scalar) mixes kinds"
+        );
         const flip55 = yield* Effect.flip(sql.unsafe("SELECT ? AS x", [[2, [1]]]));
         assert.strictEqual(reasonOf(flip55)._tag, "UnknownError");
       })
@@ -609,10 +612,6 @@ describe("DuckDbClient", { concurrent: false }, () => {
         yield* sql`CREATE SCHEMA memory.use_s2`;
         yield* sql`CREATE TABLE memory.use_s2.use_t (src INTEGER, extra INTEGER)`;
         yield* sql`INSERT INTO memory.use_s2.use_t VALUES (2, 3)`;
-        // A bind keeps the statement on the prepared cache path (D44); each
-        // context switch changes the resolved table and its result shape.
-        // DuckDB 1.5.6 re-binds bound statements per execution, so this pins
-        // the contract with or without the cache clear (D38).
         const select = sql`SELECT * FROM use_t WHERE ${1} = 1`;
         const main = [{ src: "main" }];
         const select59 = yield* select;
@@ -621,7 +620,11 @@ describe("DuckDbClient", { concurrent: false }, () => {
         assert.deepStrictEqual(select60, main);
         yield* sql`USE use_aux`;
         const select61 = yield* select;
-        assert.deepStrictEqual(select61, [{ src: 42 }]);
+        assert.deepStrictEqual(
+          select61,
+          [{ src: 42 }],
+          "the bind keeps the statement prepared; DuckDB 1.5.6 re-binds it per run, so this holds with or without the cache clear"
+        );
         yield* sql`USE memory`;
         const select62 = yield* select;
         assert.deepStrictEqual(select62, main);
@@ -653,11 +656,13 @@ describe("DuckDbClient", { concurrent: false }, () => {
         const select = sql`SELECT src FROM multi_ctx_t WHERE ${1} = 1`;
         const select67 = yield* select;
         assert.deepStrictEqual(select67, [{ src: "main" }]);
-        // A catalog-context statement inside multi-statement text is not transaction
-        // control, so the text runs and the context switch is still tracked.
         yield* sql.unsafe("SET schema = 'multi_ctx_s'; SELECT 1");
         const select68 = yield* select;
-        assert.deepStrictEqual(select68, [{ src: 7 }]);
+        assert.deepStrictEqual(
+          select68,
+          [{ src: 7 }],
+          "SET schema inside multi-statement text is not transaction control: it runs and the switch is tracked"
+        );
         yield* sql.unsafe("SELECT 1; RESET schema");
         const select69 = yield* select;
         assert.deepStrictEqual(select69, [{ src: "main" }]);
@@ -738,13 +743,15 @@ describe("DuckDbClient", { concurrent: false }, () => {
       "cancels a stream during its first native pull and releases the op lock",
       Effect.fnUntraced(function* () {
         const sql = yield* SqlClient.SqlClient;
-        // Squares are never 3 modulo 7, so no row matches and the first pull scans the whole range until it is
-        // cancelled. Column statistics cannot prove it: DuckDB 2.0.1 answers `range % 7 = 99` without scanning.
         const [elapsed, exit] = yield* sql`
           SELECT range AS i FROM range(20000000000) WHERE ((range % 7) * (range % 7)) % 7 = 3
         `.stream.pipe(Stream.runCount, Effect.timeout("300 millis"), Effect.exit, Effect.timed, TestClock.withLive);
         pipe(exit, Exit.isFailure, assertTrue);
-        assert.isBelow(Duration.toMillis(elapsed), 2000);
+        assert.isBelow(
+          Duration.toMillis(elapsed),
+          2000,
+          "squares are never 3 mod 7, so the first pull scans until cancelled; DuckDB 2.0.1 skips range % 7 = 99 by statistics"
+        );
         const value79 = yield* sql`SELECT ${1} AS n`;
         assert.deepStrictEqual(value79, [{ n: 1 }]);
       })
@@ -774,13 +781,16 @@ describe("DuckDbClient", { concurrent: false }, () => {
       "materializes a stream inside withTransaction so per-row statements see every row",
       Effect.fnUntraced(function* () {
         const sql = yield* SqlClient.SqlClient;
-        // 10000 rows: well past the 2048-row native chunk where a non-materialized stream truncates.
         const count = yield* sql<{ readonly i: number }>`SELECT range AS i FROM range(10000)`.stream.pipe(
           Stream.mapEffect((row) => sql`SELECT ${row.i} AS v`),
           Stream.runCount,
           sql.withTransaction
         );
-        assert.strictEqual(count, 10000);
+        assert.strictEqual(
+          count,
+          10000,
+          "well past the 2048-row native chunk where a non-materialized stream truncates"
+        );
       })
     );
 
@@ -1097,7 +1107,6 @@ describe("DuckDbClient", { concurrent: false }, () => {
   it.layer(DuckDbClient.layer({ databasePath: ":memory:", transformQueryNames: Str.camelToSnake }), {
     timeout: "30 seconds",
   })((it) => {
-    // effect 4.1.4 (Effect #10454): withoutTransforms() also drops a lone query-name transform.
     it.effect(
       "stops transforming identifiers under withoutTransforms when only transformQueryNames is set",
       Effect.fnUntraced(function* () {
@@ -1242,32 +1251,40 @@ describe("DuckDbClient reader connections", { concurrent: false }, () => {
         const path = sql`SELECT current_setting('search_path') AS path`;
         const pipe117 = yield* query.stream.pipe(Stream.runCollect);
         assert.deepStrictEqual(A.fromIterable(pipe117), [{ v: 42 }]);
-        // DuckDB 2.0 resets the writer's path as soon as its schema is dropped,
-        // even uncommitted, and ROLLBACK does not restore it: the lease mirrors that.
         yield* sql`BEGIN`;
         yield* sql`DROP SCHEMA probe_s CASCADE`;
         const path118 = yield* path;
-        assert.deepStrictEqual(path118, [{ path: "memory.main" }]);
+        assert.deepStrictEqual(
+          path118,
+          [{ path: "memory.main" }],
+          "DuckDB 2.0 resets the writer's path once its schema is dropped, even uncommitted"
+        );
         const pipe119 = yield* query.stream.pipe(Stream.runCollect);
         assert.deepStrictEqual(A.fromIterable(pipe119), [{ v: 1 }]);
         yield* sql`ROLLBACK`;
         const pipe120 = yield* query.stream.pipe(Stream.runCollect);
-        assert.deepStrictEqual(A.fromIterable(pipe120), [{ v: 1 }]);
-        // The rolled-back schema is still in the reader's committed catalog.
+        assert.deepStrictEqual(
+          A.fromIterable(pipe120),
+          [{ v: 1 }],
+          "ROLLBACK does not restore the reset path, and the lease mirrors that"
+        );
         yield* sql`USE memory.probe_s`;
         const pipe121 = yield* query.stream.pipe(Stream.runCollect);
-        assert.deepStrictEqual(A.fromIterable(pipe121), [{ v: 42 }]);
-        // The reused lease must normalize again after COMMIT, then see recreation.
+        assert.deepStrictEqual(
+          A.fromIterable(pipe121),
+          [{ v: 42 }],
+          "the rolled-back schema is still in the reader's committed catalog"
+        );
         yield* sql`BEGIN`;
         yield* sql`DROP SCHEMA probe_s CASCADE`;
         yield* sql`COMMIT`;
         const pipe122 = yield* query.stream.pipe(Stream.runCollect);
-        assert.deepStrictEqual(A.fromIterable(pipe122), [{ v: 1 }]);
+        assert.deepStrictEqual(A.fromIterable(pipe122), [{ v: 1 }], "the reused lease normalizes again after COMMIT");
         yield* sql`CREATE SCHEMA probe_s`;
         yield* sql`CREATE TABLE probe_s.probe_t AS SELECT 99 AS v`;
         yield* sql`USE memory.probe_s`;
         const pipe123 = yield* query.stream.pipe(Stream.runCollect);
-        assert.deepStrictEqual(A.fromIterable(pipe123), [{ v: 99 }]);
+        assert.deepStrictEqual(A.fromIterable(pipe123), [{ v: 99 }], "the reused lease then sees the recreated schema");
       })
     );
   });
@@ -1276,7 +1293,6 @@ describe("DuckDbClient reader connections", { concurrent: false }, () => {
     it.effect(
       "filters dangling qualified paths for fresh and resynchronized reader leases",
       Effect.fnUntraced(function* () {
-        // This isolated layer guarantees the first lease has no applied snapshot.
         const sql = yield* DuckDbClient.DuckDbClient;
         yield* sql`CREATE TABLE main.probe_t AS SELECT 1 AS v`;
         yield* sql`CREATE SCHEMA probe_s`;
@@ -1284,12 +1300,15 @@ describe("DuckDbClient reader connections", { concurrent: false }, () => {
         yield* sql`DROP SCHEMA probe_s`;
         const query = sql`SELECT v, current_setting('TimeZone') AS zone FROM probe_t`;
         const writerPath = yield* sql`SELECT current_setting('search_path') AS path`;
-        // DuckDB 2.0 resets the path when its schema is dropped instead of keeping it dangling.
-        assert.deepStrictEqual(writerPath, [{ path: "memory.main" }]);
+        assert.deepStrictEqual(
+          writerPath,
+          [{ path: "memory.main" }],
+          "DuckDB 2.0 resets the path when its schema is dropped instead of keeping it dangling"
+        );
         const pipe124 = yield* query.stream.pipe(Stream.runCollect);
         const argument = A.fromIterable(pipe124);
         const query1 = yield* query;
-        assert.deepStrictEqual(argument, query1);
+        assert.deepStrictEqual(argument, query1, "this layer's first reader lease has no applied snapshot yet");
         yield* sql`SET TimeZone='Asia/Tokyo'`;
         const pipe125 = yield* query.stream.pipe(Stream.runCollect);
         const argument1 = A.fromIterable(pipe125);
@@ -1336,9 +1355,12 @@ describe("DuckDbClient reader connections", { concurrent: false }, () => {
         yield* sql`CREATE TABLE "second""schema".probe_t AS SELECT 99 AS v`;
         yield* sql`SET search_path='memory.gone,memory."first,.schema",memory."second""schema"'`;
         yield* sql`DROP SCHEMA gone`;
-        // DuckDB 2.0 resets the whole path when one of its schemas is dropped.
         const value132 = yield* sql`SELECT current_setting('search_path') AS path`;
-        assert.deepStrictEqual(value132, [{ path: "memory.main" }]);
+        assert.deepStrictEqual(
+          value132,
+          [{ path: "memory.main" }],
+          "DuckDB 2.0 resets the whole path when one of its schemas is dropped"
+        );
         yield* sql`SET search_path='memory."first,.schema",memory."second""schema"'`;
         const query = sql`SELECT v FROM probe_t`;
         const pipe133 = yield* query.stream.pipe(Stream.runCollect);
@@ -1374,12 +1396,18 @@ describe("DuckDbClient reader connections", { concurrent: false }, () => {
         const query7 = yield* query;
         assert.deepStrictEqual(argument6, query7);
         yield* sql`DETACH detached`;
-        // DuckDB cannot bind even current_setting() while a detached catalog
-        // remains in the path. Snapshot refresh records this native failure.
         const writerError = yield* query.pipe(Effect.flip);
         const readerError = yield* query.stream.pipe(Stream.runCollect, Effect.flip);
-        assert.strictEqual(writerError.reason._tag, "SqlSyntaxError");
-        assert.strictEqual(readerError.reason._tag, writerError.reason._tag);
+        assert.strictEqual(
+          writerError.reason._tag,
+          "SqlSyntaxError",
+          "DuckDB cannot bind even current_setting() while a detached catalog remains in the path"
+        );
+        assert.strictEqual(
+          readerError.reason._tag,
+          writerError.reason._tag,
+          "the reader's snapshot refresh records the same native failure"
+        );
         yield* sql`ATTACH ':memory:' AS detached`;
         const pipe139 = yield* query.stream.pipe(Stream.runCollect);
         const argument7 = A.fromIterable(pipe139);
@@ -1437,10 +1465,13 @@ describe("DuckDbClient reader connections", { concurrent: false }, () => {
         yield* sql`ATTACH ':memory:' AS reader_a`;
         yield* sql`CREATE SCHEMA reader_a.s`;
         yield* sql`CREATE TABLE reader_a.s.t AS SELECT 42 AS v`;
-        // The original catalog deliberately has no schema s.
         yield* sql.unsafe("USE reader_a; SET search_path = 's'");
         const pipe145 = yield* sql`SELECT v FROM t`.stream.pipe(Stream.runCollect);
-        assert.deepStrictEqual(A.fromIterable(pipe145), [{ v: 42 }]);
+        assert.deepStrictEqual(
+          A.fromIterable(pipe145),
+          [{ v: 42 }],
+          "the original catalog has no schema s, so 's' resolves only in reader_a"
+        );
         yield* sql`CREATE SCHEMA memory.s`;
         yield* sql`CREATE TABLE memory.s.t AS SELECT 1 AS v`;
         const pipe146 = yield* sql`SELECT v FROM t`.stream.pipe(Stream.runCollect);
@@ -1610,7 +1641,6 @@ describe("DuckDbClient reader connections", { concurrent: false }, () => {
       "refreshes session settings after a reserved writer stream, including failure",
       Effect.fnUntraced(function* () {
         const sql = yield* DuckDbClient.DuckDbClient;
-        // The reservation must close before the next stream borrows a reader.
         const successfulLease = yield* Scope.make();
         yield* Effect.gen(function* () {
           const writer = yield* sql.reserve;
@@ -1618,7 +1648,11 @@ describe("DuckDbClient reader connections", { concurrent: false }, () => {
         }).pipe(Scope.use(successfulLease));
         const query = sql`SELECT current_setting('TimeZone') AS zone`;
         const pipe162 = yield* query.stream.pipe(Stream.runCollect);
-        assert.deepStrictEqual(A.fromIterable(pipe162), [{ zone: "Asia/Tokyo" }]);
+        assert.deepStrictEqual(
+          A.fromIterable(pipe162),
+          [{ zone: "Asia/Tokyo" }],
+          "the reservation closed before this stream borrowed a reader"
+        );
         const failedLease = yield* Scope.make();
         yield* Effect.gen(function* () {
           const writer = yield* sql.reserve;

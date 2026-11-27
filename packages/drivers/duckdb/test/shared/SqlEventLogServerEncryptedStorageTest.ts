@@ -1,5 +1,5 @@
 import * as SqlEventLogServerEncrypted from "@beep/duckdb/DuckDbEventLogServerEncrypted";
-/** Vendored from effect@4.0.6 (MIT, Effectful Technologies Inc.). */
+// Ported from effect@4.0.6 (MIT, Effectful Technologies Inc.).
 // beep: public leaf imports, repo test runner, native storage and Effect helpers satisfy repo laws.
 import { it } from "@beep/test-runner";
 import { assert } from "@effect/vitest";
@@ -37,28 +37,25 @@ const ids = (batches: ReadonlyArray<{ readonly entryIds: ReadonlyArray<EventJour
     )
   );
 
-// beep: DuckDB has no server lock catalog; yielding allows the other writer
-// to attempt the shared client permit before this transaction is released.
+// beep: DuckDB has no server lock catalog, so a yield lets the other writer try the shared client permit.
 const awaitLockWait = Effect.yieldNow;
 
-// Writer A holds its write open in a transaction until writer B, a separate
-// storage standing in for another server process, is blocked on it. B retries
-// once if it loses, as a client retries a failed write.
 const competingWrites = Effect.fnUntraced(function* (
   first: EventLogEncryption.EncryptedBatch,
   second: EventLogEncryption.EncryptedBatch
 ) {
   const sql = yield* SqlClient.SqlClient;
   const publicKey = yield* Effect.sync(() => EventJournal.makeEntryIdUnsafe().toString());
-  // Own tables, so other suites sharing the database don't race on creating them.
-  const namespace = `competing_${++nextNamespace}`;
-  const options = { entryTablePrefix: `${namespace}_events`, remoteIdTable: `${namespace}_remote_id` };
+  const ownTablesNamespace = `competing_${++nextNamespace}`;
+  const options = {
+    entryTablePrefix: `${ownTablesNamespace}_events`,
+    remoteIdTable: `${ownTablesNamespace}_remote_id`,
+  };
   const storageA = yield* SqlEventLogServerEncrypted.makeStorage(options);
-  const storageB = yield* SqlEventLogServerEncrypted.makeStorage(options);
-  // Create the scope's tables first, so only the writes compete.
-  const setup = makeBatch(EventJournal.makeEntryIdUnsafe());
-  yield* storageA.write(publicKey, storeId, [setup]);
-  yield* storageB.changes(publicKey, storeId, 0).pipe(Stream.take(1), Stream.runDrain);
+  const otherProcessStorage = yield* SqlEventLogServerEncrypted.makeStorage(options);
+  const tableCreatingBatch = makeBatch(EventJournal.makeEntryIdUnsafe());
+  yield* storageA.write(publicKey, storeId, [tableCreatingBatch]);
+  yield* otherProcessStorage.changes(publicKey, storeId, 0).pipe(Stream.take(1), Stream.runDrain);
 
   const written = yield* Deferred.make<void>();
   const commit = yield* Deferred.make<void>();
@@ -73,12 +70,14 @@ const competingWrites = Effect.fnUntraced(function* (
     .pipe(Effect.forkChild);
   yield* Deferred.await(written);
 
-  const writerB = yield* storageB.write(publicKey, storeId, [second]).pipe(Effect.forkChild);
+  const writerB = yield* otherProcessStorage.write(publicKey, storeId, [second]).pipe(Effect.forkChild);
   yield* awaitLockWait;
   yield* Deferred.succeed(commit, undefined);
   yield* Fiber.join(writerA);
-  const attempt = yield* Fiber.await(writerB);
-  const stored = Exit.isSuccess(attempt) ? attempt.value : yield* storageB.write(publicKey, storeId, [second]);
+  const blockedAttempt = yield* Fiber.await(writerB);
+  const stored = Exit.isSuccess(blockedAttempt)
+    ? blockedAttempt.value
+    : yield* otherProcessStorage.write(publicKey, storeId, [second]);
 
   const persisted = yield* storageA.changes(publicKey, storeId, 0).pipe(Stream.take(3), Stream.runCollect);
   return { stored, persisted: A.drop(persisted, 1) };
@@ -111,10 +110,9 @@ export const suite: {
             entryTablePrefix: `${namespace}_events`,
             remoteIdTable: `${namespace}_remote_id`,
           });
-          // Above the bind parameter limits: 2100 on SQL Server, 32767 for the
-          // PostgreSQL client and 65535 on MySQL.
+          const idsAboveMySqlBindLimit = 65_536;
           const batch: EventLogEncryption.EncryptedBatch = {
-            entryIds: A.makeBy(65_536, () => EventJournal.makeEntryIdUnsafe()),
+            entryIds: A.makeBy(idsAboveMySqlBindLimit, () => EventJournal.makeEntryIdUnsafe()),
             iv: new Uint8Array(12),
             encryptedBatch: Uint8Array.of(1),
           };

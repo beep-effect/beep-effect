@@ -41,9 +41,6 @@ const makeQueue = Effect.fnUntraced(function* (
   return yield* factory.make({ name: tableName, schema: Schema.String, retrySchedule });
 });
 
-// waits until mid-way through a wall-clock second, so a whole-second database
-// clock drops about half a second while a slow write still lands in the same
-// second
 const awaitMidSecond = Effect.gen(function* () {
   while (true) {
     const millis = (yield* Clock.currentTimeMillis) % 1000;
@@ -52,16 +49,8 @@ const awaitMidSecond = Effect.gen(function* () {
   }
 });
 
-// allowed lag of the database clock, far below the half-second and
-// multi-second errors these tests guard against
-const clockTolerance = 100;
+const databaseClockLagMillis = 100;
 
-// Delayed-offer timing checks that depend on how each SQL dialect reads the
-// database clock. They measure with the test process's clock, which the
-// database clock can trail by a few milliseconds: SQL Server's SYSDATETIME()
-// advances in coarse ticks, for example. The tests run one at a time, since a
-// transaction on a single-connection database would hold up the other test's
-// offer.
 export const suiteWith = (testApi: Vitest.MethodsNonLive<SqlClient.SqlClient | SecureRandom.SecureRandom>) => {
   testApi.layer(Layer.empty, { concurrent: false, timeout: "90 seconds" })("PersistedQueue SQL delays", (it) => {
     it.effect(
@@ -75,7 +64,11 @@ export const suiteWith = (testApi: Vitest.MethodsNonLive<SqlClient.SqlClient | S
           yield* queue.offer("delayed", { delay: "1 second" });
           yield* queue.take(Effect.succeed);
 
-          assert.isAtLeast((yield* Clock.currentTimeMillis) - offeredAt, 1000 - clockTolerance);
+          assert.isAtLeast(
+            (yield* Clock.currentTimeMillis) - offeredAt,
+            1000 - databaseClockLagMillis,
+            "offered mid-second, so a whole-second database clock would drop about half a second"
+          );
         }).pipe(TestClock.withLive),
       { timeout: 30000 }
     );
@@ -87,13 +80,16 @@ export const suiteWith = (testApi: Vitest.MethodsNonLive<SqlClient.SqlClient | S
           const queue = yield* makeQueue("effect_queue_retry_boundary", "10 millis", Schedule.spaced("1 second"));
           yield* queue.offer("job");
 
-          // time both handlers, leaving out the acknowledgement writes
           const failedAt = yield* queue
             .take(() => awaitMidSecond.pipe(Effect.andThen(Clock.currentTimeMillis), Effect.flatMap(Effect.fail)))
             .pipe(Effect.catchIf(P.isNumber, Effect.succeed));
           const retriedAt = yield* queue.take(() => Clock.currentTimeMillis);
 
-          assert.isAtLeast(retriedAt - failedAt, 1000 - clockTolerance);
+          assert.isAtLeast(
+            retriedAt - failedAt,
+            1000 - databaseClockLagMillis,
+            "both handlers are timed mid-second, leaving out the acknowledgement writes"
+          );
         }).pipe(TestClock.withLive),
       { timeout: 30000 }
     );
@@ -105,7 +101,6 @@ export const suiteWith = (testApi: Vitest.MethodsNonLive<SqlClient.SqlClient | S
           const sql = yield* SqlClient.SqlClient;
           const queue = yield* makeQueue("effect_queue_delay_transaction");
 
-          // the transaction starts well before the offer
           const offeredAt = yield* Effect.gen(function* () {
             yield* Effect.sleep("2 seconds");
             const offeredAt = yield* Clock.currentTimeMillis;
@@ -114,7 +109,11 @@ export const suiteWith = (testApi: Vitest.MethodsNonLive<SqlClient.SqlClient | S
           }).pipe(sql.withTransaction);
           yield* queue.take(Effect.succeed);
 
-          assert.isAtLeast((yield* Clock.currentTimeMillis) - offeredAt, 3000 - clockTolerance);
+          assert.isAtLeast(
+            (yield* Clock.currentTimeMillis) - offeredAt,
+            3000 - databaseClockLagMillis,
+            "the delay counts from the offer, not the transaction start; serial, so it holds up no other test's offer"
+          );
         }).pipe(TestClock.withLive),
       { timeout: 30000 }
     );
@@ -124,17 +123,17 @@ export const suiteWith = (testApi: Vitest.MethodsNonLive<SqlClient.SqlClient | S
       () =>
         Effect.gen(function* () {
           const sql = yield* SqlClient.SqlClient;
-          // no test waits out this poll interval: only the offer's wake-up can
-          // deliver the element
           const queue = yield* makeQueue("effect_queue_commit_wake", "1 hour");
           const taken = yield* queue.take(Effect.succeed).pipe(Effect.forkScoped);
 
-          // the transaction stays open after the offer, long enough for a wake-up
-          // sent before the commit to find nothing
           yield* queue.offer("committed").pipe(Effect.andThen(Effect.sleep("500 millis")), sql.withTransaction);
 
           const value = yield* Fiber.join(taken).pipe(Effect.timeoutOption("5 seconds"));
-          assert.deepStrictEqual(value, Option.some("committed"));
+          assert.deepStrictEqual(
+            value,
+            Option.some("committed"),
+            "the 1 hour poll never fires and a pre-commit wake-up finds nothing, so the post-commit wake-up delivers"
+          );
         }).pipe(TestClock.withLive),
       { timeout: 30000 }
     );
@@ -148,7 +147,6 @@ export const suiteWith = (testApi: Vitest.MethodsNonLive<SqlClient.SqlClient | S
           const sql = yield* SqlClient.SqlClient;
           const queue = yield* makeQueue("effect_queue_until_executed_transactions");
 
-          // each round's id is new, so both transactions find no row for it
           // beep: Effect.forEach replaces the upstream for loop.
           yield* Effect.forEach(
             A.range(0, 9),
@@ -176,8 +174,6 @@ export const suiteWith = (testApi: Vitest.MethodsNonLive<SqlClient.SqlClient | S
           yield* queue.offer("first", { id });
           yield* queue.take(Effect.succeed);
 
-          // default offers either see the completed element or the re-offer, so
-          // none of them is stored
           const reoffer = yield* queue.offer("reoffer", { id, deduplicate: "untilExecuted" }).pipe(Effect.forkChild);
           while (reoffer.pollUnsafe() === undefined) {
             yield* queue.offer("retry", { id });
@@ -185,7 +181,11 @@ export const suiteWith = (testApi: Vitest.MethodsNonLive<SqlClient.SqlClient | S
           yield* Fiber.join(reoffer);
 
           const taken = yield* queue.take(Effect.succeed);
-          assert.strictEqual(taken, "reoffer");
+          assert.strictEqual(
+            taken,
+            "reoffer",
+            "default offers see either the completed element or the re-offer, so none of them is stored"
+          );
         }).pipe(TestClock.withLive),
       { timeout: 30000 }
     );
@@ -231,8 +231,6 @@ export const suiteWith = (testApi: Vitest.MethodsNonLive<SqlClient.SqlClient | S
               .pipe(Effect.forkScoped);
             yield* aTaken.await.pipe(Effect.timeout("5 seconds"), TestClock.withLive);
 
-            // Refreshes stay paused on TestClock while the live database clock
-            // expires the lock, including dialects with whole-second timestamps.
             yield* Effect.sleep("2500 millis").pipe(TestClock.withLive);
 
             const bTaken = Latch.makeUnsafe();
@@ -240,7 +238,11 @@ export const suiteWith = (testApi: Vitest.MethodsNonLive<SqlClient.SqlClient | S
               .take((value, { attempts }) =>
                 Effect.gen(function* () {
                   assert.strictEqual(value, "job");
-                  assert.strictEqual(attempts, 2);
+                  assert.strictEqual(
+                    attempts,
+                    2,
+                    "refreshes stayed paused on TestClock while the live database clock expired the first claim"
+                  );
                   yield* bTaken.open;
                   return yield* Effect.never;
                 })
@@ -248,7 +250,6 @@ export const suiteWith = (testApi: Vitest.MethodsNonLive<SqlClient.SqlClient | S
               .pipe(Effect.forkScoped);
             yield* bTaken.await.pipe(Effect.timeout("5 seconds"), TestClock.withLive);
 
-            // Resume refreshes for the replacement before the stale settlement.
             yield* Effect.sleep("100 millis").pipe(
               TestClock.withLive,
               Effect.andThen(TestClock.adjust("100 millis")),
@@ -261,10 +262,11 @@ export const suiteWith = (testApi: Vitest.MethodsNonLive<SqlClient.SqlClient | S
             const duplicate = yield* queue
               .take((value, metadata) => Effect.succeed({ value, ...metadata }))
               .pipe(Effect.forkScoped);
-            // Longer than lockExpiration: stale settlement must neither release
-            // the replacement nor unregister its lock refresh.
             yield* Effect.sleep("1500 millis").pipe(TestClock.withLive);
-            assert.isUndefined(duplicate.pollUnsafe());
+            assert.isUndefined(
+              duplicate.pollUnsafe(),
+              "past lockExpiration, the stale settlement neither released the replacement nor unregistered its refresh"
+            );
 
             yield* Fiber.interrupt(replacement);
             const redelivered = yield* Fiber.join(duplicate).pipe(Effect.timeout("5 seconds"), TestClock.withLive);

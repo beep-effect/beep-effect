@@ -104,8 +104,7 @@ const assertEntries = (
 
 type Storage = EventLogServerUnencrypted.Storage["Service"];
 
-// beep: the open-with-backlog, drained-queue, persisted-rows and sentinel steps are shared helpers
-// (inlined upstream) so the repo's fallow duplication gate passes; each case keeps its steps.
+// beep: backlog, drain, persisted-row and sentinel steps are shared helpers, inlined upstream, for the fallow gate.
 const openWithBacklog = Effect.fnUntraced(function* (storage: Storage, storeId: StoreId, backlog: EventJournal.Entry) {
   yield* storage.write(storeId, [backlog]);
   const changes = yield* openChanges(storage, storeId);
@@ -148,8 +147,7 @@ type SuiteOptions = {
   readonly savepoints?: boolean | undefined;
 };
 
-// beep: `dual` and a generic error channel satisfy the repo's tsgo rules
-// (missingPipeableSignature, anyUnknownInErrorContext).
+// beep: `dual` and a generic error channel satisfy tsgo missingPipeableSignature and anyUnknownInErrorContext.
 export const suite: {
   <E>(layer: Layer.Layer<SqlClient.SqlClient, E>, options?: SuiteOptions): (name: string) => void;
   <E>(name: string, layer: Layer.Layer<SqlClient.SqlClient, E>, options?: SuiteOptions): void;
@@ -300,10 +298,9 @@ export const suite: {
                   yield* storage.write(storeId, [after]);
                 })
               );
-              // The sentinel exposes leaked notifications without sleeps.
               yield* storage.write(storeId, [sentinel]);
-              const takeN3 = yield* Queue.takeN(changes, 3);
-              assertEntries(takeN3, [before, after, sentinel], 2);
+              const throughSentinel = yield* Queue.takeN(changes, 3);
+              assertEntries(throughSentinel, [before, after, sentinel], 2);
               yield* assertDrained(changes);
 
               yield* assertPersisted(storage, storeId, [backlog, before, after, sentinel]);
@@ -349,8 +346,7 @@ export const suite: {
             const completed = yield* Deferred.make<void>();
             const release = yield* Deferred.make<void>();
             let pauseNext = false;
-            // Pause after savepoint completion releases the SQL permit, before storage merges the buffer.
-            const delayedSql: SqlClient.SqlClient = Object.assign(
+            const sqlPausingAfterSavepoint: SqlClient.SqlClient = Object.assign(
               (...args: Parameters<SqlClient.SqlClient>) => sql(...args),
               sql,
               {
@@ -371,7 +367,7 @@ export const suite: {
               }
             );
             const storage = yield* makeStorage(makeOptions("sibling_ordering")).pipe(
-              Effect.provideService(SqlClient.SqlClient, delayedSql)
+              Effect.provideService(SqlClient.SqlClient, sqlPausingAfterSavepoint)
             );
             const storeId = makeStoreId("sibling_ordering");
             const backlog = makeEntry("Ada");

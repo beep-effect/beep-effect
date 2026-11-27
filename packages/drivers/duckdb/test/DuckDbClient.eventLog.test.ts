@@ -40,8 +40,6 @@ const assertEntries = (
 it.layer(Layer.mergeAll(Reactivity.layer, DuckDbTestLayer), { timeout: "30 seconds" })(
   "SqlEventLogServerUnencrypted (duckdb, no savepoints)",
   (it) => {
-    // Replaces the vendored "commits outer writes but discards a caught nested rollback" case:
-    // DuckDB has no savepoints, so a caught nested rollback refuses the outer COMMIT.
     it.effect("refuses the outer commit after a caught nested rollback and publishes nothing from it", () =>
       Effect.gen(function* () {
         const storage = yield* makeStorage(makeOptions("nested_rollback_refused"));
@@ -73,19 +71,21 @@ it.layer(Layer.mergeAll(Reactivity.layer, DuckDbTestLayer), { timeout: "30 secon
           )
           .pipe(Effect.exit);
 
-        // Storage.withTransaction turns SqlError into a defect (`Effect.catchIf(isSqlError, Effect.die)`).
         const failure = exit.pipe(Exit.match({ onSuccess: () => "committed", onFailure: Cause.squash }));
-        assertTrue(isSqlError(failure));
+        assertTrue(isSqlError(failure), "Storage.withTransaction turns the SqlError into a defect");
         const reason = isSqlError(failure) ? failure.reason : undefined;
         assert.instanceOf(reason, UnknownError);
-        assert.strictEqual(reason?.operation, "commitTransaction");
+        assert.strictEqual(
+          reason?.operation,
+          "commitTransaction",
+          "DuckDB has no savepoints, so the caught nested rollback refuses the outer COMMIT"
+        );
 
-        // The sentinel exposes leaked notifications without sleeps.
         yield* storage.write(storeId, [sentinel]);
         assertEntries([yield* Queue.take(changes)], [sentinel], 2);
         yield* Effect.yieldNow;
-        const poll1 = yield* Queue.poll(changes);
-        assertNone(poll1);
+        const leakedAfterSentinel = yield* Queue.poll(changes);
+        assertNone(leakedAfterSentinel);
 
         const openChanges2 = yield* openChanges(storage, storeId);
         const persisted = yield* Queue.takeAll(openChanges2);
