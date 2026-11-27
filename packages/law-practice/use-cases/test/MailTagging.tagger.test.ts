@@ -48,7 +48,6 @@ const expectUnmatched = (message: MailEnvelope, reason: string) => {
   expect(!isMatched(decision) && decision.reason).toBe(reason);
 };
 
-// The attorney's docket grammar: `<client>.<family><country><sequence>`. Family 10001 is reused by two clients.
 const keyed = MatterKey.make("1234.10001");
 const reused = MatterKey.make("5678.10001");
 const docketed = MatterTaggerContext.make({
@@ -81,7 +80,10 @@ const matchedKey = (subject: string) => {
 
 describe("MailTagging matter tagger", () => {
   it("matches the attorney's client-keyed docket reference wherever it sits in the text", () => {
-    expect(matchedKey("Re: 1234.10001US01 office action")).toBe(keyed);
+    expect(
+      matchedKey("Re: 1234.10001US01 office action"),
+      "the attorney's docket grammar is `<client>.<family><country><sequence>`"
+    ).toBe(keyed);
     expect(matchedKey("docket#1234.10001us01")).toBe(keyed);
     expect(matchedKey("Your ref FA-2026-0042 / 1234.10001US01")).toBe(keyed);
     expect(matchedKey("Our ref 5678.10001US01")).toBe(reused);
@@ -99,7 +101,7 @@ describe("MailTagging matter tagger", () => {
 
   it("never picks a client from a bare family", () => {
     expect(matchedKey("Annuity due for 10001EP02")).toBe("no-signal");
-    expect(matchedKey("Status of 10001US01")).toBe("ambiguous");
+    expect(matchedKey("Status of 10001US01"), "family 10001 is reused by two clients").toBe("ambiguous");
   });
 
   it("leaves a docket reference into an unattributed family for the attorney", () => {

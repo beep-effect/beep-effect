@@ -152,8 +152,7 @@ const claimsSectionOf = (input: ClaimSelfCheckInput): Effect.Effect<PatentApplic
 const chainOf = (finding: AntecedentFinding): O.Option<AntecedentDependencyChain> =>
   AntecedentFinding.guards["pattern-not-covered"](finding) ? O.none() : O.some(finding.chain);
 
-// Unique per finding: claim, referring span start, rule and, when the finding has one, its chain.
-const findingKeyOf = (finding: AntecedentFinding, claimNumber: number): string =>
+const uniqueFindingKey = (finding: AntecedentFinding, claimNumber: number): string =>
   `c${claimNumber}s${finding.referring.anchor.startChar}r${Str.replace(/-/gu, "")(finding.rule)}${pipe(
     chainOf(finding),
     O.map(
@@ -191,7 +190,7 @@ const findingCandidate = Effect.fn("ClaimSelfCheck.findingCandidate")(function* 
         reason: "candidate-mapping-failed",
       })
   );
-  const findingKey = findingKeyOf(finding, claimNumber);
+  const findingKey = uniqueFindingKey(finding, claimNumber);
   const evidenceFixtureKey = `evidence:${input.identityDigest}:${findingKey}`;
   const [candidate, evidence] = yield* decodeEvidencedCandidate(
     EvidencedCandidateInput.make({

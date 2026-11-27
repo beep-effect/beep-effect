@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-11-26",
+  "generatedOn": "2026-11-27",
   "scope": ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}"],
   "entries": [
     {
@@ -1515,7 +1515,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 57,
+      "line": 55,
       "owner": "@beep/law-practice-use-cases",
       "reason": "Deterministic protocol/version/source-binding and corrupted-accounting controls for source assertion evidence. Arbitrary JSON artifact byte-preservation is covered in CitationOracleArtifact.test.ts; this suite preserves the fixed metadata and graph-coherence rejection directions. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-ci-repair-pass.md. No parity or coverage obligation is waived."
     },
@@ -1525,7 +1525,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 51,
+      "line": 49,
       "owner": "@beep/law-practice-use-cases",
       "reason": "Golden typed operation payload and exact original-byte preservation controls. Schema-derived arbitrary JSON preservation is covered in CitationOracleArtifact.test.ts; operation rows remain tied to the independent source observation protocol. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-ci-repair-pass.md. No parity or coverage obligation is waived."
     },
@@ -1535,7 +1535,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 345,
+      "line": 347,
       "owner": "@beep/law-practice-use-cases",
       "reason": "Service integration regression checks exact source-bound advisory items and their ReviewItem wire round-trip, alongside runtime errors and verdict projection. It does not define a new ReviewItem codec; the schema belongs to domain. Owner: @beep/law-practice-use-cases. Exit: retire when the detector excludes consumer integration round-trips or shared ReviewItem property coverage is directly recognized."
     },

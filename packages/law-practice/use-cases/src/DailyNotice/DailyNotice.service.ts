@@ -46,9 +46,6 @@ const makeDailyNotice = (mailbox: NoticeMailboxShape) =>
       if (A.isReadonlyArrayEmpty(input.digest)) {
         return DailyNoticeOutcome.cases["nothing-waiting"].make({});
       }
-      // Claimed first, atomically: a second run that day finds the claim taken,
-      // and a send that fails after it leaves the day without a notice rather
-      // than risking a second one.
       if (!(yield* mailbox.claimDay(input.today))) {
         return DailyNoticeOutcome.cases["already-sent"].make({ sentOn: input.today });
       }

@@ -38,8 +38,7 @@ type Filing = {
   readonly mode: TaggingMode;
   readonly message: MailEnvelope;
   readonly matter?: MatterIndexEntry;
-  /** Whether the job found the sender to be a contact of this matter alone; derived from the matter when absent. */
-  readonly exclusive?: boolean;
+  readonly senderIsExclusiveContact?: boolean;
 };
 
 const isContactOf = (matter: MatterIndexEntry, message: MailEnvelope): boolean =>
@@ -53,7 +52,7 @@ const file = Effect.fn("MailTaggingFilerTest.file")(function* (filing: Filing) {
       envelope: filing.message,
       matter,
       taxonomy,
-      senderIsExclusiveContact: filing.exclusive ?? isContactOf(matter, filing.message),
+      senderIsExclusiveContact: filing.senderIsExclusiveContact ?? isContactOf(matter, filing.message),
       mode: filing.mode,
       runId,
     })
@@ -119,7 +118,7 @@ describe("MailTagging attachment filer", () => {
       "does not route a contact address that another matter also lists",
       Effect.fnUntraced(function* () {
         const state = yield* World;
-        const report = yield* file({ mode: "apply", message: clientMail, exclusive: false });
+        const report = yield* file({ mode: "apply", message: clientMail, senderIsExclusiveContact: false });
 
         expect(report.attachmentsSkipped["sender-not-routable"]).toBe(1);
         expect(report.attachmentsFiled).toBe(0);
@@ -289,7 +288,7 @@ describe("MailTagging attachment filer", () => {
         const state = yield* World;
         const failure = yield* Effect.flip(file({ mode: "apply", message: usptoMail }));
 
-        assertInstanceOf(failure, MailTaggingPortError);
+        assertInstanceOf(failure, MailTaggingPortError, "the truncated digest is output no hex decoder accepts");
         expect([failure.port, failure.operation, failure.reason]).toStrictEqual([
           "ContentHasher",
           "sha256",
@@ -405,7 +404,6 @@ const sameNameTwice = () =>
 const plainKey = "folder-acme-uspto-incoming/2026-07-01 office-action.pdf";
 const shortHashKey = "folder-acme-uspto-incoming/2026-07-01 office-action (315d429b).pdf";
 
-/** What the ledger and the store hold once a foreign holder was disowned and the content filed. */
 const disownedThenFiled = {
   lines: ["FilingIntended", "FilingAbandoned", "FilingIntended", "FilingCompleted"],
   pending: [],
@@ -498,11 +496,13 @@ describe("MailTagging two-phase filing", () => {
         const state = yield* World;
         yield* Ref.set(state.failingFilingAppend, O.some(2));
         yield* Effect.flip(file({ mode: "apply", message: usptoMail }));
-        // The index was regenerated and now lists the file the interrupted upload created.
         yield* Ref.set(state.knownDocuments, [`${pdfSha256} acme.10001`]);
         const rerun = yield* file({ mode: "apply", message: usptoMail });
 
-        expect([rerun.attachmentsReconciled, rerun.attachmentsDeduped]).toStrictEqual([1, 0]);
+        expect(
+          [rerun.attachmentsReconciled, rerun.attachmentsDeduped],
+          "the regenerated index lists the file the interrupted upload created"
+        ).toStrictEqual([1, 0]);
         expect((yield* ledgerShape()).lines).toStrictEqual(["FilingIntended", "FilingCompleted"]);
       })
     );
