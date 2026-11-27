@@ -570,7 +570,9 @@ describe("schema idiom hints", () => {
   });
 
   it("a file that does not parse is not hinted", () => {
-    expect(hintsOf(lines("export const Wire = S.Struct({ timeoutMs: S.Number });", "export const = ;"))).toEqual([]);
+    expect(hintsOf(lines("export const Wire = S.Struct({ timeoutMs: S.Number });", "const y = a ?? b || c;"))).toEqual(
+      []
+    );
   });
 
   it("parses tsx files", () => {

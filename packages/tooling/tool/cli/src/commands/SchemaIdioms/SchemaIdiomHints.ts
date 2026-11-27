@@ -166,10 +166,7 @@ const isAlias = (scope: ScanScope, expression: Expression): boolean => {
 
 const calleeMember = (call: CallExpression): O.Option<readonly [object: Expression, name: string]> => {
   const callee = unwrap(call.callee);
-  return !call.optional &&
-    callee.type === "MemberExpression" &&
-    !callee.computed &&
-    callee.property.type === "Identifier"
+  return callee.type === "MemberExpression" && !callee.computed && callee.property.type === "Identifier"
     ? O.some([callee.object, callee.property.name])
     : O.none();
 };

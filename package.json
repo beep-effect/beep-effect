@@ -301,8 +301,8 @@
   "name": "@beep/root",
   "config": {
     "effectSource": {
-      "version": "4.1.5",
-      "commit": "e3aca1f1484e623cee09b7f3fa18d6ff5d66c0e8"
+      "version": "4.1.6",
+      "commit": "4cc54fe400f5107b5a418466c09dad5d0c618d78"
     }
   },
   "overrides": {
