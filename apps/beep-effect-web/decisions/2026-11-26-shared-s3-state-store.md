@@ -7,6 +7,6 @@ governs:
 enforcedBy: []
 ---
 
-Recorded in goals/infra-alchemy-rebuild/decisions/2026-11-09-shared-s3-state-store-bootstrap.md (D6, D17). The bucket is bootstrapped once with `alchemy state bootstrap` and CI never creates it; credentials and region come from the process environment (aws-vault exports on a workstation, the GitHub OIDC state role in CI).
+Recorded in goals/infra-alchemy-rebuild/decisions/2026-11-09-shared-s3-state-store-bootstrap.md (D6, D17), which holds the bucket, bootstrap and credential details; CI never creates the bucket.
 
 Rejected: a customer-managed KMS key, which needs a key-policy grant for the CI state role and a key to bootstrap before the store.

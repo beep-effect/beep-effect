@@ -11,4 +11,4 @@ A job-wide node wrapper in the coverage lane injected --js-float16array into eve
 
 Rejected: removing the wrapper from heavy.yml alone, which left PR runs on the old main workflow failing.
 
-Accepted limit: transitional. As of 2026-11-26 no workflow on main injects the flag, so the filter matches nothing and can be removed.
+Accepted limit: transitional. Delete the filter once nothing that loads next.config.ts (next build, next dev, or a test importing it) runs under a node whose execArgv carries --js-float16array. The only grant left is vitest.shared.ts's forked-worker execArgv below Node 24, and no todox test imports next.config.ts.

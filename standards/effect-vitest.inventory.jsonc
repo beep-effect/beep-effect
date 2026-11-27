@@ -6159,7 +6159,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The test observes native AtomRegistry idle eviction in one registry: a removable control resets while the subject keeps its value, with the original TTL and observation window, and TestClock does not drive registry timers. Owner: @beep/agents-client. Exit: retire when AtomRegistry idle eviction runs on the test's TestClock (#1855 wave 8 register)."
     },
     {
       "id": "EV009:packages/agents/client/test/selected-thread-lifetime.test.ts:17:it.live@2#1",
@@ -6180,7 +6181,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The test observes native AtomRegistry idle eviction in one registry: a removable control resets while the subject keeps its value, with the original TTL and observation window, and TestClock does not drive registry timers. Owner: @beep/agents-client. Exit: retire when AtomRegistry idle eviction runs on the test's TestClock (#1855 wave 8 register)."
     },
     {
       "id": "EV009:packages/drivers/graph-3d/test/browser/Graph3D.renderer.test.ts:136:it.live@2#1",
