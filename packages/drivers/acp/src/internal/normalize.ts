@@ -27,8 +27,6 @@ import type { AcpRequestContext } from "../AcpProtocol.service.ts";
 
 const $I = $AcpId.create("internal/normalize");
 
-// --- Protocol generation -------------------------------------------------------------------------
-
 const ProtocolGenerationBase = LiteralKit([1, 2]);
 
 /**
@@ -58,8 +56,6 @@ export const DEFAULT_CLIENT_INFO: V2.Implementation = { name: "@beep/acp", versi
 const isGeneration1 = (generation: ProtocolGeneration): boolean => generation === 1;
 
 const requestIdText = (requestId: AcpRequestId): string => (P.isString(requestId) ? requestId : `${requestId}`);
-
-// --- Content -------------------------------------------------------------------------------------
 
 const isCompatContentBlock = S.is(Compat.ContentBlock);
 
@@ -115,8 +111,6 @@ export const normalizeToolCallUpdate = (update: V2.ToolCallUpdate | V1.ToolCallU
   };
 };
 
-// --- Config options ------------------------------------------------------------------------------
-
 const [V2SelectConfigOption, V2BooleanConfigOption] = V2.SessionConfigOption.members;
 const isV2SelectConfigOption = S.is(V2SelectConfigOption);
 const isV2BooleanConfigOption = S.is(V2BooleanConfigOption);
@@ -142,8 +136,6 @@ export const normalizeConfigOption = (option: V2.SessionConfigOption): O.Option<
 export const normalizeConfigOptions: (
   options: ReadonlyArray<V2.SessionConfigOption>
 ) => ReadonlyArray<Compat.SessionConfigOption> = flow(A.map(normalizeConfigOption), A.getSomes);
-
-// --- Session updates -----------------------------------------------------------------------------
 
 const [
   V2UserMessageChunk,
@@ -210,16 +202,13 @@ const isToolCall = S.is(V1ToolCall);
 const isToolCallUpdate = S.is(S.Union([V2ToolCallUpdate, V1ToolCallUpdate]));
 const isToolCallContentChunk = S.is(V2ToolCallContentChunk);
 const isCompatIdleState = S.is(Compat.IdleStateUpdate);
-// An idle whose `error` the client shape rejects: generation 2 reads a malformed `error` as absent.
 const isIdleWithMalformedError = S.is(
   S.StructWithRest(
     Compat.IdleStateUpdate.schema.pipe(S.fieldsAssign({ error: S.Json })),
     Compat.IdleStateUpdate.records
   )
 );
-// A kind both generations define is matched against both members: generation 2 tightens some
-// shared fields (`Cost.currency`, `Annotations.priority`), so a valid generation-1 update can fail
-// the generation-2 member.
+// decision: shared-update-kinds-match-both-generations
 const isPassThroughUpdate = S.is(
   S.Union([
     V2RunningState,
@@ -245,7 +234,6 @@ const isPassThroughUpdate = S.is(
 );
 const isAvailableCommandsUpdate = S.is(S.Union([V2AvailableCommandsUpdate, V1AvailableCommandsUpdate]));
 const isV2ConfigOptionUpdate = S.is(V2ConfigOptionUpdate);
-// A normalized config_option_update (options keyed by `id`) matches neither generation's member.
 const isCompatConfigOptionUpdate = S.is(
   S.StructWithRest(
     V2ConfigOptionUpdate.schema.pipe(S.fieldsAssign({ configOptions: S.Array(Compat.SessionConfigOption) })),
@@ -268,8 +256,6 @@ const [V2TextCommandInput] = V2.AvailableCommandInput.members;
 const isTextCommandInput = S.is(V2TextCommandInput);
 const isV1CommandInput = S.is(V1.UnstructuredCommandInput);
 
-// Generation 2 keeps text inputs and sets every other input (missing included) to null; generation
-// 1 rewrites `{ hint }` to `{ type: "text", hint }` and drops a missing or null input.
 type CommandInput = Exclude<Compat.AvailableCommand["input"], undefined>;
 
 const normalizeCommandInput = (generation: ProtocolGeneration, input: unknown): O.Option<CommandInput> =>
@@ -496,8 +482,6 @@ export const toWireContentBlock = (content: Compat.ContentBlock): O.Option<V2.Co
 export const toWirePromptRequest = (request: Compat.PromptRequest): O.Option<V2.PromptRequest> =>
   O.map(O.all(A.map(request.prompt, toWireContentBlock)), (prompt) => ({ ...request, prompt }));
 
-// --- Initialize ----------------------------------------------------------------------------------
-
 /**
  * Projects the caller's initialize request onto a generation-2 request; `info` defaults to
  * {@link DEFAULT_CLIENT_INFO}.
@@ -689,8 +673,6 @@ export const normalizeInitializeResponse = (
   response: V1.InitializeResponse | V2.InitializeResponse
 ): Compat.InitializeResponse => (isV2InitializeResponse(response) ? fromV2InitializeResponse(response) : response);
 
-// --- Session setup -------------------------------------------------------------------------------
-
 const isV2McpServer = S.is(V2.McpServer);
 
 /**
@@ -822,8 +804,6 @@ export const normalizeSetSessionConfigOptionResponse = (
   isV1SetSessionConfigOptionResponse(response)
     ? response
     : { configOptions: normalizeConfigOptions(response.configOptions) };
-
-// --- Peer requests -------------------------------------------------------------------------------
 
 /**
  * `session/request_permission` params as either generation sends them.

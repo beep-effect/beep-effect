@@ -107,8 +107,7 @@ const trueColorFlags = ["color=16m", "color=full", "color=truecolor"] as const;
 
 const ansi256ColorFlags = ["color=256"] as const;
 
-// Each flag family stands in for the `FORCE_COLOR` value of the same level; the first family present wins.
-const flagForceColorValues: ReadonlyArray<readonly [ReadonlyArray<string>, string]> = [
+const forceColorByFlagPriority: ReadonlyArray<readonly [ReadonlyArray<string>, string]> = [
   [disabledColorFlags, "0"],
   [trueColorFlags, "3"],
   [ansi256ColorFlags, "2"],
@@ -166,11 +165,12 @@ const hasAnyFlag =
     A.some(flags, (flag) => hasFlag(flag, argv));
 
 const flagForceColor = (argv: ReadonlyArray<string>): O.Option<string> =>
-  A.findFirst(flagForceColorValues, ([flags, value]) => pipe(flags, O.liftPredicate(hasAnyFlag(argv)), O.as(value)));
+  A.findFirst(forceColorByFlagPriority, ([flags, value]) =>
+    pipe(flags, O.liftPredicate(hasAnyFlag(argv)), O.as(value))
+  );
 
 const isSetValue: (value: string | undefined) => boolean = flow(O.fromUndefinedOr, O.exists(Str.isNonEmpty));
 
-// Flags rank below FORCE_COLOR and a non-empty NO_COLOR or NODE_DISABLE_COLORS, and above the TTY and TERM checks.
 const defersToFlags = (env: Env): boolean =>
   P.isUndefined(env.FORCE_COLOR) && !isSetValue(env.NO_COLOR) && !isSetValue(env.NODE_DISABLE_COLORS);
 

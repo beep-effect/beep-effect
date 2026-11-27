@@ -64,7 +64,6 @@ const select = Prompt.Select({
   ],
 });
 
-/** A real command whose `--profile` flag falls back to a prompt. */
 const app = (fallback: Flag.Flag<string>) =>
   Command.make("tool").pipe(
     Command.withSubcommands([
@@ -88,7 +87,6 @@ const run = Effect.fn("run")(function* (
   const interactive =
     typeof options.interactive === "boolean" ? CliInteractive.layerTest(options.interactive) : options.interactive;
   const program = CliRuntime.main(Command.runWith(root, { version: "1.0.0" })(argv), {
-    // The gate reads CliInteractive when it is built; CliEnv installs it for a real program.
     platform: Layer.mergeAll(platformServices, CliPrompt.gateTerminal.pipe(Layer.provide(options.terminal.layer))),
   }).pipe(
     options.gate === true ? provideBuilt(CliPrompt.gateWizard) : (self) => self,
@@ -166,7 +164,6 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
     it.effect("non-interactive with `otherwise`: the default is used and the terminal is never read", () =>
       Effect.gen(function* () {
         const terminal = yield* TestTerminal.make();
-        // Keys are waiting; a read would consume them.
         yield* terminal.input([{ name: "down" }, { name: "enter" }]);
         const { out, code } = yield* run(app(withPrompt({ otherwise: "software-project" })), ["run"], {
           interactive: false,
@@ -177,7 +174,7 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
         const reads4 = yield* terminal.reads;
         assert.deepStrictEqual(reads4, { keys: 0, lines: 0, subscriptions: 0 });
         const pending5 = yield* terminal.pending;
-        assert.strictEqual(pending5, 2);
+        assert.strictEqual(pending5, 2, "both waiting keys are still there: a read would have consumed them");
         const output6 = yield* terminal.output;
         assert.strictEqual(output6, "");
       })
@@ -189,8 +186,10 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
         yield* terminal.input([{ name: "enter" }]);
         const { out, err, code } = yield* run(app(withPrompt()), ["run"], { interactive: false, terminal });
         assert.strictEqual(code, 64);
-        // Core prints the help on stdout for a usage error; the handler never ran.
-        assert.isFalse(A.some(out, (line) => Str.includes("profile=")(line)));
+        assert.isFalse(
+          A.some(out, (line) => Str.includes("profile=")(line)),
+          "core prints help on stdout for a usage error; the handler never ran"
+        );
         assert.isTrue(
           A.some(err, (line) => Str.includes("Missing required flag: --profile")(line)),
           A.join(err, "\n")
@@ -226,36 +225,36 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
             interactive: true,
             terminal,
           });
-          // Param.ts re-fails with the original MissingOption on QuitError, so a cancelled prompt exits 64, not 130.
-          assert.strictEqual(code, 64);
+          assert.strictEqual(code, 64, "core re-fails with the original MissingOption on QuitError: 64, not 130");
           assert.isTrue(A.some(err, (line) => Str.includes("Missing required flag: --profile")(line)));
         })
     );
 
-    // A prompt needs a terminal on stdin AND stdout: one alone is not enough.
-    it.effect("a human with stdin NOT a TTY but stdout a TTY is non-interactive: no prompt", () =>
-      Effect.gen(function* () {
-        const terminal = yield* TestTerminal.make();
-        yield* terminal.input([{ name: "down" }, { name: "enter" }]);
-        const detected = CliInteractive.layer.pipe(
-          Layer.provide(
-            Layer.mergeAll(
-              Audience.layerTest("human"),
-              TerminalEnv.layerTest({ stdinIsTerminal: false, stdout: { isTerminal: true } })
+    it.effect(
+      "a human with stdin NOT a TTY but stdout a TTY is non-interactive: a prompt needs a terminal on both",
+      () =>
+        Effect.gen(function* () {
+          const terminal = yield* TestTerminal.make();
+          yield* terminal.input([{ name: "down" }, { name: "enter" }]);
+          const detected = CliInteractive.layer.pipe(
+            Layer.provide(
+              Layer.mergeAll(
+                Audience.layerTest("human"),
+                TerminalEnv.layerTest({ stdinIsTerminal: false, stdout: { isTerminal: true } })
+              )
             )
-          )
-        );
-        const { out, code } = yield* run(app(withPrompt({ otherwise: "software-project" })), ["run"], {
-          interactive: detected,
-          terminal,
-        });
-        assert.strictEqual(code, 0);
-        assert.deepStrictEqual(out, ["profile=software-project"]);
-        const reads9 = yield* terminal.reads;
-        assert.deepStrictEqual(reads9, { keys: 0, lines: 0, subscriptions: 0 });
-        const output10 = yield* terminal.output;
-        assert.strictEqual(output10, "");
-      })
+          );
+          const { out, code } = yield* run(app(withPrompt({ otherwise: "software-project" })), ["run"], {
+            interactive: detected,
+            terminal,
+          });
+          assert.strictEqual(code, 0);
+          assert.deepStrictEqual(out, ["profile=software-project"]);
+          const reads9 = yield* terminal.reads;
+          assert.deepStrictEqual(reads9, { keys: 0, lines: 0, subscriptions: 0 });
+          const output10 = yield* terminal.output;
+          assert.strictEqual(output10, "");
+        })
     );
   });
 
@@ -295,7 +294,6 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
         assert.strictEqual(columns11, 120);
         const rows12 = yield* terminal.rows;
         assert.strictEqual(rows12, 40);
-        // The input is an already-ended queue: a prompt reading it is quit, and no key of the real one is taken.
         const exit = yield* Effect.flatMap(terminal.readInput, (queue) => Queue.take(queue)).pipe(Effect.exit);
         assertExitFailure(exit, Exit.isFailure(exit) ? exit.cause : Cause.empty);
         const line = yield* Effect.exit(terminal.readLine);
@@ -304,7 +302,11 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
         const output13 = yield* real.output;
         assert.strictEqual(output13, "");
         const reads14 = yield* real.reads;
-        assert.deepStrictEqual(reads14, { keys: 0, lines: 0, subscriptions: 0 });
+        assert.deepStrictEqual(
+          reads14,
+          { keys: 0, lines: 0, subscriptions: 0 },
+          "the gated input is an already-ended queue: no key of the real one is taken"
+        );
         const pending15 = yield* real.pending;
         assert.strictEqual(pending15, 1);
       })
@@ -314,9 +316,8 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
       Effect.gen(function* () {
         const real = yield* TestTerminal.make();
         yield* real.input([{ name: "enter" }]);
-        // Built where CliInteractive is true; the decision is made when each call runs, not here.
-        const terminal = yield* gated(true, real);
-        const take = Effect.flatMap(terminal.readInput, (queue) => Queue.take(queue));
+        const builtWhileInteractive = yield* gated(true, real);
+        const take = Effect.flatMap(builtWhileInteractive.readInput, (queue) => Queue.take(queue));
         const quiet = yield* Effect.exit(take.pipe(Effect.provideService(CliInteractive, false)));
         assertExitFailure(quiet, Exit.isFailure(quiet) ? quiet.cause : Cause.empty);
         const reads16 = yield* real.reads;

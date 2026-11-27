@@ -58,7 +58,6 @@ export class ReviewHubConfig extends S.Opaque<ReviewHubConfig, { readonly brand:
 
 const DEFAULT_PORT = 8787;
 
-// The `--data-dir` flag both commands take, falling back to PRACTICE_REVIEW_HUB_DATA_DIR.
 const dataDirectoryFlag = Flag.String("data-dir").pipe(
   Flag.withFallbackConfig(Config.String("PRACTICE_REVIEW_HUB_DATA_DIR")),
   Flag.withDescription("Directory of the hub's verdict, answer and item files.")

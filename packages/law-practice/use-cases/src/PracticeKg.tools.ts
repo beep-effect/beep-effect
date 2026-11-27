@@ -35,13 +35,9 @@ import { PracticeKgMatterMatchedOn, PracticeKgMatterResolution } from "./Practic
 const $I = $LawPracticeUseCasesId.create("PracticeKg.tools");
 const defaultBudgetBytes = PosInt.make(8000);
 
-/*
- * Tool rows admit the persisted domain literals plus the synthetic members the
- * bundle-status row uses when kg_provenance is called without an identity —
- * "bundle" is not a kg_node kind and "bundle-manifest" is not a stored
- * provenance kind, so the domain kits stay closed.
- */
+// decision: practice-kg-tool-kinds-widen-locally
 const PracticeKgToolNodeKind = S.Union([KgNodeKind, S.Literal("bundle")]);
+// decision: practice-kg-tool-kinds-widen-locally
 const PracticeKgToolProvenanceKind = S.Union([PracticeKgProvenanceKind, S.Literal("bundle-manifest")]);
 
 /**
@@ -258,8 +254,7 @@ export class DocumentRange extends S.Opaque<DocumentRange, { readonly brand: uni
   }).pipe($I.annoteSchema("DocumentRange", { description: "One-based text start and positive character length." }))
 ) {}
 
-/* Whole-document read: start at 1 with a 2 MiB character budget. */
-const defaultDocumentRange = DocumentRange.make({ length: PosInt.make(2_097_152), start: PosInt.make(1) });
+const wholeDocumentRange = DocumentRange.make({ length: PosInt.make(2_097_152), start: PosInt.make(1) });
 
 /**
  * **Example** (Fetch a document by digest with the default range)
@@ -285,8 +280,8 @@ export class GetDocumentParams extends S.Opaque<GetDocumentParams, { readonly br
     digest: S.optionalKey(S.NonEmptyString),
     organized_path: S.optionalKey(S.NonEmptyString),
     range: DocumentRange.pipe(
-      S.withConstructorDefault(Effect.succeed(defaultDocumentRange)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(defaultDocumentRange))
+      S.withConstructorDefault(Effect.succeed(wholeDocumentRange)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(wholeDocumentRange))
     ),
   }).pipe($I.annoteSchema("GetDocumentParams", { description: "Document lookup by digest or organized corpus path." }))
 ) {}
@@ -900,11 +895,6 @@ export const practiceKgCandidateClaimFieldTiers = defineFieldTiers({
   complete: S.Struct(PracticeKgCandidateClaimToolRow.fields),
 });
 
-/*
- * D-4/AC-5: the practice KG host is a strictly offline bundle reader, so the
- * MCP openWorldHint must be false — the mcp-kit readOnly preset advertises an
- * open world, which is wrong here.
- */
 /**
  * **Details**
  *
@@ -1138,7 +1128,7 @@ export const practiceKgCorrespondentFieldTiers = defineFieldTiers({
   }),
 });
 
-const closedWorldReadOnlyHints = FourHintAnnotations.make({
+const offlineBundleReadOnlyHints = FourHintAnnotations.make({
   destructive: false,
   idempotent: true,
   openWorld: false,
@@ -1159,7 +1149,7 @@ const readTool = <Name extends string, Parameters extends S.Top, Success extends
       parameters,
       success,
     }),
-    closedWorldReadOnlyHints
+    offlineBundleReadOnlyHints
   );
 
 /**

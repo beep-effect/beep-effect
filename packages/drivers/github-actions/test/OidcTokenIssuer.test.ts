@@ -34,7 +34,6 @@ const CLAIMS = OidcClaims.make({
   run_attempt: "1",
 });
 
-/** A JWT whose payload is `claims`, built the way the runner would. */
 const jwtFor = (claims: unknown, signature = "sig"): string => {
   const segment = (value: unknown): string =>
     Buffer.from(
@@ -50,10 +49,6 @@ const json = (body: unknown, init: ResponseInit = {}): Response =>
     { status: 200, headers: { "content-type": "application/json" }, ...init }
   );
 
-/**
- * The test seam: a fake `fetch` under the real client, so request construction,
- * status mapping and body decoding all actually run.
- */
 const live = (fake: typeof globalThis.fetch, env: Record<string, string> = TOKEN_ENV) =>
   OidcTokenIssuer.layer.pipe(
     Layer.provide(
@@ -130,9 +125,11 @@ describe("OidcTokenIssuer", () => {
           Effect.gen(function* () {
             yield* (yield* OidcTokenIssuer).token("sigstore");
 
-            // A "?" here would produce a second query string and the runner would
-            // hand back a token bound to the wrong audience — or none at all.
-            assert.strictEqual(seen[0], `${TOKEN_ENV.ACTIONS_ID_TOKEN_REQUEST_URL}&audience=sigstore`);
+            assert.strictEqual(
+              seen[0],
+              `${TOKEN_ENV.ACTIONS_ID_TOKEN_REQUEST_URL}&audience=sigstore`,
+              "a ? would start a second query string, and the runner would bind the token to the wrong audience or none"
+            );
           })
         );
       });
@@ -172,9 +169,11 @@ describe("OidcTokenIssuer", () => {
         it.effect("sends no audience parameter at all when none is asked for", () =>
           Effect.gen(function* () {
             yield* (yield* OidcTokenIssuer).token();
-            // The runner's default audience is not the empty string, so an
-            // `audience=` parameter would change which token comes back.
-            assert.notInclude(seen[0] ?? "", "audience");
+            assert.notInclude(
+              seen[0] ?? "",
+              "audience",
+              "the runner's default audience is not the empty string, so an audience= parameter changes the token"
+            );
           })
         );
       });
@@ -319,10 +318,6 @@ describe("OidcTokenIssuer", () => {
 
   describe("claims", () => {
     {
-      // The signature here is deliberate nonsense. Decoding it anyway is the
-      // documented choice: the token came from the runner's own endpoint over
-      // TLS, and the claims populate a provenance predicate rather than a
-      // trust decision.
       const fake: typeof globalThis.fetch = Object.assign(
         () => Promise.resolve(json({ value: jwtFor(CLAIMS, "not-a-real-signature") })),
         { preconnect: () => {} }
@@ -339,10 +334,6 @@ describe("OidcTokenIssuer", () => {
     }
 
     {
-      // `~~~??>>>` encodes to segments containing `-` and `_`, the two
-      // characters base64url swaps. A real GitHub token hits them constantly;
-      // a corpus that never does would keep passing under a decoder that
-      // rejects them.
       const urlSafe = OidcClaims.make({ ...CLAIMS, ref: "refs/heads/~~~??>>>" });
       const token = jwtFor(urlSafe);
       const fake: typeof globalThis.fetch = Object.assign(() => Promise.resolve(json({ value: token })), {
@@ -352,7 +343,11 @@ describe("OidcTokenIssuer", () => {
       it.layer(live(fake), { timeout: "30 seconds" })((it) => {
         it.effect("decodes a payload whose base64url alphabet differs from base64", () =>
           Effect.gen(function* () {
-            assert.match(Str.split(token, ".")[1] ?? "", /[-_]/, "the fixture must actually exercise the url alphabet");
+            assert.match(
+              Str.split(token, ".")[1] ?? "",
+              /[-_]/,
+              "real tokens hit - and _ constantly; a corpus without them passes a decoder that rejects them"
+            );
             const claims = yield* (yield* OidcTokenIssuer).claims();
             assert.strictEqual(claims.ref, "refs/heads/~~~??>>>");
           })
@@ -361,8 +356,6 @@ describe("OidcTokenIssuer", () => {
     }
 
     {
-      // Segment lengths that are not a multiple of four are the common case,
-      // and a decoder that demands padding fails on most real tokens.
       const padded = OidcClaims.make({ ...CLAIMS, run_id: "31415926535" });
       const fake: typeof globalThis.fetch = Object.assign(() => Promise.resolve(json({ value: jwtFor(padded) })), {
         preconnect: () => {},
@@ -372,7 +365,11 @@ describe("OidcTokenIssuer", () => {
         it.effect("decodes a payload whose base64url needs padding", () =>
           Effect.gen(function* () {
             const claims = yield* (yield* OidcTokenIssuer).claims();
-            assert.strictEqual(claims.run_id, "31415926535");
+            assert.strictEqual(
+              claims.run_id,
+              "31415926535",
+              "lengths off a multiple of four are the common case; a padding-demanding decoder fails most tokens"
+            );
           })
         );
       });
@@ -385,10 +382,6 @@ describe("OidcTokenIssuer", () => {
         Effect.gen(function* () {
           const issuer = yield* OidcTokenIssuer;
           const token = yield* issuer.token();
-          // This is the whole point of the double. A consumer that decodes the
-          // token ITSELF — which is what a provenance builder does — must get the
-          // same claims the service reports, or the path stays untested while
-          // looking tested.
           const payload = Str.split(Redacted.value(token), ".")[1] ?? "";
           const decoded = Result.getOrThrowWith(
             S.decodeResult(Json)(Buffer.from(payload, "base64url").toString("utf8")),
@@ -397,7 +390,11 @@ describe("OidcTokenIssuer", () => {
           if (!S.is(WorkflowClaim)(decoded)) {
             assert.fail("expected workflow claims");
           }
-          assert.strictEqual(decoded.job_workflow_ref, CLAIMS.job_workflow_ref);
+          assert.strictEqual(
+            decoded.job_workflow_ref,
+            CLAIMS.job_workflow_ref,
+            "a provenance builder decodes the token itself and must get the claims the service reports"
+          );
           const claims1 = yield* issuer.claims();
           assert.deepStrictEqual(claims1, CLAIMS);
         })

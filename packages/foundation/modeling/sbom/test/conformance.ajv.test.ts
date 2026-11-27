@@ -1,13 +1,3 @@
-// Full-schema conformance (W4-b): every document the emitter produces from a
-// valid input validates against the whole vendored CycloneDX 1.6 schema, not
-// only the derived subset `conformance.test.ts` checks.
-//
-// Two gaps are pinned rather than hidden. A timestamp is passed through
-// verbatim, so an unparseable one emits a document the schema rejects; that is
-// deliberate, because `NtiaReport` is where an unusable timestamp is reported.
-// An empty `bomRef` is refused at construction, since the schema's `refType`
-// has `minLength: 1`.
-
 import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
 import { Component, Contact, ExternalReference, NtiaReport, Sbom, SbomInput, SbomMetadata, Supplier } from "@beep/sbom";
 import { License } from "@beep/spdx";
@@ -26,7 +16,6 @@ const parseJson = S.decodeUnknownResult(S.fromJsonString(S.Unknown));
 
 const emitted = (input: SbomInput.Admitted): unknown => Result.getOrThrow(parseJson(Sbom.toJson(Sbom.generate(input))));
 
-/** A document exercising every field the emitter can produce. */
 const full: SbomInput.Admitted = {
   root: Component.make({
     type: "library",
@@ -58,21 +47,14 @@ const full: SbomInput.Admitted = {
   }),
 };
 
-/** Epoch milliseconds from 1970 through 2099, the range a four-digit RFC 3339 year covers. */
-const EpochMillis = S.Int.check(S.isGreaterThanOrEqualTo(0), S.isLessThan(4_102_444_800_000));
+const EpochMillisBefore2100 = S.Int.check(S.isGreaterThanOrEqualTo(0), S.isLessThan(4_102_444_800_000));
 
 const sameComponent = S.toEquivalence(Component);
 
 const isComponentsDocument = S.is(S.Struct({ components: S.Array(S.Record(S.String, S.Unknown)) }));
 
-/**
- * A seeded input made valid where the model is deliberately lenient: its
- * timestamp, when it has metadata, is a real RFC 3339 instant, and exact
- * duplicate components are dropped (the schema's top-level `components` is
- * `uniqueItems`; the emitter passes a caller's list through as given).
- */
 const validInput = Arbitrary.map(
-  Arbitrary.all([Arbitrary.schema(SbomInput), Arbitrary.schema(EpochMillis)]),
+  Arbitrary.all([Arbitrary.schema(SbomInput), Arbitrary.schema(EpochMillisBefore2100)]),
   ([input, millis]): SbomInput.Admitted => ({
     ...input,
     components: A.dedupeWith(input.components, sameComponent),
@@ -92,19 +74,24 @@ describe("CycloneDX 1.6 conformance — the whole vendored schema", () => {
     [validInput],
     ([input]) =>
       Effect.sync(() => {
-        assert.deepStrictEqual(cycloneDxViolations(emitted(input)), []);
+        assert.deepStrictEqual(
+          cycloneDxViolations(emitted(input)),
+          [],
+          "a valid input has an RFC 3339 timestamp and no exact duplicate components, where the model is lenient"
+        );
       }),
     { arbitrary: fcRuns(200) }
   );
 
   it("validates every catalog id @beep/spdx knows against the vendored SPDX enumeration", () => {
-    // The `license.id` branch is `$ref`ed to `spdx.SNAPSHOT.schema.json`, so an
-    // id the kit's catalog knows but that SPDX release does not would emit an
-    // invalid document. One root carrying every catalog id checks the whole set.
     const licenses = License.catalog.pipe(HashMap.keys, A.fromIterable);
     assert.isAbove(licenses.length, 0);
     const document = emitted({ root: Component.make({ type: "library", name: "x", licenses }), components: [] });
-    assert.deepStrictEqual(cycloneDxViolations(document), []);
+    assert.deepStrictEqual(
+      cycloneDxViolations(document),
+      [],
+      "license.id refs spdx.SNAPSHOT.schema.json, so a catalog id unknown to that release is invalid"
+    );
   });
 
   it("the SPDX enumeration is live: an id outside it fails", () => {
@@ -121,11 +108,14 @@ describe("CycloneDX 1.6 conformance — the whole vendored schema", () => {
   });
 
   it("the validator is live: a document without a component name fails", () => {
-    // The control. A validator that accepts everything would pass the property.
     const document = emitted(full);
     assertTrue(isComponentsDocument(document));
     const broken = { ...document, components: A.map(document.components, ({ name: _name, ...rest }) => rest) };
-    assert.include(cycloneDxViolations(broken), "/components/0 required");
+    assert.include(
+      cycloneDxViolations(broken),
+      "/components/0 required",
+      "the control: a validator that accepts everything would pass the property"
+    );
   });
 
   it("pins the timestamp gap: an unparseable timestamp emits an invalid document, and NTIA reports it", () => {
@@ -134,7 +124,10 @@ describe("CycloneDX 1.6 conformance — the whole vendored schema", () => {
       metadata: SbomMetadata.make({ ...full.metadata, timestamp: "last tuesday" }),
     };
     assert.include(cycloneDxViolations(emitted(input)), "/metadata/timestamp format");
-    assertFalse(NtiaReport.of(Sbom.generate(input)).compliant);
+    assertFalse(
+      NtiaReport.of(Sbom.generate(input)).compliant,
+      "a timestamp passes through verbatim; NtiaReport is where an unusable one is reported"
+    );
     assert.include(NtiaReport.of(Sbom.generate(input)).missing, "timestamp");
   });
 
@@ -148,6 +141,6 @@ describe("CycloneDX 1.6 conformance — the whole vendored schema", () => {
 
   it("refuses an empty bomRef at construction, as the schema's refType does", () => {
     assert.throws(() => Component.make({ type: "library", name: "x", bomRef: "" }));
-    assertFalse(S.is(Component)({ type: "library", name: "x", bomRef: "" }));
+    assertFalse(S.is(Component)({ type: "library", name: "x", bomRef: "" }), "the schema refType has minLength: 1");
   });
 });

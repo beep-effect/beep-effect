@@ -153,18 +153,15 @@ it.layer(platform, { concurrent: false, timeout: "5 seconds" })(
       Effect.fnUntraced(function* (host, calls) {
         const resultInstaller = yield* host.runInstaller("/fixture/setup.exe", ["/S"]);
         expect(resultInstaller).toBe(1);
-        // Without the per-user executable the file goes to Explorer, whose nonzero
-        // exit is allowed because it can already have opened the file.
+
         yield* host.openInClaude("/fixture/bundle.mcpb");
         const text = "text with 'quotes'; $(not a command)";
         expect((yield* host.openLink(text).pipe(Effect.result))._tag).toBe("Failure");
         expect((yield* host.copyToClipboard(text).pipe(Effect.result))._tag).toBe("Failure");
-        expect(A.map(calls, (call) => call.command)).toEqual([
-          "/fixture/setup.exe",
-          "explorer.exe",
-          "powershell.exe",
-          "powershell.exe",
-        ]);
+        expect(
+          A.map(calls, (call) => call.command),
+          "openInClaude tolerates Explorer’s nonzero exit: Explorer may already have opened the file."
+        ).toEqual(["/fixture/setup.exe", "explorer.exe", "powershell.exe", "powershell.exe"]);
         expect(calls[0]?.args).toEqual(["/S"]);
         expect(calls[2]?.options.env).toMatchObject({ BEEP_SETUP_TEXT: text });
         expect(calls[2]?.args).not.toContain(text);

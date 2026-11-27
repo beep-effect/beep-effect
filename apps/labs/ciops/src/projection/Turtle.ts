@@ -20,9 +20,8 @@ const prefixes = [
   "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .",
 ];
 
-// Instrumentation contract identity; vocabulary ratification remains run-3 work.
 const emissionContractVersion = "s7-emission/v2";
-// Lane-plan emission identity (contract §8.3); disjoint from the admission specification tuple.
+
 const lanePlanContractVersion = "s7-lane-plan/v1";
 const provisionalHeader = "# PROVISIONAL GRAPH — closure OPEN; excluded from negation and ratified typing.";
 
@@ -35,10 +34,7 @@ const turtleLiteral = (value: string): string =>
     Str.replaceAll(/\n/g, "\\n")
   )}"`;
 
-// Injective PN_LOCAL encoding: alphanumerics stay verbatim and every other
-// UTF-8 byte becomes a %HH PLX escape, so distinct proposal ids can never
-// mint the same node and the structural "-step-"/"-request-" suffixes below
-// cannot be forged by id content.
+// decision: injective-emission-identities
 const pnLocalSlug = (value: string): string =>
   A.join(
     A.map(A.fromIterable(new TextEncoder().encode(value)), (byte) =>
@@ -63,8 +59,8 @@ const requestTriples =
 const serializeProposal = (proposal: ScheduleProposal): TurtleDocument => {
   const proposalNode = `ciops-prov:${pnLocalSlug(proposal.proposalId)}`;
   const episodeNode = `ciops-prov:episode-${pnLocalSlug(proposal.episodeId)}`;
-  // Each component encodes '-' itself, so the tuple separators are injective.
-  // Scope comes from the admission engine's LiteralKit even for an empty queue.
+
+  // decision: injective-emission-identities
   const specificationNode = `ciops-prov:specification-${A.join(
     A.map(
       [emissionContractVersion, proposal.policyDigest, proposal.journalPrefixDigest, ScheduleScope.Enum.admission],
@@ -174,7 +170,6 @@ const laneStepTriples =
     ];
   };
 
-// precedesLaneStep is derived from laneStepIndex (i -> i+1): a second encoding of one order, not evidence.
 const lanePrecedenceTriples = (planNode: string, plan: LanePlanProposal): ReadonlyArray<string> =>
   A.map(
     A.drop(plan.laneSteps, 1),
@@ -223,6 +218,7 @@ const serializeLanePlan = (plan: LanePlanProposal): TurtleDocument => {
  * document carries the prefix block and the sorted provisional section only.
  * The specification IRI encodes the tuple `(s7-lane-plan/v1, handoffSha256,
  * orderRule, scope)`; the scope is never emitted as a scope term.
+ * The precedence edges repeat laneStepIndex order; they supply no independent ordering evidence.
  *
  * **Gotchas**
  *

@@ -106,7 +106,6 @@ const writeDayDigest = Effect.fn("DocketIntakeApp.writeDayDigest")(function* (di
   });
 });
 
-// Most digests one cycle writes. A longer gap is closed over the following cycles.
 const MAX_DIGESTS_PER_CYCLE = 62;
 
 const earliestProcessedDay = (state: DocketIntakeState): O.Option<LocalDate> =>
@@ -117,8 +116,6 @@ const earliestProcessedDay = (state: DocketIntakeState): O.Option<LocalDate> =>
     )
   );
 
-// Write the digest of every day that is over and not digested yet, earliest first, so days missed
-// while the service was down each get their own digest.
 const writeOwedDigests: (
   config: DocketIntakeAppConfig,
   today: LocalDate,
@@ -157,6 +154,10 @@ const writeOwedDigests: (
  * missed days are digested one by one, earliest first. One cycle writes at
  * most 62 digests; a longer gap is closed by the cycles after it.
  *
+ * **Gotchas**
+ *
+ * Record every run, including runs without writes, so run listing and undo can find it.
+ *
  * **Example** (Reference one poll cycle)
  *
  * ```ts
@@ -178,9 +179,8 @@ export const pollCycle = Effect.fn("DocketIntakeApp.pollCycle")(function* (
   const today = docketDayInZone(now1, config.timeZone);
 
   const report = yield* intake.pollOnce(today, options);
-  // Every run gets a line, also one that wrote nothing, so `runs` lists it and `undo` finds it.
   yield* recordDocketRunCompleted(report);
-  // Only when the review hub is configured: its questions for every needs-review message.
+
   const store = yield* DocketIntakeStore;
   const serviceOption2 = yield* Effect.serviceOption(DocketQuestionPublisher);
   yield* O.match(serviceOption2, {

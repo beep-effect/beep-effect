@@ -93,9 +93,7 @@ const installClaude = Effect.gen(function* () {
     : StepDone.make({ step, detail: `Claude Desktop ${ClaudeDesktopInstaller.version} is installed.` });
 }).pipe(failedAs("claude-desktop"));
 
-// Watch a probe until it is satisfied while Enter stays a manual override; if the
-// watch times out, ask the lawyer. True when the probe saw it, false when the
-// lawyer confirmed it.
+// decision: registry-confirmed-gateway-watch
 const watchUntil = Effect.fnUntraced(function* <A>(
   probe: Effect.Effect<A>,
   satisfied: (state: A) => boolean,
@@ -107,7 +105,7 @@ const watchUntil = Effect.fnUntraced(function* <A>(
     Effect.repeat({ schedule, until: satisfied }),
     Effect.map((state) => (satisfied(state) ? ("detected" as const) : ("timed-out" as const)))
   );
-  // race keeps watching when the console cannot read Enter; the loser is interrupted.
+
   const result = yield* Effect.race(watched, Effect.as(lawyer.awaitEnter, "confirmed" as const));
   return yield* Match.value(result).pipe(
     Match.when("detected", () => Effect.succeed(true)),
@@ -117,10 +115,7 @@ const watchUntil = Effect.fnUntraced(function* <A>(
   );
 });
 
-// Watch the gateway probe until Claude lists the bundled version. Enter only asks
-// for an immediate check: the step never trusts Enter (or a keypress left in the
-// console buffer) over Claude's registry. True when Claude lists the bundled
-// version, false when the watch timed out without it.
+// decision: registry-confirmed-gateway-watch
 const watchForGateway = Effect.fnUntraced(function* (probe: Effect.Effect<GatewayInstallState>, notYet: string) {
   const lawyer = yield* Lawyer;
   const schedule = yield* ClaudeStatePollSchedule;
@@ -130,9 +125,7 @@ const watchForGateway = Effect.fnUntraced(function* (probe: Effect.Effect<Gatewa
     Effect.tap((state) => (GatewayInstallState.is.current(state) ? Effect.void : lawyer.tell(notYet))),
     Effect.repeat({ until: GatewayInstallState.is.current })
   );
-  // race takes the first success: the Enter loop succeeds only on a current check,
-  // so a timed-out watch wins otherwise, and a console that cannot read Enter
-  // leaves the watch running. The loser is interrupted.
+
   const race2 = yield* Effect.race(watched, checkOnEnter);
   return GatewayInstallState.is.current(race2);
 });
@@ -162,6 +155,7 @@ const signIn = Effect.gen(function* () {
     : confirmed;
 }).pipe(failedAs("claude-sign-in"));
 
+// decision: registry-confirmed-gateway-watch
 const installGateway = Effect.gen(function* () {
   const host = yield* SetupHost;
   const lawyer = yield* Lawyer;
@@ -191,7 +185,6 @@ const installGateway = Effect.gen(function* () {
   yield* host.openInClaude(file);
   const back = "When Claude lists the Beep Practice Gateway as enabled, come back to this window.";
   if (GatewayInstallState.is.unknown(state)) {
-    // Claude's registry cannot be read, so the lawyer's word is the only signal.
     yield* lawyer.waitFor(back);
     return StepDone.make({ step, detail: "The gateway was handed to Claude; the lawyer confirmed the install." });
   }
@@ -204,9 +197,7 @@ const installGateway = Effect.gen(function* () {
   if (yield* watchForGateway(probe, notYet)) {
     return StepDone.make({ step, detail: "Claude lists the gateway at the bundled version." });
   }
-  // Claude's saved sign-in can expire while its sign-in marker stays on disk, so
-  // the lawyer may still be signing in when the first watch ends (proof run 5).
-  // Hand the file over once more and watch again before giving up.
+
   yield* lawyer.tell(
     A.join(
       [
@@ -317,14 +308,13 @@ export const runSetup = Effect.gen(function* () {
     Effect.Effect<StepOutcome, never, SetupHost | Lawyer | ClaudeState | InstallerDownload | GatewayBundle | Path.Path>
   > = [installClaude, signIn, installGateway, handOff];
   const outcomes = yield* runUntilFailure(steps, []);
-  // runUntilFailure stops only at a failure, so no failure means every step ran.
+
   const failure = A.findFirst(outcomes, StepOutcome.guards.failed);
   const complete = O.isNone(failure);
   const report = SetupReport.make({ outcomes, complete, finishedAt: yield* DateTime.now });
   yield* writeReport(report).pipe(
     Effect.catchCause((cause) => Effect.logWarning("The setup report could not be written.", cause))
   );
-  // The console closes when the program exits, so hold it until the lawyer has read the last line.
   yield* O.match(failure, {
     onNone: () =>
       lawyer.tell("\nPress Enter to close this window.").pipe(Effect.andThen(Effect.ignore(lawyer.awaitEnter))),

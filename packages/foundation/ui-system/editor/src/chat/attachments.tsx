@@ -33,16 +33,6 @@ import type { LexicalEditor } from "lexical";
 import type { JSX } from "react";
 import type { ComposerAttachment } from "./attachment-model.ts";
 
-/**
- * Per-editor binding that registers the Lexical `DRAG_DROP_PASTE` command and
- * drives captured files through the shared {@link captureAttachmentsFn} runtime
- * mutation (via the registry on its `AtomContext`), so drag-drop and the footer
- * picker share one capture path. Keyed by the `LexicalEditor` instance; the
- * registration is torn down via the atom finalizer on unmount.
- *
- * @category atoms
- * @since 0.0.0
- */
 const dragDropBindingAtom = Atom.family((editor: LexicalEditor) =>
   Atom.make((get) => {
     get.addFinalizer(
@@ -82,8 +72,6 @@ const dragDropBindingAtom = Atom.family((editor: LexicalEditor) =>
  */
 export function AttachmentPlugin(): null {
   const [editor] = useLexicalComposerContext();
-  // Keep the capture mutation mounted so the fiber dispatched by the drag-drop
-  // binding (and the footer picker) is never interrupted by the registry.
   useAtomSet(captureAttachmentsFn);
   useAtomMount(dragDropBindingAtom(editor));
   return null;

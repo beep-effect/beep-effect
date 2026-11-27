@@ -226,7 +226,6 @@ export class TestTerminal {
     const terminal = Terminal.make({
       columns: Effect.succeed(columns),
       rows: Effect.succeed(rows),
-      // The size never changes: each subscription starts with it and ends with its scope.
       size: Effect.acquireRelease(
         Effect.tap(Queue.sliding<Terminal.Size, Cause.Done>(1), (sizes) => Queue.offer(sizes, { columns, rows })),
         Queue.end

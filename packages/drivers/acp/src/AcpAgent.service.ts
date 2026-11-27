@@ -251,10 +251,6 @@ const decodeCancelNotification = S.decodeUnknownEffect(AcpSchema.CancelSessionNo
 const replaysFromStart = (request: AcpSchema.ResumeSessionRequest): boolean =>
   O.exists(O.fromNullishOr(request.replayFrom), (replayFrom) => replayFrom.type === "start");
 
-/**
- * Picks the `session/resume` handler: a replay from the start prefers the load handler, any
- * other resume prefers the resume handler, and each falls back to the other.
- */
 const selectResumeHandler = (
   handlers: AcpCoreAgentRequestHandlers,
   request: AcpSchema.ResumeSessionRequest
@@ -268,10 +264,6 @@ interface AcpAgentServerOptions {
   readonly serverProtocol: RpcServer.Protocol["Service"];
 }
 
-/**
- * Serves `AgentRpcs` over the patched protocol. A dying handler answers its own request id
- * (`disableFatalDefects`) instead of failing the whole connection.
- */
 const serveAgentRpcs = Effect.fnUntraced(function* ({ coreHandlers, serverProtocol }: AcpAgentServerOptions) {
   const serve =
     <Request, Response>(
@@ -319,7 +311,7 @@ const serveAgentRpcs = Effect.fnUntraced(function* ({ coreHandlers, serverProtoc
   );
 
   const scope = yield* Effect.scope;
-  // The empty reporter set keeps RpcServer from re-reporting a handler defect it already answered.
+  // decision: handler-defects-answer-their-own-request
   const serverContext = yield* Layer.buildWithScope(Layer.merge(handlerLayer, ErrorReporter.layer([])), scope);
   yield* RpcServer.make(AcpRpcs.AgentRpcs, { disableFatalDefects: true }).pipe(
     Effect.provideService(RpcServer.Protocol, serverProtocol),
@@ -430,7 +422,6 @@ export const make = Effect.fn($I`AcpAgent_make`)(function* (
     Ref.update(cancelHandlers, A.append(handler))
   );
 
-  // An `mcp/message` without an id is an MCP-over-ACP notification from the client.
   const handleMcpNotification = Effect.fn($I`AcpAgent_handleMcpNotification`)(
     (handler: (notification: AcpSchema.MessageMcpNotification) => Effect.Effect<void, AcpError.AcpError>) =>
       extensionRegistrars.handleExtNotification(AGENT_METHODS.mcp_message, AcpSchema.MessageMcpNotification, handler)

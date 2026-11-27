@@ -18,8 +18,7 @@ import { ProfileStore } from "./ProfileStore.ts";
 import { profileSelects } from "./Requirements.ts";
 import type { M365InteractiveAuthorizer } from "@beep/m365";
 
-// Tool calls never start a browser sign-in: an expired sign-in fails the call,
-// and setup_status / setup_repair walk the lawyer through signing in again.
+// decision: setup-only-interactive-signin
 const signInThroughSetup: M365InteractiveAuthorizer = () => M365Error.failEffectFromReason("auth");
 
 /**

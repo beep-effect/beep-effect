@@ -40,8 +40,6 @@ import {
   SQLNULL,
   timestampTZValue,
 } from "@duckdb/node-api";
-// beep: `typeForValue` is not re-exported from the package root; the package
-// has no `exports` map, so this deep path is the module `bind` itself uses.
 import { typeForValue } from "@duckdb/node-api/lib/typeForValue.js";
 import * as A from "effect/Array";
 import { dual, pipe } from "effect/Function";
@@ -58,7 +56,6 @@ const BIND_MESSAGE = "Failed to bind statement parameters";
 
 const MICROS_PER_MILLI = BigInt(1000);
 
-/** The value classes `@duckdb/node-api` `typeForValue` accepts as typed binds. */
 const DUCKDB_VALUE_CLASSES = [
   DuckDBArrayValue,
   DuckDBBitValue,
@@ -110,15 +107,9 @@ const bindDate = (value: Date): BindResult => {
     : Result.succeed(timestampTZValue(BigInt(millis) * MICROS_PER_MILLI));
 };
 
-/**
- * An empty array binds as an empty LIST typed `LIST(SQLNULL)` by
- * {@link bindTypes}; DuckDB casts it into any LIST column. Untyped, the native
- * bind refuses it ("Cannot create lists with item type of ANY").
- */
 const bindArray = (value: ReadonlyArray<unknown>): BindResult =>
   Result.map(Result.all(A.map(value, normalizeParameter)), listValue);
 
-/** Ordered bind rules; the first matching guard decides the conversion. */
 const BIND_RULES: ReadonlyArray<BindRule> = [
   bindRule(P.isNullish, () => Result.succeed(null)),
   bindRule(isPassThroughScalar, Result.succeed),
@@ -147,17 +138,11 @@ const isNotNullValue = (value: DuckDBValue): boolean => value !== null;
 const hasNullLeaf = (type: DuckDBType): boolean =>
   type.typeId === DuckDBTypeId.SQLNULL || (type instanceof DuckDBListType && hasNullLeaf(type.valueType));
 
-/** The types a JS `number` binds as, narrowest first. */
-const NUMBER_TYPE_IDS = [DuckDBTypeId.INTEGER, DuckDBTypeId.BIGINT, DuckDBTypeId.DOUBLE];
+const NUMBER_TYPE_IDS_NARROWEST_FIRST = [DuckDBTypeId.INTEGER, DuckDBTypeId.BIGINT, DuckDBTypeId.DOUBLE];
 
 const numberRank = (type: DuckDBType): O.Option<number> =>
-  A.findFirstIndex(NUMBER_TYPE_IDS, (typeId) => typeId === type.typeId);
+  A.findFirstIndex(NUMBER_TYPE_IDS_NARROWEST_FIRST, (typeId) => typeId === type.typeId);
 
-/**
- * The common item type of two items: the wider of two number types
- * (`INTEGER`, then `BIGINT`, then `DOUBLE`), the widened item type of two
- * LIST types, and otherwise the first type without a `NULL` leaf.
- */
 const widenItemType = (current: DuckDBType, next: DuckDBType): DuckDBType =>
   current instanceof DuckDBListType && next instanceof DuckDBListType
     ? LIST(widenItemType(current.valueType, next.valueType))
@@ -169,23 +154,12 @@ const widenItemType = (current: DuckDBType, next: DuckDBType): DuckDBType =>
         })
       );
 
-/**
- * The item type of a list: number items widen to the widest number type, so
- * `[1, 2.5]` types as `DOUBLE[]`, and a `NULL` leaf yields to the first type
- * without one, so `[[null], [null, 2]]` types as `INTEGER[][]`.
- */
 const listItemType = (items: ReadonlyArray<DuckDBValue>): DuckDBType =>
   A.matchLeft(A.map(A.filter(items, isNotNullValue), bindTypeOf), {
     onEmpty: () => SQLNULL,
     onNonEmpty: (head, tail) => A.reduce(tail, head, widenItemType),
   });
 
-/**
- * The bind type of one normalized value. `typeForValue` types a LIST from its
- * first item only, so a leading `NULL` would type the list `LIST(SQLNULL)` and
- * bind every item as `NULL`; lists are typed from their first item whose type
- * has no `NULL` leaf.
- */
 const bindTypeOf = (value: DuckDBValue): DuckDBType =>
   isListValue(value) ? LIST(listItemType(value.items)) : typeForValue(value);
 
@@ -201,6 +175,17 @@ const bindTypeOf = (value: DuckDBValue): DuckDBType =>
  * bind, so only lists bind differently. A list whose
  * items are all `NULL`, and an empty list, stay `LIST(SQLNULL)`, which DuckDB
  * casts into any LIST column (`SELECT ?` reads it back as `INTEGER[]`).
+ *
+ * **Gotchas**
+ *
+ * - `typeForValue` types a LIST from its first item only, so a leading `NULL`
+ *   would type the list `LIST(SQLNULL)` and bind every item as `NULL`; that is
+ *   why lists are typed here instead.
+ * - An empty list must be passed with its `LIST(SQLNULL)` type: untyped, the
+ *   native bind refuses it ("Cannot create lists with item type of ANY").
+ * - `typeForValue` is imported from `@duckdb/node-api/lib/typeForValue.js`:
+ *   the package root does not re-export it and has no `exports` map, so that
+ *   deep path is the module the native `bind` itself uses.
  *
  * **Example** (Typing a list with a leading null)
  *

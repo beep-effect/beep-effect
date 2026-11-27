@@ -8,8 +8,7 @@ import * as S from "effect/Schema";
 const isDOMCssProperties = S.is(DOMCssProperties);
 const isDOMReactNode = S.is(DOMReactNode);
 
-// The schema package compiles without the dom lib, so ref targets use a test double.
-class TestHTMLElement {}
+class DomlessHTMLElementDouble {}
 
 describe("DOM React and CSS guards", () => {
   it("accepts plain CSS properties and rejects other values", () => {
@@ -40,8 +39,11 @@ describe("DOM React and CSS guards", () => {
     expect(isReactRef(undefined)).toBe(true);
     expect(isReactRef(() => undefined)).toBe(true);
     expect(isReactRef("legacy")).toBe(true);
-    expect(isReactRef({ current: new TestHTMLElement() })).toBe(true);
-    expect(isReactRef({ value: new TestHTMLElement() })).toBe(false);
+    expect(
+      isReactRef({ current: new DomlessHTMLElementDouble() }),
+      "the schema package compiles without the dom lib, so the ref target is a test double"
+    ).toBe(true);
+    expect(isReactRef({ value: new DomlessHTMLElementDouble() })).toBe(false);
     expect(isReactRef(1)).toBe(false);
     expect(S.is(createDOMRefSchema())({ current: null })).toBe(true);
   });

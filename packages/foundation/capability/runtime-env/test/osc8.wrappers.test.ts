@@ -3,7 +3,6 @@ import { assert, describe, it } from "@effect/vitest";
 import { flow } from "effect/Function";
 import * as O from "effect/Option";
 
-// The detector answers with an Option; these assertions read its value, or null when it is None.
 const detectWrapper = flow(detectWrapperOption, O.getOrNull);
 
 describe("detectWrapper", () => {

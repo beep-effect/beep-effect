@@ -54,10 +54,7 @@ it.effect.prop(
   runs
 );
 
-// Numeric formatters accept numbers, so normalization means formatting after
-// reading the numeric value from their display grammar, rather than passing a
-// string to a number-only API.
-const durationValue = (text: string): number => {
+const msReadFromDurationDisplay = (text: string): number => {
   const total = A.reduce(Str.split(text, " "), 0, (sum, part) => {
     const number = Number.parseFloat(part);
     const factor = Str.endsWith("ms")(part)
@@ -78,9 +75,13 @@ it.effect.prop(
   ([ms]) =>
     Effect.sync(() => {
       const text = Fmt.duration(ms);
-      const parsed = durationValue(text);
-      assert.strictEqual(Fmt.duration(parsed), text);
-      assert.strictEqual(durationValue(Fmt.duration(parsed)), parsed);
+      const parsed = msReadFromDurationDisplay(text);
+      assert.strictEqual(
+        Fmt.duration(parsed),
+        text,
+        "a number-only formatter re-formats the value read from its display"
+      );
+      assert.strictEqual(msReadFromDurationDisplay(Fmt.duration(parsed)), parsed);
       assert.isAtMost(Math.abs(parsed - ms), ms >= 3600000 ? 60000 : ms >= 60000 ? 1000 : ms >= 1000 ? 100 : 1);
     }),
   runs

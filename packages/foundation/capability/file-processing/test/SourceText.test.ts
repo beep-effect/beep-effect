@@ -173,7 +173,6 @@ describe("@beep/file-processing SourceText", () => {
   );
 });
 
-// The arbitrary compiler consumes decode only; verify the advertised encoding separately.
 const sourceTextPageLinkCodec = (() => {
   const annotations: S.Annotations.Declaration<unknown, []> | undefined = SchemaAST.toType(
     SourceTextPage.ast
@@ -194,7 +193,10 @@ it.effect.prop(
   ({ page }) =>
     Effect.gen(function* () {
       const encoded = yield* encodeSourceTextPageLink(page);
-      expect(encoded).toEqual({
+      expect(
+        encoded,
+        "the arbitrary compiler consumes decode only, so the advertised encoding is checked here"
+      ).toEqual({
         identity: yield* encodeSourceTextIdentity(page.identity),
         pageCount: page.pageCount,
         pageIndex: page.pageIndex,

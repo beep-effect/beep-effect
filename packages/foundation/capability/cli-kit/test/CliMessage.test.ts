@@ -13,7 +13,6 @@ import * as Str from "effect/String";
 import { commandLines } from "./helpers/runnerCommands.ts";
 import type { AudienceKind } from "@beep/runtime-env";
 
-/** A `Console` recording which stream each line went to, in one sequence. */
 const capturing = () => {
   const out: string[] = [];
   const err: string[] = [];
@@ -31,7 +30,6 @@ const run = Effect.fn("run")(function* (
     readonly color?: "none" | "basic" | "truecolor";
     readonly stderrColor?: "none" | "basic" | "truecolor";
     readonly glyphs?: "unicode" | "ascii";
-    /** Provide `CurrentRuntimeEnv` with this CI; omitted, the service is not in the environment at all. */
     readonly ci?: "github-actions" | "generic" | "none";
   } = {}
 ) {
@@ -206,8 +204,11 @@ describe("CliMessage edge cases", () => {
           yield* CliMessage.status(vocab, "success", "above the new threshold");
         })
       );
-      // success (10) is now at or above warning's rank (5), so it goes to stderr with it.
-      assert.deepStrictEqual(err, ["! low", "✓ above the new threshold"]);
+      assert.deepStrictEqual(
+        err,
+        ["! low", "✓ above the new threshold"],
+        "success (10) is now at or above warning's rank (5)"
+      );
       assert.deepStrictEqual(out, []);
     })
   );

@@ -95,15 +95,17 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
         assert.strictEqual(codeOf(exit), 1);
         assert.isTrue(finalized);
         assert.deepStrictEqual(err, [], "the findings sentinel is never rendered");
-        // The sentinel carries the no-double-report mark (false SUPPRESSES), so
-        // the runtime stays quiet, and the teardown turns it into exit 1.
         assertExitFailure(exit, Exit.isFailure(exit) ? exit.cause : Cause.empty);
         if (Exit.isFailure(exit)) {
-          assert.strictEqual(exit.cause.pipe(Cause.squash, Runtime.getErrorReported), false);
+          assert.strictEqual(
+            exit.cause.pipe(Cause.squash, Runtime.getErrorReported),
+            false,
+            "the sentinel carries the no-double-report mark (false suppresses), so the runtime stays quiet"
+          );
         }
         const codes: number[] = [];
         Runtime.defaultTeardown(exit, (code) => codes.push(code));
-        assert.deepStrictEqual(codes, [1]);
+        assert.deepStrictEqual(codes, [1], "the teardown turns the quiet sentinel into exit 1");
       })
     );
 
@@ -117,8 +119,11 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
           Effect.provideService(Console.Console, double)
         );
         assert.strictEqual(codeOf(exit), 3);
-        // A defect: the status line first, then its cleaned stack.
-        assert.strictEqual(err[0], "[FAIL] Error: HOME is not set");
+        assert.strictEqual(
+          err[0],
+          "[FAIL] Error: HOME is not set",
+          "a defect prints its status line first, then its cleaned stack"
+        );
         assert.deepStrictEqual(out, []);
       })
     );
@@ -147,9 +152,11 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
             Effect.exit,
             Effect.provideService(Console.Console, double)
           );
-          // A bad code is a wiring defect: rendered once, exit 1 — never a
-          // silent 0 (256 wraps to 0 under POSIX) or a process.exit throw (1.5).
-          assert.strictEqual(codeOf(exit), 1);
+          assert.strictEqual(
+            codeOf(exit),
+            1,
+            "a bad code is a wiring defect: exit 1, never a silent 0 (256 wraps under POSIX) or a process.exit throw (1.5)"
+          );
           assert.strictEqual(
             err[0],
             `[FAIL] Error: CliRuntime.main: CliExit code must be an integer 0..255, received ${bad}`
@@ -176,16 +183,14 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
   });
 
   describe("CliRuntime.main and a UserError raised through Command.runWith", () => {
-    // A handler that fails with CliError.UserError. runWith renders it through
-    // the CliOutput formatter itself, then re-fails with it.
-    const deploy = Command.make("deploy", {}, () =>
+    const failsWithUserError = Command.make("deploy", {}, () =>
       Effect.fail(CliError.UserError.make({ cause: "unknown target: moon", userMessage: "unknown target: moon" }))
     );
 
     it.effect("reports it exactly once, and exits with the usage code 64", () =>
       Effect.gen(function* () {
         const { double, out, err } = capturing();
-        const exit = yield* CliRuntime.main(Command.runWith(deploy, { version: "1.0.0" })([]), {
+        const exit = yield* CliRuntime.main(Command.runWith(failsWithUserError, { version: "1.0.0" })([]), {
           platform: platformServices,
         }).pipe(Effect.exit, Effect.provideService(Console.Console, double));
         assert.strictEqual(
@@ -196,7 +201,7 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
         assert.include(err[0], "unknown target: moon");
         assert.deepStrictEqual(out, []);
         assert.strictEqual(codeOf(exit), 64);
-        const custom = yield* CliRuntime.main(Command.runWith(deploy, { version: "1.0.0" })([]), {
+        const custom = yield* CliRuntime.main(Command.runWith(failsWithUserError, { version: "1.0.0" })([]), {
           platform: platformServices,
           usageExitCode: 2,
         }).pipe(Effect.exit, Effect.provideService(Console.Console, capturing().double));
@@ -207,25 +212,27 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
     it.effect("with renderErrors: false runWith prints nothing, so reportFailures renders it once", () =>
       Effect.gen(function* () {
         const { double, err } = capturing();
-        const exit = yield* CliRuntime.main(Command.runWith(deploy, { version: "1.0.0", renderErrors: false })([]), {
-          platform: platformServices,
-        }).pipe(Effect.exit, Effect.provideService(Console.Console, double));
+        const exit = yield* CliRuntime.main(
+          Command.runWith(failsWithUserError, { version: "1.0.0", renderErrors: false })([]),
+          {
+            platform: platformServices,
+          }
+        ).pipe(Effect.exit, Effect.provideService(Console.Console, double));
         assert.strictEqual(
           err.length,
           1,
           `expected one stderr entry, got ${Result.getOrThrow(S.encodeUnknownResult(Json)(err))}`
         );
-        // Rendered here like any other failure, so it takes the fallback exit
-        // code, not the usage code.
-        assert.strictEqual(codeOf(exit), 1);
+        assert.strictEqual(codeOf(exit), 1, "rendered like any other failure: the fallback code, not the usage code");
       })
     );
 
     it.effect("a plain UserError carries no exit-code mark of its own", () =>
       Effect.sync(() => {
-        // The usage-code fallback below relies on this: were core ever to mark
-        // a UserError with a code, chooseExitCode would keep that instead.
-        assert.isFalse(Runtime.errorExitCode in CliError.UserError.make({ cause: "x" }));
+        assert.isFalse(
+          Runtime.errorExitCode in CliError.UserError.make({ cause: "x" }),
+          "the usage-code fallback relies on this: chooseExitCode would keep a code core put on a UserError"
+        );
       })
     );
 
@@ -248,11 +255,7 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
     );
   });
 
-  describe("CliRuntime.main and --log-level", () => {
-    // Core's --log-level flag sets MinimumLogLevel for the command program. Effect filters a log
-    // record against MinimumLogLevel BEFORE any logger runs, so a flag value of `none` silences every Effect.log*
-    // call made inside the handler. The failure report is written by reportFailures AFTER the handler's scope
-    // has closed, so it must still reach stderr, and the exit code must still be right.
+  describe("CliRuntime.main and --log-level: the failure report is written after the handler's scope closes", () => {
     const boom = Command.make("boom", {}, () => Effect.fail(TestError.make({ message: "boom" })));
     const app = Command.make("tool").pipe(Command.withSubcommands([boom]));
 
@@ -275,8 +278,6 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
       );
     }
 
-    // The positive control for the tests above: the flag really does silence logging INSIDE the handler, so the
-    // failure report surviving is the runtime's doing and not a flag that never took effect.
     it.effect("control: --log-level none silences Effect.logError inside the handler, --log-level error does not", () =>
       Effect.gen(function* () {
         const noisy = Command.make("noisy", {}, () => Effect.logError("inside"));
@@ -289,7 +290,11 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
           return err;
         });
         const result = yield* run("none");
-        assert.deepStrictEqual(result, []);
+        assert.deepStrictEqual(
+          result,
+          [],
+          "the flag took effect, so the report surviving above is the runtime's doing"
+        );
         const result1 = yield* run("error");
         assert.deepStrictEqual(result1, ["inside"]);
       })

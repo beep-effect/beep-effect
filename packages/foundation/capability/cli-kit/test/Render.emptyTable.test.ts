@@ -4,8 +4,7 @@ import * as Effect from "effect/Effect";
 import { contextOf } from "./helpers/renderContext.ts";
 import type { Block } from "@beep/cli-kit";
 
-/** A table with no header text and no row: zero projects in a counts table is the everyday case. */
-const EMPTY: ReadonlyArray<readonly [string, Block]> = [
+const EMPTY_HEADERLESS_TABLES: ReadonlyArray<readonly [string, Block]> = [
   ["Doc.countsTable([])", Doc.countsTable([])],
   ["Doc.table([{ header: [] }], [])", Doc.table([{ header: [] }], [])],
   ["Doc.table([{ header: [] }], [], { style: 'pipe' })", Doc.table([{ header: [] }], [], { style: "pipe" })],
@@ -13,8 +12,8 @@ const EMPTY: ReadonlyArray<readonly [string, Block]> = [
 
 const renderers = ["plain", "ansi", "githubLog", "markdown"] as const;
 
-describe("an empty headerless table", () => {
-  for (const [name, table] of EMPTY) {
+describe("an empty headerless table, the everyday case of zero projects in a counts table", () => {
+  for (const [name, table] of EMPTY_HEADERLESS_TABLES) {
     for (const renderer of renderers) {
       it.effect(`${name}: Render.${renderer} draws nothing for it, and the blocks around it are kept`, () =>
         Effect.gen(function* () {

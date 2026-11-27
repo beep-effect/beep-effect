@@ -13,11 +13,14 @@ import { RecordVerdictInput } from "../ReviewQueue/ReviewQueue.ports.ts";
 import { ReviewHubToolError } from "./ReviewHub.errors.ts";
 import { LockBatchRequest, OpenItems, OpenItemsRequest, RecordAnswerRequest } from "./ReviewHub.schemas.ts";
 
-// The hub works on its own local stores only, so no tool reaches an open world.
-const readHints = FourHintAnnotations.make({ destructive: false, idempotent: true, openWorld: false, readOnly: true });
+const localStoreReadHints = FourHintAnnotations.make({
+  destructive: false,
+  idempotent: true,
+  openWorld: false,
+  readOnly: true,
+});
 
-// Writes append one row and remove nothing; repeating one appends another row.
-const appendHints = FourHintAnnotations.make({
+const localStoreAppendHints = FourHintAnnotations.make({
   destructive: false,
   idempotent: false,
   openWorld: false,
@@ -48,7 +51,7 @@ export const OpenItemsTool = annotateFourHints(
     parameters: OpenItemsRequest,
     success: OpenItems,
   }),
-  readHints
+  localStoreReadHints
 );
 
 /**
@@ -74,7 +77,7 @@ export const RecordVerdictTool = annotateFourHints(
     parameters: RecordVerdictInput,
     success: VerdictRow,
   }),
-  appendHints
+  localStoreAppendHints
 );
 
 /**
@@ -100,7 +103,7 @@ export const LockBatchTool = annotateFourHints(
     parameters: LockBatchRequest,
     success: VerdictRow,
   }),
-  appendHints
+  localStoreAppendHints
 );
 
 /**
@@ -126,7 +129,7 @@ export const RecordAnswerTool = annotateFourHints(
     parameters: RecordAnswerRequest,
     success: AnswerRow,
   }),
-  appendHints
+  localStoreAppendHints
 );
 
 /**

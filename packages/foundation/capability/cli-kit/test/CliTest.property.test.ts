@@ -66,8 +66,8 @@ it.effect("RunOptions retains absent and empty overrides and rejects explicit un
       const value4 = yield* S.decodeEffect(RunOptions)(encoded);
       assert.deepStrictEqual(value4, value);
     }
-    // EF-40: a present key holding `undefined` is rejected.
-    for (const key of ["cwd", "env", "stdin"]) {
+    const optionalKeysRejectingUndefined = ["cwd", "env", "stdin"];
+    for (const key of optionalKeysRejectingUndefined) {
       assertNone(S.decodeOption(RunOptions)({ ...required, [key]: undefined }));
     }
   })

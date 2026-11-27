@@ -159,6 +159,12 @@ const dependencyContext = (finding: AntecedentFinding): string =>
 /**
  * Project self-check candidates into source-quoted attorney review items without writing state.
  *
+ * **Gotchas**
+ *
+ * The 1 MiB response limit counts the encoded wire bytes, UTF-8 and JSON
+ * escaping included, and is checked while each item is projected, so repeated
+ * full-claim quotations fail before they can amplify the response.
+ *
  * **Example** (Create a reusable program)
  *
  * ```ts
@@ -178,9 +184,6 @@ export const claimSelfCheckReview = Effect.fn("ClaimSelfCheck.review")(function*
       reason: "review-response-too-large",
       message: `No review result was delivered because it exceeds 1 MiB. All supplied claims still require review; ${A.length(checked.undecomposed)} could not be checked. Retry with a smaller claim set and its dependency context.`,
     });
-  // Count the encoded wire representation, including UTF-8 and JSON escaping.
-  // Fail during projection so repeated full-claim quotations cannot accumulate
-  // into an arbitrarily amplified response before the limit is applied.
   const encodedUnchecked = yield* encodeUnchecked(checked.undecomposed);
   let responseBytes = textEncoder.encode(encodedUnchecked).byteLength + 64;
   if (responseBytes > maxReviewResponseBytes) {

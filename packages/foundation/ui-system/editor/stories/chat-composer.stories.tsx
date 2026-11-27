@@ -7,7 +7,6 @@ import { expect, fn, userEvent, within } from "storybook/test";
 import { draftReplyInitialState as initialState } from "./fixtures.ts";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
-// Sample app-injected `@` mention source (ephemeral; serializes to plain text).
 const MENTIONS: ReadonlyArray<MentionOption> = [
   MentionOption.make({ id: "ada", label: "Ada Lovelace", hint: "collaborator" }),
   MentionOption.make({ id: "grace", label: "Grace Hopper", hint: "collaborator" }),

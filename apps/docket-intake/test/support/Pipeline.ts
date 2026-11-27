@@ -47,17 +47,16 @@ export const MAILBOX = "docket@fixture.invalid";
 export const STATE_DIRECTORY = "/fixture/state/docket-intake";
 
 type PipelineHarnessShape = {
-  /** Calendar entries the pipeline created, by idempotency key. */
   readonly entries: Ref.Ref<HashMap.HashMap<string, DocketCalendarEntry>>;
-  /** Whether each of the next mailbox listings fails, in order; listings past the end succeed. */
+
   readonly listingFailures: Ref.Ref<ReadonlyArray<boolean>>;
-  /** How many times the mailbox was listed. */
+
   readonly listings: Ref.Ref<number>;
-  /** Completed the first time the mailbox is listed. */
+
   readonly listed: Deferred.Deferred<void>;
-  /** Messages marked entered, in order. */
+
   readonly marked: Ref.Ref<ReadonlyArray<string>>;
-  /** The messages every listing returns. */
+
   readonly messages: Ref.Ref<ReadonlyArray<DocketMessage>>;
   readonly state: Ref.Ref<DocketIntakeState>;
 };
@@ -81,7 +80,6 @@ const HarnessLayer = Layer.effect(
   })
 );
 
-// The text the fixture entry cites for its dates and period; the review checks it is in the message.
 const CITED = "Mailed January 8, 2030. A response is due within three months, by April 8, 2030";
 
 /** A synthetic message that states its dates; the fixture agents enter it as a docket item. */
@@ -98,7 +96,6 @@ const message = fixtureMessage({ messageId: "m1", receivedAt: "2030-01-09T10:00:
 const MAIL_DATE = LocalDate.make({ year: 2030, month: 1, day: 8 });
 const THREE_MONTHS = DocketResponsePeriod.make({ amount: 3, unit: "months" });
 
-// The secretary reads the same date, period and reference for itself, so the review accepts.
 const agreeingReview = SecretaryReview.make({
   isDocketItem: true,
   mailDate: O.some(MAIL_DATE),
@@ -110,7 +107,6 @@ const agreeingReview = SecretaryReview.make({
 const written = (key: string): DocketWrittenEntry =>
   DocketWrittenEntry.make({ eventId: S.NonEmptyString.make(`event:${key}`) });
 
-// The mailbox and calendar as Graph would answer them; what reaches them was "written".
 const MailboxCalendarLayer = Layer.mergeAll(
   Layer.effect(
     DocketMailbox,
@@ -170,7 +166,7 @@ const AgentsLayer = Layer.mergeAll(
           })
         );
       }),
-      // The fixture review accepts in its first round, so nothing is ever disputed.
+
       revise: Effect.fnUntraced(function* (input) {
         return yield* Effect.succeed(ParalegalRevision.make({ entry: input.previous }));
       }),
@@ -193,7 +189,6 @@ const AgentsLayer = Layer.mergeAll(
   DocketMatterLookupUnavailableLive
 );
 
-// The state the pipeline saves, kept in the harness.
 const RefStoreLayer = Layer.effect(
   DocketIntakeStore,
   Effect.gen(function* () {
@@ -207,8 +202,7 @@ const RefStoreLayer = Layer.effect(
   })
 );
 
-// The store names its temporary files after the process, which it reads from `/proc/self`.
-const LinuxFileSystemLayer = Layer.effect(
+const ProcSelfFileSystemLayer = Layer.effect(
   FileSystem.FileSystem,
   Effect.gen(function* () {
     const memory = yield* MemoryFileSystem.make;
@@ -219,14 +213,13 @@ const LinuxFileSystemLayer = Layer.effect(
 );
 
 /** An in-memory file system that looks like Linux, and POSIX paths, for the digest archive. */
-export const FilesLayer = Layer.merge(LinuxFileSystemLayer, Path.layer);
+export const FilesLayer = Layer.merge(ProcSelfFileSystemLayer, Path.layer);
 
 /** The Bun crypto service, for layers a test builds beside the pipeline. */
 export const CryptoLayer = BunCrypto.layer;
 
 const storeOptions = (directory: string) => DocketFileStoreOptions.make({ directory });
 
-// Every create and mark that reaches the harness is journaled in the state directory.
 const JournaledPortsLayer = DocketJournalingPortsLive.pipe(
   Layer.provide(MailboxCalendarLayer),
   Layer.provideMerge(makeDocketFileJournalLayer(storeOptions(STATE_DIRECTORY)))
