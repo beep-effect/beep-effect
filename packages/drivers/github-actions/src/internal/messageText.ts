@@ -1,3 +1,7 @@
+// Message fragments for the package's tagged errors: an optional field reads
+// as nothing when it is absent and as `<prefix><value><closing>` when it is
+// present, spelled once so every `message` getter composes the same way.
+
 import { $GithubActionsId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 
