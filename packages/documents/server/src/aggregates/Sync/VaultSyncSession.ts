@@ -135,10 +135,9 @@ const makeResolver = Effect.fnUntraced(function* (sourceKind: V.TransportKind, b
   const scope = Effect.fn("VaultSyncSession.scope", transportSpanAttributes)(function* (rpc: string, payload: unknown) {
     if (rpc === "ClaimDestinationName") {
       const {
-        input: { claim },
+        input: { claim: claimedWorkspace },
       } = yield* decode(NameInput, payload);
-      const claimedWorkspaceScope = V.VaultSyncScope.make(claim);
-      return claimedWorkspaceScope;
+      return V.VaultSyncScope.make(claimedWorkspace);
     }
     if (rpc === "RecordConflict") {
       const {
