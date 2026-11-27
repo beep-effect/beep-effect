@@ -58,8 +58,6 @@ const uriMetadata = makeSemanticSchemaMetadata({
   canonicalizationRequired: true,
 });
 
-const absoluteUriArbitraryPattern = /^https:\/\/example\.org\/[a-z0-9]{1,30}$/;
-
 const makeReferenceChecks = (
   identifier: string,
   title: string,
@@ -83,7 +81,11 @@ const makeReferenceChecks = (
           description,
           message,
           arbitraryConstraint: {
-            patterns: [Str.startsWith(identifier, "Relative") ? /^[a-z][a-z0-9/]{0,30}$/ : absoluteUriArbitraryPattern],
+            patterns: [
+              Str.startsWith(identifier, "Relative")
+                ? /^[a-z][a-z0-9/]{0,30}$/
+                : /^https:\/\/example\.org\/[a-z0-9]{1,30}$/,
+            ],
           },
         })
       ),
@@ -125,7 +127,7 @@ const makeNonEmptyReferenceChecks = (
           description,
           message,
           arbitraryConstraint: {
-            patterns: [absoluteUriArbitraryPattern],
+            patterns: [/^https:\/\/example\.org\/[a-z0-9]{1,30}$/],
           },
         })
       ),
