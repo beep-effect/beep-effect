@@ -25,7 +25,7 @@ A push already yields the full profile (golden `push` row).
 
 The admission lane skips (`readHeavyLaneSkips`) run from source instead: `bun run beep ci admission` in `check.yml` and `heavy-admit.yml`, both `pull_request` workflows that check out the merge ref.
 
-`heavy.yml` no longer calls change-profile, and `shard-overflow.yml` only consumes the `docs_only` output. One call site is excluded: the smoke run in `beep-ci-binary.yml` sets `GITHUB_EVENT_NAME=push`, which never reads patterns. `CiOperational.service.ts` is in the CI binary closure, so the change-profile half ships with the next closure-digest binary release and its reviewed pin bump (PERIH-11), and the pull request is an operator hand merge. The admission half is live at merge. Until the pin bump merges, admission skips read the base patterns while change-profile still reads the head checkout.
+`heavy.yml` no longer calls change-profile, and `shard-overflow.yml` only consumes the `docs_only` output. One call site is excluded: the smoke run in `beep-ci-binary.yml` sets `GITHUB_EVENT_NAME=push`, which never reads patterns. `CiOperational.service.ts` is in the CI binary closure, so the change-profile half ships with the next closure-digest binary release and its reviewed pin bump (PERIH-11), and the pull request is an operator hand merge. The base read goes through `@beep/git/Git`, which grows the closure from 352 to 363 paths: the nine `@beep/git` sources plus its `package.json` and `tsconfig.json`, and nothing else. `ci-binary-closure.test.ts` pins `Git.ts` inside the closure. The admission half is live at merge. Until the pin bump merges, admission skips read the base patterns while change-profile still reads the head checkout.
 
 **Root-anchored literals (170 rows, origin/main).**
 
