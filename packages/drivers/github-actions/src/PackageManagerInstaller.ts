@@ -619,7 +619,7 @@ export interface PackageManagerInstallerShape {
    *
    * For pnpm native binaries, settle the expected checksum before fetching the roughly 36 MB archive: a supplied nativeIntegrity map is authoritative and skips packument lookup, otherwise the exact-version registry dist.integrity is authoritative. Either unavailable authority fails closed; this second artifact has no integrity-less posture.
    *
-   * Bun has no corepack integrity authority: its checksum covers the downloaded platform zip and is inherently platform-specific. npm, pnpm and Yarn 1 corepack pins cover registry tarball bytes; Yarn >=2 pins cover standalone repo.yarnpkg.com yarn.js, byte-identical to bin/yarn.js inside cli-dist, so verify that extracted file instead.
+   * Bun has no corepack integrity authority: its checksum covers the downloaded platform zip and is inherently platform-specific. npm, pnpm and Yarn 1 corepack pins cover registry tarball bytes; Yarn 2 and later pins cover standalone repo.yarnpkg.com yarn.js, byte-identical to bin/yarn.js inside cli-dist, so verify that extracted file instead.
    *
    * Prefer the runner npm only when it already matches the pin; a failed probe falls through to distribution install rather than failing. allowAmbient=false suppresses the probe entirely when replacing node, because the current npm is about to be shadowed and is not the one that will execute.
    *

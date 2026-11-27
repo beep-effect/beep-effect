@@ -60,7 +60,7 @@ const RUNNER_OS_TO_PLATFORM: Readonly<Record<string, string>> = {
  *
  * **Gotchas**
  *
- * Detect native pnpm wrappers by optionalDependencies entries named @pnpm/exe.*, never by major version. pnpm 12's pnpm bin is a shebang-less placeholder normally overwritten by its lifecycle script; the installer runs no lifecycle scripts and must overlay the host executable itself. Older layouts retain Node entry points.
+ * Detect native pnpm wrappers by optionalDependencies entries named `@pnpm/exe.*`, never by major version. pnpm 12's pnpm bin is a shebang-less placeholder normally overwritten by its lifecycle script; the installer runs no lifecycle scripts and must overlay the host executable itself. Older layouts retain Node entry points.
  *
  * **Example** (Select a Linux musl executable)
  *
