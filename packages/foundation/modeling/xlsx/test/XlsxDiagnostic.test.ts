@@ -1,6 +1,3 @@
-// Every finding's sentence, stated once per kind. The fixtures and property tests reach only the kinds a read happens
-// to produce, so without these the coverage of `describeFinding` moved from run to run.
-
 import { XlsxAddress, XlsxRange } from "@beep/xlsx/XlsxAddress.schema";
 import {
   BadAddress,
@@ -30,7 +27,7 @@ const b2 = XlsxAddress.make({ column: 1, row: 2 });
 const extent = XlsxRange.make({ first: XlsxAddress.make({ column: 0, row: 1 }), last: b2 });
 
 describe("describeFinding", () => {
-  it("names the part or the cell of every kind of finding", () => {
+  it("states the sentence of every kind of finding once, naming its part or cell", () => {
     const findings = [
       NotAWorkbook.make({ container: "encrypted" }),
       MissingPart.make({ path: "xl/styles.xml" }),
@@ -51,7 +48,10 @@ describe("describeFinding", () => {
       DeclaredExtentWrong.make({ sheet: "Items", declared: extent, found: O.some(extent) }),
       DeclaredExtentWrong.make({ sheet: "Items", declared: extent, found: O.none() }),
     ];
-    expect(A.map(findings, describeFinding)).toEqual([
+    expect(
+      A.map(findings, describeFinding),
+      "every kind is stated here: the fixtures and property tests reach only the kinds a read happens to produce"
+    ).toEqual([
       "the file is not an .xlsx workbook (encrypted)",
       "the part xl/styles.xml is missing",
       "the archive holds xl/workbook.xml twice",

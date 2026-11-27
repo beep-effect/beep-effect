@@ -1,7 +1,3 @@
-// What the reader makes of each kind of file, on workbooks built from hand-written parts (test/support/workbooks.ts).
-// Every workbook read here is also held to its schema, which is what lets the reader build cells with their checks
-// skipped (`make` with `disableChecks`).
-
 import { Xlsx } from "@beep/xlsx/Xlsx.codec";
 import { columnLetters, XlsxRange } from "@beep/xlsx/XlsxAddress.schema";
 import { MAX_CELL_CHARS, XlsxCell, XlsxErrorCode, XlsxText, XlsxValue } from "@beep/xlsx/XlsxCell.schema";
@@ -25,16 +21,21 @@ import type { Recipe } from "./support/workbooks.ts";
 
 const read = (bytes: Uint8Array, options?: XlsxReadOptions) =>
   Xlsx.parse(bytes, options).pipe(
-    Effect.tap((found) => Effect.sync(() => expect(S.is(XlsxWorkbook)(found.workbook)).toBe(true)))
+    Effect.tap((found) =>
+      Effect.sync(() =>
+        expect(
+          S.is(XlsxWorkbook)(found.workbook),
+          "every workbook read is held to its schema, which lets the reader build cells with disableChecks"
+        ).toBe(true)
+      )
+    )
   );
 
-/** A hand-built workbook, built and read. */
 const readOf = (recipe: Recipe, options?: XlsxReadOptions) =>
   Effect.flatMap(workbook(recipe), (bytes) => read(bytes, options));
 
 const first = (found: XlsxRead): XlsxWorksheet => found.workbook.sheets[0];
 
-/** What a cell holds, as an expectation a person can read. */
 const heldOf = XlsxValue.match({
   Text: (value) => `"${value.text}"`,
   Number: (value) => String(value.value),
@@ -45,7 +46,6 @@ const heldOf = XlsxValue.match({
   Blank: () => "blank",
 });
 
-/** A sheet as rows of `column:what it holds`, for an expectation a person can read. */
 const grid = (found: XlsxWorksheet) =>
   A.map(found.rows, (row) => [
     row.number,
@@ -190,8 +190,6 @@ describe("cells", () => {
     })
   );
 
-  // A shared text index is written in decimal digits. An empty value, or one JavaScript's `Number` would read as some
-  // other index (`0x0`, `1e0`, ` `), names no entry, so it never reads as the table's first entry.
   it.effect("keeps a shared text index that is not written in decimal digits as unreadable", () =>
     Effect.gen(function* () {
       const written = ["", " ", "0x0", "1e0", "0.0", "+0"];
@@ -204,15 +202,14 @@ describe("cells", () => {
         sheets: [{ name: "S", xml: sheet(rows) }],
         sharedStrings: strings(["<t>zero</t>", "<t>one</t>"]),
       });
-      expect(grid(first(found))).toEqual([
-        [1, ...A.map(written, (index, i) => `${i}:unreadable "${index}"`), '6:"zero"', '7:"one"'],
-      ]);
+      expect(
+        grid(first(found)),
+        "an empty index, or one Number reads as another (0x0, 1e0, a space), names no entry, never the first one"
+      ).toEqual([[1, ...A.map(written, (index, i) => `${i}:unreadable "${index}"`), '6:"zero"', '7:"one"']]);
       expect(findings(found)).toEqual(A.map(written, () => "UnreadableCell"));
     })
   );
 
-  // What a file wrote where no value can be read is kept as written, an error code's text included: `#N/A` in a
-  // number cell is the text `#N/A`, which canonical form and a write give back as that text and no other.
   const Garbled = S.Union([XlsxErrorCode, S.String.check(S.isPattern(/^[#A-Za-z][A-Za-z !/#?]{0,10}$/))]);
   it.effect.prop(
     "keeps what a number cell wrote that is no number as the text it wrote, error codes included",
@@ -222,7 +219,10 @@ describe("cells", () => {
         const found = yield* readOf({
           sheets: [{ name: "S", xml: sheet(`<row r="1"><c r="A1"><v>${written}</v></c></row>`) }],
         });
-        expect(grid(first(found))).toEqual([[1, `0:unreadable "${written}"`]]);
+        expect(
+          grid(first(found)),
+          "#N/A in a number cell is the text #N/A, which canonical form and a write give back as that text and no other"
+        ).toEqual([[1, `0:unreadable "${written}"`]]);
         expect(findings(found)).toEqual(["UnreadableCell"]);
         const canonical = O.map(O.fromNullishOr(first(found).rows[0]?.cells[0]), (cell) =>
           XlsxCell.canonical(cell, "1900")
@@ -235,8 +235,6 @@ describe("cells", () => {
     { arbitrary: { runs: 100 } }
   );
 
-  // The cap on a cell's characters is on the text the cell holds, its `_xHHHH_` escapes read: a cell of carriage
-  // returns, each written as `_x000D_`, takes seven times its length in the file and still reads under the cap.
   it.effect("holds a cell's text to the cap on characters once its escapes are read", () =>
     Effect.gen(function* () {
       const returns = Str.repeat(5000)("_x000D_");
@@ -248,10 +246,10 @@ describe("cells", () => {
       const limits = XlsxLimits.make({ maxCellChars: 5000 });
       const found = yield* readOf(recipe, XlsxReadOptions.make({ limits }));
       const cells = A.map(first(found).rows[0]?.cells ?? [], (cell) => cell.value);
-      expect(cells).toEqual([
-        XlsxText.make({ text: Str.repeat(5000)("\r") }),
-        XlsxText.make({ text: Str.repeat(5000)("\r") }),
-      ]);
+      expect(
+        cells,
+        "a cell of carriage returns, each written as _x000D_, takes seven times its length and still reads under the cap"
+      ).toEqual([XlsxText.make({ text: Str.repeat(5000)("\r") }), XlsxText.make({ text: Str.repeat(5000)("\r") })]);
       const tighter = XlsxReadOptions.make({ limits: XlsxLimits.make({ maxCellChars: 4999 }) });
       const inline = yield* Effect.flip(readOf({ sheets: recipe.sheets }, tighter));
       expect(inline.fatal.finding).toMatchObject({ kind: "LimitExceeded", limit: "cellChars" });
@@ -287,15 +285,16 @@ describe("cells", () => {
     { arbitrary: { runs: 20 } }
   );
 
-  // An ISO cell's time is held to the calendar: an hour past 23 or a minute or second past 59 is not carried into a
-  // later day. ISO's 24:00:00 for the end of a day is refused the same way.
   it.effect("keeps an ISO date with an impossible time as unreadable, and reports it", () =>
     Effect.gen(function* () {
       const rows =
         '<row r="1"><c r="A1" t="d"><v>2026-03-04T99:99:99</v></c><c r="B1" t="d"><v>2026-03-04T24:00:00</v></c>' +
         '<c r="C1" t="d"><v>2026-03-04T12:60:00</v></c><c r="D1" t="d"><v>2026-03-04T23:59:59</v></c></row>';
       const found = yield* readOf({ sheets: [{ name: "S", xml: sheet(rows) }] });
-      expect(grid(first(found))).toEqual([
+      expect(
+        grid(first(found)),
+        "a time past the calendar is not carried into a later day, and ISO's 24:00:00 is refused the same way"
+      ).toEqual([
         [
           1,
           '0:unreadable "2026-03-04T99:99:99"',
@@ -326,15 +325,16 @@ describe("cells", () => {
     })
   );
 
-  // The last moment either system shows is 23:59:59 on 31 December 9999; a fraction of a second is kept, and day 0,
-  // which only a serial names, is no ISO date.
   it.effect("reads ISO dates to the last second of each system, keeps fractions of a second, and refuses day 0", () =>
     Effect.gen(function* () {
       const rows =
         '<row r="1"><c r="A1" t="d"><v>9999-12-31T23:59:59</v></c><c r="B1" t="d"><v>2026-03-04T12:00:00.5</v></c>' +
         '<c r="C1" t="d"><v>1900-01-00</v></c><c r="D1" t="d"><v>9999-12-31T23:59:59.5</v></c></row>';
       const found = yield* readOf({ sheets: [{ name: "S", xml: sheet(rows) }] });
-      expect(grid(first(found))).toEqual([
+      expect(
+        grid(first(found)),
+        "23:59:59 on 31 December 9999 is the last moment either system shows; only a serial names day 0"
+      ).toEqual([
         [
           1,
           `0:date ${2_958_465 + 86_399 / 86_400}`,
@@ -384,8 +384,6 @@ describe("layout", () => {
     })
   );
 
-  // A cell or row that names no place goes after the one written before it, whatever that one held and wherever it
-  // was: a blank cell still moves the place on, and a row or cell written out of order is the one before.
   it.effect("places a cell or row that names no place after the one written just before it", () =>
     Effect.gen(function* () {
       const rows =
@@ -393,7 +391,10 @@ describe("layout", () => {
         '<row r="2"><c r="E2"><v>1</v></c><c r="B2"><v>2</v></c><c><v>3</v></c></row>' +
         '<row r="9"><c><v>9</v></c></row><row r="4"><c><v>4</v></c></row><row><c><v>5</v></c></row>';
       const found = yield* readOf({ sheets: [{ name: "S", xml: sheet(rows) }] });
-      expect(grid(first(found))).toEqual([
+      expect(
+        grid(first(found)),
+        "a blank cell still moves the place on, and a row or cell written out of order is the one before"
+      ).toEqual([
         [1, "3:7"],
         [2, "1:2", "2:3", "4:1"],
         [4, "0:4"],
@@ -417,7 +418,6 @@ describe("layout", () => {
           ""
         );
         const found = yield* readOf({ sheets: [{ name: "S", xml: sheet(`<row r="1">${xml}</row>`) }] });
-        // The model: each cell is at the column it names, else one past the cell before; the first value kept.
         const kept = MutableHashSet.empty<number>();
         const expected: Array<readonly [number, number]> = [];
         let preceding = -1;
@@ -429,7 +429,10 @@ describe("layout", () => {
           expected.push([column, i]);
         }
         const placed = A.map(A.sort(expected, byFirst), ([column, i]) => `${column}:${i}`);
-        expect(grid(first(found))).toEqual(A.isArrayNonEmpty(placed) ? [[1, ...placed]] : [[1]]);
+        expect(
+          grid(first(found)),
+          "each cell is at the column it names, else one past the cell before; the first value of a column is kept"
+        ).toEqual(A.isArrayNonEmpty(placed) ? [[1, ...placed]] : [[1]]);
       }),
     { arbitrary: { runs: 60 } }
   );
@@ -451,7 +454,6 @@ describe("layout", () => {
           ""
         );
         const found = yield* readOf({ sheets: [{ name: "S", xml: sheet(xml) }] });
-        // The model: each row is the number it names, else one past the row before; the first row of a number kept.
         const kept = MutableHashSet.empty<number>();
         const expected: Array<readonly [number, number]> = [];
         let preceding = 0;
@@ -462,7 +464,10 @@ describe("layout", () => {
           MutableHashSet.add(kept, number);
           expected.push([number, i]);
         }
-        expect(grid(first(found))).toEqual(A.map(A.sort(expected, byFirst), ([number, i]) => [number, `0:${i}`]));
+        expect(
+          grid(first(found)),
+          "each row is the number it names, else one past the row before; the first row of a number is kept"
+        ).toEqual(A.map(A.sort(expected, byFirst), ([number, i]) => [number, `0:${i}`]));
       }),
     { arbitrary: { runs: 60 } }
   );
@@ -537,8 +542,6 @@ describe("the file's own form", () => {
     })
   );
 
-  // OPC compares part names without regard to ASCII case, so a relationship may name a part in another case than
-  // the archive writes it.
   it.effect("finds a part its relationship names in another case", () =>
     Effect.gen(function* () {
       const parts = A.map(
@@ -550,19 +553,19 @@ describe("the file's own form", () => {
       );
       const bytes = yield* archive(parts);
       const found = yield* read(bytes);
-      expect(grid(first(found))).toEqual([[1, "0:7"]]);
+      expect(grid(first(found)), "OPC compares part names without regard to ASCII case").toEqual([[1, "0:7"]]);
     })
   );
 
-  // The same holds for the names that say what the file is: an archive whose every part name is upper-cased, or
-  // whose workbook part alone is `xl/Workbook.xml`, is a workbook and reads, macros found in any case too.
   it.effect("reads a workbook whose part names are in another case, the workbook part's included", () =>
     Effect.gen(function* () {
       const parts = partsOf({ sheets: [{ name: "S", xml: sheet('<row r="1"><c r="A1"><v>7</v></c></row>') }] });
       const upper = yield* archive(
         A.map(parts, ([path, text]): readonly [string, string | Uint8Array] => [Str.toUpperCase(path), text])
       );
-      expect(Xlsx.container(upper)).toBe("workbook");
+      expect(Xlsx.container(upper), "the names that say what the file is compare without regard to ASCII case").toBe(
+        "workbook"
+      );
       const upperRead = yield* read(upper);
       expect(grid(first(upperRead))).toEqual([[1, "0:7"]]);
       const capital = yield* archive(
@@ -575,7 +578,7 @@ describe("the file's own form", () => {
       const capitalRead = yield* read(capital);
       expect(grid(first(capitalRead))).toEqual([[1, "0:7"]]);
       const macros = yield* archive([...parts, ["XL/VBAPROJECT.BIN", new Uint8Array([1, 2, 3])]]);
-      expect(Xlsx.container(macros)).toBe("macroWorkbook");
+      expect(Xlsx.container(macros), "macros are found in any case too").toBe("macroWorkbook");
       const found = yield* read(macros);
       expect(found.workbook.dropped).toEqual([{ path: "XL/VBAPROJECT.BIN", kind: "macros" }]);
     })
@@ -699,8 +702,6 @@ describe("one sheet at a time", () => {
 });
 
 describe("relationships", () => {
-  // A target is resolved inside the archive whatever form it takes: relative to the part that holds it, or from the
-  // root with `.` and `..` segments, and a `..` past the root stays at the root.
   it.effect("resolves absolute and relative targets, with their dot segments", () =>
     Effect.gen(function* () {
       const targets = [
@@ -726,7 +727,10 @@ describe("relationships", () => {
           ),
         { concurrency: 1 }
       );
-      expect(counts).toEqual([1, 1, 1, 1, 1]);
+      expect(
+        counts,
+        "a target resolves inside the archive, from its part or the root, and a .. past the root stays at the root"
+      ).toEqual([1, 1, 1, 1, 1]);
     })
   );
 });

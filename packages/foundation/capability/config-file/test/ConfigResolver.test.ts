@@ -8,18 +8,12 @@ import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import * as Str from "effect/String";
 
-/** The typed failure a node adapter raises for EACCES. */
 const denied = (method: string, path: string) =>
   Effect.fail(
     PlatformError.systemError({ _tag: "PermissionDenied", module: "FileSystem", method, pathOrDescriptor: path })
   );
 
-/**
- * A volume holding a config at every candidate the resolvers below could probe,
- * whose every probe and read is DENIED. Without the faults each resolver would
- * find a file, so a `none()` can only come from the absorbed failure.
- */
-const HostileFs = MemoryFileSystem.layerWith(
+const DeniedFsWithEveryCandidate = MemoryFileSystem.layerWith(
   {
     "/a/.apprc": "{}",
     "/a/b/.apprc": "{}",
@@ -36,9 +30,9 @@ const HostileFs = MemoryFileSystem.layerWith(
 );
 
 const TestPath = Path.layer;
-const HostilePlatform = Layer.mergeAll(HostileFs, TestPath);
+const HostilePlatform = Layer.mergeAll(DeniedFsWithEveryCandidate, TestPath);
 
-describe("ConfigResolver error absorption", () => {
+describe("ConfigResolver error absorption: every candidate exists, so none() can only come from an absorbed denial", () => {
   it.layer(HostilePlatform, { timeout: "30 seconds" })((it) => {
     it.effect("explicitPath yields none() when the filesystem denies permission", () =>
       Effect.gen(function* () {
@@ -110,12 +104,10 @@ describe("ConfigResolver error absorption", () => {
 });
 
 describe("ConfigResolver — an unreadable ancestor must not abort root discovery", () => {
-  /** `/a/b` is unreadable; the real root lives above it at `/a`. */
-  const flakyFs = MemoryFileSystem.layerWith(
+  const unreadableAncestorFs = MemoryFileSystem.layerWith(
     {
       "/a/.git": MemoryFileSystem.directory(),
       "/a/.apprc": "{}",
-      // Present but unreadable: were the fault gone, discovery would stop here.
       "/a/b/.git": MemoryFileSystem.directory(),
       "/a/b/.apprc": "{}",
       "/a/b/c": MemoryFileSystem.directory(),
@@ -128,8 +120,8 @@ describe("ConfigResolver — an unreadable ancestor must not abort root discover
     }
   );
 
-  it.layer(Layer.mergeAll(flakyFs, Path.layer), { timeout: "30 seconds" })((it) => {
-    it.effect("gitRoot finds the root above an unreadable ancestor", () =>
+  it.layer(Layer.mergeAll(unreadableAncestorFs, Path.layer), { timeout: "30 seconds" })((it) => {
+    it.effect("gitRoot finds the root above an unreadable ancestor whose .git would otherwise stop discovery", () =>
       Effect.gen(function* () {
         const found = yield* ConfigResolver.gitRoot({ filename: ".apprc", cwd: "/a/b/c" }).resolve;
         assertSome(found, "/a/.apprc");
@@ -137,7 +129,7 @@ describe("ConfigResolver — an unreadable ancestor must not abort root discover
     );
   });
 
-  it.layer(Layer.mergeAll(flakyFs, Path.layer), { timeout: "30 seconds" })((it) => {
+  it.layer(Layer.mergeAll(unreadableAncestorFs, Path.layer), { timeout: "30 seconds" })((it) => {
     it.effect("upwardWalk skips an unreadable directory and keeps ascending", () =>
       Effect.gen(function* () {
         const found = yield* ConfigResolver.upwardWalk({ filename: ".apprc", cwd: "/a/b/c" }).resolve;

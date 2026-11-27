@@ -2,11 +2,11 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/law-practice-server",
   "review": {
-    "reviewer": "Claude Opus 5.5 (route-soundness-repair ROUT-03 slice 2 lane)",
-    "reason": "Re-record the root subject and three packages after their turbo.json files declared the goal-data and fixture inputs on the integration test tasks as well. Configuration review only; no qualification is granted.",
+    "reviewer": "Claude Opus 5.5 (route-soundness-repair cross-package reads lane)",
+    "reason": "Re-record the root subject and nine packages after their turbo.json files declared the files their tests read from other packages as test-task inputs. Configuration review only; no qualification is granted.",
     "basis": {
-      "path": "docs/reports/rout-03-slice-2-integration-cache-review-2026-11-26.md",
-      "sha256": "a2f3263d1a19ea8ec0a7fc85945c7d981a13dc039dd2a90a54fdcca2dd16b2ed"
+      "path": "docs/reports/cross-package-reads-cache-review-2026-11-27.md",
+      "sha256": "459eea41e7a0bff558a2b9d51b9fbed2aa35592d9e88fb7519143a4a29130b4f"
     }
   },
   "nodes": [
@@ -773,6 +773,8 @@
           "../../../.nvmrc",
           "../../../goals/citation-extraction-engine/history/evidence/2026-11-08-six-form-selection/profile.frozen.json.txt",
           "../../../goals/citation-extraction-engine/ops/**",
+          "../../../packages/_internal/db-admin/drizzle/**",
+          "../../../packages/law-practice/domain/test/fixtures/claim-element/**",
           "../../../packages/law-practice/use-cases/test/fixtures/**",
           "../../../standards/root-package.projection.generated.json",
           "../../../tsconfig.base.json",
@@ -859,6 +861,8 @@
           "../../../.nvmrc",
           "../../../goals/citation-extraction-engine/history/evidence/2026-11-08-six-form-selection/profile.frozen.json.txt",
           "../../../goals/citation-extraction-engine/ops/**",
+          "../../../packages/_internal/db-admin/drizzle/**",
+          "../../../packages/law-practice/domain/test/fixtures/claim-element/**",
           "../../../packages/law-practice/use-cases/test/fixtures/**",
           "../../../standards/root-package.projection.generated.json",
           "../../../tsconfig.base.json",
@@ -935,6 +939,8 @@
           "../../../.nvmrc",
           "../../../goals/citation-extraction-engine/history/evidence/2026-11-08-six-form-selection/profile.frozen.json.txt",
           "../../../goals/citation-extraction-engine/ops/**",
+          "../../../packages/_internal/db-admin/drizzle/**",
+          "../../../packages/law-practice/domain/test/fixtures/claim-element/**",
           "../../../packages/law-practice/use-cases/test/fixtures/**",
           "../../../standards/root-package.projection.generated.json",
           "../../../tsconfig.base.json",

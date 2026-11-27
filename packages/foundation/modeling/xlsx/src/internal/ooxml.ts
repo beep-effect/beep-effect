@@ -1,7 +1,3 @@
-// The XML of a workbook's parts, read with Effect's XML reader. This is the only file that imports
-// `effect/encoding/Xml`. That reader reports names as written and has no namespace option, so elements and
-// attributes are matched by their local name: `x:row` is `row`. It expands no entity declared in a DOCTYPE and
-// reads no outside resource.
 import { $XlsxId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -25,9 +21,16 @@ export type XmlEvent = Xml.Event;
 /** A small part read whole: an element with its attributes and children. */
 export type XmlElement = Xml.Element;
 
-/** A name without its namespace prefix. */
+/**
+ * A name without its namespace prefix.
+ *
+ * **Details**
+ *
+ * Effect's XML reader reports names as written and has no namespace option, so elements and attributes are matched
+ * by their local name: `x:row` is `row`.
+ */
 export const localName = (name: string): string => {
-  // Read for every element of every sheet: a loop that allocates nothing when there is no prefix.
+  // decision: hot-paths-are-mutable-loops
   for (let i = name.length - 1; i >= 0; i -= 1) if (name[i] === ":") return Str.slice(i + 1)(name);
   return name;
 };
@@ -68,14 +71,20 @@ const failure =
           )
       : error;
 
-/** How large one XML token may be and how deep elements may nest, from the cap on a cell's characters. */
 const decodeOptions = (cellChars: number): Xml.DecodeOptions => ({
   maxTokenSize: Math.max(cellChars * 8, 65_536),
   maxDepth: 256,
   positions: true,
 });
 
-/** The events of a part's XML, from the stream of its bytes. */
+/**
+ * The events of a part's XML, from the stream of its bytes.
+ *
+ * **Details**
+ *
+ * This file is the only one that imports `effect/encoding/Xml`. That reader expands no entity declared in a DOCTYPE
+ * and reads no outside resource.
+ */
 export const eventsOf = <E extends XlsxFatal>(input: {
   readonly path: string;
   readonly body: Stream.Stream<Uint8Array, E>;
@@ -133,17 +142,12 @@ export class Relationship extends S.Opaque<Relationship, { readonly brand: uniqu
   }).pipe($I.annoteSchema("Relationship", { description: "One relationship of an OOXML part" }))
 ) {}
 
-/** The folder of a part's path, with its trailing slash, or the empty text at the root. */
 const folderOf = (path: string): string =>
   O.match(Str.lastIndexOf("/")(path), { onNone: () => "", onSome: (at) => Str.slice(0, at + 1)(path) });
 
-/**
- * The path a relationship's target names, from the part that holds the relationship. An absolute target starts at
- * the archive's root; either kind has its `.` and `..` segments worked out, and a `..` past the root stays there.
- */
 const resolve = (from: string, target: string): string => {
   const joined = Str.startsWith("/")(target) ? target : `${folderOf(from)}${target}`;
-  // crispen: a stack of segments, popped by `..`; a fold would rebuild the array per segment.
+  // decision: hot-paths-are-mutable-loops
   const parts: Array<string> = [];
   for (const piece of Str.split("/")(joined)) {
     if (piece === "" || piece === ".") continue;
@@ -159,7 +163,14 @@ export const relationshipsPath = (part: string): string => {
   return `${folder}_rels/${Str.slice(folder.length)(part)}.rels`;
 };
 
-/** The relationships a `.rels` part lists, their targets resolved from the part they belong to. */
+/**
+ * The relationships a `.rels` part lists, their targets resolved from the part they belong to.
+ *
+ * **Details**
+ *
+ * An absolute target starts at the archive's root; either kind has its `.` and `..` segments worked out, and a `..`
+ * past the root stays there.
+ */
 export const relationshipsOf: {
   (part: string): (root: XmlElement) => ReadonlyArray<Relationship>;
   (root: XmlElement, part: string): ReadonlyArray<Relationship>;
@@ -180,7 +191,7 @@ const escape = /_x([0-9A-Fa-f]{4})_/g;
 /** Cell text as it is meant: Excel writes a character XML cannot hold as `_xHHHH_`. */
 export const unescaped = (text: string): string => {
   if (!Str.includes("_x")(text)) return text;
-  // crispen: the text between escapes is copied as each is decoded, on the path every cell's text takes.
+  // decision: hot-paths-are-mutable-loops
   let out = "";
   let at = 0;
   for (const found of Str.matchAll(escape)(text)) {
@@ -191,8 +202,7 @@ export const unescaped = (text: string): string => {
   return out + Str.slice(at)(text);
 };
 
-/** The most characters of a file's text one character of a cell takes: its escape `_xHHHH_`. */
-const escapeWidth = 7;
+const widestEscapeChars = "_xHHHH_".length;
 
 /**
  * Whether a cell's text, as the file writes it, is longer than `cap` once its `_xHHHH_` escapes are read. A cap on
@@ -205,5 +215,5 @@ export const longerThan: {
 } = dual(
   2,
   (written: string, cap: number): boolean =>
-    written.length > cap && (written.length > cap * escapeWidth || unescaped(written).length > cap)
+    written.length > cap && (written.length > cap * widestEscapeChars || unescaped(written).length > cap)
 );
