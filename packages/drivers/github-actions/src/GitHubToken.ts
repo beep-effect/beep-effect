@@ -85,7 +85,6 @@ export class GitHubTokenError extends S.TaggedError<GitHubTokenError, { readonly
   }
 }
 
-/** The default `GITHUB_STATE` key the token is filed under. */
 const DEFAULT_KEY = "githubToken";
 
 /**
@@ -328,8 +327,6 @@ const identified: {
       permissions: minted.permissions,
       appSlug: identity.slug,
       appName: identity.name,
-      // Never an explicit `undefined` on an `optionalKey` field: the class
-      // factory validates on construction and refuses one.
       ...O.getSomesStruct({ appUserId: O.fromUndefinedOr(identity.userId) }),
     });
   })
@@ -410,6 +407,10 @@ export abstract class GitHubToken {
    * remembered: `GITHUB_STATE` is plaintext by protocol, and the runner's log
    * filter is the only defense available.
    *
+   * **Gotchas**
+   *
+   * A provision that fails after minting revokes the token best-effort, and a failed revocation never replaces the original failure.
+   *
    * **Example** (Construct token provisioning for the pre phase)
    *
    * ```ts
@@ -443,8 +444,6 @@ export abstract class GitHubToken {
       }),
       Effect.fnUntraced(function* (minted: InstallationToken) {
         if (options.required !== undefined) {
-          // Pure — no service, no request. The permissions GitHub granted
-          // came back with the token.
           yield* TokenPermissions.fromGitHub(minted.permissions).assertSufficient(options.required);
         }
         yield* Secret.forRunnerFile(minted.token);
@@ -455,7 +454,6 @@ export abstract class GitHubToken {
       (minted, exit) =>
         Exit.match(exit, {
           onSuccess: () => Effect.void,
-          // Preserve the original action failure even if revocation fails.
           onFailure: () => Effect.ignore(app.revoke(minted.token)),
         })
     );
