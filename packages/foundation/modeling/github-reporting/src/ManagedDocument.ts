@@ -47,19 +47,6 @@ export class RejectedRegionDialectError extends S.TaggedError<
   })
 ) {}
 
-/**
- * The grammar shared by a document's `namespace`, its `key` and every region
- * key.
- *
- * **Details**
- *
- * Letters, digits, dashes and underscores, starting alphanumeric. Dots are
- * excluded deliberately: the three parts are joined with `.` into the marker
- * key written to the wire (`namespace.key.region`), and a dot inside a part
- * would make two different documents spell the same marker.
- *
- * @since 0.0.0
- */
 const NamePart = S.String.check(
   S.isPattern(
     /^[A-Za-z0-9][A-Za-z0-9_-]*$/u,
@@ -70,14 +57,6 @@ const NamePart = S.String.check(
   )
 );
 
-/**
- * The marker vocabulary every managed document is written with: HTML comments
- * — the one comment style GitHub renders invisibly — and a phrase distinct
- * from `@beep/managed-section`' default, so a document that also carries
- * ordinary `MANAGED SECTION` blocks never has them mistaken for regions.
- *
- * @since 0.0.0
- */
 const REGION_DIALECT: SectionDialect = SectionDialect.make({
   phrase: "MANAGED REGION",
   styles: [CommentStyle.html],
@@ -207,26 +186,16 @@ const KIND_PROSE: Record<ManagedDocumentError["kind"], string> = {
   trailingCarriageReturn: "Region content ends in a bare carriage return that LF rendering cannot preserve",
 };
 
-/**
- * Map a templates scan failure onto this surface's vocabulary.
- *
- * @since 0.0.0
- */
-const STRUCTURAL_KIND = {
+const REGION_KIND_BY_SECTION_REASON = {
   unterminatedSection: "unterminatedRegion",
   orphanedEnd: "orphanedEnd",
   overlappingSections: "overlappingRegions",
   duplicateSection: "duplicateRegion",
 } as const;
 
-/**
- * A structurally corrupt region layout, in this surface's vocabulary.
- *
- * @since 0.0.0
- */
-const structural = (failure: SectionParseError): ManagedDocumentError =>
+const corruptLayoutError = (failure: SectionParseError): ManagedDocumentError =>
   ManagedDocumentError.make({
-    kind: STRUCTURAL_KIND[failure.reason],
+    kind: REGION_KIND_BY_SECTION_REASON[failure.reason],
     markerLine: failure.line,
     ...O.getSomesStruct({ key: O.fromUndefinedOr(failure.key) }),
   });
@@ -312,7 +281,10 @@ export declare namespace ManagedDocumentSource {
  * resolves many times safe to re-render.
  *
  * The region engine is `@beep/managed-section`' pure `SectionDocument`, fixed to
- * the HTML comment style and a region-specific phrase. Everything here is string → string; the GitHub
+ * the HTML comment style, the one style GitHub renders invisibly, and the
+ * `MANAGED REGION` phrase. That phrase differs from the engine's default, so
+ * ordinary `MANAGED SECTION` blocks in the same text are never mistaken for
+ * regions. Everything here is string → string; the GitHub
  * write path composes this with `PullRequestComment` (whose `CommentMarker`
  * renders the *same* sentinel for the same namespace and key) or a PR-body
  * update in `@beep/github`.
@@ -394,7 +366,7 @@ export class ManagedDocument extends S.Class<ManagedDocument, { readonly brand: 
    */
   static parseResult(source: ManagedDocumentSource.Encoded): Result.Result<ManagedDocument, ManagedDocumentError> {
     const document = ManagedDocument.make({ namespace: source.namespace, key: source.key, text: source.text ?? "" });
-    return Result.map(Result.mapError(document.scan(), structural), () => document);
+    return Result.map(Result.mapError(document.scan(), corruptLayoutError), () => document);
   }
 
   /**
@@ -596,7 +568,7 @@ export class ManagedDocument extends S.Class<ManagedDocument, { readonly brand: 
   ): Result.Result<ManagedDocument, ManagedDocumentError> {
     const parsed = this.scan();
     if (Result.isFailure(parsed)) {
-      return parsed.failure.pipe(structural, Result.fail);
+      return parsed.failure.pipe(corruptLayoutError, Result.fail);
     }
     const declared = A.map(entries, ([key, content, meta]) =>
       SectionId.make({ key: this.wireKey(key), commentStyle: CommentStyle.html }).section(content, meta)
@@ -604,7 +576,6 @@ export class ManagedDocument extends S.Class<ManagedDocument, { readonly brand: 
     const reconciled = parsed.success.reconcile(declared);
     if (Result.isFailure(reconciled)) {
       const failure = reconciled.failure;
-      // Every declaration uses REGION_DIALECT's own HTML style.
       if (failure.reason === "unknownCommentStyle") {
         throw RejectedRegionDialectError.make({
           message: "ManagedDocument: the region dialect rejected its own comment style",
@@ -651,9 +622,6 @@ export class ManagedDocument extends S.Class<ManagedDocument, { readonly brand: 
     return Effect.fromResult(this.withRegionsResult(entries));
   }
 
-  // The scan of `text`, once: the instance is immutable and every accessor
-  // reads the same layout, so `CheckDocument.reconcile`'s parse → regions →
-  // withRegions pass scans the body once rather than three times.
   /**
    * Caches the region scan for this immutable instance so accessors reuse one layout.
    *
@@ -751,10 +719,8 @@ export class ManagedDocument extends S.Class<ManagedDocument, { readonly brand: 
    * @category parsing
    * @since 0.0.0
    */
-  private regionKeyOf(wireKey: string): string {
-    // Reconciliation failures name a declaration made by withRegionsResult,
-    // and every declaration is constructed with this prefix.
-    return Str.slice(this.wirePrefix.length)(wireKey);
+  private regionKeyOf(declaredWireKey: string): string {
+    return Str.slice(this.wirePrefix.length)(declaredWireKey);
   }
 
   /**

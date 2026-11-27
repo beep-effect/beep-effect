@@ -63,13 +63,11 @@ const marked = (messageId: string) =>
     runId: RUN,
   });
 
-// The service marked every message but `m-unjournaled`, whose question predates the journal.
 const journal = [
   DocketJournalEntry.make({ at: AT, eventId: O.some("evt-m-journaled"), kind: "event-created", runId: RUN }),
   ...A.map(["m-journaled", "m-in-ledger", "m-moved", "m-named"], marked),
 ];
 
-// `m-in-ledger` is still a needs-review record, so the service republishes its question every cycle.
 const state = DocketIntakeState.make({
   ledger: {
     "m-in-ledger": DocketLedgerRecord.make({
@@ -88,7 +86,6 @@ const EMAIL = DocketQuestionEmail.make({
   subject: O.some("Office action response"),
 });
 
-// The mailbox still has `m-journaled`; `m-moved` was moved, so Graph no longer finds it by that id.
 const fakeMailbox = Effect.fnUntraced(function* () {
   const asked = yield* Ref.make<ReadonlyArray<string>>([]);
   const describeMessage = (messageId: string): Effect.Effect<O.Option<DocketQuestionEmail>, DocketIntakeError> =>
@@ -96,8 +93,6 @@ const fakeMailbox = Effect.fnUntraced(function* () {
   return { asked, describeMessage };
 });
 
-// The hub's item store over a fresh data directory, with the five questions the producer raised:
-// four that do not name their email, and one that does.
 const seededHub = Effect.fnUntraced(function* () {
   const fs = yield* FileSystem.FileSystem;
   const questions = yield* DocketQuestions;
@@ -148,10 +143,16 @@ describe("@beep/docket-intake backfill-questions", () => {
         expect(report).toStrictEqual(
           DocketBackfillReport.make({ applied: false, enriched: 1, found: 4, inLedger: 1, unmatched: 1, unreadable: 1 })
         );
-        // Only the journaled messages outside the ledger are read from the mailbox.
-        expect(messageIds).toStrictEqual(["m-journaled", "m-moved"]);
+
+        expect(
+          messageIds,
+          "Only journal-marked messages outside the needs-review ledger are read: the unjournaled question predates the journal, ledger questions republish each cycle, and a moved message no longer resolves by its old id."
+        ).toStrictEqual(["m-journaled", "m-moved"]);
         const readFileString3 = yield* fs.readFileString(file);
-        expect(readFileString3).toBe(before);
+        expect(
+          readFileString3,
+          "The fresh hub holds five producer questions: four without email attribution and one already named."
+        ).toBe(before);
       })
     );
 
@@ -196,7 +197,7 @@ describe("@beep/docket-intake backfill-questions", () => {
     );
 
     it.effect(
-      "reads the subject, sender, practice day and link of a message, none for one the mailbox lost, and fails on throttling",
+      "reads email identity with a Chicago day before its UTC day, returns none for moved mail and fails on throttling",
       Effect.fnUntraced(function* () {
         const fake = yield* FakeM365;
         const read = describeDocketMessage(fixtureConfig);
@@ -208,7 +209,7 @@ describe("@beep/docket-intake backfill-questions", () => {
                 emailAddress: GraphEmailAddress.makeOption({ address: O.some("examiner@example.com") }),
               }),
               id: "m-journaled",
-              // Late on 9 January in Chicago, already 10 January in UTC.
+
               receivedDateTime: O.some("2030-01-10T03:30:00Z"),
               subject: O.some("Office action response"),
               webLink: O.some("https://outlook.fixture.invalid/mail/m-journaled"),
@@ -236,9 +237,12 @@ describe("@beep/docket-intake backfill-questions", () => {
         yield* Ref.update(fake.script, (script) => ({ ...script, getMessage: Effect.fail(throttled) }));
         const error = yield* Effect.flip(read("m-journaled"));
         expect([error.stage, error.cause]).toStrictEqual(["mailbox", "throttled"]);
-        // Graph is asked for the four fields that name the message, never the body.
+
         const got = yield* Ref.get(fake.calls);
-        expect(got).toStrictEqual([
+        expect(
+          got,
+          "Only subject, from, receivedDateTime and webLink name the message; no body is requested."
+        ).toStrictEqual([
           "getMessage m-journaled select=subject,from,receivedDateTime,webLink",
           "getMessage m-moved select=subject,from,receivedDateTime,webLink",
           "getMessage m-journaled select=subject,from,receivedDateTime,webLink",

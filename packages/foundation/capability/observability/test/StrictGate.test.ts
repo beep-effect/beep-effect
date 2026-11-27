@@ -60,8 +60,6 @@ const exportedSpans = Effect.fnUntraced(function* (gate: Gate) {
   return A.flatMap(body.resourceSpans, (resource) => A.flatMap(resource.scopeSpans, (scope) => scope.spans));
 });
 
-// Rules that guard content; span ids, timestamps and names guard linkage and
-// are checked by their own test.
 const contentRules = A.filter(
   GateRule.literals,
   (rule) => rule !== "span-ids" && rule !== "span-timestamps" && rule !== "span-name" && rule !== "metric-values"
@@ -78,7 +76,6 @@ const MetricsBody = S.fromJsonString(
 );
 const decodeMetricsBody = S.decodeUnknownEffect(MetricsBody);
 
-// The exported metric entries with the given name, as decoded JSON records.
 const exportedMetrics = Effect.fnUntraced(function* (rules: GateRules, name: string) {
   const gate = yield* makeStrictGate(demoConfig(rules));
   const body = yield* decodeMetricsBody(bodyText(gate.serialization.metrics(representativeMetrics())));
@@ -106,10 +103,6 @@ const tracesText = (gate: Gate): string => bodyText(gate.serialization.traces(re
 const metricsText = (gate: Gate): string => bodyText(gate.serialization.metrics(representativeMetrics()));
 const logsText = (gate: Gate): string => bodyText(gate.serialization.logs(representativeLogs()));
 
-// Acceptance #3: one mutant per gate rule. Each names the batch to serialize
-// and the bytes that rule alone keeps out of it, so turning exactly that rule
-// off makes the needle appear. The mapped type makes a new rule without a
-// mutant a type error, and the completeness test makes it a red test.
 type GateMutant = { readonly exported: (gate: Gate) => string; readonly needle: () => string };
 
 const gateMutants: { readonly [Rule in GateRule]: GateMutant } = {
@@ -136,7 +129,10 @@ describe("StrictGate", () => {
   it.layer(layerTestSalt, { timeout: "10 seconds" })((it) => {
     it.effect("has a mutant for every gate rule", () =>
       Effect.sync(() => {
-        expect(A.sort(R.keys(gateMutants), Order.String)).toEqual(A.sort(GateRule.literals, Order.String));
+        expect(
+          A.sort(R.keys(gateMutants), Order.String),
+          "each mutant names the bytes only its rule keeps out; a rule without one fails here and in the mapped type"
+        ).toEqual(A.sort(GateRule.literals, Order.String));
       })
     );
 
@@ -188,10 +184,10 @@ describe("StrictGate", () => {
         const first = yield* exportedSpans(gate).pipe(Effect.flatMap(decodeSpans));
         const second = yield* exportedSpans(gate).pipe(Effect.flatMap(decodeSpans));
         const idsOf = A.flatMap((span: ShapeOnlySpan) => [span.traceId, span.spanId]);
-        // The handler span still names the dispatch span as its parent, and both share one trace.
-        expect(A.map(first, (span) => span.parentSpanId)).toEqual(
-          expect.arrayContaining(A.map(A.take(first, 1), (span) => span.spanId))
-        );
+        expect(
+          A.map(first, (span) => span.parentSpanId),
+          "the handler span still names the dispatch span as its parent"
+        ).toEqual(expect.arrayContaining(A.map(A.take(first, 1), (span) => span.spanId)));
         expect(A.dedupe(A.map(first, (span) => span.traceId))).toHaveLength(1);
         expect(idsOf(first)).not.toContain("b7ad6b7169203331");
         expect(A.intersection(idsOf(first), idsOf(second))).toEqual([]);
@@ -252,7 +248,10 @@ describe("StrictGate", () => {
       ([rules]) =>
         Effect.gen(function* () {
           const leaks3 = yield* leaks(rules);
-          expect(leaks3).toBe(A.some(contentRules, (rule) => !rules[rule]));
+          expect(
+            leaks3,
+            "only content rules leak the canary; span ids, timestamps and names guard linkage, tested on their own"
+          ).toBe(A.some(contentRules, (rule) => !rules[rule]));
         }),
       { arbitrary: fcRuns(25) }
     );
@@ -275,9 +274,10 @@ describe("StrictGate", () => {
       Effect.gen(function* () {
         const { gate, metrics } = yield* exportedMetrics(StrictGateRulesOn, "beep.demo.latency");
         const text = yield* encodeUnknownJson(metrics);
-        // The count is the sum of the coarsened buckets, so the point stays
-        // OTLP-consistent (2 + 10 + 1000).
-        expect(Str.includes('"count":1012')(text)).toBe(true);
+        expect(
+          Str.includes('"count":1012')(text),
+          "the count is the sum of the coarsened buckets (2 + 10 + 1000)"
+        ).toBe(true);
         expect(Str.includes('"bucketCounts":[2,10,1000]')(text)).toBe(true);
         expect(Str.includes('"explicitBounds":[10,100]')(text)).toBe(true);
         for (const key of ['"sum":', '"min":', '"max":']) {
@@ -292,10 +292,10 @@ describe("StrictGate", () => {
       Effect.gen(function* () {
         const { metrics } = yield* exportedMetrics(StrictGateRulesOn, "beep.demo.latency");
         const text = yield* encodeUnknownJson(metrics);
-        // Both input series (histogram and refused exponential) carry the catalog identity.
-        expect(A.dedupe(A.map(metrics, (metric) => `${metric.description}|${metric.unit}`))).toEqual([
-          "Demo tool latency by tool.|ms",
-        ]);
+        expect(
+          A.dedupe(A.map(metrics, (metric) => `${metric.description}|${metric.unit}`)),
+          "both input series, the histogram and the refused exponential, carry the catalog identity"
+        ).toEqual(["Demo tool latency by tool.|ms"]);
         expect(Str.includes(batchCanary())(text)).toBe(false);
         const { metrics: raw } = yield* exportedMetrics(
           { ...StrictGateRulesOn, "metric-names": false },
@@ -313,9 +313,8 @@ describe("StrictGate", () => {
         const argument1 = Str.includes("exponentialHistogram");
         const encodedUnknownJson1 = yield* encodeUnknownJson(metrics);
         expect(argument1(encodedUnknownJson1)).toBe(false);
-        // The exponential series and the unknown metric name.
         const ledger5 = yield* gate.ledger;
-        expect(countOf(ledger5, "metric-not-allowed")).toBe(2);
+        expect(countOf(ledger5, "metric-not-allowed"), "the exponential series and the unknown metric name").toBe(2);
       })
     );
 
@@ -384,11 +383,10 @@ describe("layerStrictOtlp", () => {
         yield* (yield* OtlpExporter.Flusher).flush;
         const ledger = yield* (yield* StrictGate).ledger;
         expect(countOf(ledger, "egress-refused")).toBeGreaterThanOrEqual(3);
-        // The gate drops every log record the process emits, counted at export.
-        // Under CI the test runner's trace instrumentation logs into the same
-        // batch, so the count is at least this test's one record; the canary
-        // check below is what proves nothing of the record left.
-        expect(countOf(ledger, "log-record-dropped")).toBeGreaterThanOrEqual(1);
+        expect(
+          countOf(ledger, "log-record-dropped"),
+          "at least this test's record: under CI the runner's trace instrumentation logs into the same batch"
+        ).toBeGreaterThanOrEqual(1);
 
         const records = yield* (yield* StrictEgressSink).records;
         expect(A.dedupe(A.map(records, (record) => record.signal))).toEqual(

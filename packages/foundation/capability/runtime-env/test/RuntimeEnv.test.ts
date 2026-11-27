@@ -129,9 +129,8 @@ describe("RuntimeEnv", () => {
         const env = yield* CurrentRuntimeEnv;
         assertSome(env.agent, "claude");
         assertSome(env.ci, "github-actions");
-        // The name comes from the ported std-osc8 table, where iTerm's entry is named "iTerm.app".
         const terminal = O.getOrThrow(env.terminal);
-        assert.strictEqual(terminal.name, "iTerm.app");
+        assert.strictEqual(terminal.name, "iTerm.app", "the ported std-osc8 table names iTerm's entry iTerm.app");
         assertSome(terminal.version, "3.5.0");
       })
     );
@@ -207,8 +206,6 @@ describe("RuntimeEnv", () => {
     assert.deepStrictEqual(Result.getOrThrow(S.decodeResult(codec)(json)), value);
   });
 
-  // The frozen 0.1.0 wire form, exactly as that version's encoder emits it. A snapshot persisted then must keep
-  // decoding: fields added later have to decode when absent. This literal is the oracle; never regenerate it.
   const FROZEN_0_1_0 = '{"agent":"claude","ci":null,"terminal":{"name":"iTerm.app","version":"3.5.0"}}';
 
   it("decodes the frozen 0.1.0 wire literal", () => {
@@ -216,11 +213,13 @@ describe("RuntimeEnv", () => {
     assertSome(decoded.agent, "claude");
     assertNone(decoded.ci);
     assertSome(decoded.terminal, { name: "iTerm.app", version: O.some("3.5.0") });
-    assert.strictEqual(Result.getOrThrow(S.encodeResult(runtimeEnvJson)(decoded)), FROZEN_0_1_0);
+    assert.strictEqual(
+      Result.getOrThrow(S.encodeResult(runtimeEnvJson)(decoded)),
+      FROZEN_0_1_0,
+      "the literal is 0.1.0's encoder output and the oracle for persisted snapshots; never regenerate it"
+    );
   });
 
-  // A second frozen 0.1.0 literal, with a CI named: `ci` was a plain string then, and `github-actions` is one of the
-  // two values 0.1.0 ever wrote. Like the first, never regenerate it.
   const FROZEN_0_1_0_CI = '{"agent":"codex","ci":"github-actions","terminal":null}';
 
   it("decodes the frozen 0.1.0 wire literal that names a CI, and encodes it back identically", () => {
@@ -228,7 +227,11 @@ describe("RuntimeEnv", () => {
     assertSome(decoded.agent, "codex");
     assertSome(decoded.ci, "github-actions");
     assertNone(decoded.terminal);
-    assert.strictEqual(Result.getOrThrow(S.encodeResult(runtimeEnvJson)(decoded)), FROZEN_0_1_0_CI);
+    assert.strictEqual(
+      Result.getOrThrow(S.encodeResult(runtimeEnvJson)(decoded)),
+      FROZEN_0_1_0_CI,
+      "ci was a plain string in 0.1.0 and github-actions is one of the two values it wrote; never regenerate it"
+    );
   });
 
   it("every field decodes when its key is absent, so an older or sparser snapshot keeps decoding", () => {
@@ -276,9 +279,8 @@ describe("RuntimeEnv", () => {
             case "generic":
               return "ci";
             default: {
-              // Reached only if the type grew a name this switch does not handle: `name` would not be `never`.
-              const unreachable: never = name;
-              return unreachable;
+              const unhandledCiName: never = name;
+              return unhandledCiName;
             }
           }
         },
@@ -307,6 +309,11 @@ describe("RuntimeEnv", () => {
   });
 });
 
+const emptyTerminalVariableRecords: ReadonlyArray<Record<string, string>> = [
+  { TERM_PROGRAM: "iTerm.app", TERM_PROGRAM_VERSION: "" },
+  { TERM_PROGRAM: "", TERM: "xterm-kitty" },
+];
+
 const RECORDS: ReadonlyArray<Record<string, string>> = [
   {},
   { CLAUDECODE: "1" },
@@ -318,9 +325,7 @@ const RECORDS: ReadonlyArray<Record<string, string>> = [
   { TERM: "xterm-kitty" },
   { CLAUDECODE: "1", GITHUB_ACTIONS: "true", TERM_PROGRAM: "vscode", TERM_PROGRAM_VERSION: "1.99.0" },
   { AI_AGENT: "", CI: "", CLAUDECODE: "", GITHUB_ACTIONS: "" },
-  // An empty variable is unset for the terminal too: no version, and no program name to identify.
-  { TERM_PROGRAM: "iTerm.app", TERM_PROGRAM_VERSION: "" },
-  { TERM_PROGRAM: "", TERM: "xterm-kitty" },
+  ...emptyTerminalVariableRecords,
 ];
 
 describe("RuntimeEnv.fromRecord", () => {
@@ -343,8 +348,7 @@ describe("RuntimeEnv.fromRecord", () => {
     const unset = RuntimeEnv.fromRecord({});
     assert.deepStrictEqual(RuntimeEnv.fromRecord({ AI_AGENT: "", CI: "", GITHUB_ACTIONS: "", CLAUDECODE: "" }), unset);
     assert.deepStrictEqual(RuntimeEnv.fromRecord({ AI_AGENT: undefined, CI: undefined, CLAUDECODE: undefined }), unset);
-    // Control: a non-empty value is not unset.
-    assert.notDeepEqual(RuntimeEnv.fromRecord({ CLAUDECODE: "1" }), unset);
+    assert.notDeepEqual(RuntimeEnv.fromRecord({ CLAUDECODE: "1" }), unset, "control: a non-empty value is not unset");
   });
 
   it("never reads the process environment", () => {
@@ -461,14 +465,13 @@ describe("CurrentRuntimeEnv.layerFrom", () => {
       const perBuild = reads / 2;
       assert.isAbove(perBuild, 0);
       assert.strictEqual(Number.isInteger(perBuild), true);
-      // A single build reads each key once; two uses read it twice as often.
       let single = 0;
       const once = ConfigProvider.make((path) => {
         single += 1;
         return ConfigProvider.fromUnknown({ CLAUDECODE: "1" }).load(path);
       });
       yield* Layer.build(Layer.effect(First, agentOf).pipe(Layer.provide(CurrentRuntimeEnv.layerFrom(once))));
-      assert.strictEqual(reads, single * 2);
+      assert.strictEqual(reads, single * 2, "a single build reads each key once; two uses read it twice as often");
     })
   );
 });

@@ -80,7 +80,6 @@ const layers = (audience: AudienceKind) => {
 
 it.layer(layers("agent"), { timeout: "30 seconds" })((it) => {
   describe("the report's last resort keeps the output policy", () => {
-    /** A document whose block the renderer has no case for: the walker throws on it. */
     class Broken extends S.TaggedError<Broken, { readonly brand: unique symbol }>()("Broken", { message: S.String }) {
       override readonly name = "Error";
 
@@ -273,8 +272,7 @@ describe("a consumer render's output is untrusted text", () => {
       assert.notInclude(text, BEL);
       assert.notInclude(text, "evil");
       assert.include(text, "red");
-      // Outside Actions nothing is neutralized, so the command lines are still there.
-      assert.notInclude(text, ZWSP);
+      assert.notInclude(text, ZWSP, "outside Actions nothing is neutralized, so the command lines are still there");
     })
   );
 
@@ -282,8 +280,12 @@ describe("a consumer render's output is untrusted text", () => {
     "a ci audience, which is what GitHub Actions detects, gets no escape either: OSC 8 and BEL are stripped",
     () =>
       Effect.gen(function* () {
-        // Detected CI (GITHUB_ACTIONS, no override) and an explicit ci audience outside Actions.
-        for (const env of [{ GITHUB_ACTIONS: "true" }, { TEST_AUDIENCE: "ci" }, { CI: "true", TEST_AUDIENCE: "ci" }]) {
+        const detectedOrExplicitCi = [
+          { GITHUB_ACTIONS: "true" },
+          { TEST_AUDIENCE: "ci" },
+          { CI: "true", TEST_AUDIENCE: "ci" },
+        ];
+        for (const env of detectedOrExplicitCi) {
           const err = yield* reportWith(env);
           const text = A.join(err, "\n");
           assert.notInclude(text, ESC, Result.getOrThrow(S.encodeUnknownResult(Json)(env)));

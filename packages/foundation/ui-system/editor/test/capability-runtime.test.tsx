@@ -50,9 +50,6 @@ describe("capability runtime", { concurrent: false }, () => {
   it.effect(
     "keeps runtime-incompatible initial state readable as escaped wire instead of an empty editor",
     Effect.fnUntraced(function* () {
-      // A decoded state that later grows a future node is wire-shaped but
-      // rejected by the strict runtime decoder (same construction as
-      // test/runtime.test.ts).
       const futureWire = Result.getOrThrow(
         decodeEditorStateForRuntimeResult({
           root: {
@@ -74,7 +71,10 @@ describe("capability runtime", { concurrent: false }, () => {
         />
       );
       expect(document.querySelector("[contenteditable='true']")).toBeNull();
-      expect(container.textContent).toContain("future-block");
+      expect(
+        container.textContent,
+        "A future node added after wire decoding must remain readable when strict runtime decoding rejects it."
+      ).toContain("future-block");
       yield* Effect.void;
     })
   );
@@ -92,10 +92,11 @@ describe("capability runtime", { concurrent: false }, () => {
       const bold = screen.getByRole("button", { name: "Bold" });
       expect(bold).toHaveAttribute("aria-keyshortcuts", "Control+B");
       expect(bold.getAttribute("title")).toContain("Ctrl+B");
-      // A mouse press on a toolbar button must not steal the editor's focus
-      // (the mousedown is cancelled) and the click runs the command.
       const mouseDownCancelled = !fireEvent.mouseDown(bold);
-      pipe(mouseDownCancelled, assertTrue);
+      assertTrue(
+        mouseDownCancelled,
+        "Cancelling toolbar mousedown preserves editor focus before the click dispatches its command."
+      );
       fireEvent.click(bold);
       expect(document.querySelector("[contenteditable='true']")).not.toBeNull();
       yield* Effect.void;

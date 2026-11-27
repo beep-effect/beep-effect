@@ -1,0 +1,37 @@
+{
+  "previous": {
+    "//": "c2640db1ea0326a84b0893013834a14ea3434af64832c6314c69a8ca0f29be88",
+    "@beep/architecture-lab-server": "63076a508555802efcd824627b8ef90863562793b1f1af171b27027ec7a7c04e",
+    "@beep/documents-server": "303af8904ee3e0a0d13a1f1839132a3690701a3f3b29749653db0f4687bc78b9",
+    "@beep/epistemic-server": "b6dd6e0ffcd75ba1bdb81688f210de2bba76d9751bfa92242db4a016c6c22a7d",
+    "@beep/execution-authority-server": "8d90f6ee9ada15ab9ef90fa2762002c8948c8a0c2f96de6be49cdd57443830f8",
+    "@beep/github-reporting": "1bf47591b88d0e7f608e32a40ca6769d2b12f41c71e138324830c77f9a05e442",
+    "@beep/infra-ci-runners": "f26929a7892d27b95f313147afa9a52c757882715847898b4c83aa1bb4df7872",
+    "@beep/law-practice-server": "9914ed13ca0d58cab99f1dc104ee683e5cccadc8700c6ece8673ac14c5a7957f",
+    "@beep/repo-cli": "85a6d69fc6b8c7c42a87fb484fdcf4acf48046f69c2c002eb85d1074da09088f",
+    "@beep/workspace-server": "37810f915348080915c2921f4b3560df0b8e11ce367228b8d5e92e36d54c9d90"
+  },
+  "review": {
+    "reviewer": "Claude Opus 5.5 (route-soundness-repair cross-package reads lane)",
+    "reason": "Re-record the root subject and nine packages after their turbo.json files declared the files their tests read from other packages as test-task inputs. Configuration review only; no qualification is granted.",
+    "basis": {
+      "path": "docs/reports/cross-package-reads-cache-review-2026-11-27.md",
+      "sha256": "459eea41e7a0bff558a2b9d51b9fbed2aa35592d9e88fb7519143a4a29130b4f"
+    }
+  },
+  "subjects": [
+    "//",
+    "@beep/architecture-lab-server",
+    "@beep/documents-server",
+    "@beep/epistemic-server",
+    "@beep/execution-authority-server",
+    "@beep/github-reporting",
+    "@beep/infra-ci-runners",
+    "@beep/law-practice-server",
+    "@beep/repo-cli",
+    "@beep/workspace-server"
+  ],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.5",
+  "epoch": "qualification-v3"
+}

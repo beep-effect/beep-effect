@@ -283,13 +283,10 @@ export type BlobEnvelopeError =
   | BlobMetadataDecodeError
   | BlobMetadataEncodeError;
 
-/** Identifies the frame family. Four bytes: `E F B S`. */
 const MAGIC = Uint8Array.from([0x45, 0x46, 0x42, 0x53]);
 
-/** The only version this build writes. */
 const VERSION = 1;
 
-/** magic + version + metadata length. */
 const HEADER_BYTES = MAGIC.length + 1 + 4;
 
 /**
@@ -400,6 +397,10 @@ export class BlobEnvelope {
   /**
    * Read a framed blob back into its metadata and body.
    *
+   * **Gotchas**
+   *
+   * Copy the decoded body explicitly. Buffer.slice returns a view, so delegating to an input slice would let a caller mutate the original frame through the returned body.
+   *
    * **Example** (Recover metadata from a framed blob)
    *
    * ```ts
@@ -456,8 +457,6 @@ export class BlobEnvelope {
       }
       return Result.succeed({
         metadata: decoded.success,
-        // Copy explicitly: Buffer.slice returns a view, so delegating to the
-        // input's slice could let a caller corrupt the frame through the body.
         body: Uint8Array.from(bytes.subarray(HEADER_BYTES + metaLength)),
       });
     }

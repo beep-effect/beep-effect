@@ -136,14 +136,12 @@ const blocksValidated = Metric.counter("agents_assistant_turn_blocks_total", {
   incremental: true,
 });
 
-// The forced-tool pattern: claude is structured-output-capable, so the provider
-// would default to `strict: true` (grammar compilation, which our block union
-// exceeds). `Tool.Strict` false keeps the schema as plain validation guidance;
-// every emitted block is still schema-validated on the way through the scanner.
+const strictGrammarFitsBlockUnion = false;
+
 const RespondTool = Tool.make("respond", {
   description: "Deliver the assistant response as rich-text blocks. You MUST respond with a JSON object.",
   parameters: AssistantContent,
-}).annotate(Tool.Strict, false);
+}).annotate(Tool.Strict, strictGrammarFitsBlockUnion);
 
 const RespondToolkit = Toolkit.make(RespondTool);
 
@@ -156,9 +154,6 @@ const indexOf = (indexed: IndexedBlock): number => indexed.index;
 const sortedIndexedBlocks = (blocks: ReadonlyArray<IndexedBlock>): ReadonlyArray<IndexedBlock> =>
   A.sortWith(blocks, indexOf, Order.Number);
 
-// Validate-and-route: valid slices stream immediately until an earlier slice
-// fails. From that point, later valid slices are buffered so the repair tail can
-// flush repaired and already-valid blocks in original envelope order.
 const routeBlock =
   (
     failures: Ref.Ref<ReadonlyArray<IssueReport>>,
@@ -276,7 +271,6 @@ const makeStreamTurn =
         const validated = parts.pipe(
           Stream.tap(captureProviderMetadata(modelId, finish)),
           Stream.flatMap((part) => (part.type === "tool-params-delta" ? Stream.succeed(part.delta) : Stream.empty)),
-          // mapAccum flattens the returned slices array into stream elements
           Stream.mapAccum(() => initialScanState, scanChunk),
           Stream.zipWithIndex,
           Stream.mapEffect(routeBlock(failures, buffered, holdingAfterFailure)),

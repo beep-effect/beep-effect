@@ -50,8 +50,8 @@ import {
 
 const isLocked = S.is(StateDirectoryLocked);
 
-// Runs a command that must be refused because another writer holds the lock.
-const held = (args: ReadonlyArray<string>) => run(args).pipe(Effect.flip, Effect.filterOrElse(isLocked, Effect.die));
+const refusedByHeldLock = (args: ReadonlyArray<string>) =>
+  run(args).pipe(Effect.flip, Effect.filterOrElse(isLocked, Effect.die));
 
 describe("state lock, held by another writer", () => {
   it.layer(World, { timeout: "30 seconds" })((it) => {
@@ -59,9 +59,9 @@ describe("state lock, held by another writer", () => {
       Effect.gen(function* () {
         yield* writeLock(lockOf({ pid: otherWriterPid }));
 
-        const apply = yield* held(["apply", "--yes"]);
-        const watch = yield* held(["watch", "--yes"]);
-        const undo = yield* held(["undo", "--run", "tag-0001", "--yes"]);
+        const apply = yield* refusedByHeldLock(["apply", "--yes"]);
+        const watch = yield* refusedByHeldLock(["watch", "--yes"]);
+        const undo = yield* refusedByHeldLock(["undo", "--run", "tag-0001", "--yes"]);
 
         expect(apply[Runtime.errorExitCode]).toBe(4);
         expect(apply.message).toBe(`another writer holds the state directory: ${lockPath} (pid ${otherWriterPid})`);
@@ -80,7 +80,7 @@ describe("state lock, held by another writer", () => {
       Effect.gen(function* () {
         yield* writeLock("not a lock");
 
-        const error = yield* held(["apply", "--yes"]);
+        const error = yield* refusedByHeldLock(["apply", "--yes"]);
 
         assertNone(error.holderPid);
         expect(Str.endsWith("(pid unknown)")(error.message)).toBe(true);
@@ -197,7 +197,6 @@ describe("state lock, taken and released", () => {
         yield* Fiber.join(fiber);
 
         expect(builds).toBe(1);
-        // The holder records this process's pid, boot id, and start time.
         assertSome(
           betweenPasses,
           `{"pid":${ownPid},"command":"watch","acquiredAt":"1970-01-01T00:00:00.000Z","bootId":"${currentBootId}","startTime":"100"}`

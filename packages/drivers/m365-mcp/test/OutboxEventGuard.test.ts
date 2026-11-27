@@ -16,7 +16,6 @@ import * as S from "effect/Schema";
 import { EVENT_ID } from "./OutboxWorld.fixture.ts";
 
 const GuardCase = S.Struct({
-  // Absent, empty, or up to three attendees; an attendee may carry no address and no type.
   attendees: S.Option(
     S.Array(
       S.Struct({ hasAddress: S.Boolean, type: S.Option(S.Literals(["required", "optional", "resource"])) })

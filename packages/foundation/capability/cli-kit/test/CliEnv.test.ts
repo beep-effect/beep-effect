@@ -45,7 +45,6 @@ const capturing = () => {
   return { double, out, err };
 };
 
-/** `Stdio` and `Terminal` doubles: the requirements `CliEnv.layer` leaves to the platform. */
 const platform = (io: {
   readonly stdin: boolean;
   readonly stdout: boolean;
@@ -90,8 +89,7 @@ describe("CliEnv.layer", () => {
         assert.strictEqual(terminal.stdinIsTerminal, true);
         assert.deepStrictEqual(audience, AudienceShape.make({ kind: "agent", source: "override" }));
         assert.strictEqual(theme.color, "none");
-        // An agent audience is never interactive, even on a terminal.
-        assert.strictEqual(interactive, false);
+        assert.strictEqual(interactive, false, "an agent audience is never interactive, even on a terminal");
       })
     );
   });
@@ -151,14 +149,12 @@ describe("CliRuntime.main with the env option", () => {
         seen.push(argument, String(CliInteractive3), (yield* CliTheme).color);
         yield* TerminalEnv;
       });
-      // `observe` returns an effect with R = never: a leaked requirement would not compile here.
       const { exit } = yield* observe(program);
       assertExitSuccess(exit, undefined);
       assert.deepStrictEqual(seen, ["human", "true", "none"]);
     })
   );
 
-  // Forgetting the wiring silently yields a non-interactive run, so this pins that main really sets it.
   it.effect("under a human on a stdin and stdout terminal the program observes CliInteractive === true", () =>
     Effect.gen(function* () {
       let interactive: boolean | undefined;
@@ -167,7 +163,7 @@ describe("CliRuntime.main with the env option", () => {
           interactive = yield* CliInteractive;
         })
       );
-      assert.strictEqual(interactive, true);
+      assert.strictEqual(interactive, true, "forgetting the wiring silently yields a non-interactive run");
     })
   );
 
@@ -194,8 +190,11 @@ describe("CliRuntime.main with the env option", () => {
         Effect.provideService(ConfigProvider.ConfigProvider, withEnv({})),
         Effect.provideService(Console.Console, double)
       );
-      // A defect: the status line first, then its cleaned stack.
-      assert.strictEqual(err[0], "[FAIL] Error: tty broke");
+      assert.strictEqual(
+        err[0],
+        "[FAIL] Error: tty broke",
+        "a defect prints its status line first, then its cleaned stack"
+      );
       assert.deepStrictEqual(out, []);
       assertExitFailure(exit, Exit.isFailure(exit) ? exit.cause : Cause.empty);
       if (Exit.isFailure(exit)) assert.strictEqual(exit.cause.pipe(Cause.squash, Runtime.getErrorExitCode), 3);
@@ -217,9 +216,12 @@ describe("CliRuntime.main with the env option", () => {
         Effect.provideService(ConfigProvider.ConfigProvider, failing),
         Effect.provideService(Console.Console, double)
       );
-      // Every env read degrades to "unset" by design, so there is nothing to fail: no line, no exit code.
       assertExitSuccess(exit, undefined);
-      assert.deepStrictEqual(err, []);
+      assert.deepStrictEqual(
+        err,
+        [],
+        "every env read degrades to unset, so there is nothing to fail: no line, no exit code"
+      );
       assert.strictEqual(seen, "none");
     })
   );
@@ -275,8 +277,11 @@ describe("CliRuntime.main with the env option", () => {
         Effect.provideService(ConfigProvider.ConfigProvider, withEnv({})),
         Effect.provideService(Console.Console, double)
       );
-      // A defect: the status line first, then its cleaned stack.
-      assert.strictEqual(err[0], "[FAIL] Error: tty broke");
+      assert.strictEqual(
+        err[0],
+        "[FAIL] Error: tty broke",
+        "a defect prints its status line first, then its cleaned stack"
+      );
       assert.deepStrictEqual(out, []);
       if (Exit.isFailure(exit)) assert.strictEqual(exit.cause.pipe(Cause.squash, Runtime.getErrorExitCode), 3);
       else assert.fail("expected a failure");
@@ -329,9 +334,8 @@ describe("CliRuntime.main with the env option", () => {
         Effect.gen(function* () {
           const terminal = yield* Terminal.Terminal;
           columns = yield* terminal.columns;
-          // Reading input on the gated terminal is quit at once, and display writes nothing.
-          const pipe5 = yield* Effect.flatMap(terminal.readInput, (queue) => Queue.take(queue)).pipe(Effect.exit);
-          ended = Exit.isFailure(pipe5);
+          const gatedRead = yield* Effect.flatMap(terminal.readInput, (queue) => Queue.take(queue)).pipe(Effect.exit);
+          ended = Exit.isFailure(gatedRead);
           yield* terminal.display("never shown");
         }),
         {
@@ -348,9 +352,9 @@ describe("CliRuntime.main with the env option", () => {
       );
       assertExitSuccess(exit, undefined);
       assert.strictEqual(columns, 100, "the real terminal's size is delegated");
-      assert.isTrue(ended);
+      assert.isTrue(ended, "reading input on the gated terminal is quit at once");
       const output6 = yield* real.output;
-      assert.strictEqual(output6, "");
+      assert.strictEqual(output6, "", "display on the gated terminal writes nothing");
       const reads7 = yield* real.reads;
       assert.deepStrictEqual(reads7, { keys: 0, lines: 0, subscriptions: 0 });
       const pending8 = yield* real.pending;
@@ -411,9 +415,6 @@ describe("CliRuntime.main with the env option", () => {
     })
   );
 
-  // A warning logged while the env layer is built (an invalid override) used to go through Effect's default
-  // logger to STDOUT, because under env.log the env layer was built as the logger's own dependency, before any
-  // logger existed. Machine output on stdout must stay clean.
   it.effect("env.log: an env-layer warning goes to stderr through CliLogger and stdout stays clean", () =>
     Effect.gen(function* () {
       const { double, out, err } = capturing();
@@ -425,7 +426,7 @@ describe("CliRuntime.main with the env option", () => {
         Effect.provideService(ConfigProvider.ConfigProvider, withEnv({ PROBE_AUDIENCE: "bogus" })),
         Effect.provideService(Console.Console, double)
       );
-      assert.deepStrictEqual(out, ["ran"]);
+      assert.deepStrictEqual(out, ["ran"], "an env-layer warning built before any logger must not reach stdout");
       assert.strictEqual(
         A.filter(err, (line) => Str.includes("PROBE_AUDIENCE=bogus")(line)).length,
         1,
@@ -633,9 +634,8 @@ describe("CliRuntime.main with the env option", () => {
     assert.isFalse(assignable);
     const narrowed = program;
     assert.isDefined(narrowed);
-    // A literal env with no file stays free of them.
-    const plain = CliRuntime.main(Effect.void, { platform: TTY, env: { log: { envVar: "TOOL_LOG" } } });
-    const ok: Effect.Effect<void, Error, never> = plain;
+    const literalEnvWithoutFile = CliRuntime.main(Effect.void, { platform: TTY, env: { log: { envVar: "TOOL_LOG" } } });
+    const ok: Effect.Effect<void, Error, never> = literalEnvWithoutFile;
     assert.isDefined(ok);
   });
 

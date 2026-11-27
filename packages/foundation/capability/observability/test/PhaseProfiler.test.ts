@@ -116,7 +116,6 @@ describe("PhaseProfiler", () => {
     })
   );
 
-  // This layer's logger is the subject: runner lifecycle logs would alter its exact captures.
   loggerSubjectIt.layer(capturedAnnotationsLayer(), { timeout: "10 seconds" })(
     "tracks interruption and emits safe Cause annotations",
     (it) =>

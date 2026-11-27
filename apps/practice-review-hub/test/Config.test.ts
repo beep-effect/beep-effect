@@ -14,7 +14,6 @@ import * as Terminal from "effect/Terminal";
 import { decodeReviewHubConfig, ReviewNoticeConfig, reviewNoticeFlags } from "@/Config";
 import { Platform } from "./Hub.fixture.ts";
 
-// What a command line needs to run in a test: the real file system and paths, and no terminal or processes.
 const CommandEnvironment = Layer.mergeAll(
   Platform,
   Stdio.layerTest({}),
@@ -38,7 +37,6 @@ const CommandEnvironment = Layer.mergeAll(
 const noticeConfig = (claudeFolder: O.Option<string>) =>
   S.decodeEffect(ReviewNoticeConfig)({ claudeFolder, dataDirectory: "/synthetic/review-hub", timeZone: "UTC" });
 
-// Runs `notice` with the given extra arguments and environment, and returns the Claude Code folder it resolved.
 const resolvedFolder = Effect.fnUntraced(function* (
   args: ReadonlyArray<string>,
   environment: Readonly<Record<string, string>>

@@ -36,11 +36,10 @@ describe("GitHubMarkdown", () => {
     });
 
     it("a cell carrying `>=1 || <2` must not shift columns", () => {
-      // The live defect this writer exists to delete: the predecessor joined
-      // cells with " | " and a semver range added two phantom columns.
       assert.strictEqual(
         GitHubMarkdown.table(["Check", "Outcome"], [[">=1 || <2", "ok"]]),
-        "| Check | Outcome |\n| --- | --- |\n| >=1 \\|\\| <2 | ok |"
+        "| Check | Outcome |\n| --- | --- |\n| >=1 \\|\\| <2 | ok |",
+        'joining cells with " | " let a semver range add two phantom columns'
       );
     });
 
@@ -57,11 +56,10 @@ describe("GitHubMarkdown", () => {
     });
 
     it("a cell carrying a newline stays one row — line breaks become <br>", () => {
-      // The same corruption class as an unescaped pipe: a raw newline in a
-      // cell (a multi-line format result, npm stderr) terminates the row.
       assert.strictEqual(
         GitHubMarkdown.table(["Check", "Log"], [["build", "line one\nline two"]]),
-        "| Check | Log |\n| --- | --- |\n| build | line one<br>line two |"
+        "| Check | Log |\n| --- | --- |\n| build | line one<br>line two |",
+        "like an unescaped pipe, a raw newline in a cell (a multi-line format result, npm stderr) would end the row"
       );
     });
   });
@@ -273,11 +271,12 @@ describe("GitHubMarkdown", () => {
         second: S.String,
         third: S.String,
       });
-      // The row object deliberately spells its keys in a different order:
-      // a typed row cannot transpose columns, which is the hazard this
-      // construct exists to delete.
       const out = GitHubMarkdown.tableFor(Row).render([{ third: "3", first: "1", second: "2" }]);
-      assert.strictEqual(out, "| first | second | third |\n| --- | --- | --- |\n| 1 | 2 | 3 |");
+      assert.strictEqual(
+        out,
+        "| first | second | third |\n| --- | --- | --- |\n| 1 | 2 | 3 |",
+        "the row spells its keys in another order, and a typed row still cannot transpose columns"
+      );
     });
 
     it("a typed field projects through its own codec", () => {
@@ -295,19 +294,16 @@ describe("GitHubMarkdown", () => {
     });
 
     it("a field whose encoded side is not a string renders through its required formatter", () => {
-      // v4's Schema.DateTimeUtc encodes to DateTime.Utc itself — the string
-      // serialization moved out of the declare — so it has no string
-      // projection to borrow and the type of `options` demands a format.
       const Row = S.Struct({ at: S.DateTimeUtc });
       const table = GitHubMarkdown.tableFor(Row, {
         columns: { at: { format: (value) => DateTime.formatIso(value) } },
       });
       assert.strictEqual(
         table.render([{ at: DateTime.makeUnsafe("2026-07-26T12:30:00Z") }]),
-        "| at |\n| --- |\n| 2026-07-26T12:30:00.000Z |"
+        "| at |\n| --- |\n| 2026-07-26T12:30:00.000Z |",
+        "v4's Schema.DateTimeUtc encodes to DateTime.Utc itself, so there is no string projection to borrow"
       );
 
-      // The obligation is enforced at the type level, in both directions:
       // @ts-expect-error -- a non-string-encoded field makes `options` required. Owner: @beep/github-reporting. Exit: remove if the API is meant to accept this.
       GitHubMarkdown.tableFor(Row);
       // @ts-expect-error -- and its column entry cannot omit `format`. Owner: @beep/github-reporting. Exit: remove if the API is meant to accept this.
@@ -342,45 +338,39 @@ describe("GitHubMarkdown", () => {
         table.render(rows),
         "| name | outcome |\n| --- | --- |\n| build | passed |\n| test | queued |"
       );
-      // Identical rows are byte-identical output — the renderer holds no state.
-      assert.strictEqual(table.render([{ name: "build", outcome: "queued" }]), before);
+      assert.strictEqual(
+        table.render([{ name: "build", outcome: "queued" }]),
+        before,
+        "identical rows are byte-identical output: the renderer holds no state"
+      );
     });
   });
 
   describe("a render cannot fail — the reason consumers need not Effect.try-wrap", () => {
-    // The serializer's ONLY failure is the nesting-depth guard (cap 256). What
-    // makes it unreachable is not that the writer's trees are small, but that
-    // their depth does not depend on input at all: every member takes
-    // PRE-RENDERED markdown and wraps it in exactly one passthrough node. A
-    // composition nests strings, never nodes. These tests pin that property,
-    // because the docstring telling consumers not to wrap is only as good as
-    // the invariant behind it.
-
     it("nesting the writer's own output 1000 deep does not deepen the tree", () => {
       let nested = "leaf";
       for (let index = 0; index < 1000; index += 1) {
         nested = GitHubMarkdown.list([nested]);
       }
-      // Four times the depth cap, and it renders: each `list` call serialized
-      // its argument to a STRING, so the tree handed to the serializer was the
-      // same three levels deep every time.
-      assert.include(nested, "leaf");
+      assert.include(
+        nested,
+        "leaf",
+        "the serializer's only failure is its 256 depth cap, and every member wraps pre-rendered markdown in one passthrough node, so this tree stays three levels deep"
+      );
     });
 
     it("a deeply nested fragment from elsewhere is one passthrough node, not a tree", () => {
-      // The adversarial case the guard exists for: markup that WOULD nest 500
-      // deep if it were parsed. It is not parsed — it passes through.
       const deep = `${Str.repeat(500)("> ")}quoted`;
       const out = GitHubMarkdown.table(["Note"], [[deep]]);
-      assert.include(out, "quoted");
+      assert.include(out, "quoted", "markup that would nest 500 deep if parsed passes through unparsed");
     });
 
     it("every serializing member survives input that is pathological for its own construct", () => {
-      // Each member's own escaping hazard, at size — fences inside code
-      // blocks, pipes and newlines inside cells, backticks inside inline code,
-      // parens inside a URL. None reaches the serializer's failure arm.
       const hostile = `${Str.repeat(300)("`")}\n\`\`\`\n| a | b |\n`;
-      assert.isString(GitHubMarkdown.codeBlock(hostile, "text"));
+      assert.isString(
+        GitHubMarkdown.codeBlock(hostile, "text"),
+        "fences, pipes, newlines, backticks and URL parens at size never reach the serializer's failure arm"
+      );
       assert.isString(GitHubMarkdown.code(hostile));
       assert.isString(GitHubMarkdown.table(["A"], [[hostile]]));
       assert.isString(GitHubMarkdown.list([hostile]));
@@ -390,33 +380,25 @@ describe("GitHubMarkdown", () => {
     it("the one reachable throw is the CODEC, and only for a value smuggled past the types", () => {
       const Row = S.Struct({ name: S.String });
       const table = GitHubMarkdown.tableFor(Row);
-      // A well-typed row is total...
-      assert.include(table.render([{ name: "build" }]), "| build |");
-      // ...but the cell goes through encodeSync, so a value cast past the types
-      // still throws. This is why the guidance is "the serializer cannot fail",
-      // not "tableFor cannot throw" — the two are different claims and only
-      // one of them is unconditional.
+      assert.include(table.render([{ name: "build" }]), "| build |", "a well-typed row is total");
       let caught: unknown;
       try {
         table.render([deliberatelyInvalid<{ name: string }>({ name: 7 })]);
       } catch (error) {
         caught = error;
       }
-      // Assert WHICH failure, not merely that one happened: a bare
-      // `assert.throws` would stay green if the serializer or a stray
-      // TypeError started throwing instead, which is the exact confusion this
-      // block exists to settle.
       if (!S.isSchemaError(caught)) {
-        assert.fail("expected a SchemaError");
+        assert.fail("expected a SchemaError, not a serializer failure or a stray TypeError");
       }
-      assert.strictEqual(caught._tag, "SchemaError");
+      assert.strictEqual(
+        caught._tag,
+        "SchemaError",
+        "the cell goes through encodeSync, so a value cast past the types throws: the serializer cannot fail, but tableFor can throw"
+      );
     });
 
     it("a user-supplied format function is the other way a render can throw", () => {
       const Row = S.Struct({ count: S.Finite });
-      // `format` bypasses the codec entirely, so its totality is the caller's
-      // to guarantee — the no-wrapping guidance covers the writer's own
-      // machinery, not arbitrary user code the writer calls.
       const table = GitHubMarkdown.tableFor(Row, {
         columns: {
           count: {
@@ -428,7 +410,12 @@ describe("GitHubMarkdown", () => {
         },
       });
       assert.include(table.render([{ count: 3 }]), "| 3 |");
-      assert.throws(() => table.render([{ count: 0 }]), RangeError);
+      assert.throws(
+        () => table.render([{ count: 0 }]),
+        RangeError,
+        undefined,
+        "format bypasses the codec, so its totality is the caller's to guarantee"
+      );
     });
   });
 });

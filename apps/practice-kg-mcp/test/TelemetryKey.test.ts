@@ -57,7 +57,6 @@ const decodeTelemetryReport = S.decodeUnknownEffect(S.fromJsonString(PracticeKgT
 
 const xor = (bytes: Uint8Array): Uint8Array => Uint8Array.from(bytes, (byte) => byte ^ 0x5a);
 
-// A DPAPI stand-in: a reversible transform that is never the identity.
 const fakeDpapi = (
   protection: StrictKeyProtection,
   options: { readonly failUnwrap?: boolean } = {}
@@ -76,8 +75,6 @@ const fakeDpapi = (
     })
   );
 
-// A DPAPI stand-in whose first two wraps wait for each other, so two hosts
-// both find no key and both race to publish epoch 1.
 const barrierDpapi = Effect.gen(function* () {
   const arrived = yield* Ref.make(0);
   const both = yield* Deferred.make<void>();
@@ -140,10 +137,13 @@ describe("layerPracticeKgSpoolKey", () => {
         expect(materialOf(rotated)).not.toBe(materialOf(first));
         const loadedKey = yield* loadKey(fakeDpapi("dpapi-powershell"));
         expect(materialOf(loadedKey)).toBe(materialOf(rotated));
-        // The old key file is never overwritten; the new epoch is a new file.
+
         const fs = yield* FileSystem.FileSystem;
         const readDirectory2 = yield* fs.readDirectory(telemetryDir);
-        expect(A.sort(readDirectory2, Order.String)).toEqual(["key.1.dpapi", "key.2.dpapi"]);
+        expect(
+          A.sort(readDirectory2, Order.String),
+          "A new epoch creates a new key file and never overwrites the old one."
+        ).toEqual(["key.1.dpapi", "key.2.dpapi"]);
       })
     );
   });
@@ -169,7 +169,10 @@ describe("layerPracticeKgSpoolKey", () => {
       Effect.gen(function* () {
         const port = yield* barrierDpapi;
         const [left, right] = yield* Effect.all([loadKey(port), loadKey(port)], { concurrency: "unbounded" });
-        expect([left.epoch, right.epoch]).toEqual(["1", "1"]);
+        expect(
+          [left.epoch, right.epoch],
+          "Barrier-synchronized first wraps make both hosts observe a missing key and race to publish epoch one."
+        ).toEqual(["1", "1"]);
         expect(materialOf(right)).toBe(materialOf(left));
         const fs = yield* FileSystem.FileSystem;
         const readDirectory4 = yield* fs.readDirectory(telemetryDir);
@@ -196,8 +199,6 @@ const powerShellHandle = (stdout: string, code: number) =>
     getOutputFd: () => Stream.empty,
   });
 
-// Fake PowerShell: reads Base64 from stdin, applies the stand-in transform and
-// writes Base64 back, recording every argv it was started with.
 const fakePowerShell = (argvSeen: Array<ReadonlyArray<string>>, code = 0) =>
   Layer.succeed(
     ChildProcessSpawner.ChildProcessSpawner,
@@ -206,7 +207,7 @@ const fakePowerShell = (argvSeen: Array<ReadonlyArray<string>>, code = 0) =>
         if (!ChildProcess.isStandardCommand(command)) {
           return yield* Effect.die("Expected a standard PowerShell command");
         }
-        // A redacted word still reaches the real process command line, so record its value.
+
         argvSeen.push([
           command.command,
           ...A.map(command.args, (word) => (Redacted.isRedacted(word) ? Redacted.value(word) : word)),
@@ -236,7 +237,10 @@ describe("layerDpapiPowerShell", () => {
         expect(port.protection).toBe("dpapi-powershell");
         const roundTripDpapi7 = yield* roundTripDpapi(port);
         expect(roundTripDpapi7).toBe("dpapi-powershell");
-        expect(A.length(argvSeen)).toBe(4);
+        expect(
+          A.length(argvSeen),
+          "Fake PowerShell transforms base64 stdin to base64 stdout and records actual argv, including revealed Redacted words, because redaction does not remove process arguments."
+        ).toBe(4);
         for (const argv of argvSeen) {
           expect(argv[0]).toBe("powershell.exe");
           expect(Str.includes(canary)(A.join(argv, " "))).toBe(false);
@@ -321,16 +325,12 @@ const spoolOptions = StrictSpoolOptions.make({ directory: `${telemetryDir}/spool
 
 const spooledKey = layerPracticeKgSpoolKey(telemetryDir).pipe(Layer.provide(fakeDpapi("dpapi-ffi")));
 
-// Logs the canary inside a tool span and names a span after it, under the
-// spooled telemetry. The layer's scope closes before this returns, which runs
-// the final export into the spool.
 const exportCanaryThroughSpool = Effect.gen(function* () {
   yield* Effect.logError(canary).pipe(Effect.withSpan("PracticeKgTools.kg_find"));
   yield* Effect.void.pipe(Effect.withSpan(`PracticeKgTools.${canary}`));
   yield* (yield* OtlpExporter.Flusher).flush;
 }).pipe(provideScopedLayer(layerPracticeKgTelemetrySpooled(spoolOptions).pipe(Layer.provide(spooledKey))));
 
-// Reopens the spool with the stored key, as a later process would.
 const replaySpool = Effect.flatMap(makeStrictSpool(spoolOptions), (spool) => spool.replay).pipe(
   provideScopedLayer(spooledKey)
 );
@@ -350,7 +350,10 @@ describe("layerPracticeKgTelemetrySpooled", () => {
           expect(Str.includes('"keyEpoch":"1"')(atRest)).toBe(true);
         }
         const replay = yield* replaySpool;
-        expect(HashMap.size(replay.refused)).toBe(0);
+        expect(
+          HashMap.size(replay.refused),
+          "Canary log bodies and span names flush when the scoped layer closes; replay then reopens the spool with its persisted key as a later process would."
+        ).toBe(0);
         expect(A.some(replay.records, (record) => Str.includes(canary)(record.body))).toBe(false);
         expect(A.some(replay.records, (record) => Str.includes('"name":"kg_find"')(record.body))).toBe(true);
         expect(A.some(replay.records, (record) => Str.includes('"stringValue":"1"')(record.body))).toBe(true);
@@ -359,8 +362,6 @@ describe("layerPracticeKgTelemetrySpooled", () => {
   });
 });
 
-// The coverage lane runs Vitest under Node, where the root setup shims Bun's API surface but
-// cannot provide the bundler, so the real-build proof runs only where Bun.build exists (`bun run test`).
 const hasBunBuild = P.isFunction(Reflect.get(globalThis.Bun, "build"));
 
 describe("bundle graph", () => {

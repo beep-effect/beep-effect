@@ -1,6 +1,3 @@
-// The differential test for the package's own display width, against `string-width`. This is the ONLY file in the
-// package that imports `string-width` (a devDependency); see okf/decisions/own-display-width.md.
-
 import { displayWidth } from "@beep/cli-kit/internal/displayWidth";
 import { assert, describe, it } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -14,7 +11,6 @@ const UnknownJson = S.fromJsonString(S.Unknown);
 
 const OSC8 = "\u001b]8;;https://example.com\u0007link\u001b]8;;\u0007";
 
-/** 29 curated strings, labelled: ASCII, accents, CJK, emoji of every kind, ANSI, OSC-8, text and emoji presentation. */
 const CURATED: ReadonlyArray<readonly [label: string, text: string]> = [
   ["ASCII", "hello world"],
   ["precomposed accent (U+00E9)", "h\u00e9llo"],
@@ -47,13 +43,20 @@ const CURATED: ReadonlyArray<readonly [label: string, text: string]> = [
   ["Hangul filler", "한\u3164글"],
 ];
 
-const skipsCodePoint = (cp: number): boolean => (cp >= 0xd800 && cp <= 0xdfff) || cp === 0x1b;
+const sweepTimeoutOnLoadedMachine = 30_000;
+const ARABIC_NUMBER_SIGN = "\u0600";
+const KAITHI_NUMBER_SIGN = "\u{110BD}";
+const SYRIAC_ABBREVIATION_MARK = "\u070F";
 
-describe("displayWidth against string-width", () => {
+const isSurrogateOrEscape = (cp: number): boolean => (cp >= 0xd800 && cp <= 0xdfff) || cp === 0x1b;
+
+describe("displayWidth against string-width, the package's only importer of that devDependency", () => {
   it("the oracle is the version the decision was measured against", () => {
-    // 7.2.0 said 2 for a bare U+26A0, and 8.3.0 and 9.0.0 say 1; if this flips, string-width drifted and the sweep
-    // below is no longer comparing what the decision measured.
-    assert.strictEqual(stringWidth("⚠"), 1);
+    assert.strictEqual(
+      stringWidth("⚠"),
+      1,
+      "7.2.0 said 2 for a bare U+26A0, 8.3.0 and 9.0.0 say 1: a flip means string-width drifted from the measured oracle"
+    );
   });
 
   it("the harness can report a mismatch (positive control)", () => {
@@ -71,61 +74,63 @@ describe("displayWidth against string-width", () => {
     });
   }
 
-  it("a code-point sweep of every assigned code point agrees", () => {
-    // U+0000 to U+10FFFF at stride 1, so no block edge or astral zero-width range (tag characters, the variation
-    // selectors supplement) escapes it. Surrogates and ESC (which starts an escape sequence) are skipped.
-    const assigned = /^\p{Assigned}$/u;
-    const mismatches: string[] = [];
-    let checked = 0;
-    for (let cp = 0; cp <= 0x10ffff; cp++) {
-      if (skipsCodePoint(cp)) continue;
-      const ch = String.fromCodePoint(cp);
-      if (!assigned.test(ch)) continue;
-      checked++;
-      if (displayWidth(ch) !== stringWidth(ch)) {
-        mismatches.push(`U+${Str.toUpperCase(cp.toString(16))} ours=${displayWidth(ch)} oracle=${stringWidth(ch)}`);
+  it(
+    "a stride-1 sweep of every assigned code point agrees, so no block edge or astral zero-width range escapes",
+    () => {
+      const assigned = /^\p{Assigned}$/u;
+      const mismatches: string[] = [];
+      let checked = 0;
+      for (let cp = 0; cp <= 0x10ffff; cp++) {
+        if (isSurrogateOrEscape(cp)) continue;
+        const ch = String.fromCodePoint(cp);
+        if (!assigned.test(ch)) continue;
+        checked++;
+        if (displayWidth(ch) !== stringWidth(ch)) {
+          mismatches.push(`U+${Str.toUpperCase(cp.toString(16))} ours=${displayWidth(ch)} oracle=${stringWidth(ch)}`);
+        }
       }
-    }
-    // Well over the ~297,000 assigned code points outside the skipped ones: a sweep that quietly shrank would fail.
-    assert.isAbove(checked, 290_000);
-    assert.deepStrictEqual(mismatches.slice(0, 10), []);
-    assert.strictEqual(mismatches.length, 0);
-    // About a second alone; the bound leaves room for a loaded machine running other suites in parallel.
-  }, 30_000);
+      assert.isAbove(
+        checked,
+        290_000,
+        "about 297,000 code points are assigned outside the skipped ones: a sweep must not shrink"
+      );
+      assert.deepStrictEqual(mismatches.slice(0, 10), []);
+      assert.strictEqual(mismatches.length, 0);
+    },
+    sweepTimeoutOnLoadedMachine
+  );
 
   it("agrees on the former divergences and on prepended concatenation marks", () => {
-    // string-width 8.3.0 counted a lone regional indicator, and a combining mark glued after a flag, as one
-    // column; 9.0.0 counts two, as this always has. Each pair pins the oracle and this implementation together.
     const cases: ReadonlyArray<readonly [text: string, columns: number]> = [
       ["\u{1F1FA}", 2],
       ["🇺🇸ั", 2],
-      // ARABIC NUMBER SIGN alone, before a digit, twice, before a combining mark, and before wide glyphs.
-      ["\u0600", 1],
-      ["\u06001", 2],
-      ["\u0600\u06001", 3],
-      ["\u0600\u0301", 1],
-      ["\u0600日", 2],
-      ["\u0600👍", 2],
-      // KAITHI NUMBER SIGN, astral; SYRIAC ABBREVIATION MARK stays zero-width.
-      ["\u{110BD}", 1],
-      ["\u070F", 0],
+      [ARABIC_NUMBER_SIGN, 1],
+      [`${ARABIC_NUMBER_SIGN}1`, 2],
+      [`${ARABIC_NUMBER_SIGN}${ARABIC_NUMBER_SIGN}1`, 3],
+      [`${ARABIC_NUMBER_SIGN}\u0301`, 1],
+      [`${ARABIC_NUMBER_SIGN}日`, 2],
+      [`${ARABIC_NUMBER_SIGN}👍`, 2],
+      [KAITHI_NUMBER_SIGN, 1],
+      [SYRIAC_ABBREVIATION_MARK, 0],
     ];
     for (const [text, columns] of cases) {
-      assert.strictEqual(stringWidth(text), columns, text);
+      assert.strictEqual(
+        stringWidth(text),
+        columns,
+        `string-width 9.0.0 pinned (8.3.0 gave one column to a lone regional indicator or a mark after a flag): ${text}`
+      );
       assert.strictEqual(displayWidth(text), columns, text);
     }
   });
 
   it("a seeded fuzz of 5,000 compositions agrees", () => {
-    // Every curated string is an atom but the empty one.
     const atoms = pipe(
       CURATED,
       A.map(([, text]) => text),
       A.filter((text) => text !== "")
     );
-    // mulberry32, fixed seed: the run never varies.
     let state = 0x5eed1234;
-    const next = (): number => {
+    const mulberry32 = (): number => {
       state = (state + 0x6d2b79f5) | 0;
       let t = Math.imul(state ^ (state >>> 15), 1 | state);
       t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
@@ -133,9 +138,9 @@ describe("displayWidth against string-width", () => {
     };
     const mismatches: string[] = [];
     for (let i = 0; i < 5000; i++) {
-      const length = 1 + Math.floor(next() * 6);
+      const length = 1 + Math.floor(mulberry32() * 6);
       let text = "";
-      for (let j = 0; j < length; j++) text += atoms[Math.floor(next() * atoms.length)];
+      for (let j = 0; j < length; j++) text += atoms[Math.floor(mulberry32() * atoms.length)];
       if (displayWidth(text) !== stringWidth(text))
         mismatches.push(Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(text), identity));
     }

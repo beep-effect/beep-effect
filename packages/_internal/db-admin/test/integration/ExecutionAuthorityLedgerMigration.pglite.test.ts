@@ -44,10 +44,7 @@ const { shouldRunPgliteIntegration } = makePgliteIntegrationGate();
 const migrationsFolder = NodeURL.fileURLToPath(new URL("../../drizzle", import.meta.url));
 const renameMigration = "20261107032821_execution_authority_rename";
 
-// The drizzle folder contains `CREATE EXTENSION btree_gist` (the epistemic edge
-// migration's gist exclusion constraint), which the shared external
-// pglite-socket lane cannot load. Extension-dependent proofs are pinned to the
-// in-process lane.
+// decision: migration-proofs-run-in-process
 const makeMigrationProofLayer = () =>
   Layer.fresh(makePgliteSqlTestLayer({ inProcess: { extensions: { btree_gist } }, mode: "in-process" })).pipe(
     Layer.merge(NodeServices.layer)
@@ -79,9 +76,6 @@ const triggerSuffixes: ReadonlyArray<string> = [
   "outcome_block_truncate",
 ];
 
-// Every name below is load-bearing: the repository maps constraint violations
-// by name, never by message prose, so a silent rename is a silent behavior
-// change.
 const prefixed = (prefix: string, suffixes: ReadonlyArray<string>): ReadonlyArray<string> =>
   A.map(suffixes, (suffix) => `${prefix}${suffix}`);
 
@@ -107,7 +101,6 @@ const decisionContent = (seq: number, prevHash: ExecutionDecisionRecord["prevHas
     : ({ ...common, verdict: "allowed" } as const);
 };
 
-// seq 0 allowed and settled, seq 1 denied (never settles), seq 2 allowed and settled.
 const first = sealExecutionDecision(decisionContent(0, O.none(), false));
 const second = sealExecutionDecision(decisionContent(1, O.some(first.hash), true));
 const third = sealExecutionDecision(decisionContent(2, O.some(second.hash), false));
@@ -161,8 +154,10 @@ const readNames = Effect.fnUntraced(function* (prefix: string) {
 
 const expectNames = Effect.fnUntraced(function* (prefix: string) {
   const names = yield* readNames(prefix);
-  expect(names.constraints).toEqual(prefixed(prefix, constraintSuffixes));
-  expect(names.triggers).toEqual(prefixed(prefix, triggerSuffixes));
+  expect(names.constraints, "the repository maps violations by constraint name").toEqual(
+    prefixed(prefix, constraintSuffixes)
+  );
+  expect(names.triggers, "the repository maps violations by trigger name").toEqual(prefixed(prefix, triggerSuffixes));
   expect(names.guards).toEqual([`${prefix}ledger_block_mutation`]);
   expect(A.every(names.notNull, Str.startsWith(prefix))).toBe(true);
 });
@@ -179,8 +174,6 @@ const runMigrations = Effect.fnUntraced(function* (folder: string) {
   });
 });
 
-// The migrator applies the folders it is given in order; a copy without the
-// rename (and anything after it) reproduces a database migrated before the move.
 const copyFoldersBeforeRename = Effect.fnUntraced(function* () {
   const fileSystem = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -222,8 +215,6 @@ if (!shouldRunPgliteIntegration) {
           yield* expectNames("epistemic_execution_");
 
           const sql = (yield* SqlClient.SqlClient).withoutTransforms();
-          // Seed through the pre-move physical names with the row shape the
-          // converters produce, so the rows are exactly what the old adapter wrote.
           for (const decision of decisions) {
             const row = Result.getOrThrow(toExecutionDecisionInsert(decision));
             yield* sql`
@@ -276,13 +267,13 @@ if (!shouldRunPgliteIntegration) {
           expect(A.map(restoredDecisions, (row) => row.count)).toEqual([3]);
           expect(A.map(restoredOutcomes, (row) => row.count)).toEqual([2]);
 
-          // The adversarial probe stays LAST: implicit-transaction pglite hosts
-          // roll the whole session chain back after an intentional failure, so
-          // no statement may follow it. The guard survives the round trip.
           const mutation = yield* Effect.flip(sql`
             UPDATE epistemic_execution_decision SET destination_digest = ${digest("9")} WHERE seq = 0
           `);
-          expect(NodeUtil.inspect(mutation, { depth: 10 })).toContain("append-only");
+          expect(
+            NodeUtil.inspect(mutation, { depth: 10 }),
+            "the guard survives the round trip; the probe runs last: PGlite rolls the session back after an intentional failure"
+          ).toContain("append-only");
         }),
         120_000
       );

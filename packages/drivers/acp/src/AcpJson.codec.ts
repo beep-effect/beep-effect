@@ -20,8 +20,6 @@ import * as Str from "effect/String";
 
 const $I = $AcpId.create("json");
 
-// The JSON structural, whitespace, and escape characters (RFC 8259). The scanner reads one UTF-16
-// code unit at a time by index, so `text[i]` is `undefined` past the end of the text.
 const QUOTATION_MARK = '"';
 const REVERSE_SOLIDUS = "\\";
 const SOLIDUS = "/";
@@ -152,8 +150,6 @@ const readNumber = (cursor: Cursor): number => {
   });
 };
 
-// Reads the escape sequence starting at the reverse solidus at `index`; returns the decoded text
-// and the index just past the sequence.
 const readEscapeSequence = (cursor: Cursor, index: number): readonly [decoded: string, next: number] => {
   const text = cursor.text;
   const escape = text[index + 1];
@@ -174,7 +170,6 @@ const readEscapeSequence = (cursor: Cursor, index: number): readonly [decoded: s
   });
 };
 
-// Rejects the end of text and unescaped control characters inside a string.
 const ensureStringCharacter = (cursor: Cursor, index: number, code: string | undefined): void => {
   if (code === undefined || code < SPACE) {
     cursor.index = index;
@@ -207,7 +202,6 @@ const readString = (cursor: Cursor): string => {
   }
 };
 
-// Consumes the separator after an element; returns whether `closing` ended the collection.
 const readSeparator = (cursor: Cursor, closing: string, expected: string): boolean => {
   cursor.skipWhitespace();
   const code = cursor.peek();
@@ -311,8 +305,6 @@ const readStrict = (text: string): Result.Result<unknown, JsonTextSyntaxError> =
   );
 };
 
-// Finds the closing quotation mark of the string opened at `start`; returns its index (or -1 when
-// the string is unterminated) and whether the string contains an escape sequence.
 const scanString = (text: string, start: number): readonly [end: number, escaped: boolean] => {
   let escaped = false;
   let end = start + 1;
@@ -393,7 +385,8 @@ export const hasEscapedPropertyKey = (text: string): boolean => {
  * `"\\"` key. Texts without an escaped property key cannot hit that path and are parsed natively;
  * every other text is read by the strict reader in this module, which mirrors `JSON.parse`
  * semantics (last duplicate key wins, `__proto__` becomes an own property, lone surrogates are
- * preserved, numbers go through `Number`).
+ * preserved, numbers go through `Number`). A text the native parser rejects is read again by the
+ * strict reader, so the failure carries a position instead of a host-specific message.
  *
  * **Gotchas**
  *
@@ -417,9 +410,7 @@ export const readJsonText = (text: string): Result.Result<unknown, JsonTextSynta
   hasEscapedPropertyKey(text)
     ? readStrict(text)
     : Result.match(decodeNativeJsonText(text), {
-        // Native parsing is only unsafe for escaped property keys, and this text has none.
         onSuccess: Result.succeed,
-        // Re-read strictly so the failure carries a position instead of a host-specific message.
         onFailure: () => readStrict(text),
       });
 

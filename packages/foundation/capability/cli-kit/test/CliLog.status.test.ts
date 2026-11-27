@@ -15,8 +15,7 @@ import type * as LogLevel from "effect/LogLevel";
 
 const ESC = String.fromCharCode(0x1b);
 const BEL = String.fromCharCode(7);
-/** An injection attempt: repaint, a hyperlink, and a cursor move, in the text a program logs. */
-const HOSTILE = `boom ${ESC}[31mred${ESC}[0m ${ESC}]8;;https://evil.example${BEL}click${ESC}]8;;${BEL} ${ESC}[2A`;
+const HOSTILE_LOGGED_TEXT = `boom ${ESC}[31mred${ESC}[0m ${ESC}]8;;https://evil.example${BEL}click${ESC}]8;;${BEL} ${ESC}[2A`;
 
 const capture = Effect.fn("capture")(function* (
   effect: Effect.Effect<void, never, CliTheme>,
@@ -86,7 +85,7 @@ describe("CliLog.status", () => {
 
   it.effect("an agent gets no escape of any kind", () =>
     Effect.gen(function* () {
-      const { err } = yield* capture(CliLog.status(Status.core, "failure", HOSTILE), "agent");
+      const { err } = yield* capture(CliLog.status(Status.core, "failure", HOSTILE_LOGGED_TEXT), "agent");
       assert.lengthOf(err, 1);
       assert.notInclude(err[0] ?? "", ESC);
       assert.notInclude(err[0] ?? "", BEL);
@@ -96,7 +95,7 @@ describe("CliLog.status", () => {
 
   it.effect("a hostile escape in the text is neutralised for a person too: only the kit's glyph is painted", () =>
     Effect.gen(function* () {
-      const { err } = yield* capture(CliLog.status(Status.core, "failure", HOSTILE), "human");
+      const { err } = yield* capture(CliLog.status(Status.core, "failure", HOSTILE_LOGGED_TEXT), "human");
       const line = err[0] ?? "";
       const boom = O.getOrThrow(Str.indexOf(" boom")(line));
       const glyph = Str.slice(0, boom)(line);
@@ -176,8 +175,11 @@ describe("CliLog.status", () => {
           audience
         );
         const { err: plain } = yield* capture(CliLog.status(Status.core, "failure", "boom"), audience);
-        // Exactly the unindented line behind the indent's text: nothing of the hostile string but " >" is left.
-        assert.strictEqual(err[0], ` >${plain[0] ?? ""}`, audience);
+        assert.strictEqual(
+          err[0],
+          ` >${plain[0] ?? ""}`,
+          `${audience}: nothing of the hostile indent but " >" is left`
+        );
       }
     })
   );

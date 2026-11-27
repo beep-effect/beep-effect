@@ -51,7 +51,10 @@ const mergeObservations = (observations: ReadonlyArray<VaultScanObservation>): V
  * **Details**
  * The caller owns root canonicalization and the workspace lock. Both methods
  * share the same regular-file checks: symlink refusal, inode/device binding,
- * root containment and a scoped file handle. Scans skip dot entries and links.
+ * root containment and a scoped file handle. Scans skip dot entries and links:
+ * a link is never followed, so a link out of the vault cannot leak into the
+ * mirror and a dangling link cannot abort the scan. A skipped link is logged
+ * without its path, because vault paths name clients and matters.
  * Reconciliation, repositories and remote mutations stay outside this adapter.
  *
  * **Example** (Scan a canonical vault root)
@@ -96,9 +99,6 @@ export const makeVaultSyncFileStore = Effect.fn($I`makeVaultSyncFileStore`)(func
           return yield* scanFailed(`vault sync refused non-regular file ${displayPath}`);
         }
 
-        // `File` no longer exposes a descriptor, so the opened path cannot be read back
-        // from `/proc/self/fd`. Binding the canonical path to the open descriptor by
-        // device + inode is the portable equivalent and keeps the same TOCTOU guarantee.
         const openedPath = yield* fs
           .realPath(candidatePath)
           .pipe(Effect.mapError(() => scanFailed(`vault sync could not resolve open local file ${displayPath}`)));
@@ -106,7 +106,8 @@ export const makeVaultSyncFileStore = Effect.fn($I`makeVaultSyncFileStore`)(func
           .stat(openedPath)
           .pipe(Effect.mapError(() => scanFailed(`vault sync could not inspect local file ${displayPath}`)));
         const inodeMatches = O.getOrElse(O.zipWith(info.ino, candidateInfo.ino, Eq.equals), constFalse);
-        if (!Eq.equals(info.dev, candidateInfo.dev) || !inodeMatches || candidateInfo.type !== "File") {
+        const realPathIsOpenedFile = Eq.equals(info.dev, candidateInfo.dev) && inodeMatches;
+        if (!realPathIsOpenedFile || candidateInfo.type !== "File") {
           return yield* scanFailed(`vault sync refused changed local file ${displayPath}`);
         }
         if (!isPathWithinRoot(path, canonicalRoot, openedPath)) {
@@ -147,12 +148,8 @@ export const makeVaultSyncFileStore = Effect.fn($I`makeVaultSyncFileStore`)(func
         Effect.fnUntraced(function* (name) {
           const childAbsolutePath = path.join(absolutePath, name);
           const childSegments = A.append(relSegments, name);
-          // Symlinks are never followed: a link out of the vault must not leak
-          // into the mirror, and a dangling link must not abort the scan.
-          // `readLink` succeeds exactly when the entry is a symlink.
-          const symlinkTarget = yield* Effect.result(fs.readLink(childAbsolutePath));
-          if (Result.isSuccess(symlinkTarget)) {
-            // The entry's path is never logged: vault paths name clients and matters.
+          const symlinkProbe = yield* Effect.result(fs.readLink(childAbsolutePath));
+          if (Result.isSuccess(symlinkProbe)) {
             yield* Effect.logDebug("Documents vault scan skipped a symlink").pipe(
               Effect.annotateLogs({ "documents.vault_sync.depth": childSegments.length })
             );

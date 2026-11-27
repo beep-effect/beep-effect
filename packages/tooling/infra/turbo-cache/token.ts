@@ -67,8 +67,6 @@ const token = Command.make(
   })
 ).pipe(Command.withDescription("Send one Turborepo cache token to a receiving command's stdin."));
 
-// One scope owns the Alchemist services and the state layer built inside the
-// command, so the store outlives every read.
 Alchemist.layer().pipe(
   Layer.build,
   Effect.flatMap((context) => Command.run(token, { version: "0.0.0" }).pipe(Effect.provide(context))),

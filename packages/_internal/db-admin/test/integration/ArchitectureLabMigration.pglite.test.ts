@@ -14,10 +14,7 @@ import * as SqlClient from "effect/sql/SqlClient";
 const { shouldRunPgliteIntegration } = makePgliteIntegrationGate();
 const migrationsFolder = NodeURL.fileURLToPath(new URL("../../drizzle", import.meta.url));
 
-// The drizzle folder now contains `CREATE EXTENSION btree_gist`, which the
-// shared external pglite-socket lane cannot load. Migration proofs are
-// extension-dependent, so they are pinned to the in-process driver with the
-// bundled extension registered rather than gate-selected.
+// decision: migration-proofs-run-in-process
 const makeMigrationProofLayer = () =>
   Layer.fresh(makePgliteSqlTestLayer({ inProcess: { extensions: { btree_gist } }, mode: "in-process" }));
 

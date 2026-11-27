@@ -1,6 +1,0 @@
-{
-  "schemaVersion": "comment-law-pending/v1",
-  "package": "@beep/practice-m365-contacts",
-  "root": "apps/practice-m365-contacts",
-  "scopes": ["."]
-}

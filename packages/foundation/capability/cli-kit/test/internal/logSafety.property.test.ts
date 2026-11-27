@@ -28,10 +28,9 @@ it.effect.prop(
       const stringify4 = yield* stringify(parsed);
       const parsed2 = yield* parse(neutralizeJson(stringify4));
       assert.deepStrictEqual(parsed2, parsed);
-      // Force the runner-command spelling in every sample, including scalars.
-      const command = yield* stringify({ text: `##[warning]${encoded}` });
-      const parsed3 = yield* parse(neutralizeJson(command));
-      const parsed5 = yield* parse(command);
+      const forcedRunnerSpelling = yield* stringify({ text: `##[warning]${encoded}` });
+      const parsed3 = yield* parse(neutralizeJson(forcedRunnerSpelling));
+      const parsed5 = yield* parse(forcedRunnerSpelling);
       assert.deepStrictEqual(parsed3, parsed5);
     }),
   runs

@@ -54,8 +54,7 @@ describe("CliExit", () => {
         Effect.gen(function* () {
           const exit = yield* CliExit.set(bad).pipe(Effect.exit);
           assertExitFailure(exit, Exit.isFailure(exit) ? exit.cause : Cause.empty);
-          // A defect, not a typed failure: a bad code is a wiring bug.
-          assert.isTrue(Cause.hasDies(exit.cause));
+          assert.isTrue(Cause.hasDies(exit.cause), "a defect, not a typed failure: a bad code is a wiring bug");
           assert.isFalse(Cause.hasFails(exit.cause));
           const defect = Cause.squash(exit.cause);
           assert.instanceOf(defect, Error);

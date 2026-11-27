@@ -111,7 +111,6 @@ describe("CauseRedaction", () => {
     })
   );
 
-  // This layer's logger is the subject: runner lifecycle logs would alter its exact captures.
   loggerSubjectIt.layer(capturedAnnotationsLayer(), { timeout: "10 seconds" })(
     "logs only bounded redacted Cause diagnostics",
     (it) =>

@@ -36,8 +36,7 @@ import type { LazyArg } from "effect/Function";
 /** The lineage every test batch is written by. */
 export const author = LineageId.make("operation-capture-test");
 
-/** SHA-256 of the empty string: the digest the synthetic bases record. */
-const emptyDigest = Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+const emptyStringSha256 = Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
 
 const extractor = SourceTextExtractor.make({ name: "operation-capture-test", version: "1" });
 
@@ -66,8 +65,8 @@ export const baseNodeOf = ({
         scopeRef: "agent-memory-store",
         sourceRef: "export",
         locator: PosixPath.make(path),
-        sourceDigest: SourceTextDigest.make(`sha256:${emptyDigest}`),
-        textDigest: SourceTextDigest.make(`sha256:${emptyDigest}`),
+        sourceDigest: SourceTextDigest.make(`sha256:${emptyStringSha256}`),
+        textDigest: SourceTextDigest.make(`sha256:${emptyStringSha256}`),
         extractor,
         normalizationVersion: "1",
       }),
@@ -95,7 +94,7 @@ export const baseFileOfNodes = ({
     nodes.push(baseNodeOf({ path, nodeId: mint(), revisionId: revisionFor(counter.value), offset, text }));
     offset += text.length;
   }
-  return BaseFile.make({ path: MemoryFilePath.make(path), fileDigest: emptyDigest, nodes });
+  return BaseFile.make({ path: MemoryFilePath.make(path), fileDigest: emptyStringSha256, nodes });
 };
 
 /** A base whose files are the partitions of the given texts; node ids come from `seed`. */
@@ -105,7 +104,7 @@ export const seededBaseOf =
     const mint = seededNodeIdMinter(seed);
     const counter = { value: 0 };
     return BaseExport.make({
-      folderDigest: emptyDigest,
+      folderDigest: emptyStringSha256,
       files: A.map(files, ([path, text]) =>
         baseFileOfNodes({ path, texts: A.map(partition(text).nodes, (node) => node.text), mint, counter })
       ),
@@ -116,7 +115,6 @@ export const seededBaseOf =
 /** A base whose files are the partitions of the given texts, with seed 1. */
 export const baseOf = seededBaseOf(1);
 
-/** The operations of a captured batch; none when nothing changed. */
 const operationsOf = (batch: O.Option<OperationBatch>): ReadonlyArray<NodeOperation> =>
   O.match(batch, { onNone: () => [], onSome: (value) => value.operations });
 
@@ -193,8 +191,7 @@ export const costOf: {
   (nodes: ReadonlyArray<BaseNode>, editedText: string): CaptureCost;
 } = dual(2, costOfAlignment);
 
-/** Markdown-like pieces the generators insert and splice. */
-const fragments: ReadonlyArray<string> = [
+const markdownFragments: ReadonlyArray<string> = [
   "# Heading",
   "Setext\n===",
   "plain text",
@@ -215,35 +212,28 @@ const fragments: ReadonlyArray<string> = [
   "\t- tabbed",
 ];
 
-/** Separators the generators put after a fragment. */
-const separators: ReadonlyArray<string> = ["\n", "\n\n", "\r\n", "", " ", "\r\n\r\n"];
+const fragmentSeparators: ReadonlyArray<string> = ["\n", "\n\n", "\r\n", "", " ", "\r\n\r\n"];
 
-/** Short strings a raw character mutation splices in. */
-const splices: ReadonlyArray<string> = ["", "\n", "\r\n", "\n\n", "- ", "|", "#", "x", "﻿", "`", " "];
+const rawCharacterSplices: ReadonlyArray<string> = ["", "\n", "\r\n", "\n\n", "- ", "|", "#", "x", "﻿", "`", " "];
 
 const pick = <X>(random: LazyArg<number>, values: ReadonlyArray<X>): X =>
   A.getUnsafe(values, Math.floor(random() * values.length));
 
 const at = (random: LazyArg<number>, length: number): number => Math.floor(random() * (length + 1));
 
-// A cut inside a surrogate pair would leave a lone surrogate, which no file
-// decoded from UTF-8 holds and `FileEdit` refuses; move such a cut past the pair.
-const codePointBoundary = (text: string, index: number): number =>
+const wellFormedCut = (text: string, index: number): number =>
   Str.slice(0, index)(text).isWellFormed() ? index : index + 1;
 
 /** One generated piece of Markdown-like text. */
-export const piece = (random: LazyArg<number>): string => `${pick(random, fragments)}${pick(random, separators)}`;
+export const piece = (random: LazyArg<number>): string =>
+  `${pick(random, markdownFragments)}${pick(random, fragmentSeparators)}`;
 
-// One node-level edit: the node counts it applies to, and the edit itself,
-// made in place on the node texts.
 interface NodeEdit {
-  readonly applies: (length: number) => boolean;
-  readonly apply: (nodes: Array<string>, index: number, random: LazyArg<number>) => void;
+  readonly applies: (nodeCount: number) => boolean;
+  readonly apply: (nodeTextsInPlace: Array<string>, index: number, random: LazyArg<number>) => void;
 }
 
-// The node-level edits by choice: revise, insert, delete, move. Any other
-// choice, or an edit the node count rules out, splices raw characters.
-const nodeEdits: ReadonlyArray<NodeEdit> = [
+const reviseInsertDeleteMove: ReadonlyArray<NodeEdit> = [
   {
     applies: (length) => length > 0,
     apply: (nodes, index, random) => {
@@ -271,21 +261,19 @@ const nodeEdits: ReadonlyArray<NodeEdit> = [
   },
 ];
 
-// A raw character splice over the joined node texts, crossing node boundaries.
 const spliceCharacters = (nodes: ReadonlyArray<string>, random: LazyArg<number>): string => {
   const joined = A.join(nodes, "");
-  const start = codePointBoundary(joined, at(random, joined.length));
-  const end = codePointBoundary(joined, Math.min(joined.length, start + Math.floor(random() * 4)));
-  return `${Str.slice(0, start)(joined)}${pick(random, splices)}${Str.slice(end)(joined)}`;
+  const start = wellFormedCut(joined, at(random, joined.length));
+  const end = wellFormedCut(joined, Math.min(joined.length, start + Math.floor(random() * 4)));
+  return `${Str.slice(0, start)(joined)}${pick(random, rawCharacterSplices)}${Str.slice(end)(joined)}`;
 };
 
-// One random edit of `current`.
 const mutateOnce = (current: string, random: LazyArg<number>): string => {
   const nodes: Array<string> = A.map(partition(current).nodes, (node) => node.text);
   const choice = Math.floor(random() * 5);
   const index = Math.floor(random() * nodes.length);
   return O.match(
-    O.filter(A.get(nodeEdits, choice), (edit) => edit.applies(nodes.length)),
+    O.filter(A.get(reviseInsertDeleteMove, choice), (edit) => edit.applies(nodes.length)),
     {
       onNone: () => spliceCharacters(nodes, random),
       onSome: (edit) => {

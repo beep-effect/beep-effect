@@ -38,15 +38,7 @@ import type * as AST from "effect/SchemaAST";
 
 const $I = $LexicalSchemaId.create("Lexical.model");
 
-/**
- * `Option` field for a key Lexical's `exportJSON()` writes with an explicit
- * `undefined` (`checked: this.getChecked()`, `theme: this.getTheme()`,
- * `frozenRowCount: x ? x : undefined`, ...).
- *
- * Absent and `undefined` both decode to `None`; this is the EF-40 exception
- * spelling of `S.OptionFromOptional`, kept explicit because the producer is
- * third-party (pinned `@lexical/*` `exportJSON` sources).
- */
+// decision: lexical-explicit-undefined-keys
 const OptionFromLexicalUndefinedOr = <Schema extends S.Top>(schema: Schema) =>
   schema.pipe(
     S.UndefinedOr,
@@ -1075,12 +1067,6 @@ export declare namespace BaseNode {
   }
 }
 
-/**
- * `children` is mutually recursive with the union of all node schemas, so we
- * tie the knot with `S.suspend`. The annotation must only mention the
- * hand-written namespace types — referencing the classes here would make
- * every class's base expression circular.
- */
 const NodeChildren = S.Array(S.suspend((): S.Codec<LexicalNode.Type, LexicalNode.Encoded> => RawLexicalNode)).pipe(
   $I.annoteSchema("NodeChildren", {
     description:
@@ -2614,16 +2600,12 @@ export declare namespace TableNode {
   }
 }
 
-// Element recursion decodes through this structural union once; the exported
-// schema below performs the recursive parent-child check over the decoded tree.
 const RawLexicalNode = S.Union([
-  // leaves
   TextNode,
   TabNode,
   LineBreakNode,
   ArtifactRefNode,
   YouTubeNode,
-  // elements
   RootNode,
   ParagraphNode,
   HeadingNode,

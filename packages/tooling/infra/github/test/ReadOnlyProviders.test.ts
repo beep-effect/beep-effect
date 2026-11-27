@@ -14,7 +14,6 @@ import * as Str from "effect/String";
 import { FakeRepository, fakeProviders } from "./support/FakeGitHub.ts";
 import { typed } from "./support/Scratch.ts";
 
-// A preview stage gets the read-only providers over the in-memory GitHub; the token is irrelevant.
 const fake = FakeRepository.fromCensus();
 const providers = readOnlyGitHubProviders("dev_x").pipe(Layer.provideMerge(fakeProviders(fake)));
 const { test } = Test.make({ providers, stage: "dev_x" });

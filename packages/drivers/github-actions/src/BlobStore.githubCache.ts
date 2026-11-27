@@ -38,7 +38,6 @@ const VERSION = sha256Hex("blobstore|1.0");
 
 const make = Effect.fn("make")(function* (transfer: DataBlobTransfer) {
   const http = yield* HttpClient.HttpClient;
-  // Resolved once, at construction, so every member's `R` is `never`.
   const env = yield* ActionEnvironment;
 
   const backend = resultsBackend(env).pipe(
@@ -47,10 +46,8 @@ const make = Effect.fn("make")(function* (transfer: DataBlobTransfer) {
     )
   );
 
-  /** The cache service, for one key: every failure names it. */
   const cacheService = cacheServiceFor({ http, backend, fail: (failure) => BlobStoreError.make(failure) });
 
-  /** The signed download url for a key, or nothing — a miss is not a failure. */
   const download = (key: string) =>
     Effect.map(
       lookupDownload(cacheService(key), key, [], VERSION),
@@ -75,9 +72,6 @@ const make = Effect.fn("make")(function* (transfer: DataBlobTransfer) {
     put: framedPut(
       Effect.fnUntraced(function* (key: string, framed: Uint8Array) {
         const service = cacheService(key);
-        // None: another job wrote this key first. The entry is immutable,
-        // so the write has already happened and the caller got what it
-        // asked for.
         const url = yield* reserveUpload(service, key, VERSION);
         if (O.isNone(url)) {
           return;
@@ -115,6 +109,10 @@ const make = Effect.fn("make")(function* (transfer: DataBlobTransfer) {
  * belongs to the module that owns the dependency it needs: putting
  * `BlobStore.layerGitHubCache` on the service class would make `@azure/storage-blob`
  * reachable from every module that reads a blob.
+ *
+ * **Gotchas**
+ *
+ * A reservation conflict means another job already wrote the immutable key and satisfies this write; it is not an error.
  *
  * **Example** (Select the GitHub Actions cache blob backend)
  *

@@ -26,7 +26,6 @@ const messageOf = (cause: unknown): O.Option<string> =>
     O.flatMap((error) => nonEmptyMessage(error.message))
   );
 
-/** An optional diagnostic field: `Option` in the type, absent key when encoded, `None` by default. */
 const optionalDiagnostic = <Schema extends S.Top>(schema: Schema, description: string) =>
   S.OptionFromOptionalKey(schema).pipe(S.withConstructorDefault(Effect.succeedNone), S.annotateKey({ description }));
 

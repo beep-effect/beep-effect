@@ -45,7 +45,6 @@ import type { CiOpsProjectionShape } from "@/projection/CiOpsProjection";
 
 const UnknownJson = S.fromJsonString(S.Unknown);
 
-// P2 Ruling 2: the lab pins the live 33-lane handoff by digest; counts always come from the decoded bytes.
 const pinnedHandoffSha256 = "705f3e754a51c6750529ccec1021293c82fce0994709a18906b863609a0a2198";
 const pinnedHandoffPath = "goals/time-to-certainty/research/gate-order-handoff.json";
 const fixtureHandoffPath = "test/fixtures/gate-order-handoff-v1.json";
@@ -55,15 +54,14 @@ const pathFailure = "Handoff paths must be normalized repo-relative paths";
 const PlatformLive = Layer.merge(BunFileSystem.layer, BunCrypto.layer);
 
 const decodeHandoffView = S.decodeUnknownEffect(S.fromJsonString(GateOrderHandoffView));
-// An independent census of the raw lane array, so the subset view's count is checked against the document.
+
 const decodeRawLaneCensus = S.decodeUnknownEffect(
   S.fromJsonString(S.Struct({ lanes: S.Array(S.Unknown), seed: S.Struct({ lanes: S.Array(S.Unknown) }) }))
 );
 const digestBytes = S.decodeUnknownEffect(Sha256HexFromBytes);
 const decodePlan = S.decodeUnknownEffect(LanePlanProposal);
 
-// One read: the digested bytes are the decoded text, as planEpisode is specified to do.
-const readHandoff = Effect.fn("LanePlanTest.readHandoff")(function* (path: string) {
+const readHandoffOnce = Effect.fn("LanePlanTest.readHandoff")(function* (path: string) {
   const fs = yield* FileSystem.FileSystem;
   const bytes = yield* fs.readFile(path);
   return { text: new TextDecoder().decode(bytes), sha256: yield* digestBytes(bytes) };
@@ -111,7 +109,7 @@ const fixtureInput = (sha256: string, path: string = fixtureHandoffPath) =>
   });
 
 const readFixtureView = Effect.fn("LanePlanTest.readFixtureView")(function* () {
-  const fixture = yield* readHandoff(fixtureHandoffPath);
+  const fixture = yield* readHandoffOnce(fixtureHandoffPath);
   return yield* decodeHandoffView(fixture.text);
 });
 
@@ -124,13 +122,12 @@ const rankedLaneIds = (lanes: ReadonlyArray<HandoffLane>): ReadonlyArray<string>
     (lane) => lane.laneId
   );
 
-// A permutation from arbitrary sort keys: position i sorts by (keys[i] or 0, i), so every order is reachable.
 type PermutationEntry<T> = { readonly key: number; readonly index: number; readonly item: T };
 const byPermutationKey: Order.Order<PermutationEntry<unknown>> = Order.combine(
   Order.mapInput(Order.Number, (entry: PermutationEntry<unknown>) => entry.key),
   Order.mapInput(Order.Number, (entry: PermutationEntry<unknown>) => entry.index)
 );
-const permute = <T>(items: ReadonlyArray<T>, keys: ReadonlyArray<number>): ReadonlyArray<T> =>
+const permuteByKeysAndIndex = <T>(items: ReadonlyArray<T>, keys: ReadonlyArray<number>): ReadonlyArray<T> =>
   pipe(
     A.map(
       items,
@@ -147,7 +144,6 @@ const threeLanes = [lane("lane:a", 0), lane("lane:b", 1), lane("lane:c", 2)];
 const declaredLane = (laneId: string, rank: number, declarationIndex: number): HandoffLane =>
   HandoffLane.make({ rank: S.Natural.make(rank), laneId, declarationIndex: S.Natural.make(declarationIndex) });
 
-// A digest that always dies: the digest service cannot fail, so planEpisode must surface a defect, not a typed error.
 const dyingDigest = Layer.mock(Digest.Digest)({
   digest: () =>
     Effect.die(
@@ -161,11 +157,9 @@ const dyingDigest = Layer.mock(Digest.Digest)({
 });
 const FailingDigestProjectionLive = CiOpsProjectionLive.pipe(Layer.provide(dyingDigest));
 
-// A digest that returns too few bytes: the SHA-256 decode rejects it, and planEpisode reports a typed read error.
 const shortDigest = Layer.mock(Digest.Digest)({ digest: () => Effect.succeed(new Uint8Array([1, 2, 3])) });
 const ShortDigestProjectionLive = CiOpsProjectionLive.pipe(Layer.provide(shortDigest));
 
-// Contract §8.3: none of these may touch a lane plan, in either namespace.
 const forbiddenLanePlanTerms = [
   "hasCurrentProposal",
   "hasProjectionSpecification",
@@ -185,8 +179,7 @@ const forbiddenLanePlanTerms = [
 const episodeNodes = (content: string): HashSet.HashSet<string> =>
   HashSet.fromIterable(A.filter(Str.split(content, /\s+/), Str.startsWith("ciops-prov:episode-")));
 
-// The admission golden's proposal, built by hand so the regression does not depend on the policy A-Box.
-const admissionRequest = (nonce: string, enqueuedAtMillis: number) =>
+const handBuiltAdmissionRequest = (nonce: string, enqueuedAtMillis: number) =>
   PendingRequest.make({
     nonce,
     kind: "merged-preview",
@@ -204,17 +197,16 @@ const admissionGoldenProposal = ScheduleProposal.make({
       stepIndex: S.Natural.make(index),
       scheduledUnitRef: nonce,
       scope: "admission",
-      request: admissionRequest(nonce, index),
+      request: handBuiltAdmissionRequest(nonce, index),
       activeTokenTotalAfter: S.Natural.make(5 * (index + 1)),
     })
   ),
-  deferredTail: [admissionRequest("deferred-c", 2)],
+  deferredTail: [handBuiltAdmissionRequest("deferred-c", 2)],
   policyDigest: "policy-digest",
   journalPrefixDigest: "journal-prefix-digest",
 });
 
-// Rebuild Die reasons without annotations so the defect is compared structurally.
-const dieReasons = <A, E>(exit: Exit.Exit<A, E>): Exit.Exit<A, E> =>
+const unannotatedDieReasons = <A, E>(exit: Exit.Exit<A, E>): Exit.Exit<A, E> =>
   Exit.match(exit, {
     onSuccess: Exit.succeed,
     onFailure: (cause) =>
@@ -241,8 +233,10 @@ const encodedPlan = {
 it.layer(PlatformLive, { timeout: "10 seconds" })("@beep/ciops lane-plan seam", (it) => {
   it.effect("pins the fixture handoff by sha256 and decodes every lane the document carries", () =>
     Effect.gen(function* () {
-      const fixture = yield* readHandoff(fixtureHandoffPath);
-      expect(fixture.sha256).toBe(pinnedHandoffSha256);
+      const fixture = yield* readHandoffOnce(fixtureHandoffPath);
+      expect(fixture.sha256, "the live 33-lane handoff is digest-pinned; lane count comes from decoded bytes").toBe(
+        pinnedHandoffSha256
+      );
 
       const view = yield* decodeHandoffView(fixture.text);
       const census = yield* decodeRawLaneCensus(fixture.text);
@@ -258,7 +252,7 @@ it.layer(PlatformLive, { timeout: "10 seconds" })("@beep/ciops lane-plan seam", 
 
   it.effect("detects drift of the live handoff away from the pinned sha256", () =>
     Effect.gen(function* () {
-      const live = yield* readHandoff(liveHandoffPath);
+      const live = yield* readHandoffOnce(liveHandoffPath);
       expect(live.sha256).toBe(pinnedHandoffSha256);
     })
   );
@@ -407,7 +401,7 @@ it.layer(PlatformLive, { timeout: "10 seconds" })("@beep/ciops lane-plan seam", 
       expect(A.map(chain, (edge) => [edge.beforeLaneId, edge.afterLaneId])).toStrictEqual(
         A.zip(ranked, A.drop(ranked, 1))
       );
-      // The fixture's declaration order differs from its rank order, so topo agreeing with rank is not insertion order.
+
       const declared = A.map(
         A.sort(
           view.lanes,
@@ -415,7 +409,10 @@ it.layer(PlatformLive, { timeout: "10 seconds" })("@beep/ciops lane-plan seam", 
         ),
         (entry) => entry.laneId
       );
-      expect(declared).not.toStrictEqual(ranked);
+      expect(
+        declared,
+        "topo agreement with rank cannot be insertion order because declaration order differs"
+      ).not.toStrictEqual(ranked);
 
       const steps = yield* planLanes(view.lanes, chain);
       expect(steps.length).toBe(view.lanes.length);
@@ -449,7 +446,7 @@ it.layer(PlatformLive, { timeout: "10 seconds" })("@beep/ciops lane-plan seam", 
     Effect.gen(function* () {
       const exit = yield* Effect.exit(planLanes(threeLanes, [precedence("lane:c", "lane:a")]));
       assertExitFailure(
-        dieReasons(exit),
+        unannotatedDieReasons(exit),
         Cause.die(
           "Lane plan self-check failed: topological order [lane:b, lane:c, lane:a] disagrees with rank order [lane:a, lane:b, lane:c]."
         )
@@ -457,14 +454,12 @@ it.layer(PlatformLive, { timeout: "10 seconds" })("@beep/ciops lane-plan seam", 
     })
   );
 
-  it.effect("inserts nodes in declaration order, distinct from both the array order and the rank order", () =>
+  it.effect("with no edges, topo reveals declaration order y-z-x, distinct from array z-x-y and rank x-y-z", () =>
     Effect.gen(function* () {
-      // Array order [z, x, y], rank order [x, y, z], declaration order [y, z, x]. With no edges, topo follows
-      // node insertion, so the self-check's die message reveals the insertion order.
       const lanes = [declaredLane("lane:z", 2, 1), declaredLane("lane:x", 0, 2), declaredLane("lane:y", 1, 0)];
       const exit = yield* Effect.exit(planLanes(lanes, []));
       assertExitFailure(
-        dieReasons(exit),
+        unannotatedDieReasons(exit),
         Cause.die(
           "Lane plan self-check failed: topological order [lane:y, lane:z, lane:x] disagrees with rank order [lane:x, lane:y, lane:z]."
         )
@@ -476,14 +471,14 @@ it.layer(PlatformLive, { timeout: "10 seconds" })("@beep/ciops lane-plan seam", 
     Effect.gen(function* () {
       const unknown = yield* Effect.exit(planLanes(threeLanes, [precedence("lane:a", "lane:zz")]));
       assertExitFailure(
-        dieReasons(unknown),
+        unannotatedDieReasons(unknown),
         Cause.die("Lane precedence lane:a -> lane:zz names a lane outside the plan.")
       );
 
       const repeated = [lane("lane:a", 0), lane("lane:b", 1), lane("lane:a", 2)];
       const duplicate = yield* Effect.exit(planLanes(repeated, rankChain(repeated)));
       assertExitFailure(
-        dieReasons(duplicate),
+        unannotatedDieReasons(duplicate),
         Cause.die("Lane plan input carries 3 lanes but only 2 distinct lane ids.")
       );
     })
@@ -496,7 +491,7 @@ it.layer(PlatformLive, { timeout: "10 seconds" })("@beep/ciops lane-plan seam", 
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const view = yield* readFixtureView();
-        const permuted = permute(view.lanes, keys);
+        const permuted = permuteByKeysAndIndex(view.lanes, keys);
         const laneSteps = yield* planLanes(permuted, rankChain(permuted));
         const plan = LanePlanProposal.make({
           episodeId: goldenEpisodeId,
@@ -579,8 +574,11 @@ it.layer(PlatformLive, { timeout: "10 seconds" })("@beep/ciops lane-plan seam", 
       const view = yield* readFixtureView();
       const golden = yield* fs.readFileString(lanePlanGoldenPath);
       expect(A.filter(forbiddenLanePlanTerms, (term) => Str.includes(term)(golden))).toStrictEqual([]);
-      // No ratified `ciops:` term is used; only the prefix declaration names the namespace.
-      expect(/(^|\s)ciops:\w/.test(golden)).toBe(false);
+
+      expect(
+        /(^|\s)ciops:\w/.test(golden),
+        "no ratified ciops term is used; only the prefix declaration names that namespace"
+      ).toBe(false);
       const count = (term: string) => A.length(A.filter(Str.split(golden, "\n"), Str.includes(` ciops-prov:${term} `)));
       expect(count("hasLaneStep")).toBe(view.lanes.length);
       expect(count("laneStepIndex")).toBe(view.lanes.length);
@@ -628,17 +626,16 @@ it.layer(PlatformLive, { timeout: "10 seconds" })("@beep/ciops lane-plan seam", 
           pinnedHandoffSha256,
         ]);
 
-        const turtle = yield* readHandoff(admissionGoldenPath);
+        const turtle = yield* readHandoffOnce(admissionGoldenPath);
         const undecodable = yield* Effect.flip(service.planEpisode(fixtureInput(turtle.sha256, admissionGoldenPath)));
         assertInstanceOf(undecodable, HandoffDecodeError);
         expect(undecodable.path).toBe(admissionGoldenPath);
 
-        // Undecodable bytes under a wrong pin: the digest is compared before any decode, so this is a mismatch.
-        const digestFirst = yield* Effect.flip(
+        const undecodableWrongPin = yield* Effect.flip(
           service.planEpisode(fixtureInput(pinnedHandoffSha256, admissionGoldenPath))
         );
-        assertInstanceOf(digestFirst, HandoffDigestMismatchError);
-        expect([digestFirst.expectedSha256, digestFirst.actualSha256]).toStrictEqual([
+        assertInstanceOf(undecodableWrongPin, HandoffDigestMismatchError);
+        expect([undecodableWrongPin.expectedSha256, undecodableWrongPin.actualSha256]).toStrictEqual([
           pinnedHandoffSha256,
           turtle.sha256,
         ]);

@@ -6,7 +6,6 @@ import * as Base64Url from "effect/encoding/Base64Url";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
-/** The `payload`-kind failure a token decodes to; any other answer fails the test. */
 const payloadFailureOf = (token: string) => {
   const result = payloadOf(token);
   if (Result.isFailure(result) && result.failure.kind === "payload") return result.failure;

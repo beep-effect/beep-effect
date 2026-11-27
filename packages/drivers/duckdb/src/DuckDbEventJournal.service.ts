@@ -33,7 +33,7 @@ export const make = Effect.fn("DuckDbEventJournal.make")(function* (
   return yield* sql.withTransaction(
     Effect.gen(function* () {
       // beep: pre-create only the incompatible tables; upstream still owns sources, indexes and migration.
-      // BIGINT avoids INT32 epoch/sequence overflow; nextval replaces SQLite's implicit rowid sequence.
+      // beep: BIGINT avoids INT32 epoch/sequence overflow; nextval replaces SQLite's implicit rowid sequence.
       yield* sql`CREATE TABLE IF NOT EXISTS ${sql(entries)} (
     id BLOB PRIMARY KEY, event TEXT NOT NULL, primary_key TEXT NOT NULL,
     payload BLOB NOT NULL, timestamp BIGINT NOT NULL

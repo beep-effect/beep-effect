@@ -51,7 +51,6 @@ export const TRANSIENT_PATTERNS: ReadonlyArray<string> = [
   "socket hang up",
 ];
 
-/** Everything a classifier may read from one failure, lowercased once. */
 const haystack = (error: CommandFailedError): string => {
   const parts = [error.stderr ?? "", error.stdout ?? ""];
   if (error.cause instanceof PlatformError.PlatformError) {
@@ -60,7 +59,6 @@ const haystack = (error: CommandFailedError): string => {
   return Str.toLowerCase(A.join(parts, "\n"));
 };
 
-/** Whether `error` matches any of `patterns`. */
 const matches: {
   (error: CommandFailedError, patterns: ReadonlyArray<string>): boolean;
   (patterns: ReadonlyArray<string>): (error: CommandFailedError) => boolean;
@@ -69,18 +67,14 @@ const matches: {
   return A.some(patterns, (pattern) => Str.includes(Str.toLowerCase(pattern))(text));
 });
 
-// Implementation of Retry.isTransient; the public contract lives on the static.
 const isTransient = (error: CommandFailedError): boolean => {
   if (error.kind === "timeout") return false;
   if (error.kind === "spawn") return !error.notFound;
   return matches(error, TRANSIENT_PATTERNS);
 };
 
-// Implementation of Retry.transient; the public contract lives on the static.
 const transient = (options?: {
-  /** Retries after the first attempt. Defaults to 2 (three attempts total). */
   readonly times?: number | undefined;
-  /** Extra patterns treated as transient, in addition to {@link TRANSIENT_PATTERNS}. */
   readonly also?: ReadonlyArray<string> | undefined;
 }): {
   readonly while: (error: CommandFailedError) => boolean;

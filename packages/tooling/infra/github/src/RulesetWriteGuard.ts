@@ -150,12 +150,10 @@ const verifyUnchanged = Effect.fn("InfraGithub.verifyRulesetUnchanged")(function
   const rulesetId = yield* Effect.fromOption(O.fromNullishOr(capture.id)).pipe(
     Effect.mapError(() => CaptureWithoutId.make({ rulesetName: capture.name }))
   );
-  // Without a prior output the shipped reconcile POSTs a new ruleset; with another id it writes that one.
   if (!O.contains(targetId, rulesetId)) {
     return yield* RulesetTargetIsNotTheCapture.make({ rulesetName: capture.name, capturedId: rulesetId, targetId });
   }
   const read = yield* Repos.getRepoRuleset({ owner, repo: repository, ruleset_id: rulesetId });
-  // The same strict decode the guard uses: an unreadable live shape refuses the write too.
   const live = yield* decodeLiveRuleset(read);
   const diffs = yield* compareCaptures(capture, live);
   if (A.isReadonlyArrayNonEmpty(diffs)) return yield* RulesetChangedSinceCapture.make({ rulesetId, diffs });
@@ -171,6 +169,11 @@ const verifyUnchanged = Effect.fn("InfraGithub.verifyRulesetUnchanged")(function
  * lifecycle method, is the shipped provider unchanged. A provider registered
  * for the resource type directly takes precedence over the `GitHub.providers()`
  * collection, so merging this layer beside the collection is enough.
+ *
+ * **Gotchas**
+ *
+ * The re-read decodes the live ruleset as strictly as the guard does, so a
+ * live shape the decoder cannot read refuses the write too.
  *
  * **Example** (Register the guarded provider)
  *

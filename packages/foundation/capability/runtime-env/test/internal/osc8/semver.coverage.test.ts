@@ -9,7 +9,6 @@ import { flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 
-// The detector answers with an Option; these assertions read its value, or null when it is None.
 const parseKonsoleVersion = flow(parseKonsoleVersionOption, O.getOrNull);
 const parseVteVersion = flow(parseVteVersionOption, O.getOrNull);
 

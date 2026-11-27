@@ -1,6 +1,0 @@
-{
-  "schemaVersion": "comment-law-pending/v1",
-  "package": "@beep/semantic-web",
-  "root": "packages/foundation/capability/semantic-web",
-  "scopes": ["."]
-}

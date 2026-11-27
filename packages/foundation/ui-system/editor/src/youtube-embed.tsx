@@ -194,6 +194,10 @@ export const YOUTUBE_EMBED_SANDBOX = "allow-scripts allow-same-origin allow-popu
  * region block, or an origin the video does not accept — and an iframe reading
  * only "Video unavailable" leaves the viewer with nothing to click.
  *
+ * **Gotchas**
+ *
+ * Keep target=_blank out of watch-link markup. WebKitGTK routes it through the generic shell opener before React can cancel navigation. The scoped desktop event claims the request; ordinary browsers use an explicit fallback while the click still owns a user gesture.
+ *
  * **Example** (Render embed from video id)
  *
  * ```tsx
@@ -221,10 +225,6 @@ export function YouTubeEmbed({ videoID }: YouTubeEmbedProps): JSX.Element {
   const safeVideoID = decoded.value.videoID;
   const watchUrl = youtubeWatchUrl(safeVideoID);
   const onWatch = (event: MouseEvent<HTMLAnchorElement>): void => {
-    // Keep target=_blank out of the markup: WebKitGTK routes it through the
-    // generic shell opener before React can cancel the navigation. The scoped
-    // desktop event claims the request; ordinary browsers receive the explicit
-    // fallback while the click still owns a user gesture.
     event.preventDefault();
     const request = new CustomEvent(YOUTUBE_WATCH_EVENT, {
       bubbles: true,

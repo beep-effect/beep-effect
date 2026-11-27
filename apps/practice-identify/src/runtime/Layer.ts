@@ -112,12 +112,12 @@ export const makeIdentificationStages = <E>(lookups: Layer.Layer<UsptoRecordLook
         current = next;
       }
     };
-    // A `.git` directory with a HEAD, or a `.git` file (linked worktree), marks a repository checkout.
     const repositoryMarker = Effect.fnUntraced(function* (dir: string) {
       const marker = path.join(dir, ".git");
       if (!(yield* sanitise(fs.exists(marker), "output-check"))) return false;
       const info = yield* sanitise(fs.stat(marker), "output-check");
-      return info.type !== "Directory" || (yield* sanitise(fs.exists(path.join(marker, "HEAD")), "output-check"));
+      const isLinkedWorktreeFile = info.type !== "Directory";
+      return isLinkedWorktreeFile || (yield* sanitise(fs.exists(path.join(marker, "HEAD")), "output-check"));
     });
     const privatePath = Effect.fnUntraced(function* (file: string) {
       if (!path.isAbsolute(file)) return yield* failure("output-path", "unsafe-output");

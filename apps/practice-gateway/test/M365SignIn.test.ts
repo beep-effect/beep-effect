@@ -26,8 +26,6 @@ import { m365NotConfigured, settingsLayer } from "./fixtures.ts";
 const Platform = Layer.mergeAll(MemoryFileSystem.layer, BunPath.layer);
 const layerTimeout = "30 seconds";
 
-// A browser that plays Microsoft: it follows the authorization URL straight
-// to the loopback redirect with the given answer.
 const answeringBrowser = (answer: (state: string) => Record<string, string>) =>
   Layer.effect(
     SystemBrowser,

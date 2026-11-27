@@ -423,10 +423,10 @@ describe("Conformance", () => {
       "round-trips schema-derived conformance variants",
       [InvariantEnforcementArbitrary, ConformancePolicyArbitrary, SpecificationRevisionArbitrary],
       Effect.fnUntraced(function* ([enforcement, policy, revision]) {
+        const plainObjectEnforcement = Enforcement.make(enforcement);
         assertSuccess(
           pipe(encodeEnforcementResult(enforcement), Result.flatMap(decodeUnknownEnforcementResult)),
-          // Arbitrary values have a null prototype; the decoded value is a plain object.
-          Enforcement.make(enforcement)
+          plainObjectEnforcement
         );
         assertSuccess(pipe(encodePolicyResult(policy), Result.flatMap(decodeUnknownPolicyResult)), Policy.make(policy));
         assertSuccess(pipe(encodeReportResult(report), Result.flatMap(decodeUnknownReportResult)), report);

@@ -90,10 +90,8 @@ describe("assistant turn defects", { concurrent: false }, () => {
         registry.set(runTurnAtom, SendTurnRequest.make({ threadId, content }));
         const exit = yield* AtomRegistry.getResult(registry, runTurnAtom).pipe(Effect.exit);
 
-        // the defect must surface as a failed run, not a silent success
         pipe(exit, Exit.isFailure, assertTrue);
-        // an exact terminal receipt ends the bounded poll on its first attempt
-        expect(statusReads).toBe(1);
+        expect(statusReads, "an exact terminal receipt ends the bounded poll on its first attempt").toBe(1);
         assertNone(registry.get(streamingTurnAtom));
         assertSome(
           O.map(registry.get(turnErrorAtom), (error) => error.message),
@@ -103,7 +101,6 @@ describe("assistant turn defects", { concurrent: false }, () => {
         expect(registry.get(draftRevisionAtom)).toBe(status === "not_persisted" ? 1 : 0);
       }, Effect.scoped);
 
-      // Each scenario restores its exact draft key after the registry is disposed.
       yield* verifyDefectedTurn("persisted");
       yield* verifyDefectedTurn("not_persisted");
     })

@@ -30,7 +30,6 @@ const bytes = (text: string) => new TextEncoder().encode(text).length;
 const gunzip = (data: Uint8Array) =>
   Effect.promise(() => new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream("gzip"))).text());
 
-// Only the child-process spawner the test runs bash with, over the native filesystem and path it needs.
 const BashSpawner = BunChildProcessSpawner.layer.pipe(Layer.provide([BunFileSystem.layer, BunPath.layer]));
 
 it.layer(BashSpawner)("CiRunners packed post-install in bash", (it) => {
@@ -50,9 +49,7 @@ it.layer(BashSpawner)("CiRunners packed post-install in bash", (it) => {
   );
 });
 
-// The renderer's cleanup and trap shim, from the line that starts the queue to the shim's removal, run under bash with
-// `aws` stubbed: the post-install's EXIT handlers must all run, and termination must still follow.
-const trapHarness = (postInstall: string) => {
+const trapShimUnderStubbedAws = (postInstall: string) => {
   const snippet = O.getOrElse(
     O.map(
       O.fromNullishOr(/hook_exit_traps=\(\)[\s\S]*?unset -f trap/u.exec(userData(postInstall))),
@@ -68,7 +65,7 @@ it.layer(BashSpawner)("CiRunners runner EXIT traps in bash", (it) => {
     Effect.gen(function* () {
       const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
       const run = (postInstall: string) =>
-        spawner.string(ChildProcess.make("bash", ["-e", "-c", trapHarness(postInstall)]));
+        spawner.string(ChildProcess.make("bash", ["-e", "-c", trapShimUnderStubbedAws(postInstall)]));
       const one = yield* run("trap 'echo hook-one' EXIT");
       expect(Str.split("\n")(Str.trim(one))).toStrictEqual([
         "body-done",

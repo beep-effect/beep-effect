@@ -111,8 +111,7 @@ export interface ReplayRun {
   readonly writes: ReadonlyArray<AdmittedFixtureWrite>;
 }
 
-// Fisher-Yates over a seeded sequence.
-const shuffled = <T>(items: ReadonlyArray<T>, seed: number): ReadonlyArray<T> => {
+const fisherYatesShuffled = <T>(items: ReadonlyArray<T>, seed: number): ReadonlyArray<T> => {
   const random = seededRandom(seed);
   const out = A.copy(items);
   for (let at = out.length - 1; at > 0; at -= 1) {
@@ -142,19 +141,14 @@ export interface PreparedReplay {
   readonly writers: ReadonlyArray<CapturedWriter>;
 }
 
-// The replay's databases are scratch: no commit of them needs to survive a
-// crash, so they skip the journal file and every fsync.
-const scratch = Effect.fnUntraced(function* (context: Context.Context<SqlClient.SqlClient>) {
+const withoutCrashDurability = Effect.fnUntraced(function* (context: Context.Context<SqlClient.SqlClient>) {
   const sql = Context.get(context, SqlClient.SqlClient);
   yield* sql`PRAGMA journal_mode = MEMORY`;
   yield* sql`PRAGMA synchronous = OFF`;
 });
 
-// The export narrowed to one cluster's file. Capture and status typing read
-// only the files an edit names and admission never reads a batch's base, so
-// the batch is the same as against the whole export, and capture stays linear
-// in the file rather than in the folder.
 const narrowedTo = (base: BaseExport, path: string): BaseExport => ({
+  // decision: replay-captures-against-the-cluster-file
   ...base,
   files: A.filter(base.files, (file) => file.path === path),
 });
@@ -176,7 +170,7 @@ export const prepareReplay = Effect.fnUntraced(function* (
   yield* writeSampleFolder(root, fixture.files);
   const base = yield* Effect.scoped(
     Effect.flatMap(openWritingStore({ filename: database, disableWAL: true }, status.fields), (store) =>
-      Effect.andThen(scratch(store.context), store.projector.importFolder(root))
+      Effect.andThen(withoutCrashDurability(store.context), store.projector.importFolder(root))
     )
   );
   const writers: Array<CapturedWriter> = [];
@@ -192,8 +186,6 @@ export const prepareReplay = Effect.fnUntraced(function* (
   return { base, database, fixture, root, status, workspace, writers } satisfies PreparedReplay;
 });
 
-// One run on a byte copy of the imported database: the writers are admitted
-// in the given order, then the folder is exported.
 const replayInOrder = Effect.fnUntraced(function* (
   prepared: PreparedReplay,
   seed: number,
@@ -202,10 +194,10 @@ const replayInOrder = Effect.fnUntraced(function* (
   const fs = yield* FileSystem.FileSystem;
   const database = `${prepared.workspace}/run-${seed}.db`;
   yield* fs.copyFile(prepared.database, database);
-  // The folder holds the imported bytes again, so the export fence of the copy passes.
-  yield* writeSampleFolder(prepared.root, prepared.fixture.files);
+  const importedBytesForExportFence = writeSampleFolder(prepared.root, prepared.fixture.files);
+  yield* importedBytesForExportFence;
   const store = yield* openWritingStore({ filename: database, disableWAL: true }, prepared.status.fields);
-  yield* scratch(store.context);
+  yield* withoutCrashDurability(store.context);
   const writes: Array<AdmittedFixtureWrite> = [];
   for (const [position, captured] of order.entries()) {
     const outcomes = yield* store.admission.admit(captured.batch);
@@ -235,7 +227,7 @@ const replayInOrder = Effect.fnUntraced(function* (
  * draws, then the folder is exported.
  */
 export const replayOnce = Effect.fnUntraced(function* (prepared: PreparedReplay, seed: number) {
-  return yield* replayInOrder(prepared, seed, shuffled(prepared.writers, seed));
+  return yield* replayInOrder(prepared, seed, fisherYatesShuffled(prepared.writers, seed));
 });
 
 /**
@@ -243,8 +235,6 @@ export const replayOnce = Effect.fnUntraced(function* (prepared: PreparedReplay,
  * writers in order), recorded as seed 0.
  */
 export const replayInSubmissionOrder = (prepared: PreparedReplay) => replayInOrder(prepared, 0, prepared.writers);
-
-// --- The oracle ----------------------------------------------------------------
 
 /** What the oracle found in one run. */
 export interface RunVerdict {
@@ -297,12 +287,10 @@ const sameText = O.makeEquivalence((self: string, that: string) => self === that
 
 const sameNodeIds = A.makeEquivalence((self: NodeId, that: NodeId) => self === that);
 
-// The node operations of the run in admission order, with their outcomes;
-// only the status scoring reads an outcome.
 interface Judged {
   readonly author: LineageId;
   readonly operation: NodeOperation;
-  readonly outcome: O.Option<AdmissionOutcome>;
+  readonly statusScoringOutcome: O.Option<AdmissionOutcome>;
 }
 
 const judgedOf = (run: ReplayRun): ReadonlyArray<Judged> =>
@@ -310,11 +298,10 @@ const judgedOf = (run: ReplayRun): ReadonlyArray<Judged> =>
     A.map(write.batch.operations, (operation, index) => ({
       author: write.writer.author,
       operation,
-      outcome: A.get(write.outcomes, index),
+      statusScoringOutcome: A.get(write.outcomes, index),
     }))
   );
 
-// Whether `held` keeps the writer's text for the node with its other side retrievable.
 const heldWithBothTexts = (
   run: ReplayRun,
   final: MutableHashMap.MutableHashMap<NodeId, string>,
@@ -330,8 +317,6 @@ const heldWithBothTexts = (
       (write.operation.op === "insert" || O.isSome(conflict.ours) || !MutableHashMap.has(final, write.operation.nodeId))
   );
 
-// What the sequential lifecycle model of one node has counted so far, and the
-// node's current value under that model.
 interface StatusTally {
   readonly backward: number;
   readonly backwardRejected: number;
@@ -342,9 +327,6 @@ interface StatusTally {
 
 const oneIf = (condition: boolean): number => (condition ? 1 : 0);
 
-// A typed move from `current` to `to`: outside the lifecycle it must be
-// refused as such, behind `current` it must be rejected as backward, and
-// otherwise it must land and becomes the model's value.
 const judgeMove = (
   lifecycle: StatusLifecycle,
   tally: StatusTally,
@@ -368,13 +350,11 @@ const judgeMove = (
   return { ...tally, value: O.some(to), wrong: tally.wrong + oneIf(outcome.outcome !== "landed") };
 };
 
-// One move of the model: a move that is no typed status move, has no
-// outcome or starts from no lifecycle value is wrong.
 const stepStatus =
   (lifecycle: StatusLifecycle) =>
   (tally: StatusTally, move: Judged): StatusTally => {
     const to = move.operation.op === "setStatus" ? move.operation.transition.to : undefined;
-    const outcome = O.getOrUndefined(move.outcome);
+    const outcome = O.getOrUndefined(move.statusScoringOutcome);
     if (to === undefined || outcome === undefined || O.isNone(tally.value)) {
       return { ...tally, wrong: tally.wrong + 1 };
     }
@@ -387,7 +367,6 @@ const stepStatus =
     );
   };
 
-// The sequential lifecycle model of the status moves of one node.
 const statusVerdict = (
   lifecycle: StatusLifecycle,
   final: MutableHashMap.MutableHashMap<NodeId, string>,
@@ -410,7 +389,6 @@ const statusVerdict = (
 
 type Texts = MutableHashMap.MutableHashMap<NodeId, string>;
 
-// What one run's oracle reads: its export and base texts and its judged operations.
 interface Oracle {
   readonly baseTexts: Texts;
   readonly final: Texts;
@@ -418,7 +396,6 @@ interface Oracle {
   readonly run: ReplayRun;
 }
 
-// The judged operations of one kind, by node, in admission order.
 const byNode = (judged: ReadonlyArray<Judged>, op: NodeOperation["op"]) => {
   const grouped = MutableHashMap.empty<NodeId, Array<Judged>>();
   for (const write of A.filter(judged, (candidate) => candidate.operation.op === op)) {
@@ -429,13 +406,11 @@ const byNode = (judged: ReadonlyArray<Judged>, op: NodeOperation["op"]) => {
   return grouped;
 };
 
-// The node ids the judged operations of one kind touch.
 const nodesWith = (judged: ReadonlyArray<Judged>, op: NodeOperation["op"]) =>
   MutableHashSet.fromIterable(
     A.flatMap(judged, (write) => (write.operation.op === op ? [write.operation.nodeId] : []))
   );
 
-// Every text some writer submitted, by node.
 const writtenTexts = (judged: ReadonlyArray<Judged>) => {
   const written = MutableHashMap.empty<NodeId, MutableHashSet.MutableHashSet<string>>();
   for (const write of judged) {
@@ -448,7 +423,6 @@ const writtenTexts = (judged: ReadonlyArray<Judged>) => {
   return written;
 };
 
-// Every writer's text: in the export or held with both texts.
 const writerLosses = ({ final, judged, run }: Oracle): ReadonlyArray<string> =>
   A.flatMap(judged, (write) =>
     O.match(textOf(write.operation), {
@@ -461,7 +435,6 @@ const writerLosses = ({ final, judged, run }: Oracle): ReadonlyArray<string> =>
     })
   );
 
-// Whether `held` keeps a delete of the node by the writer.
 const deleteHeld = (run: ReplayRun, write: Judged): boolean =>
   A.some(
     run.held,
@@ -471,8 +444,6 @@ const deleteHeld = (run: ReplayRun, write: Judged): boolean =>
       conflict.operation.op === "delete"
   );
 
-// Every delete: its node gone from the export, or the delete held. A node is
-// gone only when some delete of it was not held.
 const deleteLosses = ({ final, judged, run }: Oracle): ReadonlyArray<string> => {
   const losses: Array<string> = [];
   for (const [nodeId, deletes] of byNode(judged, "delete")) {
@@ -488,8 +459,6 @@ const deleteLosses = ({ final, judged, run }: Oracle): ReadonlyArray<string> => 
   return losses;
 };
 
-// Base nodes: kept unless some writer deletes them (`deleteLosses` checks
-// that delete), unchanged unless written.
 const baseNodeLosses = (
   { baseTexts, final, judged }: Oracle,
   written: ReturnType<typeof writtenTexts>
@@ -508,8 +477,6 @@ const baseNodeLosses = (
   return losses;
 };
 
-// Whether `text` is the base text of a moved status cell with its token at
-// some lifecycle value.
 const isStatusForm = (
   lifecycle: StatusLifecycle,
   baseTexts: Texts,
@@ -524,8 +491,6 @@ const isStatusForm = (
     )
   );
 
-// Exported texts: each one some base or some writer held. A status cell may
-// also hold its base text with the token moved to another lifecycle value.
 const exportedLosses = (
   { baseTexts, final, judged, run }: Oracle,
   written: ReturnType<typeof writtenTexts>
@@ -542,9 +507,6 @@ const exportedLosses = (
   return losses;
 };
 
-// Whether every writer of a contested node whose text the export lacks has a
-// hold with the exported text as `ours` and its own text as `theirs`, and
-// exactly one writer's text was exported.
 const contestedHeld = ({ final, run }: Oracle, nodeId: NodeId, writes: ReadonlyArray<Judged>): boolean => {
   const exported = MutableHashMap.get(final, nodeId);
   const others = A.filter(writes, (write) => !O.exists(exported, (text) => O.contains(textOf(write.operation), text)));
@@ -562,7 +524,6 @@ const contestedHeld = ({ final, run }: Oracle, nodeId: NodeId, writes: ReadonlyA
   return others.length === writes.length - 1 && bothKept;
 };
 
-// Contested nodes: two writers, two different replace texts for one node.
 const contestedCounts = (oracle: Oracle) => {
   let contestedNodes = 0;
   let contestedHeldWithBothTexts = 0;
@@ -576,7 +537,6 @@ const contestedCounts = (oracle: Oracle) => {
   return { contestedNodes, contestedHeldWithBothTexts };
 };
 
-// Status moves, node by node in admission order.
 const statusCounts = ({ baseTexts, final, judged, run }: Oracle) => {
   const statusMoves = byNode(judged, "setStatus");
   let statusWrong = 0;
@@ -599,12 +559,7 @@ const statusCounts = ({ baseTexts, final, judged, run }: Oracle) => {
   };
 };
 
-// The node ids each file must export, in order, from the base and the run's
-// own inserts, never from admission's outcomes: every base file's nodes as a
-// chain in base order, each insert after its predecessor (or opening its
-// file) in its own file, newest first among one predecessor's successors as
-// the projection orders them, then only the nodes the export holds.
-const expectedOrder = (run: ReplayRun, exported: MutableHashSet.MutableHashSet<NodeId>) => {
+const orderFromBaseAndInserts = (run: ReplayRun, exported: MutableHashSet.MutableHashSet<NodeId>) => {
   const roots = MutableHashMap.empty<string, Array<NodeId>>();
   const successors = MutableHashMap.empty<NodeId, Array<NodeId>>();
   const push = <K>(map: MutableHashMap.MutableHashMap<K, Array<NodeId>>, key: K, nodeId: NodeId): void => {
@@ -640,20 +595,18 @@ const expectedOrder = (run: ReplayRun, exported: MutableHashSet.MutableHashSet<N
     MutableHashSet.add(paths, file.path);
   }
   return A.map(A.fromIterable(paths), (path) => {
-    // Depth first, newest successor first: a stack pushed oldest first pops the newest.
-    const stack = A.copy(O.getOrElse(MutableHashMap.get(roots, path), (): Array<NodeId> => []));
+    const newestFirstStack = A.copy(O.getOrElse(MutableHashMap.get(roots, path), (): Array<NodeId> => []));
     const order: Array<NodeId> = [];
-    for (let next = stack.pop(); next !== undefined; next = stack.pop()) {
+    for (let next = newestFirstStack.pop(); next !== undefined; next = newestFirstStack.pop()) {
       if (MutableHashSet.has(exported, next)) {
         order.push(next);
       }
-      stack.push(...O.getOrElse(MutableHashMap.get(successors, next), (): Array<NodeId> => []));
+      newestFirstStack.push(...O.getOrElse(MutableHashMap.get(successors, next), (): Array<NodeId> => []));
     }
     return [path, order] as const;
   });
 };
 
-// Every exported node once, and every file in the order the oracle builds.
 const placementLosses = ({ run }: Oracle): ReadonlyArray<string> => {
   const ids = A.flatMap(run.exported.files, (file) => A.map(file.nodes, (node) => node.nodeId));
   const exported = MutableHashSet.fromIterable(ids);
@@ -661,7 +614,7 @@ const placementLosses = ({ run }: Oracle): ReadonlyArray<string> => {
   if (MutableHashSet.size(exported) !== ids.length) {
     losses.push(`${ids.length - MutableHashSet.size(exported)} exported nodes appear twice`);
   }
-  for (const [path, order] of expectedOrder(run, exported)) {
+  for (const [path, order] of orderFromBaseAndInserts(run, exported)) {
     const actual = O.match(
       A.findFirst(run.exported.files, (file) => file.path === path),
       {
@@ -676,7 +629,6 @@ const placementLosses = ({ run }: Oracle): ReadonlyArray<string> => {
   return losses;
 };
 
-// Whether every file on disk holds exactly the joined texts of its exported nodes.
 const exportMatchesDisk = (run: ReplayRun): boolean =>
   A.every(run.disk, ([path, text]) =>
     O.exists(
@@ -694,8 +646,6 @@ const holdsAny = (write: AdmittedFixtureWrite): boolean => A.some(write.outcomes
 const landsAll = (write: AdmittedFixtureWrite): boolean =>
   A.every(write.outcomes, (outcome) => outcome.outcome === "landed");
 
-// Per stratum, in first-admission order: its writes, those with a held
-// operation and those whose every operation landed.
 const writesByStratum = (run: ReplayRun): RunVerdict["writesByStratum"] =>
   A.map(A.dedupe(A.map(run.writes, (write) => write.cluster.stratum)), (stratum) => {
     const inStratum = A.filter(run.writes, (write) => write.cluster.stratum === stratum);

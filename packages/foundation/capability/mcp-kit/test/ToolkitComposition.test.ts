@@ -34,9 +34,6 @@ const hardRegistration = SourceAuthRegistration.make({
   gate: "hard",
 });
 
-// `composeGatedLayers` decides mount-vs-vanish while its layer builds, so the
-// fixture ConfigProvider must be an explicit upstream dependency (not a
-// sibling merge) to be visible during that build.
 const buildComposedFixture = (env: Record<string, string>) => {
   const acquisitions = Ref.makeUnsafe(0);
   const executions = Ref.makeUnsafe(0);
@@ -91,7 +88,10 @@ describe("composeGatedLayers (hard gate)", () => {
       "mounts the hard-gated source",
       Effect.fnUntraced(function* () {
         const server = yield* McpServer.McpServer;
-        assert.isTrue(A.some(server.tools, ({ tool }) => tool.name === "hard_source_tool"));
+        assert.isTrue(
+          A.some(server.tools, ({ tool }) => tool.name === "hard_source_tool"),
+          "composeGatedLayers decides while it builds, so the ConfigProvider is provided upstream, not merged"
+        );
         const got2 = yield* Ref.get(present.acquisitions);
         assert.strictEqual(got2, 1);
         const got3 = yield* Ref.get(present.executions);

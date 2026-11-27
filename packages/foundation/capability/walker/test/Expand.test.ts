@@ -1,5 +1,3 @@
-// The compile+expand recipe: one call, one typed error, both causes intact.
-
 import { GlobPatternError, GlobPatternOptions } from "@beep/glob";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { DescendError } from "@beep/walker/Descend";
@@ -16,7 +14,6 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { platform, platformWith } from "./support/fixtures.ts";
 
-/** The defaults, spelled out — what a caller passes to mean "no option refinements". */
 const defaults = GlobPatternOptions.make({});
 
 describe("GlobExpansionError — exact synchronous messages", () => {
@@ -109,10 +106,6 @@ layer(platform(tree), { timeout: "10 seconds" })("compileAndExpand, expansion", 
     })
   );
 
-  // The consumer's bug, at the surface that is supposed to prevent it: two call
-  // sites of one entry point, differing only in the `glob` they each spell out.
-  // Required `glob` is what makes the divergence a visible difference between
-  // two spellings rather than the absence of one.
   it.effect("dotfile semantics come from the glob options the call site states", () =>
     Effect.gen(function* () {
       const withDot = yield* compileAndExpand("src/*.ts", {
@@ -128,14 +121,12 @@ layer(platform(tree), { timeout: "10 seconds" })("compileAndExpand, expansion", 
 
   it.effect("passes descend options straight through", () =>
     Effect.gen(function* () {
-      // Walks from cwd, so `src/lib` sits two levels below the base and trips
-      // the cap — proving maxDepth reaches descend rather than being dropped.
       const error = yield* Effect.flip(compileAndExpand("**/*.ts", { cwd: "/proj", glob: defaults, maxDepth: 1 }));
       assert.strictEqual(error.stage, "descend");
       assert.strictEqual(error.cause._tag, "DescendError");
       if (error.cause._tag !== "DescendError") return;
       assert.strictEqual(error.cause.reason, "depthExceeded");
-      assert.strictEqual(error.cause.limit, 1);
+      assert.strictEqual(error.cause.limit, 1, "src/lib sits two levels below cwd, so maxDepth reached descend");
     })
   );
 });
@@ -175,8 +166,6 @@ layer(platform(tree), { timeout: "10 seconds" })("compileAndExpand, compile fail
 
   it.effect("never touches the filesystem when the pattern does not compile", () =>
     Effect.gen(function* () {
-      // A pattern rejected at compile time cannot reach a walk, so a cwd that
-      // does not exist is irrelevant — the compile stage decides first.
       const error = yield* Effect.flip(
         compileAndExpand(Str.repeat(65_537)("a"), { cwd: "/nonexistent", glob: defaults })
       );
@@ -212,9 +201,6 @@ layer(platformWith(unreadableTree, { unreadable: HashSet.make("/proj/src/locked"
       })
     );
 
-    // The point of one tag with a discriminated cause: a caller catches once,
-    // then still tells "your pattern is malformed" from "I could not read that
-    // directory" — two different problems with two different fixes.
     it.effect("one catch discriminates both causes", () =>
       Effect.gen(function* () {
         const describe = (error: GlobExpansionError): string =>

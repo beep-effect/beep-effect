@@ -36,7 +36,6 @@ import type { LanesSnapshot } from "./Lanes.ts";
 
 const repositoryRoot = Effect.gen(function* () {
   const path = yield* Path.Path;
-  // apps/labs/lane-cockpit/src/main.ts -> the checkout root.
   return yield* path.fromFileUrl(new URL("../../../../", import.meta.url));
 });
 
@@ -71,7 +70,6 @@ const main = Effect.fnUntraced(function* () {
     Effect.forkScoped
   );
 
-  // The board's own quit path (q, Ctrl+C) unmounts it and resolves this.
   return yield* Effect.promise(() => root.waitUntilExit());
 });
 

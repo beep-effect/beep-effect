@@ -43,11 +43,11 @@ it.effect.prop(
       assert.isAtMost(widthOf(clipped), columns);
       const wrapped = wrapSpans(spans, columns);
       const lines = A.map(wrapped, (line) => paintSpans(line, ctx));
-      // Reparse each canonical output line separately, retaining blank lines too.
       const reparsed = A.map(lines, (line) => flatten([Doc.text(line)], ctx));
       assert.deepStrictEqual(
         A.map(reparsed, (line) => paintSpans(line, ctx)),
-        lines
+        lines,
+        "each canonical output line reparses on its own, blank lines retained"
       );
       assert.deepStrictEqual(
         A.map(reparsed, (line) =>

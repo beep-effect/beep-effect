@@ -251,15 +251,12 @@ const decodeToolParameters = (
 const handleTool = (
   toolkit: NlpToolkitWithHandler,
   tool: NlpTool,
-  params: Tool.Parameters<NlpTool>
+  paramsDecodedForTool: Tool.Parameters<NlpTool>
 ): Effect.Effect<
   Stream.Stream<Tool.HandlerResult<NlpTool>, Tool.HandlerError<NlpTool> | AiError.AiError>,
   AiError.AiError
 > =>
-  // `Toolkit.handle` is keyed by a literal tool-name map. At this adapter boundary
-  // we validate `params` against the selected tool schema immediately beforehand,
-  // so the runtime pairing of tool name and decoded parameters is sound.
-  toolkit.handle(tool.name as never, params as never) as Effect.Effect<
+  toolkit.handle(tool.name as never, paramsDecodedForTool as never) as Effect.Effect<
     Stream.Stream<Tool.HandlerResult<NlpTool>, Tool.HandlerError<NlpTool> | AiError.AiError>,
     AiError.AiError
   >;

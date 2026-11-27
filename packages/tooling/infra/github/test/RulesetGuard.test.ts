@@ -17,7 +17,6 @@ import census from "./fixtures/census.json" with { type: "json" };
 
 const decodeLive = decodeLiveRuleset;
 
-/** The census capture of ruleset 10240248, plus the server-managed fields GitHub returns. */
 const liveMain = {
   id: 10_240_248,
   node_id: "RRS_fixture",
@@ -56,13 +55,11 @@ const driftedFields = Effect.fn("RulesetGuardTest.drifted")(function* (live: unk
   return A.map(failure.diffs, (diff) => diff.field);
 });
 
-/** Asserts the guard refuses `live` and names exactly `fields`. */
 const expectDrift = Effect.fn("RulesetGuardTest.expectDrift")(function* (live: unknown, fields: ReadonlyArray<string>) {
   const drifted = yield* driftedFields(live);
   expect(drifted).toEqual(fields);
 });
 
-/** Asserts the guard passes `live`. */
 const expectPass = Effect.fn("RulesetGuardTest.expectPass")(function* (live: unknown) {
   const exit = yield* guard(live);
   expect(exit._tag).toBe("Success");
@@ -105,8 +102,8 @@ describe("the ruleset 10240248 guard", () => {
         ),
       }));
       yield* expectDrift(rebound, ["requiredChecks"]);
-      // A beep-reviewer entry without an App binding cannot be carried faithfully, so it is refused too.
-      yield* expectDrift(withChecks([{ context: "beep-reviewer" }]), ["requiredChecks"]);
+      const reviewerWithoutAppBinding = withChecks([{ context: "beep-reviewer" }]);
+      yield* expectDrift(reviewerWithoutAppBinding, ["requiredChecks"]);
     })
   );
 
@@ -131,28 +128,41 @@ describe("the ruleset 10240248 guard", () => {
 
   it.effect("fails closed on any shape it cannot read", () =>
     Effect.gen(function* () {
-      const unreadable = [
-        // A rule type the stack does not write (the PUT would drop it).
-        { ...liveMain, rules: [...(liveMain.rules as ReadonlyArray<Rule>), { type: "required_signatures" }] },
-        // An unknown key inside a rule's parameters.
-        editRule("required_status_checks", (parameters) => ({ ...parameters, required_reviewers_v2: [] })),
-        // An unknown top-level key.
-        { ...liveMain, merge_queue_policy: "new" },
-        // An unknown condition.
-        { ...liveMain, conditions: { ...liveMain.conditions, repository_name: { include: ["x"] } } },
-        // Settings the provider never sends, away from their defaults (the PUT would reset them).
+      const ruleTypeTheStackNeverWrites = {
+        ...liveMain,
+        rules: [...(liveMain.rules as ReadonlyArray<Rule>), { type: "required_signatures" }],
+      };
+      const unknownRuleParameterKey = editRule("required_status_checks", (parameters) => ({
+        ...parameters,
+        required_reviewers_v2: [],
+      }));
+      const unknownTopLevelKey = { ...liveMain, merge_queue_policy: "new" };
+      const unknownCondition = {
+        ...liveMain,
+        conditions: { ...liveMain.conditions, repository_name: { include: ["x"] } },
+      };
+      const unsentSettingsOffTheirDefaults = [
         editRule("pull_request", (parameters) => ({ ...parameters, required_reviewers: [{ reviewer_id: 1 }] })),
         editRule("pull_request", (parameters) => ({
           ...parameters,
           dismissal_restriction: { enabled: true, allowed_actors: [] },
         })),
         editRule("required_status_checks", (parameters) => ({ ...parameters, do_not_enforce_on_create: true })),
-        // A missing guarded field.
-        { ...liveMain, bypass_actors: undefined },
+      ];
+      const missingGuardedField = { ...liveMain, bypass_actors: undefined };
+      const unreadable = [
+        ruleTypeTheStackNeverWrites,
+        unknownRuleParameterKey,
+        unknownTopLevelKey,
+        unknownCondition,
+        ...unsentSettingsOffTheirDefaults,
+        missingGuardedField,
       ];
       for (const live of unreadable) {
         const exit = yield* Effect.exit(decodeLive(live));
-        expect(exit._tag).toBe("Failure");
+        expect(exit._tag, "the strict decoder refuses it: a PUT would drop or reset what it does not know").toBe(
+          "Failure"
+        );
       }
       const text = yield* Effect.exit(decodeLiveRulesetJson("not json"));
       expect(text._tag).toBe("Failure");
@@ -163,23 +173,22 @@ describe("the ruleset 10240248 guard", () => {
     Effect.gen(function* () {
       const withReviewer = yield* decodeLive(withChecks([{ context: "beep-reviewer", integration_id: 5_321_138 }]));
       const without = yield* decodeLive(liveMain);
-      // Nothing moved: the after read equals what was written.
       const same = yield* Effect.exit(guardAfterDeploy(productionConfig.mainRuleset, withReviewer, withReviewer));
-      expect(same._tag).toBe("Success");
-      // Released during the window, then required during the window.
+      expect(same._tag, "nothing moved: the after read equals what was written").toBe("Success");
       for (const [before, after] of [
         [withReviewer, without],
         [without, withReviewer],
       ] as const) {
         const failure = yield* Effect.flip(guardAfterDeploy(productionConfig.mainRuleset, before, after));
-        expect(failure._tag).toBe("ReviewerChangedDuringDeploy");
+        expect(failure._tag, "released during the window, then required during the window").toBe(
+          "ReviewerChangedDuringDeploy"
+        );
         if (failure._tag === "ReviewerChangedDuringDeploy") {
           expect(reviewerMismatchMessage(failure)).toMatch(
             /^ruleset-guard: beep-reviewer differs from what the deploy wrote \(written: .+; live now: .+\); confirm the switch position\.$/
           );
         }
       }
-      // Any other difference is ordinary drift.
       const strict = yield* decodeLive(
         editRule("required_status_checks", (parameters) => ({
           ...parameters,
@@ -187,27 +196,27 @@ describe("the ruleset 10240248 guard", () => {
         }))
       );
       const drift = yield* Effect.flip(guardAfterDeploy(productionConfig.mainRuleset, without, strict));
-      expect(drift._tag).toBe("RulesetDrift");
+      expect(drift._tag, "any other difference is ordinary drift").toBe("RulesetDrift");
     })
   );
 
   it.effect("rule types, a missing pull request rule and an absent extra-approval setting are all compared", () =>
     Effect.gen(function* () {
-      // A declared ruleset without the deletion or non-fast-forward rule plans fewer rule types.
       const lean = MainRuleset.make({ ...productionConfig.mainRuleset, deletion: false, nonFastForward: false });
-      expect(plannedFields(lean, O.none()).ruleTypes).toEqual(["pull_request", "required_status_checks"]);
-      // A live ruleset with no pull request rule differs in the rule types, the settings and the merge methods.
+      expect(
+        plannedFields(lean, O.none()).ruleTypes,
+        "a declared ruleset without the deletion or non-fast-forward rule plans fewer rule types"
+      ).toEqual(["pull_request", "required_status_checks"]);
       const noPullRequest = {
         ...liveMain,
         rules: A.filter(liveMain.rules as ReadonlyArray<Rule>, (rule) => rule.type !== "pull_request"),
       };
       yield* expectDrift(noPullRequest, ["ruleTypes", "pullRequest", "allowedMergeMethods"]);
-      // An absent extra-approval setting reads as false, which differs from the declared true.
-      const absent = editRule(
+      const absentExtraApprovalReadsFalse = editRule(
         "pull_request",
         ({ require_extra_approval_for_unattributed_changes: _, ...rest }) => rest
       );
-      yield* expectDrift(absent, ["pullRequest"]);
+      yield* expectDrift(absentExtraApprovalReadsFalse, ["pullRequest"]);
     })
   );
 });

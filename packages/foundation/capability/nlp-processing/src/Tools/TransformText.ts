@@ -36,12 +36,10 @@ const TransformOperation = TransformOperationKit.pipe(
 
 class TransformTextParameters extends S.Opaque<TransformTextParameters, { readonly brand: unique symbol }>()(
   S.Struct({
-    /** Ordered list of transformations to apply */
     operations: S.Array(TransformOperation).annotateKey({
       description: "Ordered list of transformations to apply",
       examples: [["removeHtml", "lowercase", "trim"]],
     }),
-    /** The text to transform */
     text: S.String.annotateKey({
       description: "The text to transform",
       examples: ["<b>Hello</b>  WORLD!! "],
@@ -55,11 +53,9 @@ class TransformTextParameters extends S.Opaque<TransformTextParameters, { readon
 
 class TransformTextSuccess extends S.Opaque<TransformTextSuccess, { readonly brand: unique symbol }>()(
   S.Struct({
-    /** List of operations that were applied */
     operationsApplied: S.Array(S.String).annotateKey({
       description: "List of operations that were applied",
     }),
-    /** The transformed text */
     result: S.String.annotateKey({
       description: "The transformed text",
     }),

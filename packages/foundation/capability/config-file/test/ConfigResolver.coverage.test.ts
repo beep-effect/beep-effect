@@ -32,9 +32,6 @@ it.layer(platform, { timeout: "30 seconds" })((it) => {
     );
     it.effect("skips etc on Windows, read from HostProcessPlatform rather than the process global", () =>
       Effect.gen(function* () {
-        // Conformance shift (W3-e): the platform is the `HostProcessPlatform`
-        // reference, so a test pins it with `provideService` instead of stubbing
-        // `globalThis.process`.
         const etc = ConfigResolver.systemEtc({ app: "app", filename: "config", dir: "/" });
         const windows = yield* Effect.provideService(
           etc.resolveProbe ?? Effect.die("no probe"),
@@ -61,9 +58,6 @@ it.layer(platform, { timeout: "30 seconds" })((it) => {
   });
 });
 
-// The workspace-root markers and a present system config, as unit cases on
-// memfs: the integration suite covers them on a real tree, and these keep the
-// coverage lane (which excludes test/integration) at full branch coverage.
 const markers = Layer.mergeAll(
   MemoryFileSystem.layerWith({
     "/npm/package.json": `{"workspaces":["packages/*"]}`,
@@ -81,7 +75,7 @@ const markers = Layer.mergeAll(
 );
 
 it.layer(markers, { timeout: "30 seconds" })((it) => {
-  describe("workspace-root markers and a present system config", () => {
+  describe("workspace-root markers and a present system config, on memfs because the coverage lane skips the integration suite", () => {
     it.effect("a package.json with workspaces marks the root, from a nested cwd", () =>
       Effect.gen(function* () {
         const resolved5 = yield* ConfigResolver.workspaceRoot({ filename: ".apprc", cwd: "/npm/sub" }).resolve;

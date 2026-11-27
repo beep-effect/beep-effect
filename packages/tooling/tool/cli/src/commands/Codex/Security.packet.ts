@@ -4,7 +4,9 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
 import * as A from "effect/Array";
+import { GOAL_HANDOFF_CLAUSE } from "../Goals/Goals.schemas.ts";
 import { PacketDocument } from "./Findings.write.ts";
 import { SECURITY_PACKAGE_VERSION, SECURITY_PLUGIN_VERSION } from "./Security.schemas.ts";
 import type { CodexPacketPlan } from "./Findings.schemas.ts";
@@ -77,7 +79,7 @@ export const renderSecurityPacketGuidance = (plan: CodexPacketPlan): ReadonlyArr
         purpose,
         "",
         "```text",
-        `/goal follow the instructions in ${packet}/GOAL.md`,
+        `/goal follow the instructions in ${packet}/GOAL.md${GOAL_HANDOFF_CLAUSE}`,
         "```",
         "",
         "See SPEC.md for scope and PLAN.md for execution.",

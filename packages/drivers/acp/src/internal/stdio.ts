@@ -11,8 +11,6 @@ import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 const encoder = new TextEncoder();
 
-// The Node spawner reports a signal exit as a `ChildProcess.exitCode` platform error whose cause
-// carries this message, instead of an exit code.
 const SIGNAL_EXIT_MESSAGE = /^Process interrupted due to receipt of signal: '(SIG[A-Z0-9]+)'$/;
 const CHILD_PROCESS_MODULE = "ChildProcess";
 const EXIT_CODE_METHOD = "exitCode";

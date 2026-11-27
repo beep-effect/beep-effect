@@ -50,7 +50,6 @@ class Card extends Domain.Aggregate("Card", {
   decide: { IssueCard: (_state, command) => [CardIssued.make({ holder: command.holder })] },
   evolve: { CardIssued: (_state, event) => ({ _tag: "Issued" as const, holder: event.holder }) },
 }) {}
-/** Audit runs by card id; the first run for a `flaky-*` card dies. */
 const audits = MutableHashMap.empty<string, number>();
 const auditsOf = (id: string) => O.getOrElse(MutableHashMap.get(audits, id), () => 0);
 class CardAudit extends Domain.Policy("CardAudit", { from: Card, on: [CardIssued] }) {}
@@ -65,14 +64,12 @@ const CardAuditLive = CardAudit.toLayer(
 );
 class Unit extends Domain.Model("Unit", { aggregates: [Card], policies: [CardAudit] }) {}
 
-/** The squashed defect of a cause, when it is an instance of `schema`. */
 const defectOf =
   <Schema extends S.Top>(schema: Schema) =>
   <E>(cause: Cause.Cause<E>) =>
     cause.pipe(Cause.squash, O.fromNullishOr, O.filter(S.is(schema)));
 
 const TableName = S.Struct({ tablename: S.String });
-/** Decode the rows a SQL statement returned. */
 const rowsOf = <Schema extends S.Codec<unknown>>(row: Schema) => S.decodeUnknownEffect(S.Array(row));
 const decodeTableNames = rowsOf(TableName);
 
@@ -82,7 +79,6 @@ const decodeOutboxRows = rowsOf(OutboxRow);
 const StoredRow = S.Struct({ principal: S.NullOr(S.String), source_kind: S.NullOr(S.String) });
 const decodeStoredRows = rowsOf(StoredRow);
 
-// Default configuration: `alchemy_` tables and no provenance mapping.
 const hosted = Unit.layer(CardAuditLive).pipe(
   Layer.provideMerge(AlchemyPostgresPlatform.layer()),
   Layer.provideMerge(Layer.merge(PgliteTestLayer, NodeCrypto.layer))
@@ -146,10 +142,13 @@ describe("AlchemyPostgresPlatform", () => {
     it.effect("fails migrate with an AlchemyPostgresError when a table name is taken by another relation", () =>
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
-        // A view under the outbox's name: CREATE TABLE IF NOT EXISTS skips it, its index cannot.
         yield* sql`CREATE VIEW broken_delivery AS SELECT 1 AS position`;
         const error = yield* migrate(AlchemyPostgresConfig.make({ tablePrefix: "broken_" })).pipe(Effect.flip);
-        deepStrictEqual([error._tag, error.operation], ["AlchemyPostgresError", "migrate"]);
+        deepStrictEqual(
+          [error._tag, error.operation],
+          ["AlchemyPostgresError", "migrate"],
+          "CREATE TABLE IF NOT EXISTS skips a view under the outbox's name; its index cannot"
+        );
       })
     );
 
@@ -174,7 +173,7 @@ describe("AlchemyPostgresPlatform", () => {
         const cards = yield* Card;
         const flaky = CardId.make("flaky-batch");
         const steady = CardId.make("steady-batch");
-        // One transaction: both outbox rows become visible together, so one pass claims both.
+
         yield* sql.withTransaction(
           Effect.gen(function* () {
             yield* cards.send(flaky, IssueCard.make({ holder: "rae" }));
@@ -188,7 +187,7 @@ describe("AlchemyPostgresPlatform", () => {
           }),
           Effect.timeout(Duration.seconds(15))
         );
-        deepStrictEqual(runs, [2, 1]);
+        deepStrictEqual(runs, [2, 1], "both rows commit in one transaction, so one pass claims both");
       })
     );
 
@@ -261,7 +260,6 @@ describe("AlchemyPostgresPlatform", () => {
   });
 });
 
-// A short lease for this host's own claims; the crashed host's lease below is set explicitly.
 const shortLease = Unit.layer(CardAuditLive).pipe(
   Layer.provideMerge(AlchemyPostgresPlatform.layer(AlchemyPostgresConfig.make({ leaseMillis: 1_000 }))),
   Layer.provideMerge(Layer.merge(PgliteTestLayer, NodeCrypto.layer))
@@ -279,16 +277,18 @@ describe("AlchemyPostgresPlatform delivery lease", () => {
           Effect.repeat({ until: (runs) => runs === 1, schedule: Schedule.spaced(Duration.millis(20)) }),
           Effect.timeout(Duration.seconds(10))
         );
-        // A host that claimed the row and then died: pending, and leased to it well past the checks below,
-        // so a slow runner cannot let the lease lapse before the "not before" assertion (ep55).
         const leasedAt = yield* Clock.currentTimeMillis;
+        const deadHostLeaseMillis = 60_000;
         yield* sql`UPDATE alchemy_delivery
-          SET status = 'pending', locked_until = ${leasedAt + 60_000}, claimed_by = 'dead-host'
+          SET status = 'pending', locked_until = ${leasedAt + deadHostLeaseMillis}, claimed_by = 'dead-host'
           WHERE model = 'Unit' AND source = ${`Card/${id}`}`;
-        // Several worker polls (250 ms each by default) pass while the dead host's lease holds.
-        yield* Effect.sleep(Duration.millis(1_000));
-        deepStrictEqual(auditsOf(id), 1);
-        // The lease lapses: the next poll may claim the row again.
+        const severalWorkerPolls = Duration.millis(1_000);
+        yield* Effect.sleep(severalWorkerPolls);
+        deepStrictEqual(
+          auditsOf(id),
+          1,
+          "the dead host's lease runs well past this check, so a slow runner cannot see it lapse first"
+        );
         const lapsedAt = yield* Clock.currentTimeMillis;
         yield* sql`UPDATE alchemy_delivery SET locked_until = ${lapsedAt - 1}
           WHERE model = 'Unit' AND source = ${`Card/${id}`}`;
@@ -296,13 +296,12 @@ describe("AlchemyPostgresPlatform delivery lease", () => {
           Effect.repeat({ until: (count) => count === 2, schedule: Schedule.spaced(Duration.millis(20)) }),
           Effect.timeout(Duration.seconds(10))
         );
-        deepStrictEqual(runs, 2);
+        deepStrictEqual(runs, 2, "once the lease lapses, the next poll claims the row again");
       })
     );
   });
 });
 
-/** Delivery starts by card id; each run then holds until its host closes. */
 const holds = MutableHashMap.empty<string, number>();
 const holdsOf = (id: string) => O.getOrElse(MutableHashMap.get(holds, id), () => 0);
 class CardHold extends Domain.Policy("CardHold", { from: Card, on: [CardIssued] }) {}
@@ -315,7 +314,7 @@ const CardHoldLive = CardHold.toLayer(
   )
 );
 class Holding extends Domain.Model("Holding", { aggregates: [Card], policies: [CardHold] }) {}
-// The driver's default 30-second lease, so a row the closing host keeps is visibly still leased.
+
 const holding = Holding.layer(CardHoldLive).pipe(Layer.provideMerge(AlchemyPostgresPlatform.layer()));
 
 describe("AlchemyPostgresPlatform delivery lease on close", () => {
@@ -336,7 +335,11 @@ describe("AlchemyPostgresPlatform delivery lease on close", () => {
           yield* Scope.close(scope, Exit.void);
           const rows = yield* sql`SELECT status, attempts, locked_until FROM alchemy_delivery
           WHERE model = 'Holding' AND source = ${`Card/${id}`}`.pipe(Effect.flatMap(decodeOutboxRows));
-          deepStrictEqual(rows, [{ status: "pending", attempts: 0, locked_until: 0 }]);
+          deepStrictEqual(
+            rows,
+            [{ status: "pending", attempts: 0, locked_until: 0 }],
+            "the default 30-second lease outlives the test, so locked_until 0 shows the close freed the row"
+          );
         })
       );
     }

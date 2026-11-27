@@ -27,7 +27,6 @@ import type * as Types from "effect/Types";
 
 const $I = $CommandsId.create("ScriptedSpawner");
 
-/** A pipeline reached a test double that only scripts standard commands. */
 class ScriptedPipelineError extends S.TaggedError<ScriptedPipelineError, { readonly brand: unique symbol }>(
   $I`ScriptedPipelineError`
 )(
@@ -146,7 +145,6 @@ export declare namespace ScriptResult {
  */
 export type SpawnScript = (command: string, args: ReadonlyArray<string>) => ScriptResult.Encoded;
 
-/** Platform stream/sink carriers validate their runtime identity; generic channels remain opaque. */
 const InputStream = S.declare<Stream.Stream<Uint8Array, PlatformError.PlatformError>>(
   (input): input is Stream.Stream<Uint8Array, PlatformError.PlatformError> => Stream.isStream(input)
 ).pipe($I.annoteSchema("InputStream", { description: "Opaque platform byte input stream." }));
@@ -215,13 +213,12 @@ const Signal = LiteralKit([
   "SIGLOST",
   "SIGINFO",
 ]).pipe($I.annoteSchema("Signal", { description: "Platform process termination signals." }));
-/** Mutable environment records match core CommandOptions rather than a readonly replacement. */
 const Environment = S.Record(S.String, S.UndefinedOr(S.String)).pipe(
   $I.annoteSchema("Environment", {
-    description: "Platform environment values, including explicitly undefined entries.",
+    description:
+      "Platform environment values, including explicitly undefined entries, mutable as core CommandOptions declares them.",
   })
 );
-/** Core command environments may carry `Redacted` words, which the spawner unwraps before the child sees them. */
 const CommandEnvironment = S.Record(S.String, S.UndefinedOr(S.Union([S.String, S.Redacted(S.String)]))).pipe(
   $I.annoteSchema("CommandEnvironment", {
     description: "Platform command environment values, including redacted and explicitly undefined entries.",
@@ -230,7 +227,6 @@ const CommandEnvironment = S.Record(S.String, S.UndefinedOr(S.Union([S.String, S
 const wordValue = (word: CommandLine.Word): string => (Redacted.isRedacted(word) ? Redacted.value(word) : word);
 const envValue = (value: CommandLine.Word | undefined): string | undefined =>
   P.isUndefined(value) ? value : wordValue(value);
-/** Core's numeric-template keys include whitespace and radix spellings, unlike Schema's numeric template matcher. */
 const AdditionalFdKey = S.TemplateLiteral([
   "fd",
   S.String.check(
@@ -247,7 +243,6 @@ const AdditionalFdKey = S.TemplateLiteral([
     description: "Core fd${number} option keys without narrowing their numeric spellings.",
   })
 );
-/** Validate all known platform options while retaining the original external object. */
 const CommandOptions = S.Struct({
   killSignal: S.optionalKey(Signal),
   forceKillAfter: RunOptions.fields.timeout,
@@ -338,11 +333,9 @@ export class SpawnRecord extends S.Opaque<SpawnRecord, { readonly brand: unique 
   )
 ) {}
 
-// Implementation of the byte streams a handle serves; one UTF-8 chunk.
 const bytes = (text: string): Stream.Stream<Uint8Array, PlatformError.PlatformError> =>
   text === "" ? Stream.empty : Stream.make(new TextEncoder().encode(text));
 
-// Implementation of ScriptedSpawner.notFound / permissionDenied.
 const spawnError: {
   (tag: "NotFound" | "PermissionDenied", command: string, code: string): PlatformError.PlatformError;
   (command: string, code: string): (tag: "NotFound" | "PermissionDenied") => PlatformError.PlatformError;
@@ -487,24 +480,22 @@ export class ScriptedSpawner {
             })
           );
         }
-        // A real spawner hands the child unwrapped values, so the record and the
-        // script see the plain strings the process would receive.
-        const args = A.map(command.args, wordValue);
-        const env = P.isUndefined(command.options.env) ? undefined : R.map(command.options.env, envValue);
+        const argsAsChildReceives = A.map(command.args, wordValue);
+        const envAsChildReceives = P.isUndefined(command.options.env)
+          ? undefined
+          : R.map(command.options.env, envValue);
         return Effect.suspend(() => {
-          // Mutable on purpose: `unrefed` is live state, flipped below when the
-          // handle's unref effect runs.
           const record: Types.Mutable<SpawnRecord> = SpawnRecord.make({
             command: command.command,
-            args,
+            args: argsAsChildReceives,
             cwd: command.options.cwd,
-            env,
+            env: envAsChildReceives,
             extendEnv: command.options.extendEnv,
             options: command.options,
             unrefed: false,
           });
           spawns.push(record);
-          const result = script(command.command, args);
+          const result = script(command.command, argsAsChildReceives);
           if (result instanceof PlatformError.PlatformError) {
             return Effect.fail(result);
           }
@@ -521,7 +512,6 @@ export class ScriptedSpawner {
               all: bytes(`${result.stdout ?? ""}${result.stderr ?? ""}`),
               getInputFd: () => Sink.drain,
               getOutputFd: () => Stream.empty,
-              // `unref` yields a Reref effect; the record flips when unref RUNS.
               unref: Effect.sync(() => {
                 record.unrefed = true;
                 return Effect.void;

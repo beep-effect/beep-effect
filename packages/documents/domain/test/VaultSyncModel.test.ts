@@ -190,7 +190,6 @@ layer(hosted, { excludeTestServices: true, timeout: "20 seconds" })("pure read c
       yield* registry.send(destination, V.RecordConflict.make({ record }));
       yield* conflicts.send(conflict, V.ConfirmConflict.make({ record }));
       yield* eventually(open.get(V.SyncDestination.ref(destination)), (s) => O.isSome(s) && H.size(s.value) === 1);
-      // A correction keyed off its own operation id could never queue; review refuses it up front.
       const unreachable = yield* conflicts
         .send(
           conflict,
@@ -203,7 +202,11 @@ layer(hosted, { excludeTestServices: true, timeout: "20 seconds" })("pure read c
           })
         )
         .pipe(Effect.flip);
-      strictEqual(unreachable.rule, "correction-key");
+      strictEqual(
+        unreachable.rule,
+        "correction-key",
+        "a correction keyed off its own operation id could never queue, so review refuses it up front"
+      );
       yield* conflicts.send(
         conflict,
         V.ReviewConflict.make({

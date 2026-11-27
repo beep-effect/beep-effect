@@ -287,8 +287,6 @@ describe("legacy sync SQL projections", () => {
         expect(failedRows).toEqual([{ status: "failed", last_error: "ensureFolder", operation_type: "createFolder" }]);
         const operationRow = sql`SELECT * FROM documents_sync_operation WHERE public_id = ${operationId}`;
         const before = yield* operationRow;
-        // A repeated completion of an already-succeeded operation leaves its projection row byte-for-byte
-        // stable: when the kernel accepts it, wait for the projection; when it rejects it, nothing is emitted.
         yield* operations
           .send(operationId, V.CompleteOperation.make({ holder: "scenario", attempt: 1 }), {
             commandId: "duplicate-success",
@@ -299,10 +297,11 @@ describe("legacy sync SQL projections", () => {
           );
         const after = yield* operationRow;
         expect(before).toHaveLength(1);
-        expect(after).toEqual(before);
+        expect(
+          after,
+          "a repeated completion of a succeeded operation leaves its row byte-for-byte stable, accepted or rejected"
+        ).toEqual(before);
 
-        // An operation's workspace is its destination's, not its item row's: here the item was never
-        // projected and the audit default (4) differs from the destination's workspace (9).
         const otherDestination = V.DestinationId.make("documents_sync_destination_aotherworkspace");
         yield* destinations.send(
           otherDestination,
@@ -330,7 +329,10 @@ describe("legacy sync SQL projections", () => {
           Effect.repeat({ until: (rows) => rows.length > 0, schedule: Schedule.spaced("10 millis") }),
           Effect.timeout("10 seconds")
         );
-        expect(orphanRows).toEqual([{ workspace_id: 9, status: "queued" }]);
+        expect(
+          orphanRows,
+          "an operation takes its destination's workspace (9), not the audit default (4) of its never-projected item"
+        ).toEqual([{ workspace_id: 9, status: "queued" }]);
       })
     );
   });

@@ -5,12 +5,7 @@ import favicon16Url from "@beep/brand/assets/favicon-16.png";
 import favicon32Url from "@beep/brand/assets/favicon-32.png";
 import { BeepMark } from "@beep/brand/react";
 
-/**
- * Document-head tags for the beep identity. React 19 hoists `<link>` and `<meta>`
- * rendered anywhere in the tree into `<head>`, so the favicon set ships from
- * `@beep/brand/assets` through Vite's asset pipeline instead of a copied `public/`.
- */
-const BrandHead = () => (
+const ReactHoistedBrandHead = () => (
   <>
     <link rel="icon" type="image/svg+xml" href={faviconSvgUrl} />
     <link rel="icon" type="image/png" sizes="32x32" href={favicon32Url} />
@@ -22,7 +17,7 @@ const BrandHead = () => (
 
 export const App = () => (
   <>
-    <BrandHead />
+    <ReactHoistedBrandHead />
     <main className="min-h-screen bg-surface-0 text-fg font-sans">
       <header className="flex items-center gap-3 border-b border-border px-6 py-4">
         <BeepMark className="size-8 text-brand-400" />

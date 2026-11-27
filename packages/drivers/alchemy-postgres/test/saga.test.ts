@@ -38,10 +38,8 @@ class Parcel extends Domain.Aggregate("Parcel", {
   },
 }) {}
 
-/** What lets a waiting run ship. */
 const Go = DurableDeferred.make("go");
 
-/** Pack, then (when `wait`) wait for `Go`, then ship: one command per step. */
 class Deliver extends Domain.Saga("Deliver", { key: ParcelId, input: { wait: S.Boolean } }) {}
 const DeliverLive = Deliver.toLayer(
   Effect.gen(function* () {
@@ -56,15 +54,8 @@ const DeliverLive = Deliver.toLayer(
 
 class Fulfilment extends Domain.Model("Fulfilment", { aggregates: [Parcel], sagas: [Deliver] }) {}
 
-/** A fresh runtime on the suite's database: built again from nothing each time. */
-const runtime = Layer.fresh(
-  Fulfilment.layer(DeliverLive).pipe(
-    // The default configuration: what an app gets from `AlchemyPostgres.layer()`.
-    Layer.provide(AlchemyPostgres.layer())
-  )
-);
+const runtime = Layer.fresh(Fulfilment.layer(DeliverLive).pipe(Layer.provide(AlchemyPostgres.layer())));
 
-/** Build the runtime in a scope of its own, use it, then tear it down: what a process exit does. */
 const withRuntime = Effect.fnUntraced(function* <A, E, R>(
   use: (context: Context.Context<Layer.Success<typeof runtime>>) => Effect.Effect<A, E, R>
 ) {
@@ -93,7 +84,6 @@ describe("Sagas on AlchemyPostgres over PGlite", () => {
     it.effect("a saga waiting on a deferred resumes in a new runtime after the old one is torn down", () =>
       Effect.gen(function* () {
         const id = ParcelId.make("parcel-resumed");
-        // The first runtime starts the run and is torn down while the run waits.
         yield* withRuntime((context) =>
           Effect.gen(function* () {
             yield* Context.get(context, Deliver).start(id, { wait: true });
@@ -106,7 +96,6 @@ describe("Sagas on AlchemyPostgres over PGlite", () => {
           })
         );
 
-        // A new runtime on the same database resumes it.
         yield* withRuntime((context) =>
           Effect.gen(function* () {
             const run = Context.get(context, Deliver).get(id);

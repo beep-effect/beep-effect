@@ -63,12 +63,14 @@ describe("asConfigProvider", () => {
         );
         assert.strictEqual(host, "db-from-file");
 
-        // The dotted spelling is NOT a synonym: `fromUnknown` descends segment by
-        // segment, so "db.host" is looked up as a single literal key.
         const dotted = yield* Effect.flip(
           Effect.provideService(Config.String("db.host"), ConfigProvider.ConfigProvider, provider)
         );
-        assert.strictEqual(dotted._tag, "ConfigError");
+        assert.strictEqual(
+          dotted._tag,
+          "ConfigError",
+          "fromUnknown descends by segment, so db.host is one literal key, not a synonym"
+        );
       })
     );
   });
@@ -79,7 +81,6 @@ describe("asConfigProvider", () => {
         const cfg = yield* AppConfig;
         const fileProvider = yield* asConfigProvider(cfg);
         const envProvider = ConfigProvider.fromUnknown({ host: "from-env" });
-        // `orElse` takes a provider, not a thunk: v4 dropped v3's `LazyArg`.
         const composed = ConfigProvider.orElse(envProvider, fileProvider);
 
         const host = yield* Effect.provideService(Config.String("host"), ConfigProvider.ConfigProvider, composed);

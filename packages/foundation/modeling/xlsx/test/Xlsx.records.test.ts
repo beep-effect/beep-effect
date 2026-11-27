@@ -1,6 +1,3 @@
-// Records read under a header row: the sheet a records codec names is the one it reads, whatever sheets its read
-// options choose, and the records a sheet expands to, blanks included, are held to `maxRecordValues`.
-
 import { Xlsx } from "@beep/xlsx/Xlsx.codec";
 import { columnLetters } from "@beep/xlsx/XlsxAddress.schema";
 import { XlsxBlank, XlsxNumber, XlsxText } from "@beep/xlsx/XlsxCell.schema";
@@ -88,9 +85,7 @@ describe("records under a header row", () => {
     })
   );
 
-  // A header of every column over rows that hold nothing is a file of a few kilobytes; as records it is a value per
-  // heading per row, which the starting `maxRecordValues` refuses before any record is built.
-  it.effect("a full header over many empty rows, refused under the starting cap", () =>
+  it.effect("a full header over many empty rows, a file of a few kilobytes, is refused under the starting cap", () =>
     Effect.gen(function* () {
       const header = A.join(
         A.map(A.range(0, 16_383), (i) => `<c r="${columnLetters(i)}1"><v>${i}</v></c>`),
@@ -101,7 +96,10 @@ describe("records under a header row", () => {
       });
       const limits = XlsxLimits.make({ maxInputBytes: ByteSize.mebibytes(64) });
       const error = yield* Effect.flip(S.decodeEffect(records(XlsxReadOptions.make({ limits })))(bytes));
-      assertTrue(Str.includes("maxRecordValues")(error.message));
+      assertTrue(
+        Str.includes("maxRecordValues")(error.message),
+        "as records it is a value per heading per row, refused before any record is built"
+      );
     })
   );
 });

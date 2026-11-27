@@ -49,7 +49,6 @@ const capturing = () => {
   return { double, out, err };
 };
 
-/** `Stdio` and `Terminal` doubles, as a platform provides them. */
 const io = Layer.mergeAll(
   Stdio.layerTest({ stdinIsTerminal: Effect.succeed(false), stdoutIsTerminal: Effect.succeed(false) }),
   Layer.succeed(
@@ -253,7 +252,6 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
 
     it.effect("a human whose stderr is not a terminal: every stderr line is plain, build-time and runtime alike", () =>
       Effect.gen(function* () {
-        // The platform double's stdout is not a terminal, and stderr mirrors it: a human piping stderr to a file.
         const { err } = yield* run({});
         assert.isTrue(
           A.some(err, (line) => Str.includes("handler ran")(line)),
@@ -261,7 +259,8 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
         );
         assert.deepStrictEqual(
           A.filter(err, (line) => isJson(line)),
-          []
+          [],
+          "the double's stderr mirrors its non-terminal stdout: a human piping stderr to a file"
         );
       })
     );
@@ -476,7 +475,6 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
             A.some(seen, (line) => Str.includes("TOOL_AUDIENCE")(line)),
             `not on the extra logger: ${Result.getOrThrow(S.encodeUnknownResult(Json)(seen))}`
           );
-          // Control: the extra logger is installed and live for the run's own records.
           yield* CliRuntime.main(Effect.logError("run record"), {
             platform: io,
             env: { log: { logger: { stderrFrom: "Error" }, extraLoggers: [extra] } },
@@ -509,10 +507,9 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
             `the override warning is on stderr: ${Result.getOrThrow(S.encodeUnknownResult(Json)({ out, err }))}`
           );
           assert.isFalse(A.some(out, (line) => Str.includes("TOOL_AUDIENCE")(line)));
-          // The host chose to route warnings below Error to stdout, and the platform's own build-time line honours it.
           assert.isTrue(
             A.some(out, (line) => Str.includes("platform warned")(line)),
-            `the platform warning follows stderrFrom: ${Result.getOrThrow(S.encodeUnknownResult(Json)({ out, err }))}`
+            `the host routed warnings below Error to stdout, and the platform's build-time line honours it: ${Result.getOrThrow(S.encodeUnknownResult(Json)({ out, err }))}`
           );
           assert.isFalse(A.some(err, (line) => Str.includes("platform warned")(line)));
         })

@@ -25,14 +25,11 @@ import { statusMoveBetween } from "./StatusField.models.ts";
 import type { NodeId } from "./NodeIdentity.models.ts";
 import type { StatusFields } from "./StatusField.models.ts";
 
-// The exported text of every node of the base, by node id.
 const baseTexts = (batch: OperationBatch): MutableHashMap.MutableHashMap<NodeId, string> =>
   MutableHashMap.fromIterable(
     A.flatMap(batch.base.files, (file) => A.map(file.nodes, (node) => [node.nodeId, node.anchor.anchor.quote] as const))
   );
 
-// The operation as submitted: a replace that is a move of exactly one status
-// field becomes that move; every other operation is unchanged.
 const typed =
   (statusFields: StatusFields, texts: MutableHashMap.MutableHashMap<NodeId, string>) =>
   (operation: NodeOperation): NodeOperation =>

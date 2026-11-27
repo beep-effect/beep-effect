@@ -1,6 +1,3 @@
-// Shared Oxigraph harness for the CQ-020 and lane-plan SPARQL checks over the committed goldens.
-// Only provisional term spellings and the episode binding are adapted in memory; the packet CQ,
-// seed, registry and frozen extraction artifacts stay read-only.
 import { iri } from "@beep/identity/Registry";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -21,8 +18,7 @@ const competencyQuestionsPath =
 
 export type Node = Oxigraph.NamedNode | Oxigraph.BlankNode;
 
-// CQ-020 terms whose ratified ciops: spelling the goldens still emit as provisional ciops-prov:.
-const provisionalTerms = [
+const provisionalCq020Terms = [
   "hasCurrentProposal",
   "hasProjectionSpecification",
   "AdmissionProjectionSpecification",
@@ -53,8 +49,7 @@ export const asNode = (term: Oxigraph.Term): Node => {
   return isNode(term) ? term : Oxigraph.blankNode();
 };
 
-// textwrap.dedent for a block whose lines all carry at least the common indentation.
-const dedent = (block: string): string => {
+const dedentCommonIndent = (block: string): string => {
   const lines = Str.split(block, "\n");
   const indent = pipe(
     lines,
@@ -65,7 +60,6 @@ const dedent = (block: string): string => {
   return A.join(A.map(lines, Str.slice(indent)), "\n");
 };
 
-/** One SELECT solution; reading an unbound column fails the assertion. */
 class Solution {
   private readonly row: ReadonlyMap<string, Oxigraph.Term>;
 
@@ -99,7 +93,6 @@ class Solution {
     return render(this.term(name));
   }
 
-  /** Every bound column in projection order, rendered: the all-column comparison key. */
   columns(): ReadonlyArray<readonly [string, string]> {
     return A.map(Array.from(this.row.entries()), ([name, term]) => [name, render(term)] as const);
   }
@@ -168,8 +161,11 @@ export class Cq020 {
       O.getOrElse(() => "")
     );
     const sparqlBlock = /^ {2}sparql: \|\n((?: {4}.*\n)+)/m.exec(section);
-    expect(sparqlBlock, "CQ-020 must retain its explicit SPARQL block").not.toBeNull();
-    const query = A.reduce(provisionalTerms, dedent(sparqlBlock?.[1] ?? ""), (text, term) =>
+    expect(
+      sparqlBlock,
+      "CQ-020 must retain its explicit SPARQL block; the shared Oxigraph harness adapts only provisional terms and episode binding in memory; packet CQ, seed, registry and frozen extraction remain read-only"
+    ).not.toBeNull();
+    const query = A.reduce(provisionalCq020Terms, dedentCommonIndent(sparqlBlock?.[1] ?? ""), (text, term) =>
       Str.replace(new RegExp(`\\bciops:${term}\\b`, "g"), `ciops-prov:${term}`)(text)
     );
     return new Cq020(`PREFIX ciops-prov: <${PROV}>\n${query}`);

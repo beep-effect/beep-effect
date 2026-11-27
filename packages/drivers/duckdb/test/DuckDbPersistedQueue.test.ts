@@ -49,19 +49,21 @@ it.layer(Layer.mergeAll(DuckDbTestLayer, NodeCrypto.layer), { timeout: "30 secon
       yield* store.offer({ name: "corrupt", id: "bad", isCustomId: true, element: { n: 1 } });
       yield* store.offer({ name: "corrupt", id: "good", isCustomId: true, element: { n: 2 } });
       yield* sql`UPDATE effect_queue_corrupt SET element = '{not json' WHERE id = 'bad'`;
-      // Closing the take scope with a success completes the good element after the bad one is dead-lettered.
       const takeScope = yield* Scope.make();
       const taken = yield* store
         .take({ name: "corrupt", maxAttempts: 3, retryDelay: () => Effect.succeed(Duration.zero) })
         .pipe(Scope.provide(takeScope), TestClock.withLive);
       yield* Scope.close(takeScope, Exit.void);
-      assert.strictEqual(taken.id, "good");
+      assert.strictEqual(
+        taken.id,
+        "good",
+        "closing the take scope with success completes the good element after the bad one is dead-lettered"
+      );
       const rows = yield* sql<{ readonly state: string }>`SELECT state FROM effect_queue_corrupt WHERE id = 'bad'`;
       assert.deepStrictEqual(rows, [{ state: "failed" }]);
     })
   );
   testApi.effect("keeps a take interruptible after dead-lettering the only stored element", () =>
-    // Live clock throughout: the poller and the dead-letter wait run on real time.
     TestClock.withLive(
       Effect.gen(function* () {
         const store = yield* DuckDbPersistedQueue.makeStoreSql({
@@ -82,9 +84,11 @@ it.layer(Layer.mergeAll(DuckDbTestLayer, NodeCrypto.layer), { timeout: "30 secon
           Effect.filterOrFail((rows) => rows[0]?.state === "failed"),
           Effect.retry(Schedule.spaced("10 millis"))
         );
-        // The take now waits for a new element; interrupting it must complete rather than hang.
         const interrupted = yield* Fiber.interrupt(taker).pipe(Effect.timeoutOption("2 seconds"));
-        assertTrue(interrupted.pipe(Option.isSome));
+        assertTrue(
+          interrupted.pipe(Option.isSome),
+          "the take now waits for a new element; interrupting it completes rather than hangs"
+        );
         yield* Scope.close(takeScope, Exit.void);
       })
     )

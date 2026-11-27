@@ -36,23 +36,6 @@ import type { ExternalReferenceType } from "./SbomDocument.ts";
 
 const $I = $SbomId.create("SbomMetadataSource");
 
-// ── Package URL ───────────────────────────────────────────────────────────
-//
-// For npm, an `@scope` is the purl NAMESPACE, not part of the name. The
-// canonical form is `pkg:npm/%40angular/animation@12.3.1` — the `@`
-// percent-encoded, the separating slash kept literal — which is the
-// package-url spec's own roundtrip vector (`tests/types/npm-test.json`) and
-// what its npm type definition states ("the npm scope @ sign prefix is always
-// percent encoded"). Encoding the whole name with `encodeURIComponent` would
-// collapse that slash to `%2F`, which parses back as a namespace-less name and
-// is not a canonical purl.
-//
-// Versions pass through verbatim: every character semver permits
-// (`0-9A-Za-z.+-`) is a legal RFC 3986 path character — `+` is a sub-delim — so
-// encoding them would produce a longer string meaning the same thing and
-// matching no published example.
-
-/** The purl namespace and name segments for an npm package name. */
 const purlSegments = (name: string): string =>
   pipe(
     Str.lastIndexOf("/")(name),
@@ -64,13 +47,9 @@ const purlSegments = (name: string): string =>
     })
   );
 
-// Data-first dispatch for the package-first members. `Package` is a type-only
-// import here (a value import would drag package-json's runtime IO in), so the
-// subject is recognized structurally: a manifest always carries `name`, and the
-// options record never does.
+// decision: dual-dispatch-by-subject-key
 const isPackageFirst = (args: IArguments): boolean => P.hasProperty(args[0], "name");
 
-// Implementation of SbomMetadataSource.npmPurl; the public contract lives on the static.
 const npmPurl = (name: string, version?: string): string => {
   const path = purlSegments(name);
   return version === undefined ? `pkg:npm/${path}` : `pkg:npm/${path}@${version}`;
@@ -269,7 +248,6 @@ const contactOf = (person: Person): Contact.Encoded => ({
   ...(person.email !== undefined && { email: person.email }),
 });
 
-/** The manifest's authors: its maintainers, or its lone author when it lists none. */
 const authorsOf = (pkg: Package): O.Option<ReadonlyArray<Contact.Encoded>> =>
   pipe(
     O.fromUndefinedOr(pkg.maintainers),
@@ -282,11 +260,6 @@ const referenceTo =
   (type: ExternalReferenceType) =>
   (url: string): ExternalReference.Encoded => ({ type, url });
 
-/**
- * The manifest's outward links as plain records, in the published order:
- * `vcs`, `issue-tracker`, `documentation`, then the supplier's `website` when
- * it says something the documentation link does not.
- */
 const referenceRecords = (
   pkg: Package,
   options: SbomMetadataOptions.Encoded | undefined
@@ -297,7 +270,6 @@ const referenceRecords = (
       O.flatMap(O.fromUndefinedOr(pkg.repository), (repository) => repository.browseUrl),
       referenceTo("vcs")
     ),
-    // An email-only `bugs` entry is legal npm and carries no URL to point at.
     O.map(O.fromUndefinedOr(pkg.bugs?.url), referenceTo("issue-tracker")),
     O.map(documentation, referenceTo("documentation")),
     pipe(
@@ -309,7 +281,6 @@ const referenceRecords = (
   ]);
 };
 
-// Implementation of SbomMetadataSource.externalReferences; the public contract lives on the static.
 const externalReferences: {
   (pkg: Package, options?: SbomMetadataOptions.Encoded): ReadonlyArray<ExternalReference>;
   (options?: SbomMetadataOptions.Encoded): (pkg: Package) => ReadonlyArray<ExternalReference>;
@@ -319,10 +290,7 @@ const externalReferences: {
     A.map(referenceRecords(pkg, options), (reference) => ExternalReference.make(reference))
 );
 
-// Implementation of SbomMetadataSource.componentFor; the public contract lives on the static.
 const componentFor = (input: ComponentInput.Encoded): Component => {
-  // `bomRef` is non-empty by schema (CycloneDX `refType`), so a nameless,
-  // unversioned input carries none rather than failing the admission.
   const bomRef = input.version === undefined ? input.name : `${input.name}@${input.version}`;
   return Component.make({
     type: input.type ?? "library",
@@ -335,14 +303,12 @@ const componentFor = (input: ComponentInput.Encoded): Component => {
   });
 };
 
-/** The root component's fields the manifest describes directly. */
 const manifestFields = (pkg: Package) => ({
   ...(pkg.description !== undefined && { description: pkg.description }),
   ...(pkg.license !== undefined && { licenses: A.of(pkg.license) }),
   ...(pkg.keywords !== undefined && A.isReadonlyArrayNonEmpty(pkg.keywords) && { tags: pkg.keywords }),
 });
 
-/** The root component's attribution: links, authors, publisher and copyright. */
 const attributionFields = (pkg: Package, options: SbomMetadataOptions.Encoded | undefined) => {
   const references = referenceRecords(pkg, options);
   const authors = pipe(pkg, authorsOf, O.getOrUndefined);
@@ -355,11 +321,9 @@ const attributionFields = (pkg: Package, options: SbomMetadataOptions.Encoded | 
   };
 };
 
-/** The publisher: explicit, then the supplier's name, then the manifest's author. */
 const publisherOf = (pkg: Package, options: SbomMetadataOptions.Encoded | undefined): string | undefined =>
   options?.publisher ?? options?.supplier?.name ?? pkg.author?.name;
 
-// Implementation of SbomMetadataSource.rootComponent; the public contract lives on the static.
 const rootComponent: {
   (pkg: Package, options?: SbomMetadataOptions.Encoded): Component;
   (options?: SbomMetadataOptions.Encoded): (pkg: Package) => Component;
@@ -376,7 +340,6 @@ const rootComponent: {
   });
 });
 
-/** The caller's supplier, with the manifest's authors filling its contacts when it names none. */
 const supplierRecord = (supplier: Supplier.Encoded, pkg: Package): Supplier.Encoded => {
   const contact = supplier.contact ?? pipe(pkg, authorsOf, O.getOrUndefined);
   return {
@@ -386,7 +349,6 @@ const supplierRecord = (supplier: Supplier.Encoded, pkg: Package): Supplier.Enco
   };
 };
 
-// Implementation of SbomMetadataSource.fromPackage; the public contract lives on the static.
 const fromPackage: {
   (pkg: Package, options?: SbomMetadataOptions.Encoded): SbomMetadata;
   (options?: SbomMetadataOptions.Encoded): (pkg: Package) => SbomMetadata;
@@ -400,7 +362,6 @@ const fromPackage: {
     })
 );
 
-// Implementation of SbomMetadataSource.formatCopyright; the public contract lives on the static.
 const formatCopyright: {
   (holder: string, years: CopyrightYears.Encoded): string;
   (years: CopyrightYears.Encoded): (holder: string) => string;
@@ -410,7 +371,6 @@ const formatCopyright: {
     : `Copyright ${years.startYear}-${years.year} ${holder}`
 );
 
-// Implementation of SbomMetadataSource.merge; the public contract lives on the static.
 const merge: {
   (base: SbomMetadata, override: SbomMetadata): SbomMetadata;
   (override: SbomMetadata): (base: SbomMetadata) => SbomMetadata;
@@ -466,6 +426,21 @@ export class SbomMetadataSource {
    * subject names. Exposed because a caller assembling its own components —
    * or a statement subject — needs the same encoding this module applies.
    *
+   * **Gotchas**
+   *
+   * For npm, an `@scope` is the purl namespace, not part of the name. The
+   * canonical form is `pkg:npm/%40angular/animation@12.3.1`: the `@`
+   * percent-encoded, the separating slash kept literal, which is the
+   * package-url spec's own roundtrip vector (`tests/types/npm-test.json`) and
+   * what its npm type definition states. Encoding the whole name with
+   * `encodeURIComponent` would collapse that slash to `%2F`, which parses back
+   * as a namespace-less name and is not a canonical purl.
+   *
+   * Versions pass through verbatim: every character semver permits
+   * (`0-9A-Za-z.+-`) is a legal RFC 3986 path character (`+` is a sub-delim),
+   * so encoding them would produce a longer string meaning the same thing and
+   * matching no published example.
+   *
    * **Example** (Encode a scoped npm identifier)
    *
    * ```ts
@@ -488,6 +463,11 @@ export class SbomMetadataSource {
    * versions are in flight is release planning and the effected `workspaces`
    * module already knows it. This is the mapping that would otherwise be
    * re-derived at every call site.
+   *
+   * **Gotchas**
+   *
+   * A nameless, unversioned input gets no `bomRef` rather than failing the
+   * admission: `bomRef` is non-empty by schema (CycloneDX `refType`).
    *
    * **Example** (Derive an unversioned dependency component)
    *
@@ -531,9 +511,11 @@ export class SbomMetadataSource {
    *
    * **Details**
    *
-   * Four of the specification's 43 types, one per manifest field: `vcs` ←
-   * `repository`, `issue-tracker` ← `bugs`, `documentation` ← `homepage`,
-   * `website` ← the supplier's first URL.
+   * Four of the specification's 43 types, one per manifest field, in this
+   * order: `vcs` ← `repository`, `issue-tracker` ← `bugs`, `documentation` ←
+   * `homepage`, `website` ← the supplier's first URL. An email-only `bugs`
+   * entry is legal npm and yields no `issue-tracker`; a supplier URL equal to
+   * the documentation link yields no `website`.
    *
    * A `repository` value the package-json model cannot interpret produces
    * **no** reference rather than a passed-through string: CycloneDX's

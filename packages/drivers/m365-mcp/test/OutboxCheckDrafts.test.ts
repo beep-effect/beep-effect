@@ -120,7 +120,6 @@ const categoriesOf = Effect.fn("categoriesOf")(function* (id: string) {
 
 const tagsOf = A.map((record: OutboxAuditRecord) => record._tag);
 
-// Any Graph verb that writes: check_drafts may only ever use updateMessageCategories.
 const WRITE_VERBS = [
   "addMessageAttachment",
   "createDraftMessage",
@@ -168,10 +167,12 @@ describe("@beep/m365-mcp outbox check_drafts", () => {
         assert.deepStrictEqual(tagsOf(records), ["draft-created", "draft-basis-marked", "draft-basis-cleared"]);
         const markRecord = records[1];
         assert.deepStrictEqual(markRecord?._tag === "draft-basis-marked" ? markRecord.fields : [], ["start"]);
-        // No moved draft, so Deleted Items is never asked for.
-        assert.strictEqual(countOf(calls, "getMailFolder"), 0);
-        // Two category writes in three calls, and no other write verb at all.
-        assert.deepStrictEqual(writes(calls), ["updateMessageCategories", "updateMessageCategories"]);
+        assert.strictEqual(countOf(calls, "getMailFolder"), 0, "no moved draft, so Deleted Items is never asked for");
+        assert.deepStrictEqual(
+          writes(calls),
+          ["updateMessageCategories", "updateMessageCategories"],
+          "two category writes in three calls, and no other write verb"
+        );
       })
     );
   });
@@ -265,10 +266,10 @@ describe("@beep/m365-mcp outbox check_drafts", () => {
           [["flaky", "transport"]]
         );
         assert.deepStrictEqual(first.drafts, []);
-        // Deleted and sent-here drafts are never read: only the three open drafts are.
         assert.deepStrictEqual(
           A.filter(firstCalls, (call) => call === "getMessage"),
-          ["getMessage", "getMessage", "getMessage"]
+          ["getMessage", "getMessage", "getMessage"],
+          "deleted and sent-here drafts are never read; only the three open drafts are"
         );
         assert.deepStrictEqual(second.closed, []);
         assert.deepStrictEqual(
@@ -321,13 +322,11 @@ describe("@beep/m365-mcp outbox check_drafts", () => {
           A.map(refused.unreadable, (entry) => [entry.draftId, entry.reason]),
           [["bad/id", "invalid-id"]]
         );
-        // The mark is recorded before the write; a draft without a change key is not attempted at all.
-        assert.deepStrictEqual(tagsOf(recordsAfterRefused), [
-          "draft-created",
-          "draft-created",
-          "draft-created",
-          "draft-basis-marked",
-        ]);
+        assert.deepStrictEqual(
+          tagsOf(recordsAfterRefused),
+          ["draft-created", "draft-created", "draft-created", "draft-basis-marked"],
+          "the mark is recorded before the write; a draft without a change key is not attempted"
+        );
         assert.deepStrictEqual(
           A.map(transport.drafts, (entry) => entry.markFailure),
           [O.some("transport"), O.some("no-change-key")]
@@ -451,12 +450,15 @@ describe("@beep/m365-mcp outbox check_drafts", () => {
           "draft-basis-marked",
           "draft-basis-cleared",
         ]);
-        // A category a person adds to the reconciled draft is not this server's to remove.
         assert.deepStrictEqual(marks(retried), [
           ["marked", "pinned-current", "none"],
           ["flaky-log", "pinned-current", "cleared"],
         ]);
-        assert.deepStrictEqual(kept, ["Client", OUTBOX_BASIS_STALE_CATEGORY]);
+        assert.deepStrictEqual(
+          kept,
+          ["Client", OUTBOX_BASIS_STALE_CATEGORY],
+          "a category a person adds to the reconciled draft is not this server's to remove"
+        );
         assert.deepStrictEqual(flakyCleared, []);
         assert.strictEqual(A.length(A.filter(records, (record) => record._tag === "draft-basis-cleared")), 2);
       })
@@ -507,23 +509,29 @@ describe("@beep/m365-mcp outbox check_drafts", () => {
             ["no-id", "missing"],
           ]
         );
-        // Only an explicit isDraft false means sent: a message with only an id stays open.
         assert.deepStrictEqual(
           A.map(first.unreadable, (entry) => [entry.draftId, entry.reason]),
-          [["bare", "incomplete-draft"]]
+          [["bare", "incomplete-draft"]],
+          "only an explicit isDraft false means sent; a message with only an id stays open"
         );
         assert.deepStrictEqual(movedCategories, ["Client", OUTBOX_BASIS_STALE_CATEGORY]);
-        // One list call per 404 with a recorded message id; none for a draft found by its id.
-        assert.strictEqual(countOf(firstCalls, "listMessages"), 3);
-        // No hit names a folder, so Deleted Items is never asked for.
-        assert.strictEqual(countOf(firstCalls, "getMailFolder"), 0);
-        // Records keep the recorded id as the draft's identity.
+        assert.strictEqual(
+          countOf(firstCalls, "listMessages"),
+          3,
+          "one list call per 404 with a recorded message id, none for a draft found by its id"
+        );
+        assert.strictEqual(
+          countOf(firstCalls, "getMailFolder"),
+          0,
+          "no hit names a folder, so Deleted Items is never asked for"
+        );
         assert.deepStrictEqual(
           A.map(
             A.filter(records, (record) => record._tag === "draft-basis-marked"),
             (record) => record.draftId
           ),
-          ["here", "moved"]
+          ["here", "moved"],
+          "records keep the recorded id as the draft's identity"
         );
         assert.deepStrictEqual(marks(second), [
           ["here", "pinned-stale", "already-set"],
@@ -618,7 +626,6 @@ describe("@beep/m365-mcp outbox check_drafts", () => {
               internetMessageId: "<live@example.test>",
               parentFolderId: DELETED_ITEMS_FOLDER_ID,
             }),
-            // A sent copy beside a deleted one: the draft was sent.
             draft("sent-trash", [], {
               internetMessageId: "<sent@example.test>",
               parentFolderId: DELETED_ITEMS_FOLDER_ID,
@@ -647,14 +654,18 @@ describe("@beep/m365-mcp outbox check_drafts", () => {
           [
             ["deleted", "missing"],
             ["sent", "sent"],
-          ]
+          ],
+          "a sent copy beside a deleted one means the draft was sent"
         );
         assert.deepStrictEqual(marks(first), [["moved", "pinned-stale", "set"]]);
         assert.deepStrictEqual(live, [OUTBOX_BASIS_STALE_CATEGORY]);
         assert.deepStrictEqual(trashed, []);
         assert.deepStrictEqual(liveTrash, []);
-        // The deleted draft is never rechecked: one event read for the one live draft.
-        assert.strictEqual(countOf(firstCalls, "getEvent"), 1);
+        assert.strictEqual(
+          countOf(firstCalls, "getEvent"),
+          1,
+          "the deleted draft is never rechecked: one event read for the one live draft"
+        );
         assert.strictEqual(countOf(firstCalls, "getMailFolder"), 1);
         assert.deepStrictEqual(writes(firstCalls), ["updateMessageCategories"]);
         assert.deepStrictEqual(second.closed, []);
@@ -736,10 +747,16 @@ describe("@beep/m365-mcp outbox check_drafts", () => {
         assert.deepStrictEqual(afterFailed, []);
         assert.deepStrictEqual(afterRetry, [["old", "<old@example.test>"]]);
         assert.deepStrictEqual(afterThird, [["old", "<old@example.test>"]]);
-        // The backfill costs no Graph call of its own.
-        assert.deepStrictEqual(thirdCalls, ["getMessage", "getEvent", "getMessage", "getEvent"]);
-        // The draft that learned its id is found after the move; the one Graph gave no id is retired.
-        assert.deepStrictEqual(marks(moved), [["old", "pinned-current", "none"]]);
+        assert.deepStrictEqual(
+          thirdCalls,
+          ["getMessage", "getEvent", "getMessage", "getEvent"],
+          "the message id backfill costs no Graph call of its own"
+        );
+        assert.deepStrictEqual(
+          marks(moved),
+          [["old", "pinned-current", "none"]],
+          "the draft that learned its id is found after the move"
+        );
         assert.deepStrictEqual(
           A.map(moved.closed, (closed) => [closed.draftId, closed.reason]),
           [["anonymous", "missing"]]

@@ -34,7 +34,6 @@ const mebibyte = 1024 * 1024;
 const cpuStep = 5;
 const rssStep = 32 * mebibyte;
 
-// A sampler that plays `script` in order and repeats its last reading.
 const scriptedSampler = (script: A.NonEmptyReadonlyArray<ProcessReading>): Layer.Layer<ProcessSampler> =>
   Layer.effect(
     ProcessSampler,
@@ -48,8 +47,6 @@ const scriptedSampler = (script: A.NonEmptyReadonlyArray<ProcessReading>): Layer
     })
   );
 
-// 23% of one core (2.3 s of CPU per 10 s) and a resident set that peaks at
-// 100 MiB in the first window, then 1 GiB in the second.
 const script = A.prepend(
   A.makeBy(60, (index) =>
     ProcessReading.make({
@@ -74,15 +71,16 @@ describe("practice KG process metrics", () => {
     })
   );
 
-  // A registry of its own: coverage runs files unisolated, so the default
-  // registry may already hold these gauges from another file's host.
   it.effect("samples every 10 seconds and records one coarsened value per closed 5-minute window", () =>
     Effect.gen(function* () {
       yield* Layer.build(layerPracticeKgProcessMetrics.pipe(Layer.provide(scriptedSampler(script))));
       yield* TestClock.adjust(Duration.millis(Duration.toMillis(Duration.minutes(5)) - 10_000));
-      // The first window is still open: nothing is recorded yet.
+
       const gauges1 = yield* gauges;
-      expect(gauges1).toEqual([0, 0]);
+      expect(
+        gauges1,
+        "Use an independent registry because coverage shares file graphs; no gauge is recorded before the first five-minute window closes. The script uses 23% of one core and peaks at 100MiB then 1GiB."
+      ).toEqual([0, 0]);
       yield* TestClock.adjust(Duration.seconds(10));
       const gauges2 = yield* gauges;
       expect(gauges2).toEqual([20, 96 * mebibyte]);
