@@ -488,25 +488,7 @@ export const CI_LANE_PARTITIONS: ReadonlyArray<CiLanePartition> = [
     packages: ["@beep/repo-cli"],
     shard: CiLanePartitionShard.make({ index: 9, total: 9 }),
   }),
-  // @beep/law-practice-server grew from 98 s (2026-11-02) to about 4,270 s of
-  // Bun/Istanbul file time once #2847 registered the canonical citation
-  // corpora. Three sha1-hash shards ran 23.0 / 31.6 / 22.8 min on green main run
-  // 42554761567 (file time 1274 / 1779 / 1267 s); twelve LPT shards planned by
-  // packages/law-practice/server/vitest.shards.json hold about 371 s of file
-  // time each at every file's worst measurement over PR #3007's four green runs
-  // (42607991192, 42615698428, 42626103000, 42637312401; `rebalance --write`
-  // with repeated `--run`, then `--prune` for the two files #3009 deleted):
-  // hosted shards varied 0.6x to 1.3x around a single-run plan, so the plan
-  // carries the worst case and the 480 s budget the rest. The weights are the
-  // planned file sums; `beep ci partitions rebalance --check` fails when they
-  // drift from the plan.
-  // Since 2026-11-10 a shard runs two Vitest workers. On PR #3040's run 42732848457 the
-  // twelve shards finished 4,512 planned seconds in 2,421 s of Vitest (0.54 of the plan) and
-  // ran 3.8-5.5 min, so eight shards of 564 planned seconds hold about 303 s of Vitest each:
-  // 8.8 min on a p95 runner (1.28x the median) with 10 percent of plan imbalance.
-  // 2026-11-14: the plan was re-recorded from PR #3355's run 43646904138 after the regex session
-  // (#3352) cut regex child processes per ten citation calls from 291 to 10; each shard plans 364 s.
-  // The CI goals driver ruled it not lane-affecting for window 5.
+  // decision: law-practice-server-unit-shards
   CiLanePartition.make({
     id: "law-practice-1",
     lane: "test-unit",
@@ -563,23 +545,11 @@ export const CI_LANE_PARTITIONS: ReadonlyArray<CiLanePartition> = [
     packages: ["@beep/law-practice-server"],
     shard: CiLanePartitionShard.make({ index: 8, total: 8 }),
   }),
-  // Seven unit bins, LPT over per-package Vitest wall seconds at each package's worst measurement across
-  // six green runs: PR #3007's 42607991192, 42615698428, 42626103000, 42637312401 and 42646019844, and
-  // main run 42677073526 (hosted package walls swing between runs). History: four bins from main run
-  // 42554761567 summed 809 / 894 / 1,175 / 700 s and unit-c took 13.9 min; six bins of about 595 s still
-  // let unit-a run 10.7 min; seven bins of 582 s ran 5.6-8.5 min on main run 42677073526 except unit-b at
-  // 10.2 min, whose 309 s package started 162 s in and then ran alone. The lane runs two package steps at
-  // once in list order, so each bin now starts its `startFirst` packages (30 s and over, heaviest first;
-  // CI_UNIT_BIN_START_FIRST_SECONDS) before the rest, which keeps a body near the larger of its heaviest
-  // package and half the serial sum, plus about 180 s of setup, prerequisite builds and upload. The weight
-  // is the bin's serial sum. Every package that ran, default-placed ones included, is curated here;
-  // @beep/infra and @beep/storybook kept their bin without a measurement in those runs.
-  // Budget: CI_UNIT_BIN_SERIAL_BUDGET_SECONDS (CiPartitions.schemas.ts).
+  // decision: unit-bins-lpt
   CiLanePartition.make({
     id: "unit-a",
     lane: "test-unit",
     weightSeconds: 594,
-    // law-practice-domain 322 s, alchemy-postgres 51 s, ontology-client 33 s
     startFirst: ["@beep/law-practice-domain", "@beep/alchemy-postgres", "@beep/ontology-client"],
     packages: [
       "@beep/agents-use-cases",
@@ -613,7 +583,6 @@ export const CI_LANE_PARTITIONS: ReadonlyArray<CiLanePartition> = [
     id: "unit-b",
     lane: "test-unit",
     weightSeconds: 593,
-    // repo-ai-metrics 309 s, epistemic-server 59 s, occt 39 s
     startFirst: ["@beep/repo-ai-metrics", "@beep/epistemic-server", "@beep/occt"],
     packages: [
       "@beep/agents-tables",
@@ -649,7 +618,6 @@ export const CI_LANE_PARTITIONS: ReadonlyArray<CiLanePartition> = [
     id: "unit-c",
     lane: "test-unit",
     weightSeconds: 594,
-    // markdown 279 s, box-provisioning 75 s, practice-kg-mcp 48 s
     startFirst: ["@beep/markdown", "@beep/box-provisioning", "@beep/practice-kg-mcp"],
     packages: [
       "@beep/architecture-lab-ui",
@@ -685,7 +653,6 @@ export const CI_LANE_PARTITIONS: ReadonlyArray<CiLanePartition> = [
     id: "unit-d",
     lane: "test-unit",
     weightSeconds: 594,
-    // professional-desktop 231 s, repo-cli-kit 77 s, doc-text 62 s, technical-drawing 35 s
     startFirst: ["@beep/professional-desktop", "@beep/repo-cli-kit", "@beep/doc-text", "@beep/technical-drawing"],
     packages: [
       "@beep/box",
@@ -721,7 +688,6 @@ export const CI_LANE_PARTITIONS: ReadonlyArray<CiLanePartition> = [
     id: "unit-e",
     lane: "test-unit",
     weightSeconds: 593,
-    // repo-workspaces 203 s, md 87 s, db-admin 66 s, editor 48 s
     startFirst: ["@beep/repo-workspaces", "@beep/md", "@beep/db-admin", "@beep/editor"],
     packages: [
       "@beep/architecture-lab-server",
@@ -757,7 +723,6 @@ export const CI_LANE_PARTITIONS: ReadonlyArray<CiLanePartition> = [
     id: "unit-f",
     lane: "test-unit",
     weightSeconds: 593,
-    // documents-server 154 s, duckdb 96 s, glob 76 s, cli-kit 49 s
     startFirst: ["@beep/documents-server", "@beep/duckdb", "@beep/glob", "@beep/cli-kit"],
     packages: [
       "@beep/agents-client",
@@ -794,7 +759,6 @@ export const CI_LANE_PARTITIONS: ReadonlyArray<CiLanePartition> = [
     id: "unit-g",
     lane: "test-unit",
     weightSeconds: 594,
-    // test-utils 128 s, lint-rules 115 s, yaml 76 s, ontology-server 55 s, wink 32 s
     startFirst: ["@beep/test-utils", "@beep/lint-rules", "@beep/yaml", "@beep/ontology-server", "@beep/wink"],
     packages: [
       "@beep/acp",
@@ -826,17 +790,7 @@ export const CI_LANE_PARTITIONS: ReadonlyArray<CiLanePartition> = [
       "@beep/yaml",
     ],
   }),
-  // Hosted Test Integration partitions (goals/citation-extraction-engine, 2026-11-09). Nineteen
-  // Vitest shards of @beep/law-practice-server's integration suite, placed by the LPT plan in
-  // packages/law-practice/server/vitest.integration.shards.json. The weight is each bin's sum of
-  // its files' worst passing hosted seconds over eight runs (PR #3005 run 42656046751, main runs
-  // 42662847801, 42675828132 and 42677073526, pull-request runs 42679893579, 42680346897,
-  // 42682725454 and 42690710476; ubuntu-24.04, one worker). The count is the smallest whose
-  // largest bin equals the largest single file (422 s), and every bin stays within
-  // CI_SHARDED_PARTITION_FILE_BUDGET_SECONDS, which test/ci-lane.test.ts enforces. The shard total
-  // must equal that plan's length or Vitest falls back to its hash split. Every other package with
-  // an integration task is default-placed into `int-rest`, which runs the root integration lane
-  // with the sharded packages filtered out.
+  // decision: law-practice-server-integration-shards
   CiLanePartition.make({
     id: "lps-int-1",
     lane: "test-integration",
@@ -1062,8 +1016,7 @@ export class CiLaneDefaultPlacement extends S.Opaque<CiLaneDefaultPlacement, { r
 const FNV_OFFSET_BASIS = 0x811c9dc5;
 const FNV_PRIME = 0x01000193;
 
-// FNV-1a over UTF-16 code units, spelled out here so a placement never moves
-// when a runtime or library changes its own string hash.
+// decision: stable-placement-hash
 const stablePackageNameHash = (packageName: string): number =>
   A.reduce(
     A.makeBy(Str.length(packageName), (index) => O.getOrElse(Str.charCodeAt(index)(packageName), constant(Number.NaN))),

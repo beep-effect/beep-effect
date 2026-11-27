@@ -364,9 +364,6 @@ class MakeDoctorProgramOptions extends S.Class<MakeDoctorProgramOptions, { reado
   })
 ) {}
 
-// Every doctor-shaped handler resolves the same data root, builds the same
-// `AgentEffectivenessDoctorInput`, and provides the same layers around whatever it derives
-// from that input; only the derivation and the rendering tail differ.
 const runDoctorInputProgram = Effect.fn("AgentEffectiveness.runDoctorInputProgram")(function* <A, E, R>(
   { dataRoot, noPhoenix, phoenixBaseUrl, target, workerEvalReportPath }: typeof MakeDoctorProgramOptions.Encoded,
   derive: (input: AgentEffectivenessDoctorInput) => Effect.Effect<A, E, R>
@@ -496,7 +493,12 @@ const makePhoenixSyncProgram = Effect.fn("AgentEffectiveness.makePhoenixSyncProg
 
 class MakeEvalScoreProgramOptions extends S.Opaque<MakeEvalScoreProgramOptions, { readonly brand: unique symbol }>()(
   S.Struct({
-    dataRoot: S.Option(S.String),
+    dataRoot: S.Option(S.String).pipe(
+      S.annotateKey({
+        description:
+          "Resolved only when recording (unset means the local XDG store), so fixture scoring never reads HOME.",
+      })
+    ),
     dir: S.String,
     json: S.Boolean,
     modelId: S.Option(S.NonEmptyString),
@@ -510,10 +512,6 @@ class MakeEvalScoreProgramOptions extends S.Opaque<MakeEvalScoreProgramOptions, 
   )
 ) {}
 
-// `evals score` carries no `--target` flag, so the fallback rung is always the
-// workstation's XDG store rather than a deploy target's server-owned root. The
-// root is resolved only when recording: pure fixture scoring must not depend on
-// HOME/XDG_STATE_HOME in hermetic environments.
 const makeEvalScoreProgram = Effect.fn("AgentEffectiveness.makeEvalScoreProgram")(function* ({
   dataRoot,
   dir,

@@ -36,7 +36,6 @@ import { CacheCommandError } from "./Cache.errors.ts";
 import { isCacheTaskInspectionArg } from "./Cache.runtime.step.ts";
 import { CacheCensusNode, CacheCensusReport, CacheCensusSource, CacheCensusWorkspace } from "./Cache.schemas.ts";
 
-// Turbo's wire objects are decoded before producing the public census model.
 const TurboWorkspaceList = S.Struct({
   packages: S.Struct({ items: S.Array(S.Struct({ name: S.String, path: S.String })) }),
 });
@@ -129,7 +128,8 @@ export const resolveCacheTurboBinary = Effect.fn("Cache.resolveTurboBinary")(fun
   return yield* CacheCommandError.new("Native Turbo is not installed; discovery will not install or emulate a client.");
 }, CacheCommandError.mapError("Cannot resolve the installed native Turbo client."));
 
-const CENSUS_CAPTURE_MAX_CHARS = 512 * 1024 * 1024;
+const WHOLE_TREE_DRY_RUN_MAX_CHARS = 512 * 1024 * 1024;
+const CONFLICTING_LEGACY_FLAGS_UNSET = { TURBO_REMOTE_ONLY: undefined, TURBO_REMOTE_CACHE_READ_ONLY: undefined };
 
 const capture = Effect.fn("CacheCensus.capture")(function* (
   root: string,
@@ -141,18 +141,14 @@ const capture = Effect.fn("CacheCensus.capture")(function* (
     args,
     cwd: root,
     source: "stdout",
-    // Whole-tree root tasks list every matched file in the dry run, so the JSON is far larger
-    // than the package-only graph the bound was sized for (C3.5).
-    bound: OutputBound.make({ maxChars: CENSUS_CAPTURE_MAX_CHARS, truncatedNotice: "[census output truncated]" }),
+    bound: OutputBound.make({ maxChars: WHOLE_TREE_DRY_RUN_MAX_CHARS, truncatedNotice: "[census output truncated]" }),
     timeout: Duration.seconds(180),
     env: {
       TURBO_TOKEN: "",
       TURBO_TEAM: "",
       TURBO_API: "",
       TURBO_REMOTE_CACHE_SIGNATURE_KEY: "",
-      // Inspection uses explicit cache flags; inherited legacy flags conflict even on a dry run.
-      TURBO_REMOTE_ONLY: undefined,
-      TURBO_REMOTE_CACHE_READ_ONLY: undefined,
+      ...CONFLICTING_LEGACY_FLAGS_UNSET,
       TURBO_TELEMETRY_DISABLED: "1",
       TURBO_BINARY_PATH: "",
     },
@@ -163,8 +159,6 @@ const capture = Effect.fn("CacheCensus.capture")(function* (
   }
   return result.output;
 });
-// `git rev-parse HEAD` through the kit with the capture's two census wordings (the Turbo variables the capture
-// blanked never reached git).
 const revisionAt = Effect.fn("CacheCensus.revision")(function* (root: string) {
   const git = yield* Git;
   return yield* git.revParse(root, "HEAD").pipe(
@@ -334,13 +328,6 @@ export const cacheTaskSelectionArgs = Effect.fn("Cache.taskSelectionArgs")(funct
   return A.appendAll(A.appendAll(selected, ["--dry=json", "--cache=local:"]), forwardedArgs);
 });
 
-// Turbo env entries are glob patterns (`BEEP_*`). The dot dialect keeps the
-// previous matcher's behaviour, which never special-cased a leading dot, and a
-// `!` or `#` prefix stays a literal character to the compiler: Turbo's own
-// negation is read below, and Turbo has no comment entries. `?`, `[..]`, `{a,b}`,
-// `+(..)`, `\` and an in-segment `**` are minimatch magic here where the old
-// compiler read them literally; no live entry uses them (R2b oracle,
-// `dialectMagic` section).
 const turboEnvGlob = GlobPatternOptions.make({ dot: true, nonegate: true, nocomment: true });
 const isTurboEnvExclusion = Str.startsWith("!");
 
@@ -349,7 +336,8 @@ const isTurboEnvExclusion = Str.startsWith("!");
  *
  * **Details**
  *
- * Entries are glob patterns under the dot dialect. A `!`-prefixed entry is a
+ * Entries are glob patterns under the dot dialect. A `#` prefix stays a literal character, since
+ * Turbo has no comment entries. A `!`-prefixed entry is a
  * Turbo exclusion: it forwards nothing, and it never subtracts a positive match
  * either, because the identity-profile gate rejects a positive declaration
  * conservatively even when a later negative would exclude the profile (the

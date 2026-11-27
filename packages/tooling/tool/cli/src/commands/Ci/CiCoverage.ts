@@ -50,8 +50,6 @@ import type { CiLanePartitionProof, CiLaneRunOptions } from "./CiLane.ts";
 import type { CiLanePartitionShard } from "./CiLanePartitions.ts";
 
 const $I = $RepoCliId.create("commands/Ci/CiCoverage");
-// Only `[ci] <message>` reaches the log, so a refusal's reason has to travel in the message. A failed
-// ratchet has already printed its rows and its cause carries no message, so nothing is appended for it.
 const coverageCommandError = (message: string) => (cause: unknown) =>
   CiCommandError.new(
     cause,
@@ -97,7 +95,6 @@ class CanonicalVitestInvocation extends S.Opaque<CanonicalVitestInvocation, { re
 const decodeInvocations = S.decodeUnknownEffect(S.NonEmptyArray(CanonicalVitestInvocation));
 const decodePreparations = S.decodeUnknownEffect(CoverageProducerPackage.fields.preparationCommands);
 
-// Whole quoted words and escaped characters retain pathname-expansion provenance.
 const canonicalWordValue = (word: string) => {
   if (Str.startsWith("'")(word)) return Str.slice(1, -1)(word);
   if (Str.startsWith('"')(word)) return Str.replace(/\\(["\\$`])/gu, "$1")(Str.slice(1, -1)(word));
@@ -106,8 +103,6 @@ const canonicalWordValue = (word: string) => {
 const expandCanonicalWord = Effect.fnUntraced(function* (word: string, cwd: string) {
   const value = canonicalWordValue(word);
   if (P.or(Str.startsWith("'"), Str.startsWith('"'))(word) || Str.startsWith("-")(value)) return [value];
-  // Support the simple pathname stars used by canonical package scripts. Other
-  // shell pattern dialects require their own package-script parity qualification.
   const active = Str.replace(/\\./gu, "")(word);
   if (/[?[\]]|\*\*/u.test(active))
     return yield* CiCommandError.make({ message: `Unsupported canonical pathname pattern: ${word}.` });
@@ -199,7 +194,6 @@ const coverageTestInventory = Effect.fn("CiCoverage.testInventory")(function* (
 ) {
   const path = yield* Path.Path;
   const runtimeArgs = command.args[0] === "--bun" ? ["--bun"] : [];
-  // Vitest's optional JSON output path must not consume a positional test filter.
   const result = yield* runCaptured({
     command: command.command,
     args: [...runtimeArgs, "vitest", "list", "--filesOnly", ...A.drop(command.args, runtimeArgs.length + 2), "--json"],
@@ -338,7 +332,6 @@ const configuredInvocations = Effect.fn("CiCoverage.configuredInvocations")(func
   }));
 });
 
-/** Config-aware test discovery, without importing or executing the test bodies. */
 const discoverCoveragePackages = Effect.fn("CiCoverage.discoverCoveragePackages")(function* (
   repoRoot: string,
   owners: ReadonlyArray<CoverageScopeOwner>,
@@ -390,10 +383,7 @@ const discoverCoveragePackages = Effect.fn("CiCoverage.discoverCoveragePackages"
         { concurrency: 1 }
       );
     }),
-    // Discovery is one `vitest list` boot per invocation (about 1.4 s each on a hosted 4-vCPU
-    // runner). The Coverage Regression consumer discovers every owner (199 invocations took 139 s at
-    // two at a time on run 42554761567), so use the runner's cores; the boots are CPU-bound and
-    // small, and the producer side only ever discovers its own partition.
+    // decision: coverage-runner-layout
     { concurrency: CI_COVERAGE_DISCOVERY_CONCURRENCY }
   );
   return A.flatten(selections);
@@ -401,6 +391,14 @@ const discoverCoveragePackages = Effect.fn("CiCoverage.discoverCoveragePackages"
 
 /**
  * Resolve the same authoritative coverage owner selection for producers and the consumer.
+ *
+ * **Details**
+ *
+ * Discovery is config-aware and never imports or executes test bodies. Canonical package scripts
+ * are expanded with their own word rules: whole quoted words and escaped characters keep their
+ * pathname-expansion provenance, only simple `*` stars expand (any other shell pattern dialect
+ * needs its own package-script parity qualification), and Vitest's optional JSON output path never
+ * consumes a positional test filter.
  *
  * **Example** (Inspect coverage planning)
  *
@@ -423,6 +421,13 @@ export const ciCoveragePlan = Effect.fn("CiCoverage.plan")(function* (repoRoot: 
 
 /**
  * Freshly execute one unit partition and then seal exactly its selected coverage packages.
+ *
+ * **Details**
+ *
+ * Only `[ci] <message>` reaches the log, so a refusal's reason travels in its message; a failed
+ * ratchet has already printed its rows and its cause carries no message, so nothing is appended for
+ * it. A bin's curated `startFirst` packages lead its two-at-a-time steps (`ciLaneStartOrder`), and
+ * a partition the table does not name, such as labs, keeps its order.
  *
  * **Example** (Inspect the unit producer)
  *
@@ -523,8 +528,6 @@ const runAndWrite = Effect.fn("CiCoverage.runAndWrite")(function* (
   ).pipe(Effect.mapError(coverageCommandError(`Failed to seal coverage partition ${partitionId}`)));
 });
 
-// A bin's curated `startFirst` packages lead its two-at-a-time steps (ciLaneStartOrder); a partition
-// the table does not name, such as labs, keeps its order.
 const startFirstOrdered = (partitionId: string, packages: ReadonlyArray<CoverageProducerPackage>) =>
   ciLaneStartOrder(
     packages,
@@ -591,20 +594,16 @@ const runOrdinaryCoverageStep = Effect.fn("CiCoverage.runOrdinaryStep")(function
   ]);
 });
 
-// Hosted ubuntu runners expose 4 vCPUs; with `--maxWorkers=1` per producer, two producers fit beside the
-// step runner without exceeding the 16 GB the one-worker pin was sized for.
+// decision: coverage-runner-layout
 const CI_COVERAGE_COMPOUND_STEP_CONCURRENCY = 2;
 const CI_COVERAGE_ONE_WORKER_ARG = "--maxWorkers=1";
-// A sharded partition runs a single producer, so that producer takes both worker slots a unit bin
-// splits between its two producers: the same two Vitest workers and the same memory on the runner.
-// With one worker a shard used one of four vCPUs (run 42726850927, repo-cli-3: 562 s of Vitest for
-// 452 s of file time, strictly serial).
+// decision: coverage-runner-layout
 const CI_COVERAGE_SHARD_WORKERS_ARG = "--maxWorkers=2";
 const producerWorkersArg =
   (entry: CoverageProducerPackage) =>
   (arg: string): string =>
     entry.shard !== undefined && arg === CI_COVERAGE_ONE_WORKER_ARG ? CI_COVERAGE_SHARD_WORKERS_ARG : arg;
-/** Parallel `vitest list` discoveries: one per core of the hosted 4-vCPU runner. */
+// decision: coverage-runner-layout
 const CI_COVERAGE_DISCOVERY_CONCURRENCY = 4;
 
 const runCompoundCoverageSteps = Effect.fn("CiCoverage.runCompoundSteps")(function* (
@@ -652,8 +651,7 @@ const runCompoundCoverageSteps = Effect.fn("CiCoverage.runCompoundSteps")(functi
       },
     })
   );
-  // Two packages at a time: each vitest process is pinned to one worker, so a 4-vCPU hosted runner has
-  // headroom for a second producer; the steps are buffered so the two logs do not interleave.
+  // decision: coverage-runner-layout
   yield* Effect.forEach(
     R.values(A.groupBy(A.zip(steps, packages), ([, entry]) => entry.packagePath)),
     (segmentsInScriptOrder) =>
@@ -740,6 +738,11 @@ export const runCiLabsCoverage = Effect.fn("CiCoverage.runLabs")(function* (
 /**
  * Artifact comparison only: no test producer or fallback can be reached through this route.
  *
+ * **Details**
+ *
+ * An affected (pull request) run pins the base through `TURBO_SCM_BASE` like every other affected
+ * coverage lane, so a row the pull request lowered is judged where it belongs.
+ *
  * **Example** (Inspect artifact comparison)
  *
  * ```ts
@@ -807,8 +810,6 @@ export const runCiCoverageComparison = Effect.fn("CiCoverage.compare")(function*
       artifactRoot: options.coverageInput ?? ".beep/ci-coverage-inputs",
       identity: plan.identity,
       scoped: plan.scoped,
-      // Affected (pull request) runs pin the base like every other affected coverage lane does
-      // through TURBO_SCM_BASE, so a row the pull request lowered is judged where it belongs.
       ...(options.affected && Str.isNonEmpty(options.base) ? { base: options.base } : {}),
       expectedPartitions: A.append(
         expectedPartitions,

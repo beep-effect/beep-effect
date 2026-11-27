@@ -134,8 +134,7 @@ const hashDirectoryAlias = Effect.fn("CacheWorkflow.directoryAlias")(function* (
 });
 const bound = OutputBound.make({ maxChars: 4 * 1024 * 1024, truncatedNotice: "workflow inventory exceeded bound" });
 const captureGit = Effect.fn("CacheWorkflow.git")(function* (root: string, args: ReadonlyArray<string>) {
-  // KEEP (D-19): producer trust boundary (pinned /usr/bin/git in the identity, scrubbed env).
-  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19), reason above
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: producer trust (D-19): pinned /usr/bin/git, scrubbed env
   const captured = yield* runCapturedStreams({
     command: "/usr/bin/git",
     args,
@@ -163,7 +162,6 @@ const declaredSourcePaths = [
   ".nvmrc",
 ];
 const listSources = Effect.fn("CacheWorkflow.listSources")(function* (root: string) {
-  // KEEP (D-19): producer trust boundary (pinned /usr/bin/git in the identity, scrubbed env).
   const output = yield* captureGit(root, [
     "ls-files",
     "--cached",
@@ -216,7 +214,6 @@ const isAmbientEnvironmentFile = S.is(AmbientEnvironmentFile);
  */
 export const assertCacheProducerWorkflowProfile = Effect.fn("CacheWorkflow.profile")(function* (root: string) {
   const fs = yield* FileSystem.FileSystem;
-  // KEEP (D-19): producer trust boundary (pinned /usr/bin/git in the identity, scrubbed env).
   const status = yield* captureGit(root, [
     "status",
     "--porcelain=v1",
@@ -320,7 +317,6 @@ export const collectCacheProducerWorkflowFiles = Effect.fn("CacheWorkflow.files"
       const sha256 = yield* Match.value(info.type).pipe(
         Match.when("Directory", () => hashDirectoryAlias(canonicalRoot, target, declared)),
         Match.orElse(() =>
-          // Metadata preflight limits every read to an exactly representable size.
           readCacheExperimentBytes(root, target, ByteSize.toNumberUnsafe(info.size)).pipe(
             Effect.filterOrFail(
               (bytes) => ByteSize.equals(ByteSize.bytes(bytes.byteLength), info.size),
@@ -365,7 +361,6 @@ export const collectCacheProducerWorkflowFiles = Effect.fn("CacheWorkflow.files"
  * @since 0.0.0
  */
 export const inspectCacheProducerWorkflow = Effect.fn("CacheWorkflow.inspect")(function* (root: string) {
-  // KEEP (D-19): producer trust boundary (pinned /usr/bin/git in the identity, scrubbed env).
   const before = yield* captureGit(root, ["rev-parse", "HEAD"]).pipe(
     Effect.map(Str.trim),
     Effect.flatMap(decodeRevision)
@@ -386,7 +381,6 @@ export const inspectCacheProducerWorkflow = Effect.fn("CacheWorkflow.inspect")(f
     inspectCacheLinkedFile,
     { concurrency: 2 }
   );
-  // KEEP (D-19): producer trust boundary (pinned /usr/bin/git in the identity, scrubbed env).
   const after = yield* captureGit(root, ["rev-parse", "HEAD"]);
   if (Str.trim(after) !== before) {
     return yield* CacheCommandError.new("Workflow revision changed during inspection.");
@@ -821,7 +815,6 @@ export const runCacheProducerWorkflow = Effect.fn("CacheWorkflow.run")(function*
     Effect.gen(function* () {
       const workflow = yield* inspectCacheProducerWorkflow(root);
       yield* assertCacheProducerWorkflowProfile(ownedRequest.sourceRoot);
-      // KEEP (D-19): producer trust boundary (pinned /usr/bin/git in the identity, scrubbed env).
       const sourceRevision = yield* captureGit(ownedRequest.sourceRoot, ["rev-parse", "HEAD"]).pipe(
         Effect.map(Str.trim),
         Effect.flatMap(decodeRevision)

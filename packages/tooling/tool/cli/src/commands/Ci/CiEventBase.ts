@@ -216,8 +216,6 @@ const isMergeParents = S.is(S.Tuple([S.String, S.String]));
 
 const shown = (value: O.Option<string>): string => O.getOrElse(value, () => "(unset)");
 
-// HEAD is the run's own merge commit when it is GITHUB_SHA and has exactly two
-// parents, the second the pull request head; the first is then the merged base.
 const provenMergeFirstParent = (facts: CiEventBaseFacts): Result.Result<string, string> => {
   if (!O.contains(facts.eventSha, facts.checkoutSha)) {
     return Result.fail(`HEAD ${facts.checkoutSha} is not GITHUB_SHA ${shown(facts.eventSha)}`);
@@ -240,6 +238,8 @@ const provenMergeFirstParent = (facts: CiEventBaseFacts): Result.Result<string, 
  * pull request uses the first parent of the verified merge commit, falls back
  * to `pull_request.base.sha` when the proof fails, and fails when that is unset
  * too: diffing a pull request against itself would select nothing.
+ * The merge commit is verified when HEAD is `GITHUB_SHA` and has exactly two parents, the second
+ * being `pull_request.head.sha`; its first parent is then the merged base.
  *
  * **Example** (Diff a pull request against its merge commit's first parent)
  *
@@ -325,6 +325,11 @@ const readEventValue = (name: string) => Effect.map(configStringOption(name), O.
 /**
  * Read the event facts from the environment and the checkout facts from git.
  *
+ * **Details**
+ *
+ * Parents are read as `HEAD^1` to `HEAD^3`; a parent git cannot name, such as `HEAD^3` of a
+ * two-parent merge, is absent rather than an error.
+ *
  * **Example** (Read facts for the current checkout)
  *
  * ```ts
@@ -345,7 +350,6 @@ export const readCiEventBaseFacts = Effect.fn("CiEventBase.readFacts")(function*
     git
       .revParse(repoRoot, ref, { peel: "commit", quiet: true })
       .pipe(CiCommandError.mapError(`--event-base could not resolve ${ref} in ${repoRoot}.`));
-  // A parent git cannot name does not exist: `HEAD^3` of a two-parent merge.
   const parent = (index: number) =>
     git.revParse(repoRoot, `HEAD^${index}`, { peel: "commit", quiet: true }).pipe(
       Effect.asSome,

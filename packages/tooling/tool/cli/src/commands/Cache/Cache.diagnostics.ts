@@ -59,7 +59,6 @@ import type {
 const refuse = CacheDependencyDiagnosticRefusal.fail;
 const utf8 = new TextEncoder();
 const newline = utf8.encode("\n");
-// The real paired observation isolated byte drift to this one package.
 const fileDetailGroup = "node-gyp";
 const changedGroupLimit = 64;
 const blockSize = 512;
@@ -128,10 +127,6 @@ const concatBytes = (...parts: ReadonlyArray<Uint8Array>): Uint8Array => {
 
 const sha256Hex = (bytes: Uint8Array) => Sha256Hex.make(Hex.encode(sha256(bytes)));
 
-// Streaming SHA-256 over two full archive passes dominates run time. Bun's native
-// hasher is about nine times faster than the portable one (see Corpus Restoration);
-// a runtime without `Bun.CryptoHasher`, such as the vitest Node lane, falls back.
-// Digests are identical either way.
 interface StreamingSha256 {
   readonly digest: () => Uint8Array;
   readonly update: (chunk: Uint8Array) => void;
@@ -156,12 +151,7 @@ const createSha256 = (): StreamingSha256 => {
   };
 };
 
-// ---------------------------------------------------------------------------
-// Source report reads.
-// ---------------------------------------------------------------------------
-
 const regularFileSize = Effect.fnUntraced(function* (fs: FileSystem.FileSystem, file: string) {
-  // A symlink at the final component is refused like O_NOFOLLOW.
   if (yield* fs.readLink(file).pipe(Effect.as(true), Effect.orElseSucceed(constFalse)))
     return yield* refuse("filesystem-or-process-failed");
   const info = yield* fs.stat(file);
@@ -183,7 +173,6 @@ const openSource = Effect.fnUntraced(function* (
   file: string,
   limits: CacheDependencyDiagnosticLimits
 ) {
-  // Special files are refused before any open, so a FIFO can never block the observer.
   const size = yield* regularFileSize(fs, file);
   if (O.isNone(size)) return yield* refuse("source-not-regular");
   const handle = yield* fs.open(file, { flag: "r", noFollow: true });
@@ -196,6 +185,11 @@ const openSource = Effect.fnUntraced(function* (
 
 /**
  * Read bounded source-report bytes without following a final symlink.
+ *
+ * **Details**
+ *
+ * A final-component symlink is refused like `O_NOFOLLOW`, and a special file is
+ * refused before any open, so a FIFO can never block the read.
  *
  * **Example** (Plan a bounded source read)
  *
@@ -274,12 +268,7 @@ export const compareCacheDiagnosticSource = Effect.fn("CacheDiagnostics.compareS
   Effect.catchTag("PlatformError", () => refuse("filesystem-or-process-failed"))
 );
 
-// ---------------------------------------------------------------------------
-// Bounded streaming tar parser (Python `tarfile` stream-mode semantics).
-// ---------------------------------------------------------------------------
-
-// Names that are not strict UTF-8 refuse as invalid values. Python decoded them
-// with surrogateescape and then failed the same way on `name.encode()`.
+// decision: dependency-diagnostics-tarfile-parity
 const strictUtf8 = new TextDecoder("utf-8", { fatal: true });
 const latin1 = new TextDecoder("latin1");
 const decodeText = (bytes: Uint8Array) =>
@@ -375,7 +364,6 @@ const pythonInt = (text: string): O.Option<number> => {
 };
 
 const pythonFloatValue = (text: string): O.Option<number> => {
-  // Non-finite pax times are treated as invalid and fall back to 0, so every record stays plain JSON.
   const trimmed = Str.replace(pythonWhitespace, "")(text);
   return decimalFloat.test(trimmed)
     ? O.filter(O.some(Number(Str.replaceAll("_", "")(trimmed))), Number.isFinite)
@@ -397,7 +385,6 @@ const sparseSize: PaxSetter = (member, value) =>
   });
 const intOrZero = (value: string) => O.getOrElse(pythonInt(value), () => 0);
 
-// Python tarfile's pax keyword handlers, applied in record order.
 const PAX_SETTERS: Readonly<Record<string, PaxSetter>> = {
   "GNU.sparse.name": assign((member, value) => {
     member.name = value;
@@ -464,7 +451,6 @@ const headerFields = (block: Uint8Array) =>
   }).pipe(O.filter((fields) => checksumMatches(block, fields.checksum)));
 
 const normalizeHeader = (member: TarMember, prefix: string, dircheck: boolean) => {
-  // Old V7 archives represent a directory as a regular file with a trailing slash.
   if (dircheck && member.type === typeAregular && Str.endsWith("/")(member.name)) member.type = typeDirectory;
   member.sparse = member.type === typeSparse;
   if (isDirectory(member)) member.name = stripTrailingSlashes(member.name);
@@ -497,14 +483,6 @@ const parseHeader = Effect.fnUntraced(function* (block: Uint8Array, dircheck: bo
 
 const blockLength = (size: number) => Math.ceil(size / blockSize) * blockSize;
 
-/**
- * One raw archive reader: hashes every byte (padding included) with timed, bounded pulls.
- *
- * @param pull - Chunk source for the canonical tar stream.
- * @param deadline - Epoch milliseconds after which every read fails.
- * @param limits - Stream, entry and header bounds the reader enforces.
- * @returns The reader's bounded read and digest operations.
- */
 const makeArchiveReader = (
   pull: Pull.Pull<A.NonEmptyReadonlyArray<Uint8Array>, PlatformError.PlatformError>,
   deadline: number,
@@ -629,7 +607,7 @@ const parsePaxRecords = Effect.fnUntraced(function* (data: Uint8Array, pairs: Pa
   }
 });
 
-/** Read the next member, or `None` at the end of the archive (Python `TarFile.next`). */
+// decision: dependency-diagnostics-tarfile-parity
 const nextMember: (
   reader: ArchiveReader,
   globalPax: PaxPairs,
@@ -639,7 +617,6 @@ const nextMember: (
   function* (reader, globalPax, limits, first) {
     const header = yield* readMember(reader, globalPax, limits, true);
     if (!isHeaderStop(header)) return O.some(header);
-    // A malformed first header is an archive failure; later ones end iteration like tarfile.
     return first && header.reason !== "end" ? yield* refuse("archive-read-failed") : O.none<TarMember>();
   }
 );
@@ -712,10 +689,6 @@ const readMember: (
   }
 );
 
-// ---------------------------------------------------------------------------
-// Snapshot: one bounded archive pass.
-// ---------------------------------------------------------------------------
-
 const pathParts = (name: string): ReadonlyArray<string> => {
   const root =
     Str.startsWith("//")(name) && !Str.startsWith("///")(name) ? ["//"] : Str.startsWith("/")(name) ? ["/"] : [];
@@ -766,7 +739,6 @@ type GroupState = {
 };
 
 const newGroup = (label: string): GroupState => ({
-  // Unexpected names are represented by a digest, never copied into logs.
   label: safeLabel.test(label) ? label : `opaque:${sha256Hex(utf8.encode(label))}`,
   entries: 0,
   files: 0,
@@ -878,7 +850,6 @@ const ingestLink = Effect.fnUntraced(function* (
   identity: Uint8Array
 ) {
   if (utf8.encode(member.linkname).length > state.limits.headerBytes) return yield* refuse("archive-link-bound");
-  // Link text is hashed but never traversed or emitted.
   group.links.update(concatBytes(identity, encodeCacheDiagnosticJson(member.linkname), newline));
 });
 
@@ -965,6 +936,12 @@ const finishArchive = Effect.fnUntraced(function* (
  * any exit. Every streamed byte, padding included, feeds the raw digest that
  * must equal the producer inspection's declared dependency digest.
  *
+ * Hashing uses Bun's native SHA-256 when present (about nine times faster) and
+ * the portable hasher elsewhere, such as the vitest Node lane; digests match.
+ * Per-file detail rows cover only the `node-gyp` group, the one package a paired
+ * observation showed drifting. A package name outside the safe label set appears
+ * only as a digest, and link text is hashed but never traversed or emitted.
+ *
  * **Example** (Plan one archive pass)
  *
  * ```ts
@@ -1023,13 +1000,9 @@ export const snapshotCacheDependencies = Effect.fn("CacheDiagnostics.snapshot")(
   Effect.catchTag("PlatformError", () => refuse("filesystem-or-process-failed"))
 );
 
-// ---------------------------------------------------------------------------
-// Observation and publication.
-// ---------------------------------------------------------------------------
-
 const decodeJson = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
 const invalidShape = () => CacheDependencyDiagnosticRefusal.make({ code: "invalid-value-or-shape" });
-// Missing keys and non-object containers both refuse as invalid values, like Python KeyError/TypeError.
+// decision: dependency-diagnostics-tarfile-parity
 const field = (value: unknown, key: string): Effect.Effect<unknown, CacheDependencyDiagnosticRefusal> =>
   isJsonObject(value) ? Effect.fromOption(invalidShape)(R.get(value, key)) : Effect.fail(invalidShape());
 const requireString = (value: unknown): Effect.Effect<string, CacheDependencyDiagnosticRefusal> =>

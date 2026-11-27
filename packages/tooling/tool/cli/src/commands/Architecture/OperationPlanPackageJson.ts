@@ -109,8 +109,6 @@ const renderLegacyPackageJson = (operation: WritePackageJsonOperation, role: Arc
     devDependencies: operation.devDependencies,
   });
 
-// A model-first package carries the manifest `beep create-package` emits for a
-// library, with one exact export per entry point and no wildcard.
 const renderContextPackageJson = (operation: WritePackageJsonOperation) =>
   encodePackageJsonCanonicalPrettyEffect({
     name: operation.packageName,

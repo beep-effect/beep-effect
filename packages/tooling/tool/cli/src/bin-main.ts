@@ -48,9 +48,7 @@ const O = await import("effect/Option");
  * @category configuration
  * @since 0.0.0
  */
-// `Git.layer` is provided once here, at the runtime edge, so a command path
-// takes `Git` from its requirements instead of rebuilding the service at a
-// leaf with `Git.make` (effected-promotion W4-l; repo-cli-gh-git-consolidation D-06).
+// decision: git-layer-at-runtime-edge
 const BaseLayers = Layer.provideMerge(
   Git.layer,
   Layer.mergeAll(BunServices.layer, BunHttpClient.layer, BunCrypto.layer)
@@ -122,9 +120,7 @@ const currentGitOrigin = (): string =>
   Result.getOrElse(
     Result.map(
       Result.try(() =>
-        // KEEP (D-21, X7): read once while the runtime's layers are being assembled, before `Git.layer`
-        // exists.
-        // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-21, X7), reason above
+        // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: read while the runtime layers assemble, before Git.layer exists
         Bun.spawnSync({ cmd: ["git", "remote", "get-url", "origin"], stdout: "pipe", stderr: "ignore" })
       ),
       (result) => (result.success ? Str.trim(result.stdout.toString()) : "")
@@ -150,6 +146,7 @@ const withHostTurboCacheDefaults = Effect.fn("RepoCli.withHostTurboCacheDefaults
   return yield* effect.pipe(Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnv()));
 });
 
+// decision: force-exit-after-drain
 const runRepoCliMain = <E, A>(effect: import("effect/Effect").Effect<A, E>) =>
   BunRuntime.runMain(
     // The stream console wraps the whole run, so the failure report the kit
@@ -158,7 +155,6 @@ const runRepoCliMain = <E, A>(effect: import("effect/Effect").Effect<A, E>) =>
       CliRuntime.main(withProgramLoggers(effect), {
         // Every path builds its own platform layer inside the program.
         platform: Layer.empty,
-        // An unknown subcommand or a bad flag exits 1, as before the kit.
         usageExitCode: 1,
         render: renderCliFailure(argv),
       }),
@@ -167,16 +163,8 @@ const runRepoCliMain = <E, A>(effect: import("effect/Effect").Effect<A, E>) =>
     ),
     {
       disableErrorReporting: true,
-      // The runner's onExit only hard-exits on a signal or nonzero code; a clean
-      // success is left to event-loop drain, so any handle a child leaves behind
-      // (turbo daemon sockets, stuck bun wrappers) wedges the process after its
-      // work is done — the CI class where a lane prints success and never exits.
-      // Keep defaultTeardown as the sole exit-code authority and force the exit
-      // the runner declines on success.
       teardown: (exit, onExit) => {
-        // A dead terminal must not abort before the drain and exit.
         Result.try(restoreSharedTerminal);
-        // The runner's onExit hard-exits on a nonzero code, so the drain must come first.
         Runtime.defaultTeardown(exit, (code) =>
           drainThenExit({
             label: "beep-cli",
@@ -239,8 +227,6 @@ const runtimeLayerFor = Effect.fnUntraced(function* (services: HashSetType.HashS
 const commandProgram = (target: DispatchTarget) =>
   Effect.scoped(
     Effect.flatMap(Dispatch.dispatchRuntimeServices(target).pipe(runtimeLayerFor), (layer) =>
-      // The help formatter rides in the built context: subcommand help prints one pointer line in
-      // place of the global-flag block, and root help keeps the block.
       Layer.build(Layer.provideMerge(Dispatch.rootHelpFormatterLayer, layer)).pipe(
         Effect.flatMap(
           Effect.fnUntraced(function* (context) {
@@ -269,7 +255,6 @@ const commandProgram = (target: DispatchTarget) =>
 
 const dispatchTarget = Dispatch.resolveDispatchTarget(argv);
 
-// A quality-task invocation that does not parse falls back to the command groups, as before.
 const qualityTaskInvocation =
   dispatchTarget._tag === "quality-task"
     ? await loadQualityTasks().then(({ parseQualityTaskInvocation, runQualityTask }) =>
@@ -278,9 +263,6 @@ const qualityTaskInvocation =
     : O.none();
 
 if (O.isSome(qualityTaskInvocation)) {
-  // The quality-task route resolves the admission-aware concurrency plan, which
-  // reads the admission snapshot through the QualityScheduler service and
-  // MemAvailable through MemoryStats; the scheduler module loads only here.
   const { MemoryStatsLive, QualitySchedulerLive } = await import("./internal/repo-run/QualityScheduler.ts");
   runRepoCliMain(
     Effect.scoped(

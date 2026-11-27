@@ -106,7 +106,6 @@ export const modelFirstContextNamesFor = ({ context, module }: ModelFirstContext
   });
 };
 
-// A binding is a value, a type, or both (an import or a class).
 type Space = "value" | "type" | "both";
 
 const bindingsIn = (names: string, space: Space): ReadonlyArray<readonly [string, Space]> =>

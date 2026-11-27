@@ -224,13 +224,10 @@ const forwarderRunMaxSnapshotExportsFlag = Flag.Int("max-snapshot-exports").pipe
     "Per-run Parquet snapshot exports to keep; older snapshots are pruned automatically after each forwarder run"
   )
 );
-// Accepted but inert: `forwarder run` now always enforces snapshot retention. Retained so that
-// already-installed systemd timer units (and any timer-rendered command) that still pass
-// --retention-enforce continue to parse instead of failing with an unrecognized-flag error.
 const forwarderRunRetentionEnforceCompatFlag = Flag.Boolean("retention-enforce").pipe(
   Flag.withDefault(false),
   Flag.withDescription(
-    "Deprecated no-op: forwarder run always prunes old per-run Parquet snapshots; kept for backward compatibility"
+    "Deprecated no-op kept so installed timer units still parse: forwarder run always prunes old Parquet snapshots"
   )
 );
 const hashSaltFlag = Flag.String("hash-salt").pipe(
@@ -590,7 +587,6 @@ const forwarderRunCommand = Command.make(
     parquetExportMode: parquetExportModeFlag,
     rawArchiveKeySecretRef: rawArchiveKeySecretRefFlag,
     repoRoot: repoRootFlag,
-    // Inert backward-compat flag: parsed and ignored (run always enforces retention).
     retentionEnforce: forwarderRunRetentionEnforceCompatFlag,
     retentionMaxSnapshotExports: forwarderRunMaxSnapshotExportsFlag,
     since: sinceFlag,
@@ -632,9 +628,6 @@ const forwarderRunCommand = Command.make(
           parquetExportMode,
           rawArchiveKeySecretRef,
           repoRoot,
-          // Local forwarder runs always self-prune the per-run Parquet snapshots so the
-          // `<data-root>/derived/parquet` directory cannot grow unbounded; keep-N is tunable via
-          // --max-snapshot-exports. Snapshot retention history is opt-in on the `timer` command instead.
           retentionEnforce: true,
           retentionMaxSnapshotExports,
           since,

@@ -365,7 +365,6 @@ const wireCases = [
 ];
 const cycle = ["RC-009", "RC-010", "RC-017", "RC-018", "RC-019", "RC-020"];
 
-// Frozen gate table encoded from the rubric at `rubricSha256`.
 const gateTable: ReadonlyArray<GateRule> = [
   {
     gate: 1,
@@ -381,9 +380,6 @@ const gateTable: ReadonlyArray<GateRule> = [
     gate: 3,
     title:
       "strict OpenAPI deviations are enumerated, and no core deviation breaks the published clients or Beep policy",
-    // Every strict verdict must be executed (a failure is an enumerated
-    // deviation, not a gate failure); the published clients must still accept
-    // the backend's actual upload status. Policy breakage is gates 4 and 5.
     enumerated: over(wireCases, "strict-openapi"),
     evidence: A.flatMap(clients, (dimension) => over(["RC-009"], dimension)),
   },
@@ -401,8 +397,6 @@ const gateTable: ReadonlyArray<GateRule> = [
     gate: 6,
     title:
       "valid x-artifact-tag values round-trip opaquely; missing, invalid, wrong-team and corrupted artifacts are rejected before restore",
-    // The signed replay (RC-017) proves opaque tag round-trip; RC-006's strict
-    // verdict also scores sha/dirty-hash metadata, so it stays under gate 3.
     evidence: A.flatMap(clients, (dimension) => over(["RC-017", "RC-018", "RC-019", "RC-020", "RC-021"], dimension)),
   },
   {
@@ -435,9 +429,6 @@ const gateTable: ReadonlyArray<GateRule> = [
   {
     gate: 12,
     title: "license and maintenance obligations are acceptable for the deployed and modified topology",
-    // The license obligation is read from the pinned backend's registry
-    // metadata; maintenance needs an executed obligation check. Source
-    // inspection never earns a pass.
     evidence: [],
     obligations: ["license", "maintenance"],
   },
@@ -507,7 +498,6 @@ const evidenceOf =
           detail: `${check.expectation}: ${Str.slice(0, 240)(check.detail)}`,
         })
     );
-    // Executed external evidence settles a case the runs could not execute.
     return A.isReadonlyArrayNonEmpty(fromEvidence) && fromRun.status === "unproven"
       ? fromEvidence
       : A.prepend(fromEvidence, fromRun);
@@ -630,6 +620,20 @@ const labelOf = (run: { readonly profile: string; readonly topology: string }) =
  * weighted points and the 20-percent metric are not computed here). When no
  * candidate qualifies, the verdict says "no eligible replacement".
  *
+ * Gate 3 needs every strict OpenAPI verdict executed, but a failing one is an enumerated
+ * deviation, not a gate failure: the gate fails when a published client rejects the backend's
+ * actual upload status, and policy breakage belongs to gates 4 and 5. RC-006's strict verdict
+ * also scores sha and dirty-hash metadata, so it counts under gate 3; gate 6 takes its opaque tag
+ * round-trip proof from the signed replay RC-017. Gate 12 reads the license obligation from the
+ * pinned backend's registry metadata (a `+suffix` build of a pinned release has that release's
+ * license) and needs an executed maintenance obligation check; source inspection never earns a
+ * pass. Executed external evidence settles a case the runs could not execute.
+ *
+ * A target's baseline is only the incumbent of the same profile, since profiles prove different
+ * gates; without one the comparison reports no incumbent, never a substitute. A regression is an
+ * incumbent pass against this target's fail; a gate the incumbent passes but this target leaves
+ * unproven is only not re-proven.
+ *
  * **Example** (Plan a comparison)
  * ```ts
  * import { compareCacheConformanceRuns } from "@beep/repo-cli/commands/Cache"
@@ -657,8 +661,6 @@ export const compareCacheConformanceRuns = Effect.fn("CacheConformance.compareRu
   const envelopeNote = envelope.concurrency.censored
     ? `The envelope is a floor, not demand: observed peak concurrency (${envelope.concurrency.readPeak} read / ${envelope.concurrency.writePeak} write) equals the reserved caps, so demand is censored (${cacheConformanceLoadEnvelopePath}).`
     : "";
-  // Merging checks corpus identity only within one target; compare across
-  // targets only when every run was scored against the same corpus.
   const corpus = A.headNonEmpty(runs).corpus;
   const foreign = A.findFirst(
     runs,
@@ -675,8 +677,6 @@ export const compareCacheConformanceRuns = Effect.fn("CacheConformance.compareRu
       evidence,
       (document) => document.profile === run.profile && A.contains(document.topologies, run.topology)
     );
-    // A semver build suffix (`2.12.0+tag-passthrough`) marks a locally
-    // modified build of the pinned release; its license is the release's.
     const release = A.head(Str.split(run.backend.release, "+")).pipe(O.getOrElse(() => run.backend.release));
     const pinned = A.findFirst(pins.backends, (backend) =>
       A.contains([backend.package, backend.release], O.some(`${run.backend.id}@${release}`))
@@ -734,8 +734,6 @@ export const compareCacheConformanceRuns = Effect.fn("CacheConformance.compareRu
     );
     const candidate = role === "candidate";
     const eligible = A.every(gates, (gate) => gate.status === "pass");
-    // Only the incumbent of the same profile is a fair baseline: profiles prove
-    // different gates, so a missing one reports "no incumbent", never a substitute.
     const baseline = HashMap.get(incumbents, run.profile);
     const delta = (keep: (mine: CacheConformanceGateStatus, theirs: CacheConformanceGateStatus) => boolean) =>
       O.match(baseline, {
@@ -746,8 +744,6 @@ export const compareCacheConformanceRuns = Effect.fn("CacheConformance.compareRu
           ),
       });
     const blockersRemoved = role === "incumbent" ? [] : delta((mine, theirs) => mine === "pass" && theirs === "fail");
-    // A regression is measured (incumbent pass, this fail); a gate the
-    // incumbent passes but this target leaves unproven is only not re-proven.
     const regressions = role === "incumbent" ? [] : delta((mine, theirs) => mine === "fail" && theirs === "pass");
     const notReproven = role === "incumbent" ? [] : delta((mine, theirs) => mine === "unproven" && theirs === "pass");
     const gateList = (all: ReadonlyArray<number>) =>

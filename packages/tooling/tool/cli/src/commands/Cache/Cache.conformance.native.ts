@@ -319,9 +319,6 @@ const runNative = Effect.fn("CacheConformance.runNative")(function* (
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const bun = yield* fs.realPath(process.execPath);
-  // Unlike `cache protocol-run`, the target lives outside any private network
-  // namespace, so Turbo shares the host network and reaches only the loopback
-  // proxy (TURBO_API); user, PID, IPC and UTS namespaces stay private.
   const captured = yield* runCapturedStreams({
     command: "/usr/bin/bwrap",
     args: [
@@ -361,10 +358,6 @@ const runNative = Effect.fn("CacheConformance.runNative")(function* (
       CI: "1",
       TURBO_TELEMETRY_DISABLED: "1",
       TURBO_API: proxyUrl,
-      // The team rides in the environment, not `.turbo/config.json`: the
-      // config file is hashed, the variable is not (strict env mode), so every
-      // team and key sees the same task hash and wrong-team and epoch probes
-      // isolate the namespace alone.
       TURBO_TEAMID: plan.team,
       TURBO_TOKEN: Redacted.value(plan.role === "writer" ? bearers.writer : bearers.reader),
       TURBO_REMOTE_CACHE_SIGNATURE_KEY: Redacted.value(plan.signing),
@@ -434,8 +427,6 @@ const scenarioCases = HashMap.make<ReadonlyArray<readonly [CacheConformanceCaseI
   ["RC-022", ["epoch-fresh-namespace", "epoch-old-namespace"]]
 );
 
-// A fault rejection only counts when the clean replay of the same artifact
-// restored: otherwise the client may have rejected it for another reason.
 const faultExpectation = (
   outcomes: HashMap.HashMap<NativeScenario, CacheConformanceNativeOutcome>,
   events: ReadonlyArray<CacheConformanceProxyEvent>,
@@ -646,12 +637,18 @@ const scoreNativeCase = (
  * signing keys. A writer producer uploads; a reader replay with an empty
  * local cache must be a remote hit with identical output; missing-tag,
  * tampered-tag, tampered-body and wrong-team replays (faults applied by the
- * proxy) must restore nothing, with fallback execution denied. Epoch rotation
+ * proxy) must restore nothing, with fallback execution denied. A fault
+ * rejection counts only when the clean replay of the same artifact restored;
+ * otherwise the client may have rejected it for another reason. Epoch rotation
  * checks that a fresh namespace and key restore nothing and that the old
  * namespace under a new key is rejected rather than downgraded. Turbo runs in
  * bubblewrap user, PID, IPC and UTS namespaces but shares the host network,
  * because the target is outside any private namespace; it is pointed only at
  * the loopback proxy.
+ *
+ * The team rides in `TURBO_TEAMID`, not `.turbo/config.json`: the config file is hashed and the
+ * variable is not (strict env mode), so every team and key sees the same task hash and the
+ * wrong-team and epoch probes isolate the namespace alone.
  *
  * **Example** (Plan a native run)
  * ```ts

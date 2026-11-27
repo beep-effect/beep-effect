@@ -81,13 +81,11 @@ export const cachePilotInputDirectory: Readonly<Record<CiCachePilotMode, string>
   local: ".beep/cache/local-pilot-observation",
 };
 
-// A refusal the Python adapter raised as `SystemExit(message)`: stderr, exit 1.
+// decision: cache-pilot-inputs-adapter-parity
 const refuse = (message: string) => Console.error(message).pipe(Effect.andThen(failWithReportedExit(message)));
 const variable = (name: string) => readStepVariable(COMMAND, name);
 
-// `json.dumps` string framing with its default `ensure_ascii=True`: the
-// short escapes, then every unit outside printable ASCII (control units, DEL,
-// non-ASCII and lone surrogates) as a lowercase `\uXXXX` escape.
+// decision: cache-pilot-inputs-adapter-parity
 const shortEscapes: Readonly<Record<string, string>> = {
   '"': '\\"',
   "\\": "\\\\",
@@ -111,8 +109,7 @@ const escapeUnit = (unit: string): string =>
   });
 const pythonString = (value: string) => `"${A.join(A.map(Str.split(value, ""), escapeUnit), "")}"`;
 
-// `json.dumps(value)` (`", "` and `": "` separators) or, with a width,
-// `json.dumps(value, indent=width)`. Keys keep their insertion order.
+// decision: cache-pilot-inputs-adapter-parity
 const pythonJson = (value: unknown, indent: O.Option<number>, level = 0): string => {
   const frame = (open: string, close: string, items: ReadonlyArray<string>) =>
     A.isReadonlyArrayNonEmpty(items)
@@ -158,7 +155,7 @@ const CachePilotTools = S.Struct({
 });
 const decodeTools = S.decodeUnknownEffect(S.fromJsonString(CachePilotTools));
 
-// `urllib.parse.urlsplit`: scheme, netloc, query and fragment of a URL.
+// decision: cache-pilot-inputs-adapter-parity
 const UrlParts = /^([^:/?#]+):\/\/([^/?#]*)[^?#]*(?:\?([^#]*))?(?:#(.*))?$/u;
 const isReviewedRegistryUrl = (url: string) =>
   O.match(Str.match(UrlParts)(url), {
@@ -178,8 +175,7 @@ interface ArchiveMember {
   readonly size: number;
 }
 
-// `tarfile.getmembers()` over an already decompressed archive; pax and GNU
-// long-name records fold into the member they describe.
+// decision: cache-pilot-inputs-adapter-parity
 const tarMembers = (archive: Uint8Array) =>
   Effect.try({
     try: () => {
@@ -206,11 +202,9 @@ const tarMembers = (archive: Uint8Array) =>
     catch: () => "unreadable",
   });
 
-// More members or unpacked bytes than the reviewed extraction bounds allow.
 const exceedsArchiveBounds = (members: ReadonlyArray<ArchiveMember>) =>
   A.length(members) > 32 || A.reduce(members, 0, (total, member) => total + member.size) > 128 * MiB;
 
-// The single regular-file member named `name`, within the reviewed executable size.
 const canaryExecutableMember = (members: ReadonlyArray<ArchiveMember>, name: string | undefined) => {
   const matches = A.filter(members, (member) => member.name === name);
   return F.pipe(
@@ -257,7 +251,6 @@ const fetchCanary = Effect.fn("Ci.fetchCachePilotCanary")(function* (
   return executable;
 });
 
-// `{'path': <checkout-relative>, 'sha256': <hex>}` for one prepared input file.
 const fileReference = Effect.fn("Ci.cachePilotReference")(function* (folder: string, relative: string, name: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -266,7 +259,6 @@ const fileReference = Effect.fn("Ci.cachePilotReference")(function* (folder: str
   return { path: `${relative}/${name}`, sha256 };
 });
 
-// The reviewed native Turbo client of the step's channel, verified against its binary pin.
 const verifiedNativeClient = Effect.fn("Ci.cachePilotNativeClient")(function* (root: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -283,7 +275,6 @@ const verifiedNativeClient = Effect.fn("Ci.cachePilotNativeClient")(function* (r
   return { pin, executable };
 });
 
-// The profile's `tasks.lint` object, refused unless it exists and still disables caching.
 const reviewedLintProfile = Effect.fn("Ci.cachePilotLintProfile")(function* (profile: string, before: Uint8Array) {
   const source = yield* decodeJson(decoder.decode(before));
   const tasks = isJsonRecord(source) ? source.tasks : undefined;
@@ -308,6 +299,11 @@ const reviewedLintProfile = Effect.fn("Ci.cachePilotLintProfile")(function* (pro
  * `GITHUB_OUTPUT`. It reads `BEEP_CACHE_PRODUCER_PRIVATE_ROOT`,
  * `BEEP_CACHE_PRODUCER_CHANNEL`, `GITHUB_RUN_ID`, `GITHUB_RUN_ATTEMPT` and
  * `GITHUB_OUTPUT` from the step environment.
+ *
+ * The canary archive must hold at most 32 members and 128 MiB unpacked, the reviewed extraction
+ * bounds, and exactly one regular-file member named by the pin, at most 64 MiB. Each prepared input
+ * is referenced as `{path, sha256}` with a checkout-relative path. The lint profile must have a
+ * `tasks.lint` object that still disables caching; `after.json` changes only its `cache` key.
  *
  * **Example** (Prepare the local observation sources)
  *
@@ -336,7 +332,6 @@ export const prepareCachePilotSources = Effect.fn("Ci.prepareCachePilotSources")
   const profile = lintProfiles[computation];
   const before = yield* fs.readFile(path.join(root, profile));
   const { source, tasks, lint } = yield* reviewedLintProfile(profile, before);
-  // Spreading keeps every key in place, so only `cache` changes in the output.
   const after = { ...source, tasks: { ...tasks, lint: { ...lint, cache: true } } };
   yield* fs.writeFile(path.join(folder, "before.json"), before);
   yield* fs.writeFileString(path.join(folder, "after.json"), `${pythonJson(after, O.some(2))}\n`);
@@ -370,7 +365,7 @@ export const prepareCachePilotSources = Effect.fn("Ci.prepareCachePilotSources")
   });
 });
 
-// `shutil.which`: the first executable regular file named `name` on the step's `PATH`.
+// decision: cache-pilot-inputs-adapter-parity
 const which = Effect.fn("Ci.cachePilotWhich")(function* (name: string) {
   const searchPath = yield* variable("PATH");
   return yield* findOnPath(searchPath, name);
@@ -416,9 +411,7 @@ export const prepareCachePilotRequest = Effect.fn("Ci.prepareCachePilotRequest")
     tools.worktrees,
     Effect.fnUntraced(function* (tree) {
       const handle = yield* spawner.spawn(
-        // KEEP (D-22): git's own output streams to the job log (inherited stdio) as the retired shell
-        // adapter's did, the parity `ci-cache-pilot` pins for the cleanup's remove; the kit captures it.
-        // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-22), reason above
+        // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: inherited stdio streams git to the job log (D-22)
         ChildProcess.make("git", ["worktree", "add", "--detach", tree, revision], { ...inherited, cwd: root })
       );
       const status = yield* handle.exitCode;
@@ -521,17 +514,13 @@ export const runCachePilotInputs = Effect.fn("Ci.runCachePilotInputs")(function*
   });
   const root = path.resolve(".");
   const program = Effect.gen(function* () {
-    // KEEP (D-22): git's stderr stays on the job log (inherited) as the shell adapter's did; the kit captures
-    // it.
-    // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-22), reason above
+    // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: git stderr stays on the job log, inherited (D-22)
     const head = yield* runStatus("git", ["rev-parse", "HEAD"], "pipe", env);
-    // `$(git rev-parse HEAD)` drops trailing newlines before the comparison.
+    // decision: cache-pilot-inputs-adapter-parity
     const revision = yield* variable("GITHUB_SHA");
     if (Str.replace(/\n+$/u, "")(head.output) !== revision)
       return yield* failWithPrintedExit("Checkout is not at GITHUB_SHA.");
-    // KEEP (D-22): the clean-checkout guard reads `diff --quiet`'s exit status as the step's own exit code;
-    // the kit has no exit-status member.
-    // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-22), reason above
+    // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: the exit status of diff --quiet is the step contract (D-22)
     yield* step("git", ["diff", "--quiet", "HEAD"]);
     yield* prepareCachePilotSources(root, mode, computation);
     yield* step("bun", [
@@ -555,12 +544,10 @@ export const runCachePilotInputs = Effect.fn("Ci.runCachePilotInputs")(function*
       `${inputs}/activation.json`,
     ]);
     yield* prepareCachePilotRequest(root, mode);
-    // KEEP (D-22): as above, the exit status is the step's contract.
-    // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-22), reason above
+    // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: the exit status of diff --quiet is the step contract (D-22)
     yield* step("git", ["diff", "--quiet", "HEAD"]);
   });
-  // `umask 077` covers every file this command and its children create. A
-  // platform or decoding failure (the Python adapter's traceback) exits 1.
+  // decision: cache-pilot-inputs-adapter-parity
   return yield* Effect.acquireUseRelease(
     Effect.sync(() => process.umask(0o077)),
     () => program,
