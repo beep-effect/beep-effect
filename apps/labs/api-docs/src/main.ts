@@ -6,10 +6,9 @@ import * as HttpRouter from "effect/http/HttpRouter";
 import * as Layer from "effect/Layer";
 import { ApiLive } from "./runtime/Layer.ts";
 
-const portWhenPortlessIsOff = 8787;
-
 const main = Effect.fnUntraced(function* () {
-  const port = yield* Config.Port("PORT").pipe(Config.withDefault(portWhenPortlessIsOff));
+  // decision: portless-off-port-fallback
+  const port = yield* Config.Port("PORT").pipe(Config.withDefault(8787));
   return yield* Layer.launch(
     ApiLive.pipe(HttpRouter.serve, Layer.provideMerge(BunHttpServer.layer({ hostname: "127.0.0.1", port })))
   );
