@@ -93,9 +93,7 @@ const verifyDocsRoutes = Effect.fn("ApiDocs.test.verifyDocsRoutes")(function* ()
   expect(scalarScript.length).toBeGreaterThan(1_000_000);
 });
 
-// The failure case mocks the shared Scalar module URL; under the global
-// `sequence.concurrent` default that mock would leak into the success case.
-describe("API docs routes", { concurrent: false }, () => {
+describe("API docs routes serialize the shared Scalar module mock", { concurrent: false }, () => {
   afterEach(() => vi.doUnmock(scalarScriptModuleUrl));
 
   it.effect("serves contract docs and committed specifications", verifyDocsRoutes);

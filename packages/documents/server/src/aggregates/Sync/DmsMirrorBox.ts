@@ -235,11 +235,6 @@ const orResponseMappingFailure = <A, E, R>(self: Effect.Effect<A, E, R>): Effect
 
 const transientBoxStatus = (status: number): boolean => status === 429 || status >= 500;
 
-/**
- * Transport-level driver failures are the only status-less Box failures the
- * adapter treats as transient; everything indeterminate defaults to
- * non-retryable.
- */
 const isRetryableBoxFailure = (error: BoxError): boolean =>
   O.match(error.status, {
     onNone: () => BoxErrorReason.is.transport(error.reason),
@@ -262,12 +257,6 @@ const boxFailureReason = (error: BoxError): string => {
   return `Box ${method} failed: ${error.reason}${status}${code}`;
 };
 
-/**
- * Probe-facing classification of a status-bearing Box failure: auth rejections
- * point at the credentials, a missing root at the folder, and rate limits or
- * server errors at Box itself; everything else stays the unclassified
- * fallback.
- */
 const disconnectReasonFromStatus: (status: number) => DmsMirrorDisconnectReason = Match.type<number>().pipe(
   Match.withReturnType<DmsMirrorDisconnectReason>(),
   Match.when(401, F.constant(DmsMirrorDisconnectReason.Enum["auth-failed"])),
@@ -382,11 +371,6 @@ const isBoxFile = S.is(BoxFile);
 const isBoxFolder = S.is(BoxFolder);
 const isBoxFolderMini = S.is(BoxFolderMini);
 
-/**
- * First folder-items entry passing `guard` whose remote name equals `name`,
- * projected to its Box id. Used to resolve an item that a create/upload
- * conflict (or a paginated listing) revealed already exists under the parent.
- */
 const findNamedId = (
   guard: (candidate: BoxItem) => boolean,
   name: string
@@ -428,10 +412,6 @@ const sourceInfoFromEvent = (source: BoxEventModel["source"]): BoxSourceInfo =>
     O.getOrElse(() => emptySourceInfo)
   );
 
-/**
- * Entries without a provider event identifier cannot be deduplicated by the
- * sync engine, so they are dropped rather than surfaced with a synthetic id.
- */
 const remoteEventFromEntry = (entry: BoxEventModel): Effect.Effect<O.Option<DmsRemoteEvent>, DmsMirrorUnavailable> =>
   O.match(nonEmptyStringOption(entry.eventId), {
     onNone: () => Effect.succeedNone,
@@ -472,10 +452,6 @@ const makeMirrorRootResolver = (box: BoxShape, config: BoxMirrorConfigValue) => 
       )
       .pipe(Effect.mapError(boxUnavailable));
 
-  /**
-   * Walk the marker-paginated folder listing until `find` matches or the pages
-   * are exhausted, so a target beyond the first page is still resolved.
-   */
   const lookupItemId = (
     parentId: string,
     find: (entries: ReadonlyArray<BoxItem>) => O.Option<string>
@@ -518,9 +494,6 @@ const makeMirrorRootResolver = (box: BoxShape, config: BoxMirrorConfigValue) => 
   const resolveMirrorRootId = Effect.gen(function* () {
     const existing = yield* lookupFolderId(BOX_ROOT_FOLDER_ID, config.mirrorRootName);
 
-    // A concurrent creator (or a listing that missed the folder) turns the
-    // create into a name conflict; recover by re-resolving the existing id,
-    // exactly like ensureFolder's conflict recovery.
     return yield* pipe(
       existing,
       O.map(Effect.succeed),
@@ -554,6 +527,12 @@ const makeMirrorRootResolver = (box: BoxShape, config: BoxMirrorConfigValue) => 
  * The mirror root folder (named by {@link BoxMirrorConfig}) is ensured lazily
  * under the Box root on the first remote operation and cached for the life of
  * the service. A `none` parent in port inputs addresses that mirror root.
+ * Creating the mirror root or a folder that meets a name conflict, because a
+ * concurrent creator won or a listing missed it, re-resolves the existing id.
+ * An upload that meets a name conflict, such as a retried upload after a
+ * crash, uploads a new version of the existing file instead of failing.
+ * `pollEvents` drops a Box event without an event id instead of surfacing it
+ * under a synthetic id, because the sync engine deduplicates events by that id.
  *
  * **Example** (Log mirror constructor)
  *
@@ -693,9 +672,6 @@ export const makeDmsMirrorBox = Effect.fn($I`makeDmsMirrorBox`)(function* () {
         })
       )
       .pipe(
-        // A name conflict means the file already exists under the parent (a
-        // retried upload after a crash). Look up its id and converge by
-        // uploading a new version of the same content instead of failing.
         Effect.catchIf(isNameConflict, (error) =>
           lookupFileId(parentId, input.name).pipe(
             Effect.flatMap(
@@ -820,30 +796,8 @@ export const DmsMirrorBoxLayer = Layer.effect(DmsMirror, makeDmsMirrorBox());
  */
 export const DmsMirrorBoxLive = DmsMirrorBoxLayer.pipe(Layer.provide(BoxMirrorConfigLayer));
 
-/**
- * How long a mirror-root resolution answers later probes before Box is asked
- * again.
- *
- * The resolution used to be cached for the life of the service, so the *first*
- * success made every later probe report `connected: true` without touching Box:
- * once the token expired, the panel kept claiming a healthy connection and a
- * sync pass whose every remote call was failing still returned a normal status.
- * Re-resolving on a short interval keeps the reported state honest while still
- * sparing the common case a round trip per probe.
- *
- * @category constants
- * @since 0.0.0
- */
 const MIRROR_ROOT_CACHE_TTL = Duration.seconds(30);
 
-/**
- * How long a *failed* probe answers later probes.
- *
- * Failures expire far sooner than successes. Caching both for the same window
- * meant one transient Box hiccup disabled sync — and flapped the connection
- * badge — for the whole window even after Box had recovered, while re-probing a
- * hard-down Box on every status read is the cost this cache exists to avoid.
- */
 const MIRROR_ROOT_FAILURE_CACHE_TTL = Duration.seconds(3);
 
 type MirrorProbeCacheEntry = {
@@ -858,12 +812,6 @@ const probeDisconnectReason = (error: MirrorProbeFailure): DmsMirrorDisconnectRe
     ? O.getOrElse(error.disconnectReason, F.constant(DmsMirrorDisconnectReason.Enum["probe-failed"]))
     : DmsMirrorDisconnectReason.Enum["probe-failed"];
 
-/**
- * Whether a probe failure may clear on retry. The failure's `reason` text is
- * never logged: it is built from vendor error text, which can name folders and
- * accounts. The tag, the status classification (`disconnect_reason`) and this
- * flag are the whole diagnostic; a schema failure is a malformed folder id.
- */
 const probeFailureRetryable = (error: MirrorProbeFailure): boolean =>
   P.isTagged(error, "DmsMirrorUnavailable") && error.retryable;
 
@@ -883,6 +831,25 @@ const probeFailureRetryable = (error: MirrorProbeFailure): boolean =>
  * reaches status subscriptions without a View change. Applications supply
  * their own disconnected variant when no Box credentials are configured.
  *
+ * A successful resolution is re-asked after the short `MIRROR_ROOT_CACHE_TTL`, never cached
+ * for the life of the service, so an expired token turns the probe
+ * disconnected instead of reporting a healthy connection while every remote
+ * call fails; the interval still spares the common case a round trip per probe.
+ * A failed probe is cached for `MIRROR_ROOT_FAILURE_CACHE_TTL`, far shorter
+ * than a success, so one transient Box hiccup does not disable sync or flap
+ * the connection badge after Box recovers, while a hard-down Box is still not
+ * re-probed on every status read. `changes` probes before it subscribes, so
+ * the value it replays first is a real probe. `refresh` always asks Box and
+ * replaces the cached answer, so passive reads immediately agree with an
+ * operator's explicit retry.
+ *
+ * **Gotchas**
+ *
+ * The probe warning carries only the failure tag, the disconnect
+ * classification and the retryable flag, never the failure's `reason`: that
+ * text comes from vendor errors and can name folders and accounts. A schema
+ * failure in that log means a malformed folder id.
+ *
  * **Example** (Log availability layer)
  *
  * ```ts
@@ -900,8 +867,6 @@ export const DmsMirrorAvailabilityBoxLayer = Layer.effect(
     const box = yield* Box;
     const config = yield* BoxMirrorConfig;
     const { resolveMirrorRootId } = makeMirrorRootResolver(box, config);
-    // The cache doubles as the change feed: every resolution a probe or refresh
-    // stores is published to status subscriptions.
     const cache = yield* SubscriptionRef.make<O.Option<MirrorProbeCacheEntry>>(O.none());
 
     const resolve = (probedAt: DateTime.Utc) =>
@@ -958,7 +923,6 @@ export const DmsMirrorAvailabilityBoxLayer = Layer.effect(
     }).pipe(Effect.withSpan($I`DmsMirrorAvailabilityBoxProbe`));
 
     return DmsMirrorAvailability.of({
-      // Resolving first guarantees the replayed current value is a real probe.
       changes: Stream.unwrap(
         Effect.as(
           probe,
@@ -969,9 +933,6 @@ export const DmsMirrorAvailabilityBoxLayer = Layer.effect(
         )
       ),
       probe,
-      // An operator's explicit retry must re-ask Box, not replay the cached
-      // failure for the rest of its TTL; the fresh answer replaces the cache
-      // so passive reads immediately agree with what the retry saw.
       refresh: probeNow.pipe(Effect.withSpan($I`DmsMirrorAvailabilityBoxRefresh`)),
     });
   })

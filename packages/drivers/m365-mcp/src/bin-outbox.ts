@@ -21,9 +21,7 @@ const ServerConfig = M365McpServerConfig.make({
   version: VERSION,
 });
 
-// Configuration is read before stdio is touched, so a session without the
-// credentials sees a failed server and a plain error, not a hung one.
-const OutboxLive = Layer.unwrap(
+const configFirstOutboxLive = Layer.unwrap(
   loadOutboxConfig().pipe(
     Effect.map((config) =>
       makeOutboxServerLayer(ServerConfig, outboxHandlerSettings(config)).pipe(
@@ -35,4 +33,4 @@ const OutboxLive = Layer.unwrap(
   )
 );
 
-Layer.launch(OutboxLive).pipe(NodeRuntime.runMain);
+Layer.launch(configFirstOutboxLive).pipe(NodeRuntime.runMain);

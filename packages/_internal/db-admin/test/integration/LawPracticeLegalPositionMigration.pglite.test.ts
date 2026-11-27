@@ -41,9 +41,7 @@ const decodeUnknownPowerExercise = S.decodeUnknownEffect(PowerExercise);
 const { shouldRunPgliteIntegration } = makePgliteIntegrationGate();
 const migrationsFolder = NodeURL.fileURLToPath(new URL("../../drizzle", import.meta.url));
 
-// The drizzle folder contains `CREATE EXTENSION btree_gist` (the epistemic edge
-// migration), which the shared external pglite-socket lane cannot load, so this
-// proof is pinned to the in-process lane like its epistemic and candor siblings.
+// decision: migration-proofs-run-in-process
 const makeMigrationProofLayer = () =>
   Layer.fresh(makePgliteSqlTestLayer({ inProcess: { extensions: { btree_gist } }, mode: "in-process" }));
 
@@ -55,9 +53,6 @@ const legalPositionTableNames: ReadonlyArray<string> = [
   "law_practice_power_exercise",
 ];
 
-// This migration adds no foreign key and no composite unique: the five tables
-// carry only their primary key, so anything else appearing here is a schema
-// change that arrived without a migration to install it.
 const expectedConstraintNames: ReadonlyArray<string> = [
   "law_practice_act_frame_pkey",
   "law_practice_correction_delta_pkey",
@@ -66,9 +61,6 @@ const expectedConstraintNames: ReadonlyArray<string> = [
   "law_practice_power_exercise_pkey",
 ];
 
-// These names are the append-only guarantee for all five tables, including the
-// three whose denials no block below executes. A silent rename would leave those
-// tables writable while this proof still passed, so they are asserted exactly.
 const expectedTriggerNames: ReadonlyArray<string> = [
   "law_practice_act_frame_append_only",
   "law_practice_act_frame_block_truncate",
@@ -117,14 +109,10 @@ const transition = (label: string, kind: string) => ({
   source: norm("cl. 5", null),
 });
 
-// The converters drop `id` so each insert takes the table's own sequence value:
-// the two relations become 1 and 2, and every other table's single row becomes
-// 1. The cross-table references below are written against those sequence values
-// rather than the fixture seeds, so each recorded row names a row that exists.
-const RELATOR_PRIVILEGE_ID = 1;
-const RELATOR_CLAIM_ID = 2;
-const FRAME_ID = 1;
-const EXERCISE_ID = 1;
+const PRIVILEGE_SEQUENCE_ID = 1;
+const CLAIM_SEQUENCE_ID = 2;
+const FRAME_SEQUENCE_ID = 1;
+const EXERCISE_SEQUENCE_ID = 1;
 
 const relatorInput = (
   id: number,
@@ -139,7 +127,7 @@ const relatorInput = (
   bearer: roleInput(bearer, bearerPlayer),
   content: { description: ACT, polarity },
   counterparty: roleInput(counterparty, bearerPlayer === 1 ? 2 : 1),
-  grounding: { foundingExercise: null, producingExercise: EXERCISE_ID },
+  grounding: { foundingExercise: null, producingExercise: EXERCISE_SEQUENCE_ID },
   positionKind,
   scope: scopeInput,
   sourceNorm: NORM,
@@ -164,10 +152,7 @@ const frameInput = {
   terminates: [transition("assignor-claim", "claim")],
 };
 
-// An attempt whose disposition is `undetermined`: the row a deletion probe must
-// fail against, because an attempt nobody has ruled on is exactly the record a
-// party would most want gone.
-const exerciseInput = {
+const undeterminedExerciseInput = {
   ...productEntityFixtureInput("LawPracticePowerExercise", 1),
   attemptedAt: 1_700_000_000_000,
   authorityBasis: {
@@ -176,7 +161,7 @@ const exerciseInput = {
     foundingExercise: null,
     sourceNorm: NORM,
   },
-  frame: FRAME_ID,
+  frame: FRAME_SEQUENCE_ID,
   preconditionAssertions: [{ element: { label: "no-objection", part: "precondition" }, status: "asserted-met" }],
   result: {
     constitution: null,
@@ -192,7 +177,7 @@ const correctionInput = {
   correctedElements: [
     { element: { label: "no-objection", part: "precondition" }, source: norm("cl. 4.2", "within ten days") },
   ],
-  frame: FRAME_ID,
+  frame: FRAME_SEQUENCE_ID,
   reviewer: systemPrincipal,
   reviewerAction: "undetermined",
   stage: "interpretation",
@@ -203,23 +188,15 @@ const correctionInput = {
   },
 };
 
-const candidateInput = {
+const primaFacieOppositionInput = {
   ...productEntityFixtureInput("LawPracticeLegalOppositionCandidate", 1),
-  candidate: { act: ACT, overlappingScope: scopeInput, relators: [RELATOR_PRIVILEGE_ID, RELATOR_CLAIM_ID] },
+  candidate: { act: ACT, overlappingScope: scopeInput, relators: [PRIVILEGE_SEQUENCE_ID, CLAIM_SEQUENCE_ID] },
   priorityBasis: null,
   verdictFamily: null,
 };
 
 const sortedNames = (names: ReadonlyArray<string>): ReadonlyArray<string> => A.sort(names, Order.String);
 
-/**
- * Apply the migration bundle, assert the legal-position tables carry the
- * constraints and triggers that make them append-only, and record one of each
- * entity through the schema-first converters so the generated columns are proven
- * to accept what the domain encodes. Two relations are recorded rather than one,
- * so the opposition candidate names a pair of rows that both exist. Returns the
- * raw sql client for the caller's denial probe.
- */
 const migrateAndRecord = Effect.fnUntraced(function* () {
   const info = yield* TestDatabaseInfo;
   const db = yield* makeDrizzle();
@@ -250,7 +227,8 @@ const migrateAndRecord = Effect.fnUntraced(function* () {
       A.filter((row) => A.contains(legalPositionTableNames, row.relname)),
       A.map((row) => row.conname),
       sortedNames
-    )
+    ),
+    "only primary keys: any other constraint arrived without the migration that installs it"
   ).toEqual(expectedConstraintNames);
   expect(
     pipe(
@@ -258,25 +236,21 @@ const migrateAndRecord = Effect.fnUntraced(function* () {
       A.filter((row) => A.contains(legalPositionTableNames, row.relname)),
       A.map((row) => row.tgname),
       sortedNames
-    )
+    ),
+    "exact names guard all five tables, including the three no denial probe exercises"
   ).toEqual(expectedTriggerNames);
 
-  // A privilege to enter and a claim that the same act be omitted: the pair the
-  // recorded candidate below screens as prima facie opposed. Screening it is a
-  // record, never a finding, and neither row is the other's correlative.
   const privilege = yield* decodeUnknownLegalPositionRelator(
-    relatorInput(RELATOR_PRIVILEGE_ID, "privilege", "act", "lessee", "lessor", 1)
+    relatorInput(PRIVILEGE_SEQUENCE_ID, "privilege", "act", "lessee", "lessor", 1)
   );
   const claim = yield* decodeUnknownLegalPositionRelator(
-    relatorInput(RELATOR_CLAIM_ID, "claim", "omission", "lessor", "lessee", 2)
+    relatorInput(CLAIM_SEQUENCE_ID, "claim", "omission", "lessor", "lessee", 2)
   );
   const frame = yield* decodeUnknownActFrame(frameInput);
-  const exercise = yield* decodeUnknownPowerExercise(exerciseInput);
+  const exercise = yield* decodeUnknownPowerExercise(undeterminedExerciseInput);
   const correction = yield* decodeUnknownCorrectionDelta(correctionInput);
-  const candidate = yield* decodeUnknownLegalOppositionCandidate(candidateInput);
+  const candidate = yield* decodeUnknownLegalOppositionCandidate(primaFacieOppositionInput);
 
-  // The converters return `Result` because encoding is fallible; converting them
-  // keeps a schema failure in the error channel instead of inserting defaults.
   const privilegeInsert = yield* Effect.fromResult(toLegalPositionRelatorInsert(privilege));
   const claimInsert = yield* Effect.fromResult(toLegalPositionRelatorInsert(claim));
   const frameInsert = yield* Effect.fromResult(toActFrameInsert(frame));
@@ -309,26 +283,20 @@ if (!shouldRunPgliteIntegration) {
   describe.skip("db-admin law-practice-legal-position migration PgLite integration", () => {});
 } else {
   describe("db-admin law-practice-legal-position migration PgLite integration", { concurrent: false }, () => {
-    // Two fresh databases rather than two probes in one session: an implicit
-    // transaction pglite host rolls the whole session chain back after an
-    // intentional failure, so the UPDATE and DELETE denials cannot share one.
-    // The two probes name different tables so two of the five triggers are
-    // proven to fire rather than one; the other three rest on the exact-name
-    // assertion above.
     it.layer(makeMigrationProofLayer(), { timeout: "2 minutes" })((it) => {
       it.effect(
         "runs the law-practice-legal-position migration and rejects re-kinding a stored relation",
         Effect.fnUntraced(function* () {
           const sql = yield* migrateAndRecord();
 
-          // Keep the intentional failure last: editing `position_kind` in place
-          // is correlative drift by another name — the stored relation would now
-          // assert something its recorded grounding never supported.
           const mutation = yield* Effect.flip(sql`
-            UPDATE law_practice_legal_position_relator SET position_kind = 'claim' WHERE id = ${RELATOR_PRIVILEGE_ID}
+            UPDATE law_practice_legal_position_relator SET position_kind = 'claim' WHERE id = ${PRIVILEGE_SEQUENCE_ID}
           `);
 
-          expect(NodeUtil.inspect(mutation, { depth: 10 })).toContain("append-only");
+          expect(
+            NodeUtil.inspect(mutation, { depth: 10 }),
+            "editing position_kind in place is correlative drift; the edit runs last: PGlite rolls the session back after an intentional failure"
+          ).toContain("append-only");
         }),
         120_000
       );
@@ -340,13 +308,14 @@ if (!shouldRunPgliteIntegration) {
         Effect.fnUntraced(function* () {
           const sql = yield* migrateAndRecord();
 
-          // An attempt still recorded as `undetermined` is the row whose removal
-          // would leave no trace that anybody tried to exercise the power.
           const mutation = yield* Effect.flip(sql`
-            DELETE FROM law_practice_power_exercise WHERE id = ${EXERCISE_ID}
+            DELETE FROM law_practice_power_exercise WHERE id = ${EXERCISE_SEQUENCE_ID}
           `);
 
-          expect(NodeUtil.inspect(mutation, { depth: 10 })).toContain("append-only");
+          expect(
+            NodeUtil.inspect(mutation, { depth: 10 }),
+            "deleting an undetermined attempt would erase the only trace of it"
+          ).toContain("append-only");
         }),
         120_000
       );

@@ -660,8 +660,7 @@ const newestOtherReplyIn = (
   mailbox: string
 ): O.Option<string> => {
   const self = normalizeAddress(mailbox);
-  // A pinned message without a receipt time sorts before every other message.
-  const isLater = (at: DateTime.Utc): boolean =>
+  const isLaterOrPinUndated = (at: DateTime.Utc): boolean =>
     O.match(receivedAt(pinned), { onNone: () => true, onSome: (pinnedAt) => DateTime.isGreaterThan(at, pinnedAt) });
   const isOtherSender = (message: GraphMessage): boolean =>
     !O.exists(fromAddress(message), (address) => normalizeAddress(address) === self);
@@ -669,7 +668,7 @@ const newestOtherReplyIn = (
     A.filter(page, (message) => !O.contains(message.isDraft, true) && isOtherSender(message)),
     A.map((message) => O.all([receivedAt(message), nonEmpty(message.internetMessageId)])),
     A.getSomes,
-    A.filter(([at]) => isLater(at))
+    A.filter(([at]) => isLaterOrPinUndated(at))
   );
 
   return A.match(candidates, {
@@ -781,7 +780,6 @@ const differing = <View>(
 const fieldNames = <View>(tests: ReadonlyArray<FieldTest<View>>): ReadonlyArray<OutboxBasisChangedField> =>
   A.map(tests, ([field]) => field);
 
-// An observation of the other kind cannot come from the reader; it differs in every field.
 const changedFields = (pin: OutboxBasisPin, now: OutboxBasisObservation): ReadonlyArray<OutboxBasisChangedField> =>
   OutboxBasisPin.match(pin, {
     event: (pinned) =>

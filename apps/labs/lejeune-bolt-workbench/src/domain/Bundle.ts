@@ -85,12 +85,6 @@ const RfqLayoutId = LiteralKit(["rfq-a", "rfq-b"]).pipe(
   })
 );
 
-/**
- * Closed source-format vocabulary for the two fixture pairs.
- *
- * @category schemas
- * @since 0.0.0
- */
 const SourceFormat = LiteralKit(["outlook-body-table", "xlsx-takeoff", "prose-email", "pdf-text-layer"]).pipe(
   $I.annoteSchema("SourceFormat", {
     description: "The four source formats in the two frozen RFQ fixture pairs.",
@@ -180,20 +174,6 @@ export class MissingField extends S.Opaque<MissingField, { readonly brand: uniqu
   )
 ) {}
 
-/**
- * Deterministic normalized output for one RFQ source pair.
- *
- * **Example** (Inspect the source collection)
- *
- * ```ts
- * import { NormalizedFixture } from "@/domain/Bundle"
- *
- * console.log(NormalizedFixture.fields.sources !== undefined) // true
- * ```
- *
- * @category models
- * @since 0.0.0
- */
 const NormalizedFixtureFields = S.Struct({
   components: S.Union([S.Tuple([Component, Component]), S.Tuple([Component, Component, Component, Component])]),
   extractedFields: S.Tuple([
@@ -611,20 +591,6 @@ export const CanonicalNormalizedFixtures: readonly [NormalizedFixture, Normalize
   }),
 ];
 
-/**
- * Governing public source metadata and the bounded evidence used by a rule.
- *
- * **Example** (Inspect the opening URL field)
- *
- * ```ts
- * import { RuleSource } from "@/domain/Bundle"
- *
- * console.log(RuleSource.fields.url !== undefined) // true
- * ```
- *
- * @category models
- * @since 0.0.0
- */
 const RuleSourceFields = S.Struct({
   accessedOn: S.tag("2026-08-25"),
   evidence: S.NonEmptyString,
@@ -673,44 +639,18 @@ export class RuleSource extends S.Opaque<RuleSource, { readonly brand: unique sy
     )
 ) {}
 
-/**
- * Exact three-rule identifier set frozen by the goal packet.
- *
- * @category schemas
- * @since 0.0.0
- */
 const RuleId = LiteralKit(["matched-assembly", "dti-strength-match", "a490-hdg-refusal"]).pipe(
   $I.annoteSchema("RuleId", {
     description: "The complete three-rule advisory slice authorized for the lunch demo.",
   })
 );
 
-/**
- * Advisory outcome vocabulary with explicit human-stop states.
- *
- * @category schemas
- * @since 0.0.0
- */
 const RuleDisposition = LiteralKit(["pass", "mismatch", "refuse", "human-review"]).pipe(
   $I.annoteSchema("RuleDisposition", {
     description: "Advisory rule outcomes; every non-pass result stops for an RFI or qualified human decision.",
   })
 );
 
-/**
- * One deterministic cited rule-check result.
- *
- * **Example** (Inspect the matched-facts field)
- *
- * ```ts
- * import { RuleResult } from "@/domain/Bundle"
- *
- * console.log(RuleResult.fields.matchedFacts !== undefined) // true
- * ```
- *
- * @category models
- * @since 0.0.0
- */
 const RuleResultFields = S.Struct({
   caseId: EntityId,
   disposition: RuleDisposition,
@@ -755,20 +695,6 @@ export class RuleResult extends S.Opaque<RuleResult, { readonly brand: unique sy
     )
 ) {}
 
-/**
- * Minimal sanitized candidate retained from the successful hosted extraction.
- *
- * **Example** (Inspect the candidate text field)
- *
- * ```ts
- * import { ProviderCandidate } from "@/domain/Bundle"
- *
- * console.log(ProviderCandidate.fields.text !== undefined) // true
- * ```
- *
- * @category models
- * @since 0.0.0
- */
 const ProviderCandidateLabel = LiteralKit(["project", "delivery_date", "finish"]).pipe(
   $I.annoteSchema("ProviderCandidateLabel", {
     description: "The exact three extraction labels authorized by the frozen RFQ A provider contract.",
@@ -862,14 +788,14 @@ export const ProviderCandidateListFromJsonString = S.fromJsonString(
   S.Tuple([ProviderCandidate, ProviderCandidate, ProviderCandidate])
 );
 
+const FrozenV1RecordingProvider = LiteralKit(["anthropic", "openai-compat", "venice-ai", "xai"]);
+
 const ProviderRecordingFields = S.Struct({
   candidates: S.Tuple([ProviderCandidate, ProviderCandidate, ProviderCandidate]),
   documentId: S.tag(PROVIDER_RECORDING_DOCUMENT_ID),
   extractionContractRevision: S.tag("lejeune-rfq-a-extraction/v1"),
   model: S.NonEmptyString,
-  // Frozen `lejeune-provider-recording/v1` provider set: provider-smoke now records only Anthropic, but
-  // narrowing this set would stop earlier v1 review candidates from decoding without a version bump.
-  provider: LiteralKit(["anthropic", "openai-compat", "venice-ai", "xai"]),
+  provider: FrozenV1RecordingProvider,
   recordedAt: IsoTimestamp,
   responseSha256: Sha256Hex,
   schemaVersion: S.tag("lejeune-provider-recording/v1"),
@@ -879,6 +805,12 @@ const ProviderRecordingFields = S.Struct({
 
 /**
  * Sanitized successful provider output embedded for deterministic replay.
+ *
+ * **Gotchas**
+ *
+ * The v1 `provider` set stays frozen at four values although provider-smoke now
+ * records only Anthropic: narrowing it would stop earlier v1 recordings from
+ * decoding without a `schemaVersion` bump.
  *
  * **Example** (Inspect the provider field)
  *
@@ -1018,20 +950,6 @@ export class ProjectionSnapshot extends S.Opaque<ProjectionSnapshot, { readonly 
   static readonly decodeUnknownEffect = S.decodeUnknownEffect(ProjectionSnapshot);
 }
 
-/**
- * Immutable replay bundle assembled from normalized fixtures and cited results.
- *
- * **Example** (Inspect the retention field)
- *
- * ```ts
- * import { ImmutableDemoBundle } from "@/domain/Bundle"
- *
- * console.log(ImmutableDemoBundle.fields.mutableCorpusDispositionDate !== undefined) // true
- * ```
- *
- * @category models
- * @since 0.0.0
- */
 const ImmutableDemoBundleFields = S.Struct({
   bundleVersion: S.tag(BUNDLE_VERSION),
   certificates: S.Tuple([LotCertificate, LotCertificate]),
@@ -1432,20 +1350,6 @@ export class GoldenReplayReceipt extends S.Opaque<GoldenReplayReceipt, { readonl
   )
 ) {}
 
-/**
- * Explicit reviewed authority to retain the mutable corpus beyond its fixed disposition date.
- *
- * **Example** (Inspect the new disposition field)
- *
- * ```ts
- * import { RetentionAuthorization } from "@/domain/Bundle"
- *
- * console.log(RetentionAuthorization.fields.newDispositionDate !== undefined) // true
- * ```
- *
- * @category models
- * @since 0.0.0
- */
 const RetentionAuthorizationFields = S.Struct({
   authorization: LiteralKit(["consented-pilot", "promoted"]),
   authorizedAt: IsoTimestamp,
@@ -1670,7 +1574,6 @@ const PublishedReplayAggregateModel =
   PublishedReplayAggregateFields.mapFields(identity).check(PublishedReplayAggregateCheck);
 const decodeUnknownPublishedReplayAggregateModelType = S.decodeUnknownEffect(S.toType(PublishedReplayAggregateModel));
 
-/** Decoded readback proof for every persisted publication document promoted by the builder. */
 class PublishedReplayAggregate extends S.Opaque<PublishedReplayAggregate, { readonly brand: unique symbol }>()(
   PublishedReplayAggregateModel.pipe(
     $I.annoteSchema("PublishedReplayAggregate", {

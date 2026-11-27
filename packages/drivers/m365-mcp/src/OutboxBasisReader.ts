@@ -93,16 +93,14 @@ const unreadable = (what: string) =>
 
 const nonEmpty = O.filter(Str.isNonEmpty);
 
-// The caller's view as an observation, so the pin comparison can judge it.
 const callerObservation = (ref: OutboxBasisPinRef): OutboxBasisObservation =>
   OutboxBasisPinRef.match(ref, {
     event: ({ view }) => OutboxBasisObservation.cases.event.make({ view }),
     message: ({ view }) => OutboxBasisObservation.cases.message.make({ view }),
   });
 
-// Field names only: never a value or any item content.
-const changedSinceRead = (kind: string, fields: ReadonlyArray<string>): string =>
-  `The pinned ${kind} changed since it was read (${A.join(fields, ", ")}). Read it again and redo the draft; no draft was created.`;
+const changedSinceRead = (kind: string, fieldNamesOnly: ReadonlyArray<string>): string =>
+  `The pinned ${kind} changed since it was read (${A.join(fieldNamesOnly, ", ")}). Read it again and redo the draft; no draft was created.`;
 
 const unreadableStatus = (reason: string): OutboxBasisStatus => OutboxBasisStatus.cases.Unreadable.make({ reason });
 
@@ -117,8 +115,7 @@ const makeReader = Effect.fnUntraced(function* (mailbox: GraphPathSegment) {
 
   const readEvent = (eventId: GraphPathSegment) => m365.getEvent(M365GetEventRequest.make({ eventId, userId }));
 
-  // One page of a conversation; `Option.none` when it has more than one page.
-  const readConversation = (conversationId: string) =>
+  const readSinglePageConversation = (conversationId: string) =>
     m365
       .listMessages(
         M365ListMessagesRequest.make({
@@ -165,7 +162,7 @@ const makeReader = Effect.fnUntraced(function* (mailbox: GraphPathSegment) {
       }),
       unreadable("message")
     );
-    const page = yield* readConversation(conversationId).pipe(Effect.mapError(unreadable("message")));
+    const page = yield* readSinglePageConversation(conversationId).pipe(Effect.mapError(unreadable("message")));
     const view = yield* Effect.fromOption(
       O.flatMap(page, messageViewOf({ internetMessageId, mailbox })),
       unreadable("message")
@@ -198,11 +195,10 @@ const makeReader = Effect.fnUntraced(function* (mailbox: GraphPathSegment) {
       Effect.catch(Effect.succeed)
     );
 
-  // Found by message id in the conversation, so a message filed into another folder is not gone.
-  const recheckMessage = (
+  const recheckByMessageIdInThread = (
     pin: Extract<OutboxBasisPin, { readonly kind: "message" }>
   ): Effect.Effect<OutboxBasisStatus> =>
-    readConversation(pin.conversationId).pipe(
+    readSinglePageConversation(pin.conversationId).pipe(
       Effect.mapError((error) => unreadableStatus(error.reason)),
       Effect.flatMap((conversation) =>
         Effect.fromOption(conversation, () => unreadableStatus("conversation-too-long"))
@@ -234,7 +230,7 @@ const makeReader = Effect.fnUntraced(function* (mailbox: GraphPathSegment) {
       return pin;
     }),
     recheck: Effect.fn("OutboxBasisReader.recheck")(function* (pin) {
-      const status = yield* OutboxBasisPin.match(pin, { event: recheckEvent, message: recheckMessage });
+      const status = yield* OutboxBasisPin.match(pin, { event: recheckEvent, message: recheckByMessageIdInThread });
       yield* Effect.annotateCurrentSpan({ m365_outbox_basis_kind: pin.kind, m365_outbox_basis_status: status._tag });
       return status;
     }),

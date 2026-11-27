@@ -17,7 +17,6 @@ import type { ScriptResult } from "@beep/commands/ScriptedSpawner";
 import type * as PlatformError from "effect/PlatformError";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
-/** Builds each test layer under the program's scope, with fresh per-invocation state. */
 const withLayer =
   <R, E2, R2>(layer: Layer.Layer<R, E2, R2>) =>
   <A, E, R3>(program: Effect.Effect<A, E, R3>) =>
@@ -27,7 +26,6 @@ const withLayer =
 
 const cmd = (executable = "tool", args: ReadonlyArray<string> = []) => ChildProcess.make(executable, args);
 
-/** The common shape: provide a scripted spawner to a program that requires one. */
 const withScript = <A, E>(
   program: () => Effect.Effect<A, E, ChildProcessSpawner.ChildProcessSpawner>,
   script: (command: string, args: ReadonlyArray<string>) => ScriptResult.Encoded
@@ -52,15 +50,16 @@ describe("Run.collect", () => {
   );
 
   it.effect("a NON-ZERO exit is a successful result, not an error", () =>
-    // This is core's contract and the package must not silently change it:
-    // `collect` reports what happened; `text`/`lines`/`json` are the ones
-    // that treat a non-zero exit as failure.
     Effect.gen(function* () {
       const output = yield* withScript(
         () => Run.collect(cmd()),
         () => ({ stdout: "", exit: 42 })
       );
-      assert.strictEqual(output.exitCode, 42);
+      assert.strictEqual(
+        output.exitCode,
+        42,
+        "core's contract: collect reports what happened; text, lines and json fail a non-zero exit"
+      );
     })
   );
 
@@ -176,8 +175,6 @@ describe("Run.collect", () => {
 
   it.effect("with no timeout option, a hanging command does NOT fail on its own", () =>
     Effect.gen(function* () {
-      // The design's "no default ceiling" decision, pinned: a forked hang is
-      // still running after a large virtual-clock advance.
       const fiber = yield* Effect.forkChild(
         withScript(
           () => Run.collect(cmd()),
@@ -185,8 +182,7 @@ describe("Run.collect", () => {
         )
       );
       yield* TestClock.adjust("10 minutes");
-      // `pollUnsafe` is the non-blocking check: `undefined` means the fiber
-      // has not settled, which is exactly the claim — no ceiling was imposed.
+
       assert.strictEqual(fiber.pollUnsafe(), undefined, "expected the run to still be pending with no timeout");
       yield* Fiber.interrupt(fiber);
     })
@@ -378,15 +374,16 @@ describe("Run.jsonLine", () => {
   );
 
   it.effect("a NON-ZERO exit with a valid payload still succeeds — the payload outranks the exit code", () =>
-    // The documented posture: a protocol payload discriminates success
-    // in-band, so a child that crashes AFTER flushing its payload still
-    // reported. Callers wanting exit-code semantics use Run.json.
     Effect.gen(function* () {
       const payload = yield* withScript(
         () => Run.jsonLine(cmd(), Payload),
         () => ({ stdout: '{"ok":false}', stderr: "crashed after reporting", exit: 7 })
       );
-      assert.deepStrictEqual(payload, { ok: false });
+      assert.deepStrictEqual(
+        payload,
+        { ok: false },
+        "a child that crashes after flushing its payload still reported; Run.json keeps exit-code semantics"
+      );
     })
   );
 
@@ -475,16 +472,16 @@ describe("Run.jsonLine", () => {
   );
 
   it.effect("a trailing log line AFTER the payload is tolerated — the exit-hook case (#292)", () =>
-    // The controlled pair from the consumer evidence: a pnpmfile hook logging
-    // from `process.on("exit", ...)` writes after the payload has flushed and
-    // used to win the "last non-empty line" and break the parse. The scan
-    // from the end now walks past it to the payload.
     Effect.gen(function* () {
       const payload = yield* withScript(
         () => Run.jsonLine(cmd(), Payload),
         () => ({ stdout: '{"ok":true}\ncleanup: hook exiting\n', exit: 0 })
       );
-      assert.deepStrictEqual(payload, { ok: true });
+      assert.deepStrictEqual(
+        payload,
+        { ok: true },
+        "a pnpmfile process.on('exit') hook logs after the payload flushed; the scan from the end walks past it"
+      );
     })
   );
 
@@ -509,9 +506,6 @@ describe("Run.jsonLine", () => {
   );
 
   it.effect("when MULTIPLE lines decode under the schema, the LAST one wins — the documented consequence", () =>
-    // A child must not emit two schema-valid lines; when one does anyway,
-    // the scan from the end makes the later line the payload. Pinned so the
-    // documented tie-break cannot drift silently.
     Effect.gen(function* () {
       const payload = yield* withScript(
         () => Run.jsonLine(cmd(), Payload),
@@ -522,9 +516,6 @@ describe("Run.jsonLine", () => {
   );
 
   it.effect("nothing decodes but a line parsed as JSON: kind 'schema' with the LAST parseable line's issue", () =>
-    // The near-miss diagnostic: the last JSON-parseable line is the most
-    // probable intended payload, so its decode failure rides as the cause
-    // even when garbage lines follow it.
     Effect.gen(function* () {
       const error = yield* Effect.flip(
         withScript(
@@ -537,7 +528,10 @@ describe("Run.jsonLine", () => {
         assert.strictEqual(error.kind, "schema");
         assert.strictEqual(error.exitCode, 3);
         assert.strictEqual(error.stderr, "hook stderr");
-        assert.isDefined(error.cause, "the last parseable line's decode failure must ride as the cause");
+        assert.isDefined(
+          error.cause,
+          "the last parseable line, the most probable intended payload, gives the cause even with garbage after it"
+        );
       }
     })
   );
@@ -732,9 +726,10 @@ describe("Run.detach", () => {
       const spawner = ScriptedSpawner.make(() => ({ exit: 0 }));
       const pid = yield* withLayer(spawner.layer)(Run.detach(cmd("server")));
       assert.strictEqual(Number(pid), 4242);
-      // The invariant the helper exists to encode: unref RAN. Without it the
-      // scope's release kills the child and nothing outlives this process.
-      assert.isTrue(spawner.spawns[0]?.unrefed, "detach must run handle.unref before the scope closes");
+      assert.isTrue(
+        spawner.spawns[0]?.unrefed,
+        "detach must run handle.unref before the scope closes, or the scope's release kills the child"
+      );
     })
   );
 
@@ -769,26 +764,27 @@ describe("Run.extendEnv", () => {
   );
 
   it("combinator values win over construction-time env values", () => {
-    // Data-first call shape, so both halves of the dual signature are pinned.
-    const command = Run.extendEnv(ChildProcess.make("tool", [], { env: { NODE_ENV: "construction" } }), {
+    const dataFirstCommand = Run.extendEnv(ChildProcess.make("tool", [], { env: { NODE_ENV: "construction" } }), {
       NODE_ENV: "combinator",
     });
-    if (!ChildProcess.isStandardCommand(command)) {
+    if (!ChildProcess.isStandardCommand(dataFirstCommand)) {
       assert.fail("expected a standard command");
     }
-    assert.deepStrictEqual(command.options.env, { NODE_ENV: "combinator" });
+    assert.deepStrictEqual(dataFirstCommand.options.env, { NODE_ENV: "combinator" });
   });
 
   it("forces extendEnv true even where construction set it false — the documented contract", () => {
-    // Inheriting the parent environment is the combinator's entire purpose;
-    // a caller who wants a hermetic env uses core's setEnv/options directly.
     const command = ChildProcess.make("tool", [], { env: { A: "1" }, extendEnv: false }).pipe(
       Run.extendEnv({ B: "2" })
     );
     if (!ChildProcess.isStandardCommand(command)) {
       assert.fail("expected a standard command");
     }
-    assert.strictEqual(command.options.extendEnv, true);
+    assert.strictEqual(
+      command.options.extendEnv,
+      true,
+      "inheriting the parent environment is the combinator's purpose; a hermetic env uses core's setEnv"
+    );
   });
 
   it("a pipeline gets the env on BOTH sides, with the pipe's own options preserved", () => {
@@ -812,17 +808,15 @@ describe("Run.extendEnv", () => {
 
   it.effect("CONTROL: bare core setEnv reaches the spawner with extendEnv UNSET — the trap itself", () =>
     Effect.gen(function* () {
-      // This pins the core behavior Run.extendEnv exists to compensate for:
-      // ChildProcess.setEnv merges options.env but never sets extendEnv, so the
-      // Node spawner resolves the child environment to ONLY these variables
-      // (no PATH, no HOME). If a future core beta makes this assertion fail,
-      // setEnv started extending — re-evaluate this combinator's raison d'être.
       const spawner = ScriptedSpawner.make(() => ({ stdout: "ok", exit: 0 }));
       const command = ChildProcess.make("tool", []).pipe(ChildProcess.setEnv({ MARKER: "x" }));
       yield* withLayer(spawner.layer)(Run.collect(command));
       const record = spawner.spawns[0];
       assert.deepStrictEqual(record?.options.env, { MARKER: "x" });
-      assert.isUndefined(record?.options.extendEnv);
+      assert.isUndefined(
+        record?.options.extendEnv,
+        "setEnv never sets extendEnv, so the child gets only these variables; if this fails, re-evaluate Run.extendEnv"
+      );
     })
   );
 });
@@ -830,18 +824,18 @@ describe("Run.extendEnv", () => {
 describe("Run over core Command combinators", () => {
   it.effect("honours cwd and env applied with core's own combinators", () =>
     Effect.gen(function* () {
-      // RunOptions deliberately carries no cwd/env — those live on the core
-      // Command. This pins that the package consumes them rather than
-      // re-declaring them.
       const command = ChildProcess.make("tool", ["x"]).pipe(
         ChildProcess.setCwd("/repo"),
         ChildProcess.setEnv({ LC_ALL: "C" })
       );
-      // A real `if` narrows; `assert.isTrue(guard(x))` would not.
       if (!ChildProcess.isStandardCommand(command)) {
         assert.fail("expected a standard command");
       }
-      assert.strictEqual(command.options.cwd, "/repo");
+      assert.strictEqual(
+        command.options.cwd,
+        "/repo",
+        "RunOptions carries no cwd or env: Run consumes the core Command's"
+      );
       assert.deepStrictEqual(command.options.env, { LC_ALL: "C" });
       const output = yield* withScript(
         () => Run.collect(command),

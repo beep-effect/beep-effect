@@ -114,7 +114,6 @@ export const MailTaggingPassOutput = <A>() =>
     })
   );
 
-// The contract of the pass runner; `MailTaggingPasses` is its service.
 class MailTaggingPassesShape extends S.Opaque<MailTaggingPassesShape, { readonly brand: unique symbol }>()(
   S.Struct({
     schedule: MailTaggingPassSchedule.annotateKey({
@@ -173,7 +172,8 @@ export class MailTaggingPasses extends Context.Service<MailTaggingPasses, MailTa
  * **Gotchas**
  *
  * The layer is built with `Layer.fresh` in a scope of its own, so two passes
- * never share an instance even when the function answers the same layer.
+ * never share an instance even when the function answers the same layer, and
+ * each pass closes its service when that pass ends.
  *
  * **Example** (Reference the constructor)
  *
@@ -194,7 +194,6 @@ export const makeMailTaggingPasses: {
   (passLayer: MailTaggingPassLayerOf): (schedule: MailTaggingPassSchedule) => MailTaggingPassesShape;
   (schedule: MailTaggingPassSchedule, passLayer: MailTaggingPassLayerOf): MailTaggingPassesShape;
 } = dual(2, (schedule: MailTaggingPassSchedule, passLayer: MailTaggingPassLayerOf): MailTaggingPassesShape => {
-  // `Layer.build` runs in the pass's own scope, so the service is closed when the pass ends.
   const inFreshPass =
     (runId: TaggingRunId) =>
     <A>(use: Effect.Effect<A, MailTaggingPassFailure, MailTaggingJob | MailTaggingUndo>) =>

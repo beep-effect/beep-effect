@@ -26,8 +26,7 @@ const pinnedMessage = GraphMessage.make({
   receivedDateTime: O.some("2030-01-10T09:00:00Z"),
 });
 
-// What the caller read: the stored event below, which has no subject.
-const eventView = OutboxEventView.make({
+const callerViewWithoutSubject = OutboxEventView.make({
   end: OutboxEventInstant.make({ dateTime: "2030-01-15T10:00:00.0000000", timeZone: "UTC" }),
   isAllDay: false,
   isCancelled: false,
@@ -35,7 +34,7 @@ const eventView = OutboxEventView.make({
   subject: "",
 });
 
-const eventRef = OutboxBasisPinRef.cases.event.make({ id: EVENT_ID, view: eventView });
+const eventRef = OutboxBasisPinRef.cases.event.make({ id: EVENT_ID, view: callerViewWithoutSubject });
 
 const messageRef = OutboxBasisPinRef.cases.message.make({
   id: "message-1",
@@ -47,7 +46,7 @@ const eventPin = (id: string) =>
     changeKey: O.none(),
     id,
     observedAt: DateTime.makeUnsafe("2030-01-10T12:00:00Z"),
-    view: eventView,
+    view: callerViewWithoutSubject,
   });
 
 const reasonOf = (status: OutboxBasisStatus): string => (status._tag === "Unreadable" ? status.reason : status._tag);
@@ -77,11 +76,14 @@ describe("@beep/m365-mcp outbox basis reader", () => {
         assert.deepStrictEqual(pin.changeKey, O.some("event-key-1"));
         assert.strictEqual(incomplete.reason, "basis-unreadable");
         assert.strictEqual(reasonOf(recheck), "incomplete-event");
-        // A recorded id that is not a Graph path segment is never sent to Graph.
         const escaped = yield* reader.recheck(eventPin("../escape"));
         const userIds = yield* world.userIds;
         assert.strictEqual(reasonOf(escaped), "invalid-id");
-        assert.deepStrictEqual(userIds, [O.some(MAILBOX), O.some(MAILBOX), O.some(MAILBOX)]);
+        assert.deepStrictEqual(
+          userIds,
+          [O.some(MAILBOX), O.some(MAILBOX), O.some(MAILBOX)],
+          "an id that is not a Graph path segment never reaches Graph"
+        );
       })
     );
   });
@@ -121,7 +123,6 @@ describe("@beep/m365-mcp outbox basis reader", () => {
         const observe = reader.observe(messageRef);
         yield* world.script({ messages: [pinnedMessage] });
 
-        // The stub answers only `conversationId eq '<id>'` with OData's doubled quote.
         const quoted = yield* observe;
         yield* world.script({ messages: [GraphMessage.make({ ...pinnedMessage, conversationId: O.none() })] });
         const noConversation = yield* observe.pipe(Effect.flip);
@@ -139,7 +140,11 @@ describe("@beep/m365-mcp outbox basis reader", () => {
           [noConversation.reason, listFailed.reason, paged.reason],
           ["basis-unreadable", "basis-unreadable", "basis-unreadable"]
         );
-        assert.strictEqual(quoted.kind === "message" ? quoted.conversationId : "", "conversation-o'brien");
+        assert.strictEqual(
+          quoted.kind === "message" ? quoted.conversationId : "",
+          "conversation-o'brien",
+          "the stub matches only an OData filter with the quote doubled"
+        );
         assert.strictEqual(pin.kind, "message");
         if (pin.kind === "message") {
           assert.strictEqual(pin.conversationId, "conversation-1");

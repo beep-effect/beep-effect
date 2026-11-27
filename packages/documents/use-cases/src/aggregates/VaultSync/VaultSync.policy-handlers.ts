@@ -21,16 +21,7 @@ import {
   OperationFailures,
 } from "./VaultSync.policy.ts";
 
-// Every `send` fails only with the command's declared `SyncRuleViolation`. A permanent refusal re-raised as a
-// defect would redeliver the committed event forever, so each handler either records the refusal or keeps
-// `Effect.orDie` only where the refusal is impossible by construction, with the reason beside it.
-
-// An item's operation slots. The caller mints operation ids, so a replayed or corrupted observation can
-// name an id another item already holds, or one whose operation has left `queued`; `QueueOperation` then
-// refuses with `not-retargetable` on every redelivery (`operation-key` cannot occur: the key is the
-// target). That refusal becomes a terminal item failure: the item shows `error` while its slot keeps the
-// operation id visible. Such a slot can name another item's operation, so supersession skips operations
-// the item does not own; an operation never changes owner, so the read cannot go stale.
+// decision: policy-refusals-recorded-not-defects
 const itemOperationSlots = Effect.gen(function* () {
   const operations = yield* V.SyncOperation;
   const items = yield* V.SyncItem;
@@ -76,6 +67,15 @@ const itemOperationSlots = Effect.gen(function* () {
 /**
  * Aggregate-dispatch handlers and public read authorization; no Box or filesystem adapter is called here.
  *
+ * **Details**
+ *
+ * ConflictReviews queues a review's corrective move or rename before it closes the review, and a tracked
+ * item takes the correction as its operation slot so the next pass pumps it. A correction refused because
+ * its operation id is held elsewhere leaves the conflict, and its recorded review request, in `OpenConflicts` for
+ * another review instead of closing it unapplied. A heal for an item the slice never tracked closes the review with
+ * nothing healed, and a failed operation for a review correction on such an item stays the only record of the
+ * failure.
+ *
  * **Example** (Inspect declaration)
  * ```ts
  * import { VaultSyncPolicies } from "@beep/documents-use-cases/aggregates/VaultSync";
@@ -93,7 +93,7 @@ export const VaultSyncPolicies = Layer.mergeAll(
         yield* conflicts.send(event.record.publicId, V.ConfirmConflict.make({ record: event.record }), {
           commandId: `${envelope.stream}:${envelope.seq}:record`,
         });
-        // `conflict-id` is impossible: the target is the record's own public id.
+        // decision: policy-refusals-recorded-not-defects
       }, Effect.orDie);
     })
   ),
@@ -134,7 +134,7 @@ export const VaultSyncPolicies = Layer.mergeAll(
           yield* claims.send(old, V.ReleaseDestinationName.make({ destinationId: c.destinationId }), {
             commandId: `${envelope.stream}:${envelope.seq}:release`,
           });
-        // `ReleaseDestinationName` never refuses: a claim held by another destination is left untouched.
+        // decision: policy-refusals-recorded-not-defects
       }, Effect.orDie);
     })
   ),
@@ -151,8 +151,7 @@ export const VaultSyncPolicies = Layer.mergeAll(
               `${envelope.stream}:${envelope.seq}:supersede:${id}`
             );
         yield* slots.queue(source.id, event.observation, `${envelope.stream}:${envelope.seq}:queue`);
-        // `SupersedeOperation` never refuses, and `MarkItemPushFailed` cannot meet `not-tracked`: the item
-        // that emitted this event is tracked.
+        // decision: policy-refusals-recorded-not-defects
       }, Effect.orDie);
     })
   ),
@@ -163,7 +162,6 @@ export const VaultSyncPolicies = Layer.mergeAll(
       const items = yield* V.SyncItem;
       return Effect.fn(function* ({ event, source, envelope }) {
         if (event.correction !== null) {
-          // I14: the corrective move or rename is queued before the review closes.
           const correction = event.correction;
           const queued = yield* operations
             .send(correction.operationId, V.QueueOperation.make({ input: correction.input }), {
@@ -178,10 +176,7 @@ export const VaultSyncPolicies = Layer.mergeAll(
                 )
               )
             );
-          // A correction whose operation id is held elsewhere leaves the conflict open, and the recorded
-          // review request, in `OpenConflicts` for another review instead of closing it unapplied.
           if (!queued) return;
-          // A tracked item takes the correction as its slot so the next pass pumps it.
           const tracked = yield* items.get(correction.input.itemId);
           if (tracked !== null)
             yield* items.send(
@@ -190,7 +185,6 @@ export const VaultSyncPolicies = Layer.mergeAll(
               { commandId: `${envelope.stream}:${envelope.seq}:correct-slot` }
             );
         } else if (event.record.itemId !== null) {
-          // An item this slice never tracked has nothing to heal; the review closes, as for an untracked remote item.
           yield* items
             .send(event.record.itemId, V.ReturnItemToPending.make({ operationId: event.healOperationId }), {
               commandId: `${envelope.stream}:${envelope.seq}:heal`,
@@ -206,7 +200,7 @@ export const VaultSyncPolicies = Layer.mergeAll(
           }),
           { commandId: `${envelope.stream}:${envelope.seq}:close` }
         );
-        // `conflict-not-found` is impossible: the scope comes from the conflict that emitted this event.
+        // decision: policy-refusals-recorded-not-defects
       }, Effect.orDie);
     })
   ),
@@ -218,7 +212,7 @@ export const VaultSyncPolicies = Layer.mergeAll(
           if (id !== event.observation.operationId)
             yield* slots.supersede(source.id, id, "review-heal", `${envelope.stream}:${envelope.seq}:supersede:${id}`);
         yield* slots.queue(source.id, event.observation, `${envelope.stream}:${envelope.seq}:heal`);
-        // As in `ItemOperations`: supersession never refuses and the emitting item is tracked.
+        // decision: policy-refusals-recorded-not-defects
       }, Effect.orDie);
     })
   ),
@@ -241,8 +235,6 @@ export const VaultSyncPolicies = Layer.mergeAll(
       const items = yield* V.SyncItem;
       return Effect.fn(function* ({ state, envelope }) {
         if (state === null) return;
-        // A review correction may queue for an item this slice never tracked; `not-tracked` leaves the
-        // failed operation as the only record.
         yield* items
           .send(state.input.itemId, V.MarkItemPushFailed.make({ terminal: true, generation: state.input.generation }), {
             commandId: `${envelope.stream}:${envelope.seq}:error`,
@@ -263,7 +255,7 @@ export const VaultSyncPolicies = Layer.mergeAll(
             yield* operations.send(id, V.ReviveOperation.make({}), {
               commandId: `${envelope.stream}:${envelope.seq}:revive:${id}`,
             });
-        // `ReviveOperation` never refuses: an operation that is not failed records nothing.
+        // decision: policy-refusals-recorded-not-defects
       }, Effect.orDie);
     })
   )

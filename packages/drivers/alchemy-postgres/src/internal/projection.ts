@@ -19,8 +19,7 @@ import type { HostContext } from "./host.ts";
 
 const decodePartitions = rowsOf(PartitionRow);
 const decodeAccepted = rowsOf(AcceptedJson);
-/** `COALESCE(MAX(...), 0)` always answers one row. */
-const decodeCount = S.decodeUnknownEffect(S.NonEmptyArray(S.Struct({ position: S.Int })));
+const decodeCoalescedMax = S.decodeUnknownEffect(S.NonEmptyArray(S.Struct({ position: S.Int })));
 const decodeKeys = rowsOf(S.Struct({ key: S.String }));
 const decodeOldest = S.decodeUnknownEffect(S.NonEmptyArray(AcceptedJson));
 
@@ -34,7 +33,6 @@ export const makeProjectionStore =
       const name = kit.name;
       const consumerId = `projection:${name}`;
       const orDie = orDieAs("receive")(tables.projectionPartition);
-      // Rebuilt (a new generation): start every key's log over; the history is replayed to it.
       yield* ctx.resetConsumer(
         consumerId,
         kit.generation,
@@ -46,7 +44,6 @@ export const makeProjectionStore =
           { concurrency: 1, discard: true }
         )
       );
-      /** One lock per key: intake, processing and the key's consumer role hold it. */
       const lockOf = (key: string) => `projection:${name}/${key}`;
       const batch = kit.options.batch;
       const target = targetId({
@@ -72,7 +69,7 @@ export const makeProjectionStore =
       const countOf = (key: string) =>
         sql`SELECT COALESCE(MAX(position), 0)::int AS position FROM ${sql(tables.consumerInput)}
         WHERE model = ${modelName} AND consumer = ${consumerId} AND key = ${key}`.pipe(
-          Effect.flatMap(decodeCount),
+          Effect.flatMap(decodeCoalescedMax),
           Effect.map((rows) => A.headNonEmpty(rows).position)
         );
       const inputs = (key: string, after: number, limit: number) =>
@@ -80,14 +77,11 @@ export const makeProjectionStore =
         WHERE model = ${modelName} AND consumer = ${consumerId} AND key = ${key} AND position > ${after}
         ORDER BY position LIMIT ${limit}`.pipe(Effect.flatMap(decodeAccepted));
 
-      /** Keys with a timer armed to process a short batch once it has waited long enough. */
-      const timers = MutableHashSet.empty<string>();
+      const keysWithArmedTimer = MutableHashSet.empty<string>();
 
-      /** Handle the key's unprocessed inputs in order, in batches; leave a short batch to fill. */
       const process = (key: string, flush: boolean): Effect.Effect<void> =>
         ctx.exclusive(lockOf(key))(run(key, flush)).pipe(orDie);
 
-      /** Process `key` in the background, once the caller's transaction committed. */
       const background = (work: Effect.Effect<void>) =>
         sql.afterCommit(
           Effect.forkIn(work.pipe(Effect.catchCause(ctx.logFailure(`projection ${name}`))), scope).pipe(Effect.asVoid)
@@ -103,18 +97,17 @@ export const makeProjectionStore =
         if (partition.processed >= count) return;
         const size = batch?.size ?? 1;
         const at = yield* now;
-        // There is an unprocessed input, so the oldest one exists.
         const oldest = yield* sql`SELECT position, delivery, at FROM ${sql(tables.consumerInput)}
             WHERE model = ${modelName} AND consumer = ${consumerId} AND key = ${key} AND position > ${partition.processed}
             ORDER BY position LIMIT 1`.pipe(Effect.flatMap(decodeOldest));
         const waited = at - A.headNonEmpty(oldest).at;
         if (!flush && batch !== undefined && count - partition.processed < size && waited < batch.waitMillis) {
-          if (!MutableHashSet.has(timers, key)) {
-            MutableHashSet.add(timers, key);
+          if (!MutableHashSet.has(keysWithArmedTimer, key)) {
+            MutableHashSet.add(keysWithArmedTimer, key);
             yield* background(
               Duration.millis(batch.waitMillis - waited).pipe(
                 Effect.sleep,
-                Effect.andThen(Effect.sync(() => MutableHashSet.remove(timers, key))),
+                Effect.andThen(Effect.sync(() => MutableHashSet.remove(keysWithArmedTimer, key))),
                 Effect.andThen(process(key, true))
               )
             );
@@ -141,9 +134,7 @@ export const makeProjectionStore =
         yield* run(key, flush);
       });
 
-      /** Accept a delivery into its key's log (once), then handle the log. */
       const intake = (delivery: DomainPlatform.Delivery): Effect.Effect<void> =>
-        // For an earlier generation of the projection: nothing to run.
         (delivery.target.generation ?? 0) < kit.generation
           ? Effect.void
           : ctx
@@ -171,7 +162,6 @@ export const makeProjectionStore =
               )
               .pipe(orDie);
 
-      // Buffers and merges history while a backfill runs.
       const consumer = ctx.consumerKeys({
         id: consumerId,
         target,
@@ -181,19 +171,17 @@ export const makeProjectionStore =
         apply: (_key, deliveries) => Effect.forEach(deliveries, intake, { concurrency: 1, discard: true }),
       });
 
-      // Keys a previous process accepted but did not finish processing resume once workers start.
-      ctx.workers.push(
-        sql`SELECT partition.key FROM ${sql(tables.projectionPartition)} partition
+      const resumeUnfinishedKeys = sql`SELECT partition.key FROM ${sql(tables.projectionPartition)} partition
         WHERE partition.model = ${modelName} AND partition.projection = ${name}
           AND partition.processed < (
             SELECT COALESCE(MAX(position), 0) FROM ${sql(tables.consumerInput)} input
             WHERE input.model = partition.model AND input.consumer = ${consumerId} AND input.key = partition.key
           )`.pipe(
-          Effect.flatMap(decodeKeys),
-          Effect.flatMap(Effect.forEach(({ key }) => kick(key, false), { discard: true })),
-          orDie
-        )
+        Effect.flatMap(decodeKeys),
+        Effect.flatMap(Effect.forEach(({ key }) => kick(key, false), { discard: true })),
+        orDie
       );
+      ctx.workers.push(resumeUnfinishedKeys);
 
       return {
         receive: Effect.fn("AlchemyPostgres.Projection.receive")(function* (delivery: DomainPlatform.Delivery) {

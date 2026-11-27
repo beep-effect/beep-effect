@@ -26,7 +26,6 @@ class SourceFile extends S.Opaque<SourceFile, { readonly brand: unique symbol }>
   )
 ) {}
 const failInput = () => ContactsError.make({ reason: "input" });
-// The header row parseOutlookCsv reads: the first row with a non-empty cell.
 const headerOf = (text: string) =>
   Csv.parse(text, CsvCodecOptions.default.read).pipe(
     Effect.mapBoth({

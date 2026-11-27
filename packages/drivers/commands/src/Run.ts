@@ -27,7 +27,6 @@ import type * as Redacted from "effect/Redacted";
 
 const $I = $CommandsId.create("Run");
 
-/** Captured stdout contained no candidate JSON line. */
 class EmptyJsonLineError extends S.TaggedError<EmptyJsonLineError, { readonly brand: unique symbol }>(
   $I`EmptyJsonLineError`
 )(
@@ -61,17 +60,16 @@ class EmptyJsonLineError extends S.TaggedError<EmptyJsonLineError, { readonly br
  */
 export const DEFAULT_MAX_OUTPUT_BYTES = 16 * 1024 * 1024;
 
-/** Characters shown from the tail of captured output in an error message. */
 const MAX_MESSAGE_CHARS = 2000;
 
 const JsonOutput = S.fromJsonString(S.Unknown);
 
-/** Numeric policy inputs preserve the upstream number domain, including infinity. */
 const PolicyNumber = S.declare(P.isNumber).pipe(
-  $I.annoteSchema("PolicyNumber", { description: "An upstream numeric policy value without additional refinement." })
+  $I.annoteSchema("PolicyNumber", {
+    description: "An upstream numeric policy value without additional refinement, infinity included.",
+  })
 );
 
-/** Existing numeric spelling with trailing whitespace allowed by Duration.Input's numeric template. */
 const DurationNumberText = S.String.check(
   S.isPattern(/^[+-]?\d*\.?\d+(?:[Ee][+-]?\d+)?\s*$/),
   S.makeFilter(
@@ -87,7 +85,6 @@ const DurationNumberText = S.String.check(
   })
 );
 
-/** All input representations accepted by Effect Duration, without normalization. */
 const DurationInput = S.Union([
   S.Duration,
   PolicyNumber,
@@ -310,21 +307,16 @@ export class CommandOutput extends S.Class<CommandOutput, { readonly brand: uniq
   }
 }
 
-/** The executable and argv an error should report for `command`. */
+const labelRedactedWords = String;
 const describeCommand = (command: ChildProcess.Command): { command: string; args: ReadonlyArray<string> } => {
   if (ChildProcess.isStandardCommand(command)) {
-    // `String` renders a `Redacted` word as its `<redacted>` label, so secrets
-    // never reach an error message.
-    return { command: command.command, args: A.map(command.args, String) };
+    return { command: command.command, args: A.map(command.args, labelRedactedWords) };
   }
   const left = describeCommand(command.left);
   const right = describeCommand(command.right);
-  // A pipeline has no single argv; report the shape so the message still names
-  // what ran, with both sides' arguments dropped rather than merged.
   return { command: `${left.command} | ${right.command}`, args: [] };
 };
 
-/** argv as an error should store it: declared secrets removed, then the flag heuristic. */
 const safeArgs: {
   (args: ReadonlyArray<string>, secrets: ReadonlyArray<Redacted.Redacted<string>> | undefined): ReadonlyArray<string>;
   (
@@ -336,7 +328,6 @@ const safeArgs: {
     Redaction.scrubArgs(Redaction.applyArgs(args, secrets ?? []))
 );
 
-/** Captured text as an error should store it. */
 const safeText: {
   (text: string, secrets: ReadonlyArray<Redacted.Redacted<string>> | undefined): string;
   (secrets: ReadonlyArray<Redacted.Redacted<string>> | undefined): (text: string) => string;
@@ -344,20 +335,13 @@ const safeText: {
   Redaction.apply(text, secrets ?? [])
 );
 
-/** Whether a captured stream carries any non-whitespace text. */
 const hasText = (text: string | undefined): text is string => text !== undefined && Str.trim(text) !== "";
 
-/**
- * The stream whose tail explains a failure: stderr first, then stdout, because
- * npm and friends route real errors there often enough that dropping it hides
- * causes.
- */
-const causeStream = (stderr: string | undefined, stdout: string | undefined): string | undefined => {
+const stderrElseStdout = (stderr: string | undefined, stdout: string | undefined): string | undefined => {
   if (hasText(stderr)) return stderr;
   return hasText(stdout) ? stdout : undefined;
 };
 
-/** Tail-bounded rendering: tools write warnings first and the real error last. */
 const tail = (text: string): string => {
   const trimmed = Str.trim(text);
   if (trimmed.length <= MAX_MESSAGE_CHARS) return trimmed;
@@ -607,7 +591,7 @@ export class CommandFailedError extends S.TaggedError<CommandFailedError, { read
     const parts = [`Command "${rendered}" failed`];
     if (this.kind === "timeout") parts.push("(timed out)");
     if (this.exitCode !== undefined) parts.push(`(exit ${this.exitCode})`);
-    const stream = causeStream(this.stderr, this.stdout);
+    const stream = stderrElseStdout(this.stderr, this.stdout);
     if (stream !== undefined) parts.push(`:\n${tail(stream)}`);
     return A.join(parts, " ");
   }
@@ -711,7 +695,6 @@ export class CommandOutputError extends S.TaggedError<CommandOutputError, { read
   }
 }
 
-/** Spawns, collects both streams concurrently, and awaits exit. */
 const collectRaw: {
   (
     command: ChildProcess.Command,
@@ -750,13 +733,10 @@ const collectRaw: {
         const limit = options?.maxOutputBytes ?? DEFAULT_MAX_OUTPUT_BYTES;
         const out = tee === undefined ? handle.stdout : Stream.tapSink(handle.stdout, tee.stdout());
         const err = tee === undefined ? handle.stderr : Stream.tapSink(handle.stderr, tee.stderr());
-        // { concurrency: "unbounded" } is load-bearing, not a style choice:
-        // reading these sequentially deadlocks the moment either OS pipe
-        // buffer fills — the child blocks writing to a full pipe while the
-        // reader that would drain it is still waiting on the other stream.
+        const drainBothPipesAtOnce = { concurrency: "unbounded" } as const;
         const [stdout, stderr, exitCode] = yield* Effect.all(
           [collectBounded(out, limit), collectBounded(err, limit), handle.exitCode],
-          { concurrency: "unbounded" }
+          drainBothPipesAtOnce
         );
         const secrets = options?.redact;
         return CommandOutput.make({
@@ -768,7 +748,6 @@ const collectRaw: {
     )
 );
 
-/** Maps the raw failure modes onto this package's taxonomy, and applies any ceiling. */
 const collectClassified: {
   (
     command: ChildProcess.Command,
@@ -805,7 +784,6 @@ const collectClassified: {
   }
 );
 
-/** Fails a run whose process exited non-zero. */
 const requireZero: {
   (
     command: ChildProcess.Command,
@@ -828,30 +806,26 @@ const requireZero: {
       : Effect.fail(CommandFailedError.nonZero(command, output, options?.redact))
 );
 
-/** Span attributes: what ran and how many arguments — never the arguments. */
-const annotate = (command: ChildProcess.Command): Effect.Effect<void> => {
+const annotateWithoutArgs = (command: ChildProcess.Command): Effect.Effect<void> => {
   const described = describeCommand(command);
   return Effect.annotateCurrentSpan({ command: described.command, argc: described.args.length });
 };
 
-/** Annotates the current span, then runs and classifies the command without a tee. */
 const annotatedRun = (
   command: ChildProcess.Command,
   options: RunOptions.Encoded | undefined
 ): Effect.Effect<CommandOutput, CommandFailedError | CommandOutputError, ChildProcessSpawner.ChildProcessSpawner> =>
   Effect.andThen(
-    annotate(command),
+    annotateWithoutArgs(command),
     Effect.suspend(() => collectClassified(command, options, undefined))
   );
 
-/** {@link annotatedRun}, failing a run whose process exited non-zero. */
 const checkedRun = (
   command: ChildProcess.Command,
   options: RunOptions.Encoded | undefined
 ): Effect.Effect<CommandOutput, CommandFailedError | CommandOutputError, ChildProcessSpawner.ChildProcessSpawner> =>
   Effect.flatMap(annotatedRun(command, options), (output) => requireZero(command, output, options));
 
-// Implementation of Run.collect; the public contract lives on the static.
 const collect: {
   (
     command: ChildProcess.Command,
@@ -865,12 +839,11 @@ const collect: {
 } = Fn.dual(
   (args) => ChildProcess.isCommand(args[0]),
   Effect.fn("Run.collect")(function* (command: ChildProcess.Command, options?: RunOptions.Encoded) {
-    yield* annotate(command);
+    yield* annotateWithoutArgs(command);
     return yield* collectClassified(command, options, undefined);
   })
 );
 
-// Implementation of Run.collectTee; the public contract lives on the static.
 const collectTee: {
   (
     command: ChildProcess.Command,
@@ -892,13 +865,12 @@ const collectTee: {
 } = Fn.dual(
   (args) => ChildProcess.isCommand(args[0]),
   Effect.fn("Run.collectTee")(function* (command: ChildProcess.Command, options?: RunOptions.Encoded) {
-    yield* annotate(command);
+    yield* annotateWithoutArgs(command);
     const stdio = yield* Stdio.Stdio;
     return yield* collectClassified(command, options, stdio);
   })
 );
 
-// Implementation of Run.text; the public contract lives on the static.
 const text: {
   (
     command: ChildProcess.Command,
@@ -917,7 +889,6 @@ const text: {
   })
 );
 
-// Implementation of Run.lines; the public contract lives on the static.
 const lines: {
   (
     command: ChildProcess.Command,
@@ -940,7 +911,6 @@ const lines: {
   })
 );
 
-// Implementation of Run.json; the public contract lives on the static.
 const json: {
   <A, I>(
     command: ChildProcess.Command,
@@ -971,7 +941,6 @@ const json: {
   })
 );
 
-// Implementation of Run.jsonLine; the public contract lives on the static.
 const jsonLine: {
   <A, I>(
     command: ChildProcess.Command,
@@ -993,24 +962,16 @@ const jsonLine: {
   ) {
     const output = yield* annotatedRun(command, options);
     const described = describeCommand(command);
-    // The run's context travels on every output error: when the payload line is
-    // missing or unusable, the exit code and captured streams (already redacted
-    // by collectClassified) are the only evidence of what actually went wrong.
-    const context = { exitCode: output.exitCode, stderr: output.stderr, stdout: output.stdout };
+    const redactedRunEvidence = { exitCode: output.exitCode, stderr: output.stderr, stdout: output.stdout };
     const candidates = A.filter(Str.split(/\r?\n/)(output.stdout), (candidate) => Str.trim(candidate).length > 0);
     if (candidates.length === 0) {
       return yield* CommandOutputError.make({
         kind: "notJson",
         command: described.command,
         cause: EmptyJsonLineError.make({ message: "stdout carried no non-empty line" }),
-        ...context,
+        ...redactedRunEvidence,
       });
     }
-    // Scan from the END: the first candidate that both JSON-parses and decodes
-    // under the schema is the payload. The near-miss diagnostics below record
-    // the FIRST failure of each kind encountered by the scan — i.e. the LAST
-    // non-empty line's parse error and the LAST parseable line's decode issue —
-    // because the line nearest the end is the most probable intended payload.
     let notJsonCause: unknown;
     let schemaCause: unknown;
     for (let index = candidates.length - 1; index >= 0; index--) {
@@ -1024,16 +985,22 @@ const jsonLine: {
       if (Result.isSuccess(decoded)) return decoded.success;
       schemaCause ??= decoded.failure;
     }
-    // Nothing decoded anywhere. When at least one line parsed as JSON, the
-    // near-miss is a schema drift — report kind "schema" with the last
-    // parseable line's decode failure; otherwise nothing was JSON at all.
     return yield* schemaCause !== undefined
-      ? CommandOutputError.make({ kind: "schema", command: described.command, cause: schemaCause, ...context })
-      : CommandOutputError.make({ kind: "notJson", command: described.command, cause: notJsonCause, ...context });
+      ? CommandOutputError.make({
+          kind: "schema",
+          command: described.command,
+          cause: schemaCause,
+          ...redactedRunEvidence,
+        })
+      : CommandOutputError.make({
+          kind: "notJson",
+          command: described.command,
+          cause: notJsonCause,
+          ...redactedRunEvidence,
+        });
   })
 );
 
-// Implementation of Run.exitCode; the public contract lives on the static.
 const exitCode: {
   (
     command: ChildProcess.Command,
@@ -1047,13 +1014,12 @@ const exitCode: {
 } = Fn.dual(
   (args) => ChildProcess.isCommand(args[0]),
   Effect.fn("Run.exitCode")(function* (command: ChildProcess.Command, options?: RunOptions.Encoded) {
-    yield* annotate(command);
+    yield* annotateWithoutArgs(command);
     const output = yield* collectClassified(command, options, undefined);
     return output.exitCode;
   })
 );
 
-// Implementation of Run.succeeds; the public contract lives on the static.
 const succeeds: {
   (
     command: ChildProcess.Command,
@@ -1065,7 +1031,7 @@ const succeeds: {
 } = Fn.dual(
   (args) => ChildProcess.isCommand(args[0]),
   Effect.fn("Run.succeeds")(function* (command: ChildProcess.Command, options?: RunOptions.Encoded) {
-    yield* annotate(command);
+    yield* annotateWithoutArgs(command);
     return yield* collectClassified(command, options, undefined).pipe(
       Effect.map((output) => output.succeeded),
       Effect.orElseSucceed(() => false)
@@ -1073,24 +1039,18 @@ const succeeds: {
   })
 );
 
-// Implementation of Run.detach; the public contract lives on the static.
 const detach = Effect.fn("Run.detach")(function* (command: ChildProcess.Command) {
-  yield* annotate(command);
+  yield* annotateWithoutArgs(command);
   return yield* Effect.scoped(
     Effect.gen(function* () {
       const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
       const handle = yield* spawner.spawn(command);
-      // Order is the whole point of this helper: the Node backend's release
-      // checks an `isReferenced` flag and does NOT kill an unref'd child, so
-      // unref must run BEFORE this scope closes. Reversed, the child dies
-      // with the scope and nothing outlives the process.
       yield* Effect.asVoid(handle.unref);
       return handle.pid;
     })
   ).pipe(Effect.mapError((error) => CommandFailedError.spawn(command, error)));
 });
 
-// Implementation of Run.stream; the public contract lives on the static.
 const stream: {
   (
     command: ChildProcess.Command,
@@ -1114,7 +1074,6 @@ const stream: {
     ).pipe(Stream.mapError((error) => CommandFailedError.spawn(command, error)))
 );
 
-// Implementation of Run.extendEnv; the public contract lives on the static.
 const extendEnv: {
   (env: Record<string, string>): (self: ChildProcess.Command) => ChildProcess.Command;
   (self: ChildProcess.Command, env: Record<string, string>): ChildProcess.Command;

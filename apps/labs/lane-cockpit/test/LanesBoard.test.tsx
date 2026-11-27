@@ -43,7 +43,6 @@ const mount = Effect.fn("mount")(function* (snapshot: LanesSnapshot, rows = 16) 
 const press = (app: RenderResult, keys: string) => Effect.promise(() => app.press(keys));
 const type = (app: RenderResult, text: string) => Effect.promise(() => app.type(text));
 
-// Lane names in the order the list draws them: rows with a marker column, a lane and a state.
 const LIST_ROW = /^│ [>! ] (\S+)\s+(?:open|blocked)\s/;
 const listedLanes = (app: RenderResult): ReadonlyArray<string> =>
   pipe(
@@ -52,9 +51,7 @@ const listedLanes = (app: RenderResult): ReadonlyArray<string> =>
     A.getSomes
   );
 
-// Text.js renders through process-wide state (the active root, the input engine), so
-// frames from concurrent tests would interleave; this suite runs one test at a time.
-describe("LanesBoard frames", { concurrent: false }, () => {
+describe("LanesBoard serial frames share the Text.js root and input engine", { concurrent: false }, () => {
   it.effect("orders blocked lanes first, then by age of the last note", () =>
     Effect.gen(function* () {
       const snapshot = yield* snapshotOf(ROWS);

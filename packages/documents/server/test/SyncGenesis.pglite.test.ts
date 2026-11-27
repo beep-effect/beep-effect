@@ -170,12 +170,10 @@ const seedCursors = Effect.fnUntraced(function* () {
     workspace_id: 10,
     stream_position: "selected-old",
     last_event_id: null,
-    // Legacy cursor errors were free adapter text; genesis keeps it in the row and maps the state.
     status: "error",
     last_error: "Box answered 503 Service Unavailable (upstream timeout)",
   })}`;
 });
-// A crash on the fifteenth audit call leaves a half import; the next two runs converge.
 const importAfterCrash = Effect.fnUntraced(function* <R>(runtime: Context.Context<R>) {
   const provenance = yield* LegacySyncAudit;
   const calls = yield* Ref.make(0);
@@ -190,10 +188,10 @@ const importAfterCrash = Effect.fnUntraced(function* <R>(runtime: Context.Contex
     }),
     Effect.exit
   );
-  expect(partial._tag).toBe("Failure");
+  expect(partial._tag, "a crash on the fifteenth audit call leaves a half import").toBe("Failure");
   const first = yield* importSyncGenesis("synthetic-backup", "beep-vault").pipe(Effect.provideContext(runtime));
   const second = yield* importSyncGenesis("synthetic-backup", "beep-vault").pipe(Effect.provideContext(runtime));
-  expect(second).toEqual(first);
+  expect(second, "the next two runs after a half import converge").toEqual(first);
   expect(first).toMatchObject({ items: 4, operations: 20, conflicts: 12, cursors: 3 });
 });
 const assertGenesisEvents = Effect.fnUntraced(function* () {
@@ -208,21 +206,22 @@ const assertGenesisEvents = Effect.fnUntraced(function* () {
       schema_version: 1,
     });
 });
-// D17 F3: genesis binds each workspace to an opaque minted id, stable across re-runs.
 const assertBindings = Effect.fnUntraced(function* () {
   const workspace9 = yield* workspaceDestinationId(9);
   const workspace10 = yield* workspaceDestinationId(10);
-  expect(S.is(V.DestinationId)(workspace9)).toBe(true);
+  expect(S.is(V.DestinationId)(workspace9), "genesis binds each workspace to an opaque minted id").toBe(true);
   expect(workspace9).not.toContain("workspace");
   expect(workspace9).not.toBe(workspace10);
   const rebound = yield* workspaceDestinationId(9);
-  expect(rebound).toBe(workspace9);
+  expect(rebound, "a minted workspace binding is stable across re-runs").toBe(workspace9);
   const destinations = yield* V.SyncDestination;
   const state = yield* destinations.get(workspace9);
   expect(state).toMatchObject({ orgId: 17, paused: true, cursor: null });
-  // The selected legacy error cursor's free text becomes the closed `pollEvents` literal in state.
   const selected = yield* destinations.get(workspace10);
-  expect(selected).toMatchObject({ cursor: "selected-old", cursorError: "pollEvents", paused: false });
+  expect(
+    selected,
+    "the selected legacy error cursor's free adapter text stays in its row and becomes the closed pollEvents literal in state"
+  ).toMatchObject({ cursor: "selected-old", cursorError: "pollEvents", paused: false });
   return { workspace9, workspace10 };
 });
 const clearLegacyTables = Effect.fnUntraced(function* () {
@@ -277,7 +276,6 @@ const awaitCursorProjection = Effect.fnUntraced(function* () {
     Effect.timeout("5 seconds")
   );
 });
-// A duplicate cursor workspace stays paused: a poll there leaves its imported rows untouched.
 const assertPausedCursorKept = Effect.fnUntraced(function* (workspace9: V.DestinationId) {
   const sql = yield* SqlClient.SqlClient;
   const before = yield* sql`SELECT * FROM documents_sync_cursor WHERE workspace_id=9 ORDER BY id`;
@@ -289,9 +287,11 @@ const assertPausedCursorKept = Effect.fnUntraced(function* (workspace9: V.Destin
   yield* LegacySyncCursor.caughtUp(paused);
   yield* awaitCursorProjection();
   const after = yield* sql`SELECT * FROM documents_sync_cursor WHERE workspace_id=9 ORDER BY id`;
-  expect(after).toEqual(before);
+  expect(
+    after,
+    "a duplicate cursor workspace stays paused, so a poll there leaves its imported rows untouched"
+  ).toEqual(before);
 });
-// A live event on an imported operation keeps the legacy key text; its reason column takes the literal.
 const assertImportedKeyKept = Effect.fnUntraced(function* () {
   const sql = yield* SqlClient.SqlClient;
   const operations = yield* V.SyncOperation;
@@ -309,9 +309,11 @@ const assertImportedKeyKept = Effect.fnUntraced(function* () {
     }),
     Effect.timeout("5 seconds")
   );
-  expect(rows).toEqual([{ idempotency_key: "stored-key-107", last_error: "kind-replaced" }]);
+  expect(
+    rows,
+    "a live event on an imported operation keeps the legacy key text while its reason column takes the literal"
+  ).toEqual([{ idempotency_key: "stored-key-107", last_error: "kind-replaced" }]);
 });
-// Redelivering every event from a reset checkpoint changes nothing.
 const assertRedeliveryStable = Effect.fnUntraced(function* (replayScope: Scope.Closeable) {
   const sql = yield* SqlClient.SqlClient;
   const before = yield* diffLegacySyncTables();
@@ -325,7 +327,7 @@ const assertRedeliveryStable = Effect.fnUntraced(function* (replayScope: Scope.C
   );
   yield* awaitCursorProjection();
   const after = yield* diffLegacySyncTables();
-  expect(after).toEqual(before);
+  expect(after, "redelivering every event from a reset checkpoint changes nothing").toEqual(before);
 });
 
 describe("lossless offline genesis", () => {

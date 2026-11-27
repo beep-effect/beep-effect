@@ -42,7 +42,6 @@ describe("Run schema property floor", () => {
   roundTrips("CommandOutputError", CommandOutputError);
 });
 
-// Generation hints are test-local: the exported codec still performs every encode/decode.
 const RunOptionsSample = RunOptions.mapFields((fields) => ({
   ...fields,
   timeout: fields.timeout.schema
