@@ -39,7 +39,11 @@ describe("GateVitestReporter on synthetic Vitest objects", { concurrent: false }
         const record = yield* store.readRecord(target);
         assert.strictEqual(record.report.totals.passed, 2);
         assert.strictEqual(record.report.reason, "passed");
-        assert.strictEqual(writes.mock.calls.length, 0);
+        assert.strictEqual(
+          writes.mock.calls.length,
+          0,
+          "no case wrote to the shared console.error spy, so cases run one at a time"
+        );
       })
     );
 

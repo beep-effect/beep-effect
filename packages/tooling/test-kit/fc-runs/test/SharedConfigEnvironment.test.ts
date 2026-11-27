@@ -5,7 +5,7 @@ import * as Str from "effect/String";
 
 const SHARED = new URL("../../../../../vitest.shared.ts", import.meta.url);
 
-describe("the shared configuration's environment reads skip the default ConfigProvider", () => {
+describe("the shared configuration's environment reads skip the default ConfigProvider, built once per worker at first use", () => {
   it("leave a variable set after the import visible to the default provider of a fresh process", {
     timeout: 60_000,
   }, () => {
