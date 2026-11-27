@@ -63,6 +63,11 @@ export class ContactCardSourceShape extends S.Opaque<ContactCardSourceShape, { r
 /**
  * Service tag for ContactCardSource.
  *
+ * **Details**
+ *
+ * `cards` is a lazy Stream: every run of it starts an independent read of the
+ * contact source.
+ *
  * **Example** (Inspect ContactCardSource)
  *
  * ```ts
@@ -76,7 +81,6 @@ export class ContactCardSourceShape extends S.Opaque<ContactCardSourceShape, { r
  * @category ports
  * @since 0.0.0
  */
-// A Stream is lazy: every run of `cards` starts an independent read, as the SPEC requires.
 export class ContactCardSource extends Context.Service<ContactCardSource, ContactCardSourceShape>()(
   $I`ContactCardSource`
 ) {}
