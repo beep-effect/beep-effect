@@ -4,12 +4,15 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import { Git } from "@beep/git/Git";
 import { ActionOutputs } from "@beep/github-actions/ActionOutputs";
 import { WorkflowCommand } from "@beep/github-commands/WorkflowCommand";
 import { GitHubMarkdown } from "@beep/github-reporting/GitHubMarkdown";
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
 import * as Config from "effect/Config";
 import * as Console from "effect/Console";
 import * as Context from "effect/Context";
@@ -224,43 +227,62 @@ export const readPinnedPrDiff = Effect.fn("Ci.readPinnedPrDiff")(function* (
 });
 
 /**
- * Load the CI pattern data a checkout carries, falling back to the compiled-in patterns when the
- * checkout has no pattern file.
+ * Load the CI pattern data recorded at a pull request's base commit.
  *
  * **Details**
  *
- * The checkout's own file classifies its tree: a binary built from `main` must not judge a pull
- * request by `main`'s compiled-in literals. A file that is present but unreadable fails.
+ * A pull request is classified by the patterns its base already carries, so a head that widens
+ * the docs or goals patterns cannot narrow its own verification; a pattern edit takes effect on
+ * the pull request after it merges. A base with no pattern file yields the compiled-in patterns.
+ * A base file that cannot be read, or that does not decode under this binary's schema (an older
+ * or newer schema), yields `None`, which every caller treats as "keep every verification
+ * profile active".
  *
  * **Example** (Reference the loader)
  *
  * ```ts
- * import { readCheckoutCiPatterns } from "@beep/repo-cli/commands/Ci"
+ * import { readBaseCiPatterns } from "@beep/repo-cli/commands/Ci"
  * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
  *
- * console.log(Effect.isEffect(readCheckoutCiPatterns("."))) // true
+ * console.log(Effect.isEffect(readBaseCiPatterns("base", O.none()))) // true
  * ```
  *
- * @param root - The repository root of the checkout.
- * @returns The checkout's pattern data, or the compiled-in data when the file is absent.
+ * @param base - The pull request's base SHA.
+ * @param cwd - The checkout to read from; `None` uses the process directory.
+ * @returns The base's pattern data, the compiled-in data when the base has no pattern file, or
+ * `None` when the base's file is unreadable.
  * @category services
  * @since 0.0.0
  */
-export const readCheckoutCiPatterns = Effect.fn("Ci.readCheckoutCiPatterns")(function* (
-  root: string
-): Effect.fn.Return<CiOperationalPatterns, CiCommandError, FileSystem.FileSystem | Path.Path> {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const target = path.join(root, PATTERN_FILE);
-  const loaded = yield* fs.exists(target).pipe(
-    Effect.flatMap((present) =>
-      present
-        ? fs.readFileString(target).pipe(Effect.flatMap(decodePatterns), Effect.asSome)
-        : Effect.succeed(O.none<CiOperationalPatterns>())
-    ),
-    CiCommandError.mapError(`ci-change-profile: could not read the CI patterns from ${target}`)
-  );
-  return O.getOrElse(loaded, () => ciOperationalPatterns);
+export const readBaseCiPatterns = Effect.fn("Ci.readBaseCiPatterns")(function* (
+  base: string,
+  cwd: O.Option<string>
+): Effect.fn.Return<O.Option<CiOperationalPatterns>, never, ChildProcessSpawner.ChildProcessSpawner> {
+  const git = yield* Git.make;
+  return yield* git
+    .show(
+      O.getOrElse(cwd, () => "."),
+      base,
+      PATTERN_FILE
+    )
+    .pipe(
+      Effect.flatMap(
+        O.match({
+          onNone: () =>
+            Console.error(
+              `ci-patterns: base ${base} has no ${PATTERN_FILE}; classifying with the compiled-in patterns`
+            ).pipe(Effect.as(ciOperationalPatterns)),
+          onSome: decodePatterns,
+        })
+      ),
+      Effect.asSome,
+      Effect.catchCause((cause) =>
+        Console.error(
+          `ci-patterns: the CI patterns at base ${base} are unreadable; keeping every verification profile active: ${Cause.pretty(cause)}`
+        ).pipe(Effect.as(O.none<CiOperationalPatterns>()))
+      )
+    );
 });
 
 /**
@@ -340,27 +362,14 @@ export const CiOperationalLive = Layer.effect(
       );
       return { stdout, status };
     }, Effect.scoped);
-    // The checkout's own pattern file classifies its tree; a binary built from
-    // main must not judge a pull request by main's compiled-in literals. A file
-    // that is present but unreadable fails closed.
-    const changeProfilePatterns = Effect.gen(function* () {
-      const root = yield* findRepoRoot().pipe(
-        Effect.provideService(FileSystem.FileSystem, fs),
-        Effect.provideService(Path.Path, path),
-        Effect.option
-      );
-      if (O.isNone(root)) return ciOperationalPatterns;
-      return yield* readCheckoutCiPatterns(root.value).pipe(
-        Effect.provideService(FileSystem.FileSystem, fs),
-        Effect.provideService(Path.Path, path)
-      );
-    });
     const pinnedDiff = (base: string, head: string) =>
       readPinnedPrDiff(base, head, O.none()).pipe(
         Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
       );
+    const basePatterns = (base: string) =>
+      readBaseCiPatterns(base, O.none()).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner));
     const emitChangeProfile = Effect.fn("Ci.emitChangeProfile")(
-      function* (patterns: CiOperationalPatterns, positionalBase: O.Option<string>, positionalHead: O.Option<string>) {
+      function* (positionalBase: O.Option<string>, positionalHead: O.Option<string>) {
         const event = yield* Config.String("GITHUB_EVENT_NAME").pipe(Config.withDefault("local"));
         // Hosted callers pin the refs; explicit arguments are the local seam.
         const pinned = Effect.fn("Ci.pinnedRef")(function* (name: string, positional: O.Option<string>) {
@@ -374,9 +383,10 @@ export const CiOperationalLive = Layer.effect(
             ? yield* pinnedDiff(base, head)
             : O.none<ReadonlyArray<string>>();
         if (event === "pull_request" && O.isNone(paths)) yield* diffUnavailable;
-        const profile = O.match(paths, {
+        const patterns = O.isSome(paths) ? yield* basePatterns(base) : O.none<CiOperationalPatterns>();
+        const profile = O.match(O.all([paths, patterns]), {
           onNone: () => fullProfile,
-          onSome: (changed) => classifyChangeProfile(patterns, changed),
+          onSome: ([changed, recorded]) => classifyChangeProfile(recorded, changed),
         });
         const output = renderChangeProfile(profile);
         const target = yield* text("GITHUB_OUTPUT");
@@ -386,9 +396,7 @@ export const CiOperationalLive = Layer.effect(
       Effect.mapError(CiCommandError.new("Failed to determine the CI change profile."))
     );
     const changeProfile = (base: O.Option<string>, head: O.Option<string>) =>
-      Effect.flatMap(changeProfilePatterns, (patterns) => emitChangeProfile(patterns, base, head)).pipe(
-        Effect.withSpan("Ci.changeProfile")
-      );
+      emitChangeProfile(base, head).pipe(Effect.withSpan("Ci.changeProfile"));
 
     const pruneAptSources = Effect.fn("Ci.pruneAptSources")(
       function* (directory: string) {

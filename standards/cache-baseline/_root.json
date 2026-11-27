@@ -8,11 +8,11 @@
     "@beep/types#lint"
   ],
   "review": {
-    "reviewer": "Claude Opus 5.5 (route-soundness-repair cross-package reads lane)",
-    "reason": "Re-record the root subject and @beep/repo-cli after its turbo.json declared law-practice-server's test files, which ci-partitions.test.ts globs, as test, test:property and coverage inputs. Configuration review only; no qualification is granted.",
+    "reviewer": "Claude Opus 5.5 (route-soundness-repair PERIH-10 lane)",
+    "reason": "Re-record the root subject and @beep/repo-cli after its turbo.json declared two files its tests read from other packages as test, test:property and coverage inputs. Configuration review only; no qualification is granted.",
     "basis": {
-      "path": "docs/reports/cross-package-reads-root-reference-cache-review-2026-11-27.md",
-      "sha256": "cb0ad15eaf31ae01c877936ef9f7100e8540f47e87a9db4e8c7e227d4e5f13ba"
+      "path": "docs/reports/perih-10-cache-review-2026-11-27.md",
+      "sha256": "0b8a240212e02276f0a22638a3c53fa01856ad13d66b9affe21fe2c98a616f06"
     }
   },
   "globalConfiguration": {
@@ -228,7 +228,7 @@
     },
     {
       "path": "packages/tooling/tool/cli/turbo.json",
-      "sha256": "b110b2b5b7950cf0100424edab44d36eafde2baa3b62b15f5d6612c9682bcb6d"
+      "sha256": "39e84bd5d96dd641e2542038bff3ea8832e50de097cd86df8f9e1fd4db974fcc"
     },
     {
       "path": "packages/workspace/server/turbo.json",
