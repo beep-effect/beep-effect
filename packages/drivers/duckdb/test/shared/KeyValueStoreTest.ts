@@ -15,9 +15,7 @@ import { dual } from "effect/Function";
 import * as KeyValueStore from "effect/persistence/KeyValueStore";
 import type * as Layer from "effect/Layer";
 
-// Tests clear the shared store.
-// beep: `dual` with a generic error channel satisfies the repo's tsgo rules
-// (missingPipeableSignature, anyUnknownInErrorContext).
+// beep: `dual` with a generic error channel satisfies tsgo missingPipeableSignature and anyUnknownInErrorContext.
 export const suite: {
   <E>(layer: Layer.Layer<KeyValueStore.KeyValueStore, E>): (name: string) => void;
   <E>(name: string, layer: Layer.Layer<KeyValueStore.KeyValueStore, E>): void;

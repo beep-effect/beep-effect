@@ -125,7 +125,6 @@ const expectDuplicateOf = Effect.fnUntraced(function* <R extends Rpc.Any>(
   expect(result.originalId).toEqual(request.envelope.requestId);
   yield* expectRequestIdForKey(request, id);
 });
-// Saves one request and returns the encoded storage with the request's shard key.
 const saveForEncoded = Effect.gen(function* () {
   yield* truncate;
   const storage = yield* MessageStorage.MessageStorage;
@@ -222,7 +221,6 @@ describe("SqlMessageStorage", () => {
     );
   });
 
-  // Tests truncate this backend's shared tables.
   it.layer(StorageLayer.pipe(Layer.provideMerge(Layer.mergeAll(DuckDbTestLayer, NodeCrypto.layerDigest))), {
     concurrent: false,
     timeout: 120000,
@@ -284,8 +282,7 @@ describe("SqlMessageStorage", () => {
         const processed = yield* sql`SELECT processed FROM cluster_messages ORDER BY seq`;
         yield* storage.resetRequests([streaming.envelope.requestId, completed.envelope.requestId]);
         const messages = yield* storage.unprocessedMessages(shards);
-        // Replies keep both requests out of the SQL read loop.
-        expect(messages).toHaveLength(0);
+        expect(messages, "replies keep both requests out of the SQL read loop").toHaveLength(0);
         const repliesFor11 = yield* storage.repliesFor([streaming, completed]);
         expect(repliesFor11).toEqual(replies);
         const value12 = yield* sql`SELECT processed FROM cluster_messages ORDER BY seq`;
@@ -310,18 +307,17 @@ describe("SqlMessageStorage", () => {
         yield* storage.saveRequest(request);
         yield* storage.saveEnvelope(interrupt());
         yield* storage.saveReply(reply);
-        // An interrupt received after completion belongs to the next execution.
-        const pending = interrupt();
-        yield* storage.saveEnvelope(pending);
+        const nextExecutionInterrupt = interrupt();
+        yield* storage.saveEnvelope(nextExecutionInterrupt);
         yield* storage.clearReplies(request.envelope.requestId, { expectedReplyId: reply.reply.id });
-        // A duplicate reset must not remove that pending interrupt either.
         yield* storage.clearReplies(request.envelope.requestId, { expectedReplyId: reply.reply.id });
         const replies = yield* storage.repliesFor([request]);
         assert.deepStrictEqual(replies, []);
         const messages = yield* storage.unprocessedMessages([request.envelope.address.shardId]);
         assert.deepStrictEqual(
           A.map(messages, ({ envelope }) => (envelope._tag === "Request" ? envelope.requestId : envelope.id)),
-          [request.envelope.requestId, pending.envelope.id]
+          [request.envelope.requestId, nextExecutionInterrupt.envelope.id],
+          "neither reset removed the interrupt received after completion, which belongs to the next execution"
         );
       })
     );
@@ -419,12 +415,14 @@ describe("SqlMessageStorage", () => {
         const deleted = yield* deleteProcessedBefore(cutoff);
         expect(deleted).toEqual(1);
 
-        // a late acknowledgement and cancellation, such as ones that waited behind the delete
         const ack = yield* makeAckChunk(request, chunk);
         yield* storage.saveEnvelope(ack);
         yield* saveInterrupt(request);
         const unprocessed = yield* storage.unprocessedMessages([request.envelope.address.shardId]);
-        expect(unprocessed).toEqual([]);
+        expect(
+          unprocessed,
+          "a late acknowledgement and cancellation that waited behind the delete are dropped"
+        ).toEqual([]);
         const requestId = String(request.envelope.requestId);
         const rows = yield* sql`SELECT id FROM cluster_messages WHERE request_id = ${requestId}`;
         expect(rows).toEqual([]);
@@ -447,15 +445,11 @@ describe("SqlMessageStorage", () => {
             }),
           { concurrency: 1 }
         );
-        // completed before the Snowflake epoch, so its reply id is negative
-        const preEpoch = yield* makeRequest({ payload: { id: 0 } });
-        yield* storage.saveRequest(preEpoch);
-        yield* completeAt(preEpoch, Snowflake.constEpochMillis - 1);
+        const negativeReplyIdRequest = yield* makeRequest({ payload: { id: 0 } });
+        yield* storage.saveRequest(negativeReplyIdRequest);
+        yield* completeAt(negativeReplyIdRequest, Snowflake.constEpochMillis - 1);
         const makeRunning = makePrimaryKeyRequest(7);
-        // still running, so never eligible
         yield* Effect.flatMap(makeRunning, storage.saveRequest);
-        // MessageRetention's cutoffs for an infinite, huge, sub-millisecond,
-        // negative huge and negative infinite retention
         // beep: One sequential Effect.forEach replaces the upstream run of per-cutoff expectations.
         const deletedCounts = yield* Effect.forEach(
           [
@@ -470,9 +464,12 @@ describe("SqlMessageStorage", () => {
           (completedBefore) => deleteProcessedBefore(completedBefore, 2),
           { concurrency: 1 }
         );
-        expect(deletedCounts).toEqual([0, 0, 1, 1, 2, 2, 1]);
+        expect(
+          deletedCounts,
+          "MessageRetention's cutoffs for infinite, huge, sub-millisecond, negative huge and negative infinite retention"
+        ).toEqual([0, 0, 1, 1, 2, 2, 1]);
         const running = yield* Effect.flatMap(makeRunning, storage.saveRequest);
-        expect(running._tag).toEqual("Duplicate");
+        expect(running._tag, "the still-running request is never eligible for deletion").toEqual("Duplicate");
       }).pipe(Effect.ensuring(Effect.orDie(truncate)))
     );
 
@@ -526,18 +523,16 @@ describe("SqlMessageStorage", () => {
 
         yield* expectDuplicateReply("Chunk");
 
-        // get the un-acked chunk
         const replies = yield* storage.repliesFor([request]);
-        expect(replies).toHaveLength(1);
+        expect(replies, "only the un-acked chunk remains").toHaveLength(1);
 
         const madeReply19 = yield* makeReply(request);
         yield* storage.saveReply(madeReply19);
 
         yield* expectDuplicateReply("WithExit");
 
-        // duplicate WithExit
-        const madeReply20 = yield* makeReply(request);
-        const fiber = yield* storage.saveReply(madeReply20).pipe(Effect.forkChild);
+        const duplicateWithExit = yield* makeReply(request);
+        const fiber = yield* storage.saveReply(duplicateWithExit).pipe(Effect.forkChild);
         yield* TestClock.adjust(1);
         // beep: Effect.repeat replaces the upstream while loop that drives the retry schedule.
         yield* Effect.gen(function* () {
@@ -591,21 +586,19 @@ describe("SqlMessageStorage", () => {
         const request = yield* makePrimaryKeyRequest(456);
         yield* storage.saveRequest(request);
 
-        // rows written by previous versions store the plaintext composed
-        // key, so short keys must stay byte-identical to keep deduplicating
         const plaintext = Envelope.primaryKey<typeof PrimaryKeyTest>(request.envelope);
         const rows = yield* selectMessageIds;
         expect(rows).toHaveLength(1);
-        expect(rows[0]?.message_id).toEqual(plaintext);
+        expect(
+          rows[0]?.message_id,
+          "previous versions stored the plaintext composed key, so short keys stay byte-identical to deduplicate"
+        ).toEqual(plaintext);
 
         const madePrimaryKeyRequest22 = yield* makePrimaryKeyRequest(456);
         yield* expectDuplicateOf(request, madePrimaryKeyRequest22, "456");
       })
     );
 
-    // sqlite's TEXT message_id column stored over-long plaintext keys
-    // before hashing, so the legacy fallback must also cover keys longer
-    // than the 255-character limit of the width-enforcing dialects
     // beep: DuckDB TEXT is unbounded like SQLite's, so the SQLite-only case always runs.
     it.effect("detects duplicates for legacy long-key plaintext rows", () =>
       Effect.gen(function* () {
@@ -617,9 +610,11 @@ describe("SqlMessageStorage", () => {
         const request = yield* makeLongKeyRequest(longId);
         yield* storage.saveRequest(request);
 
-        // simulate a row written before message_id values were hashed
         const plaintext = Envelope.primaryKey<typeof LongKeyRpc>(request.envelope) ?? "";
-        expect(plaintext.length).toBeGreaterThan(255);
+        expect(
+          plaintext.length,
+          "SQLite TEXT kept over-long plaintext keys before hashing, so the fallback covers keys past 255 characters"
+        ).toBeGreaterThan(255);
         yield* sql`UPDATE cluster_messages SET message_id = ${plaintext} WHERE id = ${String(
           request.envelope.requestId
         )}`;
@@ -656,10 +651,10 @@ describe("SqlMessageStorage", () => {
         expect(limited).toHaveLength(3);
         expect(payloadIds(limited)).toEqual([1, 2, 3]);
 
-        // rows beyond the limit were not claimed and are returned by the
-        // next read
         const rest = yield* storage.unprocessedMessages([shardOne]);
-        expect(payloadIds(rest)).toEqual([4, 5]);
+        expect(payloadIds(rest), "rows beyond the limit were not claimed and come back on the next read").toEqual([
+          4, 5,
+        ]);
       })
     );
 
@@ -673,9 +668,8 @@ describe("SqlMessageStorage", () => {
         });
         expect(payloadIds(filtered)).toEqual([2, 4]);
 
-        // the filtered read must not claim the other addresses
         const rest = yield* storage.unprocessedMessages([shardOne]);
-        expect(payloadIds(rest)).toEqual([1, 3]);
+        expect(payloadIds(rest), "the filtered read did not claim the other addresses").toEqual([1, 3]);
       })
     );
 
