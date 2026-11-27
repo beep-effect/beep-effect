@@ -1,13 +1,13 @@
 import { defineConfig, mergeConfig } from "vitest/config";
 import shared from "../../../vitest.shared.ts";
 
-const filesMockModulesStubGlobalsOrChdir = true;
-
 export default mergeConfig(
   shared,
   defineConfig({
     test: {
-      isolate: filesMockModulesStubGlobalsOrChdir,
+      // Tests here mock modules, stub globals, or change the working directory; keep every file in
+      // its own worker even under coverage (vitest.shared.ts shares the graph there by default).
+      isolate: true,
       environment: "happy-dom",
       testTimeout: 30_000,
     },
