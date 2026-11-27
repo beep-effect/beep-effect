@@ -931,6 +931,7 @@ const payloadWithShas = (shas: { readonly base?: string; readonly head?: string 
 // The pinned `git diff --name-only --no-renames <base>...<head>` the lane gate reads, as C-quoted
 // newline lines, or a non-zero exit when the base is unreadable; fetches and other git calls succeed.
 const PATTERNS_FILE = "packages/tooling/tool/cli/src/commands/Ci/CiOperational.patterns.json";
+const encodeCiOperationalPatternsJson = S.encodeEffect(S.fromJsonString(CiOperationalPatterns));
 const pinnedDiffSpawner = (diff: O.Option<ReadonlyArray<string>>, patternsAtBase: O.Option<string> = O.none()) =>
   ScriptedSpawner.make((_command, args) =>
     A.contains(args, "--no-renames")
@@ -1065,7 +1066,7 @@ it.layer(laneSkipsPlatform, { timeout: "30 seconds" })("HOST-06 heavy lane skips
         expect(unreadablePatternSkips).toEqual(["docgen"]);
         const absentAtBase = yield* read(payloadWithShas({ base: "b", head: "h" }), pinnedDiffSpawner(goals, O.none()));
         expect(absentAtBase).toEqual(HEAVY_LANE_IDS);
-        const recorded = yield* S.encodeEffect(S.fromJsonString(CiOperationalPatterns))(ciOperationalPatterns);
+        const recorded = yield* encodeCiOperationalPatternsJson(ciOperationalPatterns);
         const recordedAtBase = yield* read(
           payloadWithShas({ base: "b", head: "h" }),
           pinnedDiffSpawner(goals, O.some(recorded))
