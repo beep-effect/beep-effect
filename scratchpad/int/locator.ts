@@ -137,6 +137,15 @@ const YouTubeLegacyName = text("YouTubeLegacyName", /^[A-Za-z0-9]{1,20}$/, "A us
 declare namespace YouTubeLegacyName {
   export type Encoded = string;
 }
+const YouTubeCustomName = text(
+  "YouTubeCustomName",
+  /^[A-Za-z0-9_.%-]{1,100}$/,
+  "A name from the retired /c/ custom channel URL, percent-encoded where it is not ASCII."
+);
+
+declare namespace YouTubeCustomName {
+  export type Encoded = string;
+}
 const YouTubeVideoId = text("YouTubeVideoId", /^[A-Za-z0-9_-]{11}$/, "An eleven-character YouTube video ID.");
 
 declare namespace YouTubeVideoId {
@@ -296,6 +305,21 @@ declare namespace ChannelByUser {
   }
 }
 
+class ChannelByCustom extends S.Opaque<ChannelByCustom, { readonly brand: unique symbol }>()(
+  S.Struct({ by: S.tag("custom"), name: YouTubeCustomName }).pipe(
+    $I.annoteSchema("ChannelByCustom", {
+      description: "Channel named by the custom URL it claimed before handles replaced them.",
+    })
+  )
+) {}
+
+declare namespace ChannelByCustom {
+  export interface Encoded {
+    readonly by: "custom";
+    readonly name: YouTubeCustomName.Encoded;
+  }
+}
+
 const YouTubeChannelFromPath = S.Union([
   S.TemplateLiteralParser(["/@", YouTubeHandle]).pipe(
     S.decodeTo(
@@ -315,9 +339,15 @@ const YouTubeChannelFromPath = S.Union([
       T.transform({ decode: ([, name]) => ({ by: "user", name }), encode: ({ name }) => ["/user/", name] })
     )
   ),
+  S.TemplateLiteralParser(["/c/", YouTubeCustomName]).pipe(
+    S.decodeTo(
+      ChannelByCustom,
+      T.transform({ decode: ([, name]) => ({ by: "custom", name }), encode: ({ name }) => ["/c/", name] })
+    )
+  ),
 ]).pipe(
   $I.annoteSchema("YouTubeChannelFromPath", {
-    description: "Reads and prints the three ways a YouTube path names a channel.",
+    description: "Reads and prints the four ways a YouTube path names a channel.",
   })
 );
 
@@ -325,7 +355,8 @@ declare namespace YouTubeChannelFromPath {
   export type Encoded =
     | `/@${YouTubeHandle.Encoded}`
     | `/channel/${YouTubeChannelId.Encoded}`
-    | `/user/${YouTubeLegacyName.Encoded}`;
+    | `/user/${YouTubeLegacyName.Encoded}`
+    | `/c/${YouTubeCustomName.Encoded}`;
 }
 
 const YouTubeTab = MappedLiteralKit([
@@ -949,6 +980,15 @@ const InstagramTargetFromRoute = S.Union([
       })
     )
   ),
+  S.TemplateLiteralParser(["/_u/", InstagramUser]).pipe(
+    S.decodeTo(
+      InstagramCollection,
+      T.transform({
+        decode: ([, user]): typeof InstagramCollection.Encoded => ({ kind: "collection", user, tab: "posts" }),
+        encode: ({ user }) => ["/_u/", user],
+      })
+    )
+  ),
   S.TemplateLiteralParser(["/stories/", InstagramUser]).pipe(
     S.decodeTo(
       InstagramStories,
@@ -981,6 +1021,7 @@ const InstagramTargetFromRoute = S.Union([
 declare namespace InstagramTargetFromRoute {
   export type Encoded =
     | `/${InstagramUser.Encoded}${InstagramTab.Encoded}`
+    | `/_u/${InstagramUser.Encoded}`
     | `/stories/${InstagramUser.Encoded}`
     | `/stories/highlights/${PostNumber.Encoded}`
     | `${InstagramPostForm.Encoded}${InstagramShortcode.Encoded}`;
@@ -2204,7 +2245,7 @@ const sites: Readonly<Record<Platform, Site>> = {
   x: Site.make({ hosts: ["x.com","www.x.com","twitter.com","www.twitter.com","mobile.twitter.com"] }),
   youtube: Site.make({ hosts: ["www.youtube.com","youtube.com","m.youtube.com"], routedQuery: ["v"] }),
   redgifs: Site.make({ hosts: ["www.redgifs.com","redgifs.com"] }),
-  facebook: Site.make({ hosts: ["www.facebook.com","facebook.com","m.facebook.com","mbasic.facebook.com","web.facebook.com"], routedQuery: ["id","fbid"] }),
+  facebook: Site.make({ hosts: ["www.facebook.com","facebook.com","m.facebook.com","mbasic.facebook.com","web.facebook.com","fb.com","www.fb.com"], routedQuery: ["id","fbid"] }),
   fansly: Site.make({ hosts: ["fansly.com","www.fansly.com"] }),
   instagram: Site.make({ hosts: ["www.instagram.com","instagram.com"] }),
   onlyfans: Site.make({ hosts: ["onlyfans.com","www.onlyfans.com"] }),

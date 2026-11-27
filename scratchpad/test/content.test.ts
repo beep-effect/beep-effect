@@ -28,14 +28,18 @@ import {
   Post,
   Profile,
   RichText,
+  RichTextFromString,
+  TextEntity,
+  elsewhere,
   hashtags,
   largest,
   linked,
   mentions,
+  outbound,
   summary,
   tagged,
 } from "@beep/scratchpad/int/content";
-import { AuthRequired, CollectionLocator, Locator, type Platform, PostLocator, XTarget, locate } from "@beep/scratchpad/int/locator";
+import { AuthRequired, CollectionLocator, Locator, LocatorFromUrl, type Platform, PostLocator, XTarget, locate } from "@beep/scratchpad/int/locator";
 import { describe, expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -44,6 +48,7 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
+import * as Str from "effect/String";
 
 const readPost = S.decodeUnknownOption(Post);
 const readProfile = S.decodeUnknownOption(Profile);
@@ -281,4 +286,77 @@ it.layer(
       expect(failure._tag).toBe("ConnectionsHidden");
     })
   );
+});
+
+describe("a biography", () => {
+  const read = S.decodeUnknownOption(RichTextFromString);
+  const kinds = (text: string) => O.map(read(text), ({ entities }) => A.map(entities, ({ kind }) => kind));
+  const sliced = (text: string) =>
+    O.map(read(text), ({ entities }) =>
+      A.flatMap(entities, ({ span }) => A.fromOption(O.map(span, ({ start, end }) => Str.slice(start, end)(text))))
+    );
+
+  it("finds hashtags, mentions and links in bare text, each at its span", () => {
+    const text = "🌊 #vanlife w/ @jack.d — booking: https://shop.example/now. more: linktr.ee/jack";
+    expect(kinds(text)).toStrictEqual(O.some(["hashtag", "mention", "link", "link"]));
+    expect(sliced(text)).toStrictEqual(O.some(["#vanlife", "@jack.d", "https://shop.example/now", "linktr.ee/jack"]));
+  });
+
+  it("reads a bare host with a path as an https link", () => {
+    const urls = O.map(read("linktr.ee/jack"), ({ entities }) =>
+      A.map(A.filter(entities, TextEntity.guards.link), ({ url }) => url.href)
+    );
+    expect(urls).toStrictEqual(O.some(["https://linktr.ee/jack"]));
+  });
+
+  it("leaves addresses, abbreviations, numbers and a URL fragment as text", () => {
+    expect(kinds("mail me@example.com, e.g. #1 fan, 24/7, a&#b")).toStrictEqual(O.some([]));
+    expect(kinds("https://example.org/a#top @")).toStrictEqual(O.some(["link"]));
+  });
+
+  it("prints the text it was read from", () => {
+    const text = "#a @b https://example.org/c";
+    expect(O.flatMap(read(text), S.encodeOption(RichTextFromString))).toStrictEqual(O.some(text));
+  });
+
+  it("answers the same questions as a caption", () => {
+    const bio = read("#bitcoin and #nostr with @jack, see https://x.com/jack/status/20");
+    expect(O.map(bio, hashtags)).toStrictEqual(O.some(["bitcoin", "nostr"]));
+    expect(O.map(bio, (text) => A.map(mentions(text), handleOf))).toStrictEqual(O.some([O.some("jack")]));
+    expect(O.map(bio, (text) => A.map(linked(text), ({ platform }) => platform))).toStrictEqual(O.some(["x"]));
+  });
+});
+
+describe("the links of a profile", () => {
+  const decoded = S.decodeOption(Profile)({
+    source: "https://www.instagram.com/example/",
+    account: { by: "handle", handle: "example" },
+    bio: {
+      text: "snap + ig",
+      entities: [
+        { kind: "link", url: "https://www.snapchat.com/add/example" },
+        { kind: "link", url: "https://instagram.com/example?igsh=abc" },
+        { kind: "link", url: "https://shop.example/" },
+      ],
+    },
+    links: [
+      { url: "https://shop.example/", title: "Shop" },
+      { url: "https://twitter.com/example/status/20" },
+      { url: "https://www.threads.net/@example" },
+      { url: "https://linktr.ee/example" },
+    ],
+  });
+  const printed = S.encodeOption(LocatorFromUrl);
+
+  it("lists link slots before biography links and each URL once", () => {
+    expect(O.map(decoded, (p) => A.map(outbound(p), ({ hostname }) => hostname))).toStrictEqual(
+      O.some(["shop.example", "twitter.com", "www.threads.net", "linktr.ee", "www.snapchat.com", "instagram.com"])
+    );
+  });
+
+  it("names the accounts those links lead to, without the profile itself", () => {
+    expect(O.map(decoded, (p) => A.flatMap(elsewhere(p), (locator) => A.fromOption(printed(locator))))).toStrictEqual(
+      O.some(["https://x.com/example", "https://www.threads.com/@example", "https://www.snapchat.com/@example"])
+    );
+  });
 });

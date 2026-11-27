@@ -14,11 +14,14 @@ import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
+import * as T from "effect/SchemaTransformation";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
 import {
+  type CollectionLocator,
   CollectionLocatorFromUrl,
+  landing,
   Locator,
   LocatorFromUrl,
   type MapFailure,
@@ -355,6 +358,97 @@ export declare namespace RichText {
     readonly text: string;
     readonly entities?: ReadonlyArray<TextEntity.Encoded>;
   }
+}
+
+const Marks =
+  /(?<url>https?:\/\/[^\s<>"]*[^\s<>".,;:!?)\]}'])|(?<![\p{L}\p{N}_.@#/])(?<bare>(?:[a-z0-9-]+\.)+[a-z]{2,}\/[^\s<>"]*[^\s<>".,;:!?)\]}'])|(?<![\p{L}\p{N}_&/])#(?<tag>[\p{L}\p{N}_]*[\p{L}_][\p{L}\p{N}_]*)|(?<![\p{L}\p{N}_./])@(?<handle>[A-Za-z0-9_](?:[A-Za-z0-9_.-]*[A-Za-z0-9_])?)/giu;
+
+const isUrlText = S.is(S.URLFromString.pipe(S.toEncoded));
+
+const markOf = (match: RegExpMatchArray): O.Option<TextEntity.Encoded> =>
+  O.flatMap(O.fromNullishOr(match.index), (start) => {
+    const span = { start, end: start + Str.length(match[0]) };
+    const group = (name: string) => O.flatMap(O.fromNullishOr(match.groups), (groups) => O.fromNullishOr(groups[name]));
+    return O.firstSomeOf<TextEntity.Encoded>([
+      pipe(
+        group("url"),
+        O.orElse(() => O.map(group("bare"), (bare) => `https://${bare}`)),
+        O.filter(isUrlText),
+        O.map((url) => ({ kind: "link", url, span }))
+      ),
+      O.map(group("tag"), (tag) => ({ kind: "hashtag", tag, span })),
+      O.map(group("handle"), (handle) => ({ kind: "mention", account: { by: "handle", handle }, span })),
+    ]);
+  });
+
+/**
+ * **Details**
+ *
+ * Most sites send a biography as bare text: Instagram, Threads, TikTok,
+ * Snapchat, VSCO, OnlyFans and Fansly mark nothing in it. A reader names
+ * that wire field with this codec and receives the same {@link RichText} a
+ * site with entity data yields, every entity carrying the span it was found
+ * at. Encoding prints the text alone, since the entities are derived from it.
+ *
+ * A link is an `http(s)` URL, or a bare host followed by a path
+ * (`linktr.ee/jack`), read as `https`. A hashtag needs one letter, so
+ * `#1` stays text. A mention becomes a handle reference on the site of the
+ * enclosing value.
+ *
+ * **Gotchas**
+ *
+ * The mention rule is the widest any supported site allows: letters, digits,
+ * `_`, and inner `.` or `-`. Where a site sends its own entities, as X does
+ * for a profile description, decode those and leave this codec out. A bare
+ * host without a path (`example.org`) is left as text, because abbreviations
+ * read the same way.
+ *
+ * **Example** (Find what a bare biography refers to)
+ *
+ * ```ts import.meta.vitest name="Find what a bare biography refers to"
+ * import { RichTextFromString, hashtags } from "@beep/scratchpad/int/content"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * const bio = S.decodeUnknownOption(RichTextFromString)("#vanlife with @jack, more at linktr.ee/jack")
+ * O.map(bio, hashtags) // => O.some(["vanlife"])
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const RichTextFromString = S.String.pipe(
+  S.decodeTo(
+    RichText,
+    T.transform({
+      decode: (text): RichText.Encoded => ({
+        text,
+        entities: A.flatMap(A.fromIterable(Str.matchAll(Marks)(text)), (match) => A.fromOption(markOf(match))),
+      }),
+      encode: ({ text }) => text,
+    })
+  ),
+  $I.annoteSchema("RichTextFromString", {
+    description: "Reads bare text as rich text by finding its links, hashtags and mentions, and prints the text back.",
+  })
+);
+
+/**
+ * @category type-level
+ * @since 0.0.0
+ */
+export type RichTextFromString = typeof RichTextFromString.Type;
+
+/**
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace RichTextFromString {
+  /**
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = string;
 }
 
 const plain = RichText.pipe(
@@ -1457,6 +1551,14 @@ const Visibility = LiteralKit(["public", "private"]).pipe(
  * accounts behind a count are a separate, rarely available stream: see
  * {@link SiteReader}.
  *
+ * A profile points outward from two places. `links` holds the slots a site
+ * gives for it: one website on X, TikTok, Pinterest and Snapchat, up to five
+ * titled links on Instagram and Threads, a titled list on YouTube, Reddit
+ * and Facebook. `bio` holds whatever the account typed, with its hashtags,
+ * mentions and URLs as entities; a site that sends the biography as bare
+ * text is read through {@link RichTextFromString}. {@link outbound} joins the
+ * two and {@link elsewhere} reads them as accounts.
+ *
  * **Example** (Read a profile with a picture and counts)
  *
  * ```ts import.meta.vitest name="Read a profile with a picture and counts"
@@ -1602,6 +1704,87 @@ export const linked = (text: RichText): ReadonlyArray<Locator> =>
     A.filter(text.entities, TextEntity.guards.link),
     A.flatMap(({ url }) => A.fromOption(locatorOf(url.href)))
   );
+
+/**
+ * Every URL a profile points to: its link slots first, then the links
+ * written in its biography, each once.
+ *
+ * **Example** (Join the link slot and the biography)
+ *
+ * ```ts import.meta.vitest name="Join the link slot and the biography"
+ * import { Profile, outbound } from "@beep/scratchpad/int/content"
+ * import * as A from "effect/Array"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * const profile = S.decodeUnknownOption(Profile)({
+ *   source: "https://www.instagram.com/example",
+ *   account: { by: "handle", handle: "example" },
+ *   bio: { text: "shop", entities: [{ kind: "link", url: "https://shop.example/" }] },
+ *   links: [{ url: "https://shop.example/", title: "Shop" }, { url: "https://linktr.ee/example" }],
+ * })
+ * O.map(profile, (p) => A.map(outbound(p), ({ hostname }) => hostname)) // => O.some(["shop.example", "linktr.ee"])
+ * ```
+ *
+ * @category getters
+ * @since 0.0.0
+ */
+export const outbound = ({ bio, links }: Profile): ReadonlyArray<URL> =>
+  A.dedupeWith(
+    A.appendAll(
+      A.map(links, ({ url }) => url),
+      A.map(A.filter(bio.entities, TextEntity.guards.link), ({ url }) => url)
+    ),
+    (left, right) => left.href === right.href
+  );
+
+const sameLocator = S.toEquivalence(Locator);
+
+/**
+ * Accounts on supported sites that a profile points to, other than itself.
+ *
+ * **Details**
+ *
+ * Each of the profile's {@link outbound} URLs that a supported site routes is
+ * reduced to the listing of the account it names, so a link to one post
+ * counts as a link to its author. This is how an account on one site is
+ * tied to the same person's accounts on others.
+ *
+ * **Gotchas**
+ *
+ * A link through an aggregator or a shortener (`linktr.ee`, `youtu.be`,
+ * `vm.tiktok.com`) names no account until something follows it, so it
+ * yields nothing here.
+ *
+ * **Example** (Find the other accounts in a biography)
+ *
+ * ```ts import.meta.vitest name="Find the other accounts in a biography"
+ * import { Profile, elsewhere } from "@beep/scratchpad/int/content"
+ * import * as A from "effect/Array"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * const profile = S.decodeUnknownOption(Profile)({
+ *   source: "https://www.instagram.com/example",
+ *   account: { by: "handle", handle: "example" },
+ *   bio: { text: "snap me", entities: [{ kind: "link", url: "https://snapchat.com/add/example" }] },
+ *   links: [{ url: "https://x.com/example/status/20" }],
+ * })
+ * O.map(profile, (p) => A.map(elsewhere(p), ({ platform }) => platform)) // => O.some(["x", "snapchat"])
+ * ```
+ *
+ * @category getters
+ * @since 0.0.0
+ */
+export const elsewhere = (profile: Profile): ReadonlyArray<CollectionLocator> => {
+  const own = A.prepend(A.fromOption(landing(profile.source)), profile.source);
+  return pipe(
+    outbound(profile),
+    A.flatMap(({ href }) => A.fromOption(O.flatMap(locatorOf(href), landing))),
+    A.dedupeWith(sameLocator),
+    A.filter((locator) => !A.containsWith(sameLocator)(own, locator))
+  );
+};
 
 /**
  * Every account tagged on any gallery item of a post, in gallery order.
