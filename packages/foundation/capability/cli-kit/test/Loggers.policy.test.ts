@@ -14,8 +14,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { commandLines, isCommand } from "./helpers/runnerCommands.ts";
 
-/** A message part as `Array#join` writes it: a nullish part is empty. */
-const joinPart = (part: unknown): string => (P.isNullish(part) ? "" : String(part));
+const arrayJoinPart = (part: unknown): string => (P.isNullish(part) ? "" : String(part));
 
 const Json = S.fromJsonString(S.Unknown);
 
@@ -37,7 +36,6 @@ type Ci = "github-actions" | "generic" | "absent";
 
 const runtime = (ci: Ci) => (ci === "absent" ? Layer.empty : CurrentRuntimeEnv.layerTest({ ci: O.some(ci) }));
 
-/** Run `program` under the plain CliLogger and a captured Console, with an optional CurrentRuntimeEnv. */
 const plain = Effect.fn("plain")(function* (
   program: Effect.Effect<void>,
   ci: Ci = "absent",
@@ -52,7 +50,6 @@ const plain = Effect.fn("plain")(function* (
   return err;
 });
 
-/** The same under CliLog with a fixed format, level Debug, and the audience and terminal given. */
 const diagnostics = Effect.fn("diagnostics")(function* (
   program: Effect.Effect<void>,
   format: "json" | "pretty",
@@ -131,7 +128,7 @@ describe("CliLogger sanitises and, under GitHub Actions, neutralizes", () => {
   it.effect("a custom render receives sanitised string input and owns its own output", () =>
     Effect.gen(function* () {
       const painted = (m: unknown) =>
-        `${ESC}[1m${String(A.isArray(m) ? A.join(A.map(m, joinPart), " ") : m)}${ESC}[22m`;
+        `${ESC}[1m${String(A.isArray(m) ? A.join(A.map(m, arrayJoinPart), " ") : m)}${ESC}[22m`;
       const err = yield* plain(Effect.logError(`${ESC}[31mhostile${ESC}[0m`), "absent", { render: painted });
       assert.deepStrictEqual(err, [`${ESC}[1mhostile${ESC}[22m`]);
     })
@@ -156,8 +153,11 @@ describe("CliLog's pretty line sanitises and neutralizes", () => {
           audience
         );
         const text = A.join(err, "\n");
-        // The kit paints the level itself with a human on a colour terminal; nothing the message carried survives.
-        assert.notInclude(text, `${ESC}[31mred`);
+        assert.notInclude(
+          text,
+          `${ESC}[31mred`,
+          "the kit paints the level itself; nothing the message carried survives"
+        );
         assert.notInclude(text, `${ESC}]8`);
         assert.notInclude(text, `${ESC}[2J`);
         assert.notInclude(text, BEL);

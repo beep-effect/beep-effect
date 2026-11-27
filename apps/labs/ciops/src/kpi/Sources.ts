@@ -290,8 +290,7 @@ export class FleetManifestFacts extends S.Opaque<FleetManifestFacts, { readonly 
 
 const LOCK_SENTENCE = "Another Yeet full proof";
 
-// Reconciler-stamped reasons: `recordedAt` is the sweep, not the attempt's end (TTC ruling 75).
-const reconcilerReasons: ReadonlyArray<string> = ["legacy-unowned-start", "owner-dead", "stale-unverifiable-owner"];
+const sweepStampedReasons: ReadonlyArray<string> = ["legacy-unowned-start", "owner-dead", "stale-unverifiable-owner"];
 
 const attemptSchemaVersion = S.tag("yeet-attempt-journal/v1");
 const optionalString = S.OptionFromOptionalKey(S.String);
@@ -370,9 +369,8 @@ const finishedOutcome = (row: AttemptFinishedRow): AttemptOutcome =>
 const terminalOutcome = (row: TerminalRow): AttemptOutcome =>
   AttemptJournalRow.guards["attempt-finished"](row) ? finishedOutcome(row) : AttemptOutcome.Enum.red;
 
-// A reconciler-stamped termination keeps its order and stays red but ends no duration.
 const terminalInstant = (row: TerminalRow): O.Option<DateTime.Utc> =>
-  AttemptJournalRow.guards["attempt-terminated"](row) && A.contains(reconcilerReasons, row.reason)
+  AttemptJournalRow.guards["attempt-terminated"](row) && A.contains(sweepStampedReasons, row.reason)
     ? O.none()
     : O.some(row.recordedAt);
 
@@ -398,7 +396,6 @@ const toAttempt =
 const isTerminalRow = (row: AttemptJournalRow): row is TerminalRow =>
   AttemptJournalRow.guards["attempt-finished"](row) || AttemptJournalRow.guards["attempt-terminated"](row);
 
-// The first terminal row per attempt wins, in file order.
 const firstTerminals = (rows: ReadonlyArray<AttemptJournalRow>): HashMap.HashMap<string, TerminalRow> =>
   A.reduce(A.filter(rows, isTerminalRow), HashMap.empty<string, TerminalRow>(), (terminals, row) =>
     HashMap.has(terminals, row.attemptId) ? terminals : HashMap.set(terminals, row.attemptId, row)
@@ -460,7 +457,6 @@ export const decodeAttemptJournal = Effect.fn("KpiSources.decodeAttemptJournal")
   });
 });
 
-// Splits a YAML list block into its items: each item starts at a column-0 `- ` line.
 const listItems = (block: ReadonlyArray<string>): ReadonlyArray<ReadonlyArray<string>> => {
   const starts = A.getSomes(A.map(block, (line, index) => (Str.startsWith("- ")(line) ? O.some(index) : O.none())));
   return A.map(starts, (start, k) =>
@@ -645,8 +641,6 @@ const AdmissionCell = S.Union([S.String, S.Finite, S.Boolean, S.Null]);
 const decodeAdmissionRecord = S.decodeEffect(S.fromJsonString(S.Record(S.String, AdmissionCell)));
 const decodeKpiAdmissionRow = S.decodeUnknownEffect(KpiAdmissionRow);
 
-// Custody members differ by construction between the two sources (different salts and the
-// checkout surrogate); every other member must agree on a shared (nonce, tag) row.
 const custodyMembers: ReadonlyArray<string> = [
   "ownerRef",
   "ownerRefVariant",
@@ -659,7 +653,8 @@ const custodyMembers: ReadonlyArray<string> = [
 class SourcedAdmissionRow extends S.Opaque<SourcedAdmissionRow, { readonly brand: unique symbol }>()(
   S.Struct({ key: S.String, comparable: S.String, row: KpiAdmissionRow }).pipe(
     $I.annoteSchema("SourcedAdmissionRow", {
-      description: "An admission row with its dedupe key and its custody-free comparable form.",
+      description:
+        "Source salts and checkout surrogates differ, so the comparable form omits custody members; all other members must agree for a shared nonce and tag.",
     })
   )
 ) {}

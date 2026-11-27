@@ -456,8 +456,6 @@ describe("LiteralKit subset and match types", () => {
   });
 
   it("rejects an empty pick, an omit of every member, and a widened subset argument", () => {
-    // Type-only assertions: the function is never called, so the rejected
-    // calls do not run and only the checker sees them.
     const rejected = (): void => {
       // @ts-expect-error pick requires a non-empty tuple of members.
       Tier.pick([]);
@@ -467,7 +465,9 @@ describe("LiteralKit subset and match types", () => {
       // @ts-expect-error a widened array has no tuple shape for the checker to subset.
       Tier.omit(widened);
     };
-    expect(typeof rejected).toBe("function");
+    expect(typeof rejected, "the function is never called, so only the checker sees the rejected calls").toBe(
+      "function"
+    );
   });
 
   it("rejects cases that name no member", () => {

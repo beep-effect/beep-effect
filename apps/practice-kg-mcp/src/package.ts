@@ -22,12 +22,6 @@ import * as R from "effect/Record";
 import { assertBundleGraph } from "./BundleGraph.ts";
 import { PRACTICE_KG_EXTENSION_VERSION } from "./Version.ts";
 
-/*
- * Tool names DERIVE from the canonical PracticeKgToolkit so the shipped
- * manifest cannot drift from the served surface; only the human-facing
- * descriptions live here, and the keyed record type makes a toolkit tool
- * without a description entry a compile error.
- */
 const ManifestToolDescriptions: Readonly<Record<keyof typeof PracticeKgToolkit.tools, string>> = {
   claim_inspect_input:
     "Inspect every supplied claim record and page through possible antecedent-basis and dependency issues.",
@@ -59,7 +53,7 @@ const program = mcpbPackageProgram(
       "practice-kg-claims",
       "src/",
     ],
-    // The PGlite files bin.ts imports `with { type: "file" }`.
+
     assets: ["initdb.wasm", "pglite.data", "pglite.wasm"],
     manifest: McpbManifestFields.make({
       name: "beep-practice-kg",

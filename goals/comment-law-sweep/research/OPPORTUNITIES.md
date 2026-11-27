@@ -76,3 +76,9 @@
 - Doing: committing the w25 (`@beep/memfs` src) verifier's repairs on top of the author's commit.
 - Evidence: the verifier restored two original comments as residue; the staged hook reported `introduced=2` against the author's commit, while `laws comments` against the merge base reported `introduced=0`.
 - Prevention: the staged hook should measure against the branch's merge base with main, as the full law does, so restored originals are not flagged as new.
+
+## 2026-11-27: final-check gates killed when run inside the agent tool's process group
+
+- Doing: w50+51 (#3627) `yeet final-check` launched from the agent's shell tool, in the foreground and as a background task.
+- Evidence: in three runs, `lint:schema-first` exited 130 about 69 s into the cheap gates, with no output (`script "lint:schema-first" exited with code 130`); one run also got exit 137 from `lint:policy:medium`. The kernel and systemd-oomd logged no kills, the runner's capture timeout is 15 minutes, and the same lint passed standalone. The whole final-check passed when launched as its own `systemd-run --user` unit.
+- Prevention: launch final-check outside the tool's process group, either as a systemd unit or via a `--detach` mode on `yeet final-check` like the one detached proofs already have, then wait on its log or job.

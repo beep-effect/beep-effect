@@ -27,7 +27,6 @@ const withCapture = (lines: Array<string>) => {
     );
 };
 
-// vitest-agent's console-mode literal sets, the fixture the brief names.
 const accepts = {
   human: ["passthrough", "silent", "stream", "agent"],
   agent: ["passthrough", "silent", "agent"],
@@ -89,12 +88,10 @@ describe("EnvOverride.read", () => {
   it("the result type narrows to the union of the accepted literals (type-level)", () => {
     const program = EnvOverride.read({ envVar: "X", accepts });
     type Accepted = "passthrough" | "silent" | "stream" | "agent" | "ci-annotations";
-    // Assignable to exactly the five literals: a `string` result would not compile here.
-    const ok: Effect.Effect<O.Option<Accepted>, never, Audience> = program;
-    // And not narrower than the union: one literal is too small.
+    const assignsToFiveLiterals: Effect.Effect<O.Option<Accepted>, never, Audience> = program;
     const tooNarrow: typeof program extends Effect.Effect<O.Option<"stream">, never, Audience> ? true : false = false;
-    assert.isDefined(ok);
-    assert.isFalse(tooNarrow);
+    assert.isDefined(assignsToFiveLiterals, "a string result would not compile at this assignment");
+    assert.isFalse(tooNarrow, "not narrower than the union: one literal is too small");
   });
 });
 
@@ -159,11 +156,11 @@ describe("EnvOverride.readResult", () => {
 });
 
 describe("EnvOverride.readResult with a source", () => {
+  const conflictingAmbientEnv = { VITEST_AGENT_CONSOLE: "silent" };
   const readFrom = (source: Readonly<Record<string, string | undefined>> | ConfigProvider.ConfigProvider) =>
     EnvOverride.readResult({ envVar: "VITEST_AGENT_CONSOLE", accepts, source }).pipe(
       Effect.provideService(Audience, AudienceShape.make({ kind: "human", source: "override" })),
-      // The ambient environment says something else: a source wins over it.
-      withEnv({ VITEST_AGENT_CONSOLE: "silent" })
+      withEnv(conflictingAmbientEnv)
     );
 
   it.effect("a record is read fresh on every call", () =>
@@ -202,10 +199,9 @@ describe("EnvOverride.readResult with a source", () => {
 });
 
 describe("EnvOverride.readResult: testing a module-level reader (A8)", () => {
-  // A host's reader, built once at module level with no `source`: each read takes the fiber's provider.
-  const consoleMode = EnvOverride.readResult({ envVar: "VITEST_AGENT_CONSOLE", accepts });
+  const hostModuleLevelReader = EnvOverride.readResult({ envVar: "VITEST_AGENT_CONSOLE", accepts });
   const under = (env: Record<string, string>) =>
-    consoleMode.pipe(
+    hostModuleLevelReader.pipe(
       Effect.provideService(Audience, AudienceShape.make({ kind: "human", source: "override" })),
       withEnv(env)
     );

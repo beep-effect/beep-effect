@@ -35,10 +35,7 @@ import type { ExtractionHandoff } from "@beep/langextract/Handoff";
 import type { OfficeActionExtractionLabel as OfficeActionExtractionLabelValue } from "../OfficeActionReview/OfficeActionExtractionLabel.ts";
 import type { LawEntities } from "./IrToLaw.ports.ts";
 
-// The spike builds these entities from statically known-good shapes (fixed
-// fixture keys/literals + unconstrained extraction strings), so a decode failure
-// here is a construction defect, not input error — matching the
-// ClaimGate/ClaimProjection precedent.
+const orDieOnConstructionDefect = Effect.orDie;
 const decodeOfficeAction = S.decodeUnknownEffect(OfficeAction);
 const decodeClaim = S.decodeUnknownEffect(Claim);
 const decodePriorArtReference = S.decodeUnknownEffect(PriorArtReference);
@@ -158,7 +155,7 @@ const buildLawEntities = Effect.fn("law_practice.ir_to_law.build_entities")(func
       independent: true,
       patentAssetFixtureKey,
       text: claimText,
-    }).pipe(Effect.orDie),
+    }).pipe(orDieOnConstructionDefect),
     distinction: yield* decodeDistinction({
       ...spikeEntityInput("LawPracticeDistinction", 5),
       anchor: distinctionAnchor,
@@ -167,28 +164,28 @@ const buildLawEntities = Effect.fn("law_practice.ir_to_law.build_entities")(func
       fixtureKey: distinctionFixtureKey,
       lifecycleState: "candidate",
       rejectionFixtureKey,
-    }).pipe(Effect.orDie),
+    }).pipe(orDieOnConstructionDefect),
     officeAction: yield* decodeOfficeAction({
       ...spikeEntityInput("LawPracticeOfficeAction", 1),
       applicationNumber: officeActionText,
       fixtureKey: officeActionFixtureKey,
       matterFixtureKey: "matter.spike",
       patentAssetFixtureKey,
-    }).pipe(Effect.orDie),
+    }).pipe(orDieOnConstructionDefect),
     priorArtReference: yield* decodePriorArtReference({
       ...spikeEntityInput("LawPracticePriorArtReference", 3),
       documentNumber: "US 0,000,000 B2",
       fixtureKey: referenceFixtureKey,
       officeActionFixtureKey,
       title: referenceText,
-    }).pipe(Effect.orDie),
+    }).pipe(orDieOnConstructionDefect),
     rejection: yield* decodeRejection({
       ...spikeEntityInput("LawPracticeRejection", 4),
       claimFixtureKey,
       fixtureKey: rejectionFixtureKey,
       ground: { referenceFixtureKey, statute: "102" },
       officeActionFixtureKey,
-    }).pipe(Effect.orDie),
+    }).pipe(orDieOnConstructionDefect),
   };
 });
 

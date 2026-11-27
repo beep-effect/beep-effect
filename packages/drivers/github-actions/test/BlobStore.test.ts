@@ -49,7 +49,6 @@ const CONFIG: S3Config.Encoded = {
   secretAccessKey: Redacted.make("secret-key"),
 };
 
-/** Records every mask, so the declassification ordering is observable. */
 const recordingOutputs = () => {
   const masked: Array<string> = [];
   const layer = ActionOutputs.layerTest({
@@ -73,19 +72,10 @@ const s3 = (fake: typeof globalThis.fetch, config: S3Config.Encoded = CONFIG, ou
   );
 
 describe("SigV4", () => {
-  // The oracle is AWS's own published examples, not this implementation's
-  // output. That distinction was load-bearing: the first draft was checked
-  // against a remembered signature constant that turned out to belong to a
-  // different example, and only reproducing a value AWS publishes settled which
-  // side was wrong.
   it("reproduces AWS's documented canonical request for GET Object", () => {
     const { canonicalRequest } = canonicalize(
       {
         method: "GET",
-        // AWS's example is virtual-host addressed (the bucket is in the host),
-        // so the canonical path is just the key. The signer is agnostic — it
-        // signs whatever path it is given, which is what lets this same code
-        // serve the path-style addressing R2 and MinIO need.
         path: "test.txt",
         host: "examplebucket.s3.amazonaws.com",
         headers: { range: "bytes=0-9" },
@@ -99,8 +89,11 @@ describe("SigV4", () => {
         service: "s3",
       }
     );
-    // AWS documents this exact hash for the GET Object example.
-    assert.strictEqual(digestHex(canonicalRequest), "7344ae5b7ee6c3e7e6b0fe0640412a37625d1fbfff95c48bbb2dc43964946972");
+    assert.strictEqual(
+      digestHex(canonicalRequest),
+      "7344ae5b7ee6c3e7e6b0fe0640412a37625d1fbfff95c48bbb2dc43964946972",
+      "the oracle is AWS's published hash; its example is virtual-host addressed, so the path is just the key"
+    );
   });
 
   it("reproduces AWS's documented signing-key derivation", () => {
@@ -112,10 +105,11 @@ describe("SigV4", () => {
   });
 
   it("encodes the characters encodeURIComponent leaves alone", () => {
-    // `!'()*` are unreserved to encodeURIComponent and reserved to AWS. A key
-    // containing one signs one string and requests another, and the server says
-    // only `SignatureDoesNotMatch`.
-    assert.strictEqual(uriEncode("a!b'c(d)e*f"), "a%21b%27c%28d%29e%2Af");
+    assert.strictEqual(
+      uriEncode("a!b'c(d)e*f"),
+      "a%21b%27c%28d%29e%2Af",
+      "!'()* are reserved to AWS; left raw, the key signs one string, requests another, and gets SignatureDoesNotMatch"
+    );
     assert.strictEqual(uriEncode("plain-file_name.tar~gz"), "plain-file_name.tar~gz");
   });
 
@@ -151,9 +145,11 @@ describe("SigV4", () => {
     const credentials = { accessKeyId: "AK", secretAccessKey: "SK", region: "us-east-1", service: "s3" };
     const first = canonicalize({ ...request, headers: { "z-last": "1", "a-first": "2" } }, credentials);
     const second = canonicalize({ ...request, headers: { "a-first": "2", "z-last": "1" } }, credentials);
-    // The signature covers this exact string, so an order-dependent canonical
-    // form produces a valid-looking signature the server rejects.
-    assert.strictEqual(first.canonicalRequest, second.canonicalRequest);
+    assert.strictEqual(
+      first.canonicalRequest,
+      second.canonicalRequest,
+      "the signature covers this string; an order-dependent form signs validly and the server rejects it"
+    );
   });
 });
 
@@ -447,9 +443,11 @@ describe("BlobStore", () => {
               Meta
             );
 
-            // Path-style, not virtual-host: that is what makes one layer work
-            // against R2, MinIO and Spaces as well as AWS.
-            assert.strictEqual(seen[0]?.url, "https://account.r2.cloudflarestorage.com/cache/build/1");
+            assert.strictEqual(
+              seen[0]?.url,
+              "https://account.r2.cloudflarestorage.com/cache/build/1",
+              "path-style, not virtual-host, so one signer-agnostic layer serves R2, MinIO and Spaces as well as AWS"
+            );
             assert.strictEqual(seen[0]?.method, "PUT");
             assert.include(seen[0]?.authorization ?? "", "AWS4-HMAC-SHA256 Credential=AKIAEXAMPLE/");
           })
@@ -713,9 +711,6 @@ describe("BlobStore", () => {
     }
 
     {
-      // The reason the magic prefix exists: a store holding pre-envelope
-      // entries must produce a clean, named failure rather than decoding
-      // arbitrary bytes as metadata.
       const fake: typeof globalThis.fetch = fetchStub(
         () => new Response(new Uint8Array([1, 2, 3, 4, 5]), { status: 200 })
       );
@@ -723,7 +718,11 @@ describe("BlobStore", () => {
         it.effect("reports an unframed legacy blob as a typed miss, not as garbage metadata", () =>
           Effect.gen(function* () {
             const error = yield* Effect.flip(Effect.flatMap(BlobStore, (store) => store.get("legacy", Meta)));
-            assert.instanceOf(error, NotABlobEnvelopeError);
+            assert.instanceOf(
+              error,
+              NotABlobEnvelopeError,
+              "the magic prefix exists so pre-envelope entries fail clean and named, never decoded as metadata"
+            );
           })
         );
       });
@@ -743,8 +742,11 @@ describe("BlobStore", () => {
             yield* store.has("a");
 
             yield* store.has("b");
-            // Both credentials masked; once each, not once per request.
-            assert.deepStrictEqual(outputs.masked, ["secret-key", "session"]);
+            assert.deepStrictEqual(
+              outputs.masked,
+              ["secret-key", "session"],
+              "both credentials are masked in order, once each, not once per request"
+            );
           })
         );
       });

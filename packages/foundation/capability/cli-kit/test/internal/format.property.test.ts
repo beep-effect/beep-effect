@@ -66,7 +66,6 @@ const readTree = (
 ): ReadonlyArray<IssueEntry.Encoded> =>
   A.flatMap(nodes, (node) => {
     if (node.children !== undefined) return readTree(node.children, [...path, node.label]);
-    // Collapsed single leaves have the last segment followed by ': '.
     return O.match(Str.indexOf(": ")(node.label), {
       onNone: () => [{ message: node.label, path }],
       onSome: (separator) => [
@@ -74,8 +73,7 @@ const readTree = (
       ],
     });
   });
-// Messages without ': ' make the compact tree representation unambiguous.
-const entries = entry.pipe(
+const entriesWithoutColonSpace = entry.pipe(
   S.Array,
   Arbitrary.schema,
   Arbitrary.map((values) =>
@@ -84,7 +82,7 @@ const entries = entry.pipe(
 );
 it.effect.prop(
   "the issue trie has an idempotent parse/render form and retains every path and message",
-  [entries],
+  [entriesWithoutColonSpace],
   ([input]) =>
     Effect.sync(() => {
       const tree = issueTreeChildren(input);

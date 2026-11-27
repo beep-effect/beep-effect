@@ -1,10 +1,3 @@
-import { identity } from "effect/Function";
-// in-toto statements: the value a signer wraps and a verifier reads.
-//
-// Nothing here reaches `@sigstore/*` — building and inspecting a statement is
-// what lets a VERIFIER depend on the shapes alone, and it is half of why these
-// live in their own module rather than inside the signer.
-
 import {
   IN_TOTO_STATEMENT_V1,
   InTotoStatement,
@@ -17,6 +10,7 @@ import { assert, describe, it } from "@effect/vitest";
 import { assertFailure, assertSuccess, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -50,11 +44,13 @@ describe("Sha256Digest", () => {
   });
 
   it("normalizes uppercase hex to lowercase", () => {
-    // Both spellings name the same digest, and a subject that disagrees with a
-    // verifier on case is an attestation nobody can match.
     const parsed = Sha256Digest.parseResult(Str.toUpperCase(HEX));
     assertSuccess(parsed, digestOf(HEX));
-    assert.strictEqual(parsed.success, HEX);
+    assert.strictEqual(
+      parsed.success,
+      HEX,
+      "a subject that disagrees with a verifier on case is an attestation nobody can match"
+    );
   });
 
   it("rejects a digest of the wrong length", () => {
@@ -65,10 +61,10 @@ describe("Sha256Digest", () => {
   });
 
   it("rejects non-hex characters", () => {
-    // `g` is the discriminating character: right length, wrong alphabet.
+    const rightLengthWrongAlphabet = `g${Str.slice(1)(HEX)}`;
     assertFailure(
-      Sha256Digest.parseResult(`g${Str.slice(1)(HEX)}`),
-      InvalidSha256DigestError.make({ input: `g${Str.slice(1)(HEX)}` })
+      Sha256Digest.parseResult(rightLengthWrongAlphabet),
+      InvalidSha256DigestError.make({ input: rightLengthWrongAlphabet })
     );
     assertFailure(Sha256Digest.parseResult(""), InvalidSha256DigestError.make({ input: "" }));
   });
@@ -102,7 +98,7 @@ describe("InTotoSubject", () => {
   });
 });
 
-describe("InTotoStatement", () => {
+describe("InTotoStatement, built and inspected with no signer in reach", () => {
   const subject = InTotoSubject.forSha256("pkg:npm/left-pad@1.0.0", digestOf(HEX));
   const predicate = { hello: "world" };
 
@@ -168,8 +164,6 @@ describe("InTotoStatement", () => {
   });
 
   it("nests a typed predicate without wrapping or renaming a field of it", () => {
-    // The seam between the two halves of this package: a `SlsaProvenance` goes
-    // in as the predicate and comes out of the payload as its own JSON shape.
     const provenance = SlsaProvenance.forGitHubWorkflow({
       serverUrl: "https://github.com",
       repository: "effected/kit",
@@ -193,7 +187,11 @@ describe("InTotoStatement", () => {
     const parsed: unknown = Result.getOrThrowWith(S.decodeResult(UnknownJson)(statement.toJson()), identity);
     assertTrue(S.is(ProvenanceStatementJson)(parsed));
     assert.strictEqual(parsed.predicateType, "https://slsa.dev/provenance/v1");
-    assert.strictEqual(parsed.predicate.buildDefinition.buildType, SlsaProvenance.buildType);
+    assert.strictEqual(
+      parsed.predicate.buildDefinition.buildType,
+      SlsaProvenance.buildType,
+      "a SlsaProvenance predicate comes out of the payload as its own JSON shape"
+    );
   });
 });
 

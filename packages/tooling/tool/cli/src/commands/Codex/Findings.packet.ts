@@ -23,6 +23,7 @@ import { identity } from "effect/Function";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import { GOAL_HANDOFF_CLAUSE } from "../Goals/Goals.schemas.ts";
 import { CodexFindingSeverity } from "./Findings.capture.schemas.ts";
 import { CodexFindingsIngestError } from "./Findings.errors.ts";
 import { CodexSeverityCounts } from "./Findings.schemas.ts";
@@ -242,7 +243,7 @@ const manifestDocument = (plan: CodexPacketPlan): PacketDocument => {
           path: "GOAL.md",
           targetChars: 3500,
           maxChars: 4000,
-          command: `/goal follow the instructions in goals/${plan.slug}/GOAL.md`,
+          command: `/goal follow the instructions in goals/${plan.slug}/GOAL.md${GOAL_HANDOFF_CLAUSE}`,
         },
       ],
       source: {
@@ -481,7 +482,7 @@ const readmeDocument = (plan: CodexPacketPlan): PacketDocument => {
       "## Launch",
       "",
       "```text",
-      `/goal follow the instructions in goals/${plan.slug}/GOAL.md`,
+      `/goal follow the instructions in goals/${plan.slug}/GOAL.md${GOAL_HANDOFF_CLAUSE}`,
       "```",
       "",
       "`GOAL.md` is the compact launcher. `SPEC.md` remains the normative contract.",

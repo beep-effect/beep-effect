@@ -35,6 +35,9 @@ Workflow:
    `PLAN.md` P4 Closeout Checklist); `bun run beep lint reflection-artifacts`
    must pass.
 
+Hand-off: when the only work left is a step only Benjamin can do, name the step
+and what it unblocks, and stop.
+
 Acceptance:
 
 - [ ] `SPEC.md` acceptance criteria are satisfied.

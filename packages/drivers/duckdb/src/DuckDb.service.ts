@@ -203,8 +203,6 @@ type NativeUse<A, R = never> = (native: NativeConnection) => Effect.Effect<A, Du
 const ABORTED_TRANSACTION_MESSAGE =
   "DuckDB aborted this transaction after an earlier statement failed; COMMIT refused because DuckDB would roll it back silently";
 
-// The native DuckDB diagnostic of a classified failure, so legacy
-// `DuckDbError.message` names the real problem instead of the generic default.
 const nativeFailureMessage = (cause: unknown): O.Option<string> =>
   O.liftPredicate(cause, isSqlError).pipe(
     O.map((error) => error.reason.cause),
@@ -326,10 +324,8 @@ const acquireScopedSharedConnection = (options: DuckDbConnectionOptions, scope: 
         const native = yield* getConnection(operation);
         if (!finalizerRegistered) {
           finalizerRegistered = true;
-          // Close under the op lock so a statement still running at teardown
-          // settles first; closing mid-statement leaves its promise pending.
-          // The closed gate then refuses statements queued behind teardown.
-          yield* Scope.addFinalizer(scope, native.gate.close(releaseNativeConnection(native)));
+          const closeAfterRunningStatementSettles = native.gate.close(releaseNativeConnection(native));
+          yield* Scope.addFinalizer(scope, closeAfterRunningStatementSettles);
         }
         return native;
       })
@@ -421,10 +417,6 @@ const makeConnectionClient = (
                 operation: DuckDbOperation,
                 useNative: NativeUse<A, R>
               ): Effect.fn.Return<A, DuckDbError, R> {
-                // An interrupted statement is recorded as well: the gate sends
-                // DuckDB an INTERRUPT, which aborts the open transaction, and a
-                // caller that swallows the interruption (timeoutOption, race)
-                // would otherwise reach a COMMIT that DuckDB silently rolls back.
                 return yield* useNative(native).pipe(
                   Effect.tapError((error) =>
                     Effect.sync(() => {
@@ -603,6 +595,16 @@ export class DuckDb extends Context.Service<DuckDb, DuckDbShape>()($I`DuckDb`) {
    * The layer registers a scope finalizer that closes both the shared
    * connection and DuckDB instance. Use this constructor for application code
    * that wants native resources tied to an Effect scope.
+   *
+   * **Gotchas**
+   *
+   * Teardown closes the connection under its op lock, so a statement still
+   * running settles first (closing mid-statement would leave its promise
+   * pending); statements queued behind teardown then fail on the closed gate.
+   * Inside `withTransaction`, an interrupted statement counts as a failure:
+   * the gate sends DuckDB an INTERRUPT, which aborts the open transaction, so
+   * a caller that swallows the interruption (`timeoutOption`, `race`) gets a
+   * refused COMMIT instead of one DuckDB silently rolls back.
    *
    * **Example** (Scoped native service layer)
    *

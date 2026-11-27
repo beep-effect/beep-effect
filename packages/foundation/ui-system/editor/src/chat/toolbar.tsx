@@ -127,8 +127,6 @@ const INITIAL_STATE: SelectionState = {
   blockType: "paragraph",
 };
 
-// Maps a Lexical list type onto the toolbar's {@link BlockType}. Shared by the
-// direct-list and ancestor-list branches so the mapping lives in one place.
 const blockTypeFromListType = (listType: "number" | "bullet" | "check"): BlockType =>
   listType === "number" ? "number" : listType === "check" ? "check" : "bullet";
 
@@ -137,21 +135,10 @@ const blockTypeFromNode = Match.type<LexicalNode>().pipe(
   Match.when($isHeadingNode, (node) => node.getTag()),
   Match.when($isQuoteNode, F.constant(BlockType.Enum.quote)),
   Match.when($isCodeNode, F.constant(BlockType.Enum.code)),
-  // A table cell is the local block boundary. Do not climb to the table's
-  // top-level node: classify the nearest supported block inside this cell.
   Match.when($isTableCellNode, F.constant(BlockType.Enum.paragraph)),
   Match.orElse(() => undefined)
 );
 
-// The block type of the current selection, read from live editor state. Must run
-// inside a Lexical lexical-scope (`editorState.read` or `editor.update`), where
-// the `$`-prefixed helpers are valid.
-//
-// Block toggles must resolve this here rather than from the React snapshot in
-// {@link toolbarSelectionAtom}: the snapshot lags the editor by a render, so two
-// quick presses both saw the pre-toggle type and *created* a second block
-// instead of toggling back — nesting a code block inside a quote while both
-// buttons still reported unpressed.
 /**
  * Classifies the nearest supported block ancestor of the live range
  * selection, stopping at a table-cell boundary.
@@ -160,6 +147,10 @@ const blockTypeFromNode = Match.type<LexicalNode>().pipe(
  *
  * Must run inside a Lexical read/update scope. Exported so custom toolbars and
  * selection-focused tests share the exact same classification semantics.
+ *
+ * **Gotchas**
+ *
+ * Block toggles must classify the live selection here rather than use the React selection snapshot, which lags by a render. Two quick presses otherwise see the same old type and nest a second block instead of toggling back.
  *
  * **Example** (Read selection block type)
  *
@@ -187,10 +178,7 @@ export const $selectionBlockType = (): BlockType => {
   return "paragraph";
 };
 
-// Reads the current selection's marks + block type. Must run inside an
-// editorState.read (a Lexical lexical-scope), where the `$`-prefixed helpers are
-// valid.
-const computeSelectionState = (): SelectionState => {
+const $computeSelectionState = (): SelectionState => {
   const selection = $getSelection();
   if (!$isRangeSelection(selection)) return INITIAL_STATE;
   return {
@@ -225,24 +213,22 @@ const computeSelectionState = (): SelectionState => {
 export const toolbarSelectionAtom = Atom.family((editor: LexicalEditor) =>
   Atom.make((get) => {
     get.addFinalizer(
-      editor.registerUpdateListener(({ editorState }) => get.setSelf(editorState.read(computeSelectionState)))
+      editor.registerUpdateListener(({ editorState }) => get.setSelf(editorState.read($computeSelectionState)))
     );
     get.addFinalizer(
       editor.registerCommand(
         SELECTION_CHANGE_COMMAND,
         () => {
-          get.setSelf(editor.getEditorState().read(computeSelectionState));
+          get.setSelf(editor.getEditorState().read($computeSelectionState));
           return false;
         },
         COMMAND_PRIORITY_LOW
       )
     );
-    return editor.getEditorState().read(computeSelectionState);
+    return editor.getEditorState().read($computeSelectionState);
   })
 );
 
-// Keep the editor selection alive: a toolbar press must not blur the editor
-// before the format/command dispatch runs.
 const preventBlur = (event: { preventDefault: () => void }): void => event.preventDefault();
 
 interface ToolbarToggleProps {
@@ -251,12 +237,6 @@ interface ToolbarToggleProps {
   readonly onClick: () => void;
   readonly pressed: boolean;
 }
-
-// Toggleable text marks (bold/italic/underline/strikethrough/inline-code). The
-// canonical `Toggle` surfaces an unmistakable pressed state via `data-[pressed]`
-// (accent fill + foreground) in both light and dark themes. We drive `pressed`
-// straight from the selection atom and dispatch on press, so the Lexical command
-// — not the toggle's internal state — remains the source of truth.
 function ToolbarToggle({ pressed, label, onClick, children }: ToolbarToggleProps): JSX.Element {
   return (
     <Toggle size="sm" aria-label={label} title={label} pressed={pressed} onMouseDown={preventBlur} onClick={onClick}>
@@ -271,11 +251,6 @@ interface ToolbarButtonProps {
   readonly label: string;
   readonly onClick: () => void;
 }
-
-// One-shot / block actions (lists, quote, code block). These render the same
-// canonical `Toggle` as the text marks, with `pressed` driven by the active
-// block type, so the active state reads identically across the bar and Base UI
-// reports it through `aria-pressed`.
 function ToolbarButton({ active = false, label, onClick, children }: ToolbarButtonProps): JSX.Element {
   return (
     <ToolbarToggle pressed={active} label={label} onClick={onClick}>
@@ -314,7 +289,6 @@ export function FixedToolbarPlugin(): JSX.Element {
     editor.update(() => {
       const selection = $getSelection();
       if ($isRangeSelection(selection)) {
-        // Toggle against the live block type, never the rendered snapshot.
         $setBlocksType<ElementNode>(
           selection,
           $selectionBlockType() === target ? () => $createParagraphNode() : create

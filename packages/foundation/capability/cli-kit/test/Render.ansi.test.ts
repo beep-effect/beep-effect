@@ -30,7 +30,6 @@ const ansi = (doc: ReadonlyArray<Block>, overrides: Partial<RenderContext.Encode
 const plain = (doc: ReadonlyArray<Block>, overrides: Partial<RenderContext.Encoded> = {}) =>
   Effect.map(contextOf(overrides), (ctx) => Render.plain(doc, ctx));
 
-/** A context whose paint marks tokens, so a test decodes them; hyperlinks are off unless a test turns them on. */
 const TOKENS = { paint: tokenPaint, link: labelLink } as const;
 const OFF = {
   color: "none",
@@ -320,8 +319,11 @@ describe("Render.ansi: layout under colour (paint after cut)", () => {
           const out = yield* ansi(composite({ codeAndPath: true }), { link, width });
           assert.deepStrictEqual(sgrProblems(out), [], `width ${width}: SGR balanced`);
           assert.isTrue(linksOf(out).balanced, `width ${width}: hyperlinks balanced`);
-          // Nothing but the renderer's own SGR and OSC 8 is left: no ESC, BEL or other control character.
-          assert.notMatch(stripAnsi(out), CONTROL, `width ${width}: no smuggled control character`);
+          assert.notMatch(
+            stripAnsi(out),
+            CONTROL,
+            `width ${width}: nothing but the renderer's own SGR and OSC 8 is left`
+          );
         }
       })
   );

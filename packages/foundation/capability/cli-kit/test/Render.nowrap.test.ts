@@ -15,12 +15,11 @@ import type { AudienceKind } from "@beep/runtime-env";
 const ESC = String.fromCharCode(0x1b);
 const strip = (text: string): string => Str.replace(new RegExp(`${ESC}\\[[0-9;]*m`, "g"), "")(text);
 
-/** A finding wider than 80 columns: a reader greps it by `path:line:col`, so it must stay on one line. */
-const PATH = `/very/long/absolute/path/${Str.repeat(4)("deeply/nested/")}file.ts:12:3`;
+const GREPPED_FINDING_PATH = `/very/long/absolute/path/${Str.repeat(4)("deeply/nested/")}file.ts:12:3`;
 const finding = [
   Doc.status(Status.core, "failure"),
   " ",
-  PATH,
+  GREPPED_FINDING_PATH,
   "  rule-name  ",
   Doc.text("a message that runs on", "muted"),
 ];
@@ -115,7 +114,11 @@ describe("Render.context's width follows the stream's terminal for a human", () 
       Effect.gen(function* () {
         const lines = yield* printed([Doc.paragraph(...finding)]);
         assert.lengthOf(lines, 1);
-        assert.include(lines[0], `✗ ${PATH}`);
+        assert.include(
+          lines[0],
+          `✗ ${GREPPED_FINDING_PATH}`,
+          "a reader greps a finding by path:line:col, so it stays on one line"
+        );
       })
     );
   });
@@ -128,7 +131,7 @@ describe("Doc.line with wrap: false", () => {
       for (const render of [Render.plain, Render.ansi, Render.githubLog, Render.markdown]) {
         const text = render([Doc.line(finding, { wrap: false })], ctx);
         assert.lengthOf(Str.split(text, "\n"), 1, `${audience} ${render === Render.plain ? "plain" : "other"}`);
-        assert.include(strip(text), PATH);
+        assert.include(strip(text), GREPPED_FINDING_PATH);
       }
     }
     const human = Render.ansi(
@@ -156,7 +159,7 @@ describe("Doc.line with wrap: false", () => {
     const text = Render.plain([Doc.list([Doc.line(finding, { wrap: false }), Doc.paragraph(PROSE)])], ctx);
     const lines = Str.split(text, "\n");
     assert.lengthOf(
-      A.filter(lines, (line) => Str.includes(PATH)(line)),
+      A.filter(lines, (line) => Str.includes(GREPPED_FINDING_PATH)(line)),
       1
     );
     assert.isAbove(lines.length, 3, "the prose item wrapped");

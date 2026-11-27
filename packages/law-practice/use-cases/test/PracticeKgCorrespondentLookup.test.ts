@@ -75,12 +75,14 @@ describe("practice KG correspondent lookup contract", () => {
   });
 
   it("refuses a family key that is not keyed to the link's client or is not a matter of the bundle", () => {
-    expect([
-      // the attorney's own matter number has the dotted shape but is no matter (D-20)
-      decide({ links: [link("attorney-answer", "11111.00012")] }),
-      decide({ links: [link("attorney-answer", "22222.30002")] }),
-      decide({ links: [link("attorney-answer", "11111.20001")], matterFamilyKeys: [] }),
-    ]).toStrictEqual(A.replicate(["ambiguous", null], 3));
+    expect(
+      [
+        decide({ links: [link("attorney-answer", "11111.00012")] }),
+        decide({ links: [link("attorney-answer", "22222.30002")] }),
+        decide({ links: [link("attorney-answer", "11111.20001")], matterFamilyKeys: [] }),
+      ],
+      "the first key, the attorney's own matter number, has the dotted shape but is no matter"
+    ).toStrictEqual(A.replicate(["ambiguous", null], 3));
   });
 
   it("refuses role mailboxes, practice addresses, shared and unknown addresses", () => {

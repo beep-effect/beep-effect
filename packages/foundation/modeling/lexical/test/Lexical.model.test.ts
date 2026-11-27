@@ -43,7 +43,6 @@ import type { SerializedTableCellNode } from "@lexical/table";
 
 const UnknownJson = S.fromJsonString(S.Unknown);
 
-// LexicalNode's strict decoders reject excess properties, as the retired statics did.
 const strictSemanticParseOptions = { onExcessProperty: "error" } satisfies SchemaAST.ParseOptions;
 const decodeStrictLexicalNodeResult = S.decodeUnknownResult(LexicalNode, strictSemanticParseOptions);
 const decodeStrictLexicalNodeOption = S.decodeUnknownOption(LexicalNode, strictSemanticParseOptions);
@@ -135,12 +134,7 @@ const paragraphNode = (children: ReadonlyArray<ReturnType<typeof text>>) => ({
   textStyle: "",
 });
 
-/**
- * Encoded fixture mirroring what Lexical 0.45 writes for an assistant turn:
- * heading, paragraph (with the 0.45 required paragraph fields), quote, code,
- * check list, link, and the package-owned artifact-ref block.
- */
-const fixture = {
+const lexical045AssistantTurn = {
   root: {
     ...element,
     type: "root",
@@ -285,9 +279,9 @@ const fixture = {
 
 describe("Lexical.model", { concurrent: false }, () => {
   it("decodes the fixture editor state and captures nullish wire values as Options", () => {
-    const state = decoded(decodeUnknownSerializedEditorStateResult(fixture));
+    const state = decoded(decodeUnknownSerializedEditorStateResult(lexical045AssistantTurn));
 
-    pipe(SerializedEditorState.decodeOption(fixture), O.isSome, assertTrue);
+    pipe(SerializedEditorState.decodeOption(lexical045AssistantTurn), O.isSome, assertTrue);
     assertNone(state.root.direction);
     assertNone(state.root.textFormat);
     expect(A.map(state.root.children, (node) => node.type)).toEqual([
@@ -342,7 +336,7 @@ describe("Lexical.model", { concurrent: false }, () => {
   it("rejects values outside nullish optional field domains", () => {
     const invalidDirection = {
       root: {
-        ...fixture.root,
+        ...lexical045AssistantTurn.root,
         direction: "sideways",
       },
     };
@@ -351,16 +345,16 @@ describe("Lexical.model", { concurrent: false }, () => {
   });
 
   it("round-trips the fixture through decode/encode without wire drift", () => {
-    const state = decoded(decodeUnknownSerializedEditorStateResult(fixture));
-    expect(decoded(encodeSerializedEditorStateResult(state))).toEqual(fixture);
+    const state = decoded(decodeUnknownSerializedEditorStateResult(lexical045AssistantTurn));
+    expect(decoded(encodeSerializedEditorStateResult(state))).toEqual(lexical045AssistantTurn);
   });
 
   it("round-trips through the JSON string codec", () => {
-    const json = Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(fixture), identity);
+    const json = Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(lexical045AssistantTurn), identity);
     const state = decoded(decodeEditorStateFromJsonResult(json));
     expect(
       Result.getOrThrowWith(S.decodeResult(UnknownJson)(decoded(encodeEditorStateFromJsonResult(state))), identity)
-    ).toEqual(fixture);
+    ).toEqual(lexical045AssistantTurn);
   });
 
   it.prop(
@@ -1004,7 +998,7 @@ describe("Lexical.model", { concurrent: false }, () => {
   });
 
   it("projects plain text", () => {
-    const state = decoded(decodeUnknownSerializedEditorStateResult(fixture));
+    const state = decoded(decodeUnknownSerializedEditorStateResult(lexical045AssistantTurn));
     const plain = editorStateToPlainText(state);
     expect(plain).toContain("Plan");
     expect(plain).toContain("See the docs");
@@ -1034,7 +1028,6 @@ describe("Lexical.model", { concurrent: false }, () => {
   });
 });
 
-// The arbitrary compiler consumes decode only; verify the advertised encoding separately.
 it.effect.prop(
   "encodes SerializedEditorState through its generation link",
   { value: Arbitrary.schema(SerializedEditorState) },
@@ -1049,7 +1042,9 @@ it.effect.prop(
       SchemaAST.decodeTo(link.to, SchemaAST.toType(SerializedEditorState.ast), link.transformation)
     );
     const encoded = yield* S.encodeEffect(codec)(value);
-    expect(encoded).toEqual([]);
+    expect(encoded, "the arbitrary compiler consumes decode only, so the advertised encoding is checked here").toEqual(
+      []
+    );
   }),
   { arbitrary: fcRuns(50) }
 );

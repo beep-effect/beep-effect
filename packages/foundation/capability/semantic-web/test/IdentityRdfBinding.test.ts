@@ -314,7 +314,6 @@ describe("identity RDF binding", () => {
   );
 });
 
-// The arbitrary compiler consumes decode only; verify the advertised encoding separately.
 it.effect.prop(
   "encodes IdentityRdfBinding through its generation link",
   [Arbitrary.schema(IdentityRdfBinding)],
@@ -330,7 +329,10 @@ it.effect.prop(
         SchemaAST.decodeTo(link.to, SchemaAST.toType(IdentityRdfBinding.ast), link.transformation)
       );
       const encoded = yield* S.encodeEffect(codec)(value);
-      expect(encoded).toEqual(R.keys(value.fiberPaths));
+      expect(
+        encoded,
+        "the arbitrary compiler consumes decode only, so the advertised encoding is checked here"
+      ).toEqual(R.keys(value.fiberPaths));
       return true;
     }),
   { arbitrary: fcRuns(50) }

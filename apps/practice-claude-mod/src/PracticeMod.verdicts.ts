@@ -34,38 +34,22 @@ const StoredItems = S.Array(KgAnswerItem);
 const StoredRows = S.Array(VerdictRow);
 const RowLine = S.fromJsonString(VerdictRow);
 
-/**
- * The item already carries a lock, so no further verdict is accepted.
- *
- * @category errors
- * @since 0.0.0
- */
 class VerdictLocked extends S.TaggedError<VerdictLocked, { readonly brand: unique symbol }>($I`VerdictLocked`)(
   "VerdictLocked",
   { itemId: S.NonEmptyString },
   $I.annote("VerdictLocked", { description: "A verdict was refused because its item is locked." })
 ) {}
 
-/**
- * The stored rows did not decode, so the log refuses to write over them.
- *
- * @category errors
- * @since 0.0.0
- */
 class VerdictStoreUnreadable extends S.TaggedError<VerdictStoreUnreadable, { readonly brand: unique symbol }>(
   $I`VerdictStoreUnreadable`
 )(
   "VerdictStoreUnreadable",
   { key: S.NonEmptyString, message: S.String },
-  $I.annote("VerdictStoreUnreadable", { description: "The plugin store held verdict data that did not decode." })
+  $I.annote("VerdictStoreUnreadable", {
+    description: "Stored verdict data failed to decode, so the log refuses to overwrite it.",
+  })
 ) {}
 
-/**
- * Everything a verdict log call can fail with.
- *
- * @category errors
- * @since 0.0.0
- */
 type VerdictLogError = VerdictLocked | VerdictStoreUnreadable | ModHostError;
 
 /**
@@ -150,7 +134,6 @@ const writeStored = Effect.fn("VerdictLog.writeStored")(function* <A, I>(
   yield* host.storeSet(key, encoded);
 });
 
-// Decode the old wire format before converting it; legacy revisions were zero-based.
 const LegacyRow = S.Struct({
   schemaVersion: S.tag("practice-verdict/v1"),
   itemId: S.NonEmptyString.check(S.isPattern(/^kg-answer:.+:.+$/)),
@@ -159,7 +142,11 @@ const LegacyRow = S.Struct({
   revision: S.Natural,
   recordedAt: S.DateTimeUtcFromString,
   lockedAt: S.OptionFromNullOr(S.DateTimeUtcFromString),
-}).pipe($I.annoteSchema("LegacyVerdictRow", { description: "The untouched practice-verdict/v1 store format." }));
+}).pipe(
+  $I.annoteSchema("LegacyVerdictRow", {
+    description: "Legacy zero-based practice-verdict/v1 rows decoded before migration.",
+  })
+);
 
 const legacyBatch = (itemId: string) =>
   ReviewBatchId.make(`session:${pipe(itemId, Str.slice(10), Str.split(":"), A.dropRight(1), A.join(":"))}`);
@@ -194,9 +181,6 @@ const MigratedRows = S.Array(LegacyRow).pipe(
   )
 );
 
-// The envelope rule: an item's current verdict is the row with the greatest
-// recordedAt, a tie going to the row appended last; lock rows never count as
-// verdicts. Revisions restart per batch, so they never break ties.
 const currentVerdictFor = (rows: ReadonlyArray<VerdictRow>, itemId: string): O.Option<VerdictRow> =>
   A.reduce(rows, O.none<VerdictRow>(), (latest, row) =>
     row.itemId !== itemId || O.isSome(row.lockedAt)
@@ -210,12 +194,15 @@ const currentVerdictFor = (rows: ReadonlyArray<VerdictRow>, itemId: string): O.O
         })
   );
 
-// A lock closes one batch: any lock row in it refuses further writes.
 const batchLocked = (rows: ReadonlyArray<VerdictRow>, batchId: string): boolean =>
   A.some(rows, (row) => row.batchId === batchId && O.isSome(row.lockedAt));
 
 /**
  * Builds the verdict log over the mod host's store.
+ *
+ * **Gotchas**
+ *
+ * An item’s current verdict has the greatest recordedAt, with append order breaking ties. Lock rows never count as verdicts; revisions restart per batch and cannot break ties.
  *
  * **Example** (Reference the constructor)
  *
@@ -231,8 +218,8 @@ const batchLocked = (rows: ReadonlyArray<VerdictRow>, batchId: string): boolean 
  */
 export const makeVerdictLog = Effect.gen(function* () {
   const host = yield* ModHost;
-  // record reads, appends and writes the stored rows; serialize it so two
-  // overlapping records cannot both append to the same snapshot.
+
+  // decision: shared-plugin-write-permits
   const writes = yield* Semaphore.make(1);
 
   const readRows = Effect.fn("VerdictLog.readRows")(function* () {

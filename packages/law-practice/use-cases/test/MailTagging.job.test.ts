@@ -61,13 +61,11 @@ const clientReply = envelope({
   hasAttachments: true,
 });
 
-// The same contact address listed under a second matter.
 const sharedContactIndex = MatterIndex.make({
   builtAt: since,
   entries: [acmeEntry, MatterIndexEntry.make({ ...globexEntry, contactAddresses: acmeEntry.contactAddresses })],
 });
 
-// Contact-only mail: a known contact, a domain-only sender, and a reply to a contact two matters share.
 const contactOnlyMail = [
   envelope({ at: 1, subject: "Quick question", sender: "counsel@acme.example.test" }),
   envelope({ at: 2, subject: "Invoice copy", sender: "paralegal@acme.example.test" }),
@@ -90,7 +88,6 @@ const clientWorld = (matters: MatterIndex) =>
 
 const tiedLater = envelope({ at: 2, id: "msg-2b", subject: "Third notice for 16/123,456" });
 
-/** Two messages share an instant across a page break: msg-2 ends page 1, msg-2b opens page 2. */
 const tiedMailbox = () =>
   scenario({
     envelopes: [
@@ -356,7 +353,10 @@ describe("MailTagging job", () => {
         const interrupted = yield* Ref.get(state.checkpoint);
 
         assertInstanceOf(failure, MailTaggingPortError);
-        expect(A.flatMap(O.toArray(interrupted), (saved) => saved.coveredAtBoundary)).toStrictEqual(["msg-2"]);
+        expect(
+          A.flatMap(O.toArray(interrupted), (saved) => saved.coveredAtBoundary),
+          "msg-2 and msg-2b share an instant across a page break: msg-2 ends page 1, msg-2b opens page 2"
+        ).toStrictEqual(["msg-2"]);
         const categoriesById30 = yield* state.categoriesById("msg-2b");
         expect(categoriesById30).toStrictEqual([]);
         const got31 = yield* Ref.get(state.tagRecords);
@@ -477,7 +477,10 @@ describe("MailTagging job contact-only near misses", () => {
         const applied = yield* run("apply", runId);
 
         for (const report of [preview, applied]) {
-          expect(report.unmatched).toStrictEqual({
+          expect(
+            report.unmatched,
+            "a known contact, a domain-only sender and a reply to a contact two matters share all stay below the threshold"
+          ).toStrictEqual({
             "no-signal": 0,
             "below-threshold": 3,
             ambiguous: 0,

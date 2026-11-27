@@ -52,12 +52,6 @@ import { simulateStream } from "./Simulation.ts";
 import type { AdmissionPriority, AdmissionWorkKind } from "../projection/Schemas.ts";
 import type { ReplayArmSpec, ReplayEtaEstimator } from "./Schemas.ts";
 
-/**
- * One admitted-and-released nonce joined from the journal.
- *
- * @category models
- * @since 0.0.0
- */
 interface RecordedChain {
   readonly admittedAtMillis: number;
   readonly checkoutKey: string;
@@ -79,7 +73,6 @@ interface ChainRows {
 
 const emptyRows: ChainRows = { admitted: O.none(), checkoutKey: O.none(), releasedAtMillis: O.none() };
 
-// v3 rows carry the checkout as an optional key; a legacy row carries none.
 const nonEmptyCheckout = (event: object): O.Option<string> =>
   "checkoutRoot" in event && O.isOption(event.checkoutRoot)
     ? O.filter(event.checkoutRoot as O.Option<string>, Str.isNonEmpty)
@@ -128,7 +121,7 @@ const joinChains = (
       priority: admitted.priority,
       weightTokens: admitted.weightTokens,
       originKey: admitted.originKey,
-      // A chain without checkout attribution is its own checkout.
+
       checkoutKey: O.getOrElse(rows.checkoutKey, () => nonce),
       enqueuedAtMillis: admitted.enqueuedAtMillis,
       admittedAtMillis: admitted.admittedAtMillis,
@@ -140,7 +133,6 @@ const joinChains = (
   return { chains, skipped: A.length(joined) - A.length(chains) };
 };
 
-// Nearest rank: the smallest sample with at least `permille` of the population at or below it.
 const nearestRank = (sorted: ReadonlyArray<number>, permille: number): number =>
   A.match(sorted, {
     onEmpty: () => 0,
@@ -189,7 +181,6 @@ const releaseOrder: Order.Order<RecordedChain> = Order.mapInput(
   (chain: RecordedChain) => chain.releasedAtMillis
 );
 
-// The ETA a chain declares: the quantile of its kind's holds released by its enqueue instant.
 const causalEta = (
   estimator: ReplayEtaEstimator,
   released: ReadonlyArray<RecordedChain>,
@@ -344,8 +335,6 @@ export const replayTailWaits = Effect.fn("BackfillModel.replayTailWaits")(functi
   });
 });
 
-// The tags the replay reads. A row carrying one of them that does not decode is schema drift; any
-// other line (a worker `admission-routed` row, a torn tail, a tag this lab does not know) is opaque.
 const ReplayTag = S.Literals([
   "admission-admitted",
   "admission-released",

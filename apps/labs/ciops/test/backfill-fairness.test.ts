@@ -28,13 +28,6 @@ import { simulateStream } from "@/backfill/Simulation";
 import { PosInt } from "@/projection/PosInt";
 import type { VerdictFunction } from "@/backfill/Policy";
 
-// SCHE-06 property laws (goals/local-proof-under-ten SPEC "SCHE-06", PLAN slice 11):
-// capacity is never exceeded, every unit is admitted, a protected unit is admitted
-// within its conditional bound when ETAs hold, a breached bound disables backfill,
-// fairness orders unprotected work by recent origin then checkout usage, and the
-// model equals the deployed scheduler when its new modes are off or no unit carries
-// an ETA (tier units). Mutants prove the laws can fail.
-
 const policy = BackfillPolicy.make({
   capacityTokens: PosInt.make(10),
   publishAgingMillis: PosInt.make(120_000),
@@ -63,8 +56,6 @@ type ArrivalSeed = typeof ArrivalSeed.Type;
 
 const StreamSeed = S.Array(ArrivalSeed).check(S.isMaxLength(24));
 
-// The true hold given the declared ETA: honest holds never pass it (a crash or an
-// early finish ends sooner); overruns always do.
 type HoldRule = (etaMillis: number, permille: number, etaKnown: boolean) => number;
 
 const honestHold: HoldRule = (etaMillis, permille) => N.max(1, Math.floor((etaMillis * permille) / 1_000));
@@ -113,8 +104,6 @@ const arrival = (
 const admittedEvents = (report: SimulationReport) => A.filter(report.events, SimulationEvent.guards.Admitted);
 const breachEvents = (report: SimulationReport) => A.filter(report.events, SimulationEvent.guards.BoundBreached);
 
-// Replays the journal and counts backfill admissions made while a waiting unit
-// was past its stamped deadline.
 const backfillsWhileBreached = (report: SimulationReport): number =>
   A.reduce(report.events, { deadlines: HashMap.empty<string, number>(), violations: 0 }, (acc, event) =>
     SimulationEvent.match(event, {
@@ -142,9 +131,7 @@ const outcomeOrder = (report: SimulationReport) =>
 
 const reportEquivalence = S.toEquivalence(SimulationReport);
 
-// The deployed scheduler without skippable tickets: rank, enqueue instant, nonce,
-// and a contender attempts only as the head and only when it fits.
-const deployedOrder = (nowMillis: number): Order.Order<QueuedUnit> =>
+const deployedHeadOnlyOrder = (nowMillis: number): Order.Order<QueuedUnit> =>
   Order.combineAll([
     Order.mapInput(Order.Number, (unit: QueuedUnit) =>
       unit.priority === "publish" || nowMillis - unit.enqueuedAtMillis >= policy.publishAgingMillis ? 0 : 1
@@ -156,7 +143,7 @@ const deployedOrder = (nowMillis: number): Order.Order<QueuedUnit> =>
 const deployedMayAttempt = (view: SchedulerView, nonce: string): boolean => {
   const active = N.sumAll(A.map(view.running, (lease) => lease.weightTokens));
   return pipe(
-    A.head(A.sort(view.waiting, deployedOrder(view.nowMillis))),
+    A.head(A.sort(view.waiting, deployedHeadOnlyOrder(view.nowMillis))),
     O.exists((head) => head.nonce === nonce && active + head.weightTokens <= policy.capacityTokens)
   );
 };
@@ -226,8 +213,6 @@ const usageOf = (view: SchedulerView, originKey: string): number =>
 const rankOf = (view: SchedulerView, unit: QueuedUnit): number =>
   unit.priority === "publish" || view.nowMillis - unit.enqueuedAtMillis >= policy.publishAgingMillis ? 0 : 1;
 
-// Mutants. Greedy backfill admits anything that fits, ignoring the head's start;
-// fairness without protection or aging lets fresh origins overtake an old unit forever.
 const greedyBackfill: VerdictFunction = (view, mutantPolicy, nonce) => {
   const verdict = attemptVerdict(view, mutantPolicy, nonce);
   const active = N.sumAll(A.map(view.running, (lease) => lease.weightTokens));
@@ -251,8 +236,6 @@ const unprotectedOrdering: VerdictFunction = (view, mutantPolicy, nonce) =>
     nonce
   );
 
-// One unit holds 6 tokens, a full-capacity unit queues behind it, then a train of
-// one-token units arrives continuously.
 const tinyTrain = (trainLength: number, intervalMillis: number, tinyHoldMillis: number, blockerHoldMillis: number) =>
   A.appendAll(
     [arrival("blocker", "origin-blocker", 6, 0, blockerHoldMillis), arrival("big", "origin-big", 10, 1, 60_000)],
@@ -261,8 +244,6 @@ const tinyTrain = (trainLength: number, intervalMillis: number, tinyHoldMillis: 
     )
   );
 
-// Origin A has run before; full-capacity units from fresh origins arrive faster
-// than they finish.
 const freshOriginTrain = A.appendAll(
   [arrival("warm", "origin-a", 10, 0, 1_000), arrival("old", "origin-a", 10, 500, 60_000)],
   A.makeBy(12, (index) => arrival(`fresh-${index}`, `origin-fresh-${index}`, 10, 600 + index * 50_000, 60_000))
@@ -291,12 +272,12 @@ it.layer(BackfillModelLive, { timeout: "60 seconds" })("@beep/ciops SCHE-06 back
             BoundBreached: () => undefined,
           });
         }
-        // Enqueue rows follow the simulator's (instant, nonce) order, so match each row to its arrival by nonce.
+
         const requested = HashMap.fromIterable(
           A.map(arrivalsFrom(seeds, overrunHold), (unit) => [unit.nonce, unit.requestedWeightTokens] as const)
         );
         for (const enqueued of A.filter(report.events, SimulationEvent.guards.Enqueued)) {
-          expect(enqueued.clamped).toBe(
+          expect(enqueued.clamped, "enqueue rows sort by instant and nonce, so requested weights join by nonce").toBe(
             O.exists(HashMap.get(requested, enqueued.nonce), (weight) => weight > policy.capacityTokens)
           );
         }
@@ -367,10 +348,13 @@ it.layer(BackfillModelLive, { timeout: "60 seconds" })("@beep/ciops SCHE-06 back
           O.map(big, (outcome) => outcome.nonce),
           "big"
         );
-        expect(breachEvents(report)).toEqual([]);
+        expect(
+          breachEvents(report),
+          "80-arrival runs take about 40ms; capped runs prevent the nightly floor multiplying this load"
+        ).toEqual([]);
         return true;
       }),
-    // Each run simulates a train of up to 80 arrivals (about 40 ms a run); the nightly floor must not multiply it.
+
     { arbitrary: fcRunsCapped(64) }
   );
 
@@ -401,7 +385,7 @@ it.layer(BackfillModelLive, { timeout: "60 seconds" })("@beep/ciops SCHE-06 back
 
         expect(A.some(rest, protectedNow)).toBe(false);
         expect(A.map(protectedUnits, (unit) => unit.nonce)).toEqual(
-          A.map(A.sort(protectedUnits, deployedOrder(view.nowMillis)), (unit) => unit.nonce)
+          A.map(A.sort(protectedUnits, deployedHeadOnlyOrder(view.nowMillis)), (unit) => unit.nonce)
         );
         A.forEach(rest, (earlier, index) =>
           A.forEach(A.drop(rest, index + 1), (later) => {
@@ -425,7 +409,7 @@ it.layer(BackfillModelLive, { timeout: "60 seconds" })("@beep/ciops SCHE-06 back
         const ordered = yield* model.order(deployedPolicy, view);
 
         expect(A.map(ordered, (unit) => unit.nonce)).toEqual(
-          A.map(A.sort(view.waiting, deployedOrder(view.nowMillis)), (unit) => unit.nonce)
+          A.map(A.sort(view.waiting, deployedHeadOnlyOrder(view.nowMillis)), (unit) => unit.nonce)
         );
         const verdicts = yield* Effect.forEach(
           view.waiting,
@@ -515,15 +499,12 @@ it.layer(BackfillModelLive, { timeout: "60 seconds" })("@beep/ciops SCHE-06 back
       const mutant = yield* simulateStream(policy, stream, greedyBackfill);
 
       expect(A.some(sound.outcomes, (outcome) => outcome.route === "backfill")).toBe(true);
-      // Sound: the train backfills only while the blocker runs, then the big unit starts as
-      // head when the blocker releases at 10 s, long before it would be protected.
-      assertSome(
-        O.map(
-          A.findFirst(sound.outcomes, (outcome) => outcome.nonce === "big"),
-          (outcome) => `${outcome.route}@${outcome.admittedAtMillis}`
-        ),
-        "head@10000"
+
+      const headAtBlockerRelease = O.map(
+        A.findFirst(sound.outcomes, (outcome) => outcome.nonce === "big"),
+        (outcome) => `${outcome.route}@${outcome.admittedAtMillis}`
       );
+      assertSome(headAtBlockerRelease, "head@10000");
       expect(breachEvents(sound)).toEqual([]);
       expect(A.map(breachEvents(mutant), (event) => event.nonce)).toEqual(["big"]);
     })

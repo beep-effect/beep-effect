@@ -16,7 +16,6 @@ import * as HashSet from "effect/HashSet";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
-/** The plain wire shape a branded projection is compared against. */
 type WireProjection = typeof CheckRunProjection.Encoded;
 
 describe("CheckState", () => {
@@ -42,9 +41,6 @@ describe("CheckState", () => {
   });
 
   it("projects every state onto the wire, exhaustively", () => {
-    // The canonical table, in full: a new literal added to the vocabulary
-    // without a row here fails this test rather than falling through the
-    // projection's default arm silently.
     assert.deepStrictEqual<WireProjection>(projectCheckState("running"), { status: "in_progress" });
     assert.deepStrictEqual<WireProjection>(projectCheckState("pass"), { status: "completed", conclusion: "success" });
     assert.deepStrictEqual<WireProjection>(projectCheckState("fail"), { status: "completed", conclusion: "failure" });
@@ -61,21 +57,21 @@ describe("CheckState", () => {
       status: "completed",
       conclusion: "timed_out",
     });
-    assert.strictEqual(CheckState.literals.length, 7, "a state was added without extending this table");
+    assert.strictEqual(
+      CheckState.literals.length,
+      7,
+      "a state was added without extending this table; it must fail here, not fall through the default arm silently"
+    );
   });
 
   it("every completed projection lands inside @beep/github's conclusion set", () => {
-    // The projection spells its conclusions structurally so this pure module
-    // never imports the octokit-owning package at runtime. This is the drift
-    // pin: a conclusion GitHub's wire vocabulary does not carry fails here,
-    // not in a consumer's CheckRun.complete call.
     const wire = HashSet.fromIterable<string>(CheckConclusion.literals);
     for (const state of CheckState.literals) {
       const projected = projectCheckState(state);
       if (projected.status === "completed") {
         assert.isTrue(
           HashSet.has(wire, projected.conclusion),
-          `${state} projects to unknown conclusion ${projected.conclusion}`
+          `${state} projects to unknown conclusion ${projected.conclusion}; conclusions are spelled structurally so this pure module never imports octokit, and drift fails here, not in CheckRun.complete`
         );
       }
     }
