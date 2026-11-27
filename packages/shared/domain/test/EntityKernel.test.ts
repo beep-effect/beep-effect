@@ -123,10 +123,10 @@ describe("EntityId", () => {
       expect(value2).toBe(1);
       assertTrue(DocumentId.equivalence(decoded, decoded));
       assertFalse(DocumentId.equivalence(decoded, cast(2)));
-      // The canonical static is the schema's own (per-AST memoized) equivalence, not the
-      // codec groups' `dual(2, ...)` wrapper: the wrapper curries below its arity, while the
-      // plain form always answers with a boolean.
-      expect(DocumentId.equivalence).toBe(S.toEquivalence(DocumentId));
+      expect(
+        DocumentId.equivalence,
+        "the canonical static is the schema's own memoized equivalence, not the curried dual(2, ...) wrapper"
+      ).toBe(S.toEquivalence(DocumentId));
       invokeStatic(DocumentId, "equivalence").pipe(O.getOrThrow, P.isFunction, assertFalse);
 
       const Annotated = DocumentId.annotate({ description: "proof" });
@@ -264,8 +264,10 @@ describe("ProductEntity", () => {
       expect(inserted.createdAt).toBeDefined();
       expect(inserted.updatedAt).toBeDefined();
       assertFalse("id" in inserted);
-      // The SQL default (1) supplies the first token; the constructor never invents one.
-      assertFalse("rowVersion" in inserted);
+      assertFalse(
+        "rowVersion" in inserted,
+        "the SQL default (1) supplies the first token; the constructor never invents one"
+      );
     })
   );
 
@@ -305,7 +307,6 @@ class OrgDocument extends EntityBarrel.OrgEntity.Entity<OrgDocument>()(DocumentI
   $I.annote("OrgDocument", { description: "Org-tier test model." })
 ) {}
 
-// Brand and literal preservation through the generic tier factory (spike law).
 export type _IdBrandKept = Expect<
   IsEqual<InstanceType<typeof ProductDocument>["id"], EntityId.EntityIdValueFor<"SharedDocumentId">>
 >;

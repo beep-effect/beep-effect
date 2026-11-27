@@ -379,15 +379,14 @@ export const divergences = ({
   const approvals = approvalsGraph(operational);
   const approvalRows = A.filter(operational, (o) => o.relation === "approves-for");
 
-  // approver is (transitively) below the person they approve for in the declared chart
-  const isAbove = (actor: PartyId, target: PartyId) =>
+  const approverIsBelowInChart = (actor: PartyId, target: PartyId) =>
     O.match(O.all([HashMap.get(chart.index, actor), HashMap.get(chart.index, target)]), {
       onNone: thunkFalse,
       onSome: ([a, t]) => Graph.hasPath(chart.graph, a, t, { direction: "outgoing" }),
     });
 
   const inverted = A.flatMap(approvalRows, (o) =>
-    isAbove(o.actor, o.counterparty)
+    approverIsBelowInChart(o.actor, o.counterparty)
       ? [
           Divergence.cases.InvertedAuthority.make({
             declaredSubordinate: o.actor,

@@ -88,6 +88,7 @@ it.layer(testPlatformLayer, { timeout: "30 seconds" })(
         const path = yield* Path.Path;
         const dynamicModules = yield* DynamicModuleLoader;
         const packageRoot = yield* path.fromFileUrl(PACKAGE_ROOT);
+        const viteDevTreeShakes = false;
         const result = yield* Effect.tryPromise({
           try: () =>
             build({
@@ -97,10 +98,7 @@ it.layer(testPlatformLayer, { timeout: "30 seconds" })(
               write: false,
               format: "esm",
               platform: "browser",
-              // Vite dev serves the whole graph unbundled and runs every module's
-              // top-level code; tree-shaking would hide exactly the leaks that
-              // crash real dev workers.
-              treeShaking: false,
+              treeShaking: viteDevTreeShakes,
               metafile: true,
               logLevel: "silent",
             }),
@@ -109,28 +107,26 @@ it.layer(testPlatformLayer, { timeout: "30 seconds" })(
 
         const inputs = R.keys(result.metafile.inputs);
 
-        // The precise regression: the browser build of this micromark dependency
-        // calls `document.createElement` at module top level.
         const domCharacterReference = A.filter(inputs, (input) =>
           pipe(input, Str.includes("decode-named-character-reference/index.dom.js"))
         );
-        expect(domCharacterReference).toEqual([]);
+        expect(
+          domCharacterReference,
+          "the browser build of this micromark dependency calls document.createElement at module top level"
+        ).toEqual([]);
 
-        // The class of regression: the worker needs no markdown support, so any
-        // micromark module in the graph is a barrel leak (worker.ts's docstring
-        // requires the entrypoint stay free of root package barrels).
         const markdownStack = A.filter(inputs, (input) => /node_modules\/micromark(-[^/]+)?\//.test(input));
-        expect(markdownStack).toEqual([]);
+        expect(markdownStack, "the worker needs no markdown support, so any micromark module is a barrel leak").toEqual(
+          []
+        );
 
-        // Strongest form: the bundle's top-level code must run where no DOM
-        // exists, exactly like a fresh module worker.
         const dir = yield* fs.makeTempDirectoryScoped({ prefix: "beep-worker-graph-" });
         const bundlePath = path.join(dir, "worker-graph.mjs");
         yield* fs.writeFileString(bundlePath, result.outputFiles[0]?.text ?? "");
         const bundleUrl = yield* path.toFileUrl(bundlePath);
-        const moduleExports = yield* dynamicModules.load(bundleUrl.href);
-        pipe(P.hasProperty(moduleExports, "WorkerCommand"), assertTrue);
-        pipe(P.hasProperty(moduleExports, "buildOntologyGraphProjection"), assertTrue);
+        const domFreeWorkerExports = yield* dynamicModules.load(bundleUrl.href);
+        pipe(P.hasProperty(domFreeWorkerExports, "WorkerCommand"), assertTrue);
+        pipe(P.hasProperty(domFreeWorkerExports, "buildOntologyGraphProjection"), assertTrue);
       }),
       120_000
     );

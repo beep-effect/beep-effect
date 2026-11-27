@@ -74,8 +74,6 @@ const TripleValidationMessages = ({ state }: { readonly state: OntologyInspector
   </>
 );
 
-// The zero-behavior extraction keeps the established form validation and
-// gesture guards together so every action reads one consistent input snapshot.
 const OntologyAddTripleForm = (): JSX.Element => {
   const form = useAtomValue(ontologyInspectorFormStateAtom);
   const predicateSuggestions = useAtomValue(ontologyPredicateSuggestionsAtom);
@@ -201,8 +199,6 @@ export function OntologyInspectorRegion(): JSX.Element {
     <>
       <OntologyInspectorSummary />
       {O.isNone(path) ? (
-        // Same honest empty state Explorer/Source use: a sessionless Add Triple
-        // form is all disabled buttons dressed up as an invitation to type.
         <p className="flex min-h-0 flex-1 items-center justify-center p-3 text-sm text-muted-foreground">
           No ontology file open
         </p>

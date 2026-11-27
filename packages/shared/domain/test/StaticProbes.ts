@@ -2,9 +2,6 @@ import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 
-// `annotate` returns the bare codec type and `EntityId.Any` only types the entity metadata
-// statics, so the factory-attached codec statics are probed by name without widening either type.
-
 /** Whether `schema` carries a callable static named `key`. */
 export const hasFunctionStatic: {
   (schema: object, key: string): boolean;

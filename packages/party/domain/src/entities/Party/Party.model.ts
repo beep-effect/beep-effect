@@ -23,10 +23,6 @@ import { PartyKey } from "../../PartyKey.ts";
 
 const $I = $PartyDomainId.create("entities/Party/Party.model");
 
-// ---------------------------------------------------------------------------
-// Party
-// ---------------------------------------------------------------------------
-
 /**
  * Kinds of collective agent that have their own identity, lifecycle, or
  * relationships (the promotion rule: a grouping becomes a party only when it
@@ -132,10 +128,6 @@ export const Party = S.Union([Person, Organization, CollectiveAgent]).pipe(
  * @since 0.0.0
  */
 export type Party = typeof Party.Type;
-
-// ---------------------------------------------------------------------------
-// Account
-// ---------------------------------------------------------------------------
 
 /**
  * **Example** (Decode MailSystem)

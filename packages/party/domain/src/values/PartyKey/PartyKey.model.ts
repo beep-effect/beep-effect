@@ -105,11 +105,6 @@ const IdentifierBasisFields = S.Struct({
   value: IdentifierValue,
 });
 
-/**
- * The graduated value schema each scheme hashes. A basis value must already be
- * that scheme's canonical value, so an adapter that skips the shared
- * normalizer cannot mint a divergent key.
- */
 const schemeValueGuards: Readonly<Record<IdentifierScheme, (value: string) => boolean>> = {
   email: S.is(NormalizedEmail),
   tel: S.is(E164Phone),
@@ -126,7 +121,7 @@ const SchemeCanonicalCheck = S.makeFilter(
   $I.annote("SchemeCanonicalCheck", {
     title: "Scheme-canonical identifier basis",
     description:
-      "Globally scoped schemes carry an empty authority and namespaced schemes require one; the value is the scheme's graduated canonical value.",
+      "Globally scoped schemes carry an empty authority and namespaced schemes require one; the value is the scheme's graduated canonical value, so an adapter that skips the shared normalizer cannot mint a divergent key.",
     message: "Expected the scheme's authority rule and graduated canonical value",
   })
 );
