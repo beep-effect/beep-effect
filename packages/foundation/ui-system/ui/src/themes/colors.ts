@@ -6,7 +6,6 @@
  */
 import type { CssVarsThemeOptions } from "@mui/material/styles";
 
-// Augment the palette to include custom 'text' property
 declare module "@mui/material/styles" {
   interface CommonColors {
     readonly background: string;
@@ -30,6 +29,12 @@ declare module "@mui/material/styles" {
 /**
  * Colors theme value.
  *
+ * **Details**
+ *
+ * The light scheme's `text.tertiary` meets WCAG AA for normal text, at about
+ * 4.59:1 on `background.paper` and 4.52:1 on `background.default` against the
+ * 4.5:1 minimum. It does not meet AAA's 7:1 for normal text.
+ *
  * **Example** (Import colors theme)
  *
  * ```ts
@@ -45,38 +50,38 @@ export const colors: CssVarsThemeOptions["colorSchemes"] = {
   light: {
     palette: {
       text: {
-        icon: "rgb(0 0 0 / 0.4)", // systemGray for icons
-        tertiary: "rgb(0 0 0 / 0.54)", // lowest contrast text to pass AAA
+        icon: "rgb(0 0 0 / 0.4)",
+        tertiary: "rgb(0 0 0 / 0.54)",
       },
       action: {
-        activatedOpacity: 0.38, // Reduced from 0.54
-        selectedOpacity: 0.06, // Reduced from 0.08
-        disabledOpacity: 0.2, // Reduced from 0.38
-        focusOpacity: 0.08, // Reduced from 0.12
+        activatedOpacity: 0.38,
+        selectedOpacity: 0.06,
+        disabledOpacity: 0.2,
+        focusOpacity: 0.08,
       },
       primary: {
         main: "#000",
         text: "#212121",
       },
       secondary: {
-        main: "rgb(229, 229, 234)", // systemGray
-        text: "rgb(108, 108, 112)", // systemGray increased contrast
+        main: "rgb(229, 229, 234)",
+        text: "rgb(108, 108, 112)",
       },
       success: {
-        main: "rgb(52, 199, 89)", // green
-        text: "rgb(0, 137, 50)", // green increased contrast
+        main: "rgb(52, 199, 89)",
+        text: "rgb(0, 137, 50)",
       },
       error: {
-        main: "rgb(255, 56, 60)", // red
-        text: "rgb(233, 21, 45)", // red increased contrast
+        main: "rgb(255, 56, 60)",
+        text: "rgb(233, 21, 45)",
       },
       warning: {
-        main: "rgb(255, 204, 0)", // yellow
-        text: "rgb(161, 106, 0)", // yellow increased contrast
+        main: "rgb(255, 204, 0)",
+        text: "rgb(161, 106, 0)",
       },
       info: {
-        main: "rgb(0, 136, 255)", // blue
-        text: "rgb(30, 110, 244)", // blue increased contrast
+        main: "rgb(0, 136, 255)",
+        text: "rgb(30, 110, 244)",
       },
       common: {
         background: "rgb(248, 248, 248)",
@@ -91,46 +96,46 @@ export const colors: CssVarsThemeOptions["colorSchemes"] = {
   dark: {
     palette: {
       text: {
-        icon: "rgb(255 255 255 / 0.54)", // systemGray for icons in dark mode
-        tertiary: "rgb(255 255 255 / 0.6)", // systemGray for tertiary text
+        icon: "rgb(255 255 255 / 0.54)",
+        tertiary: "rgb(255 255 255 / 0.6)",
       },
       action: {
-        activatedOpacity: 0.38, // Reduced intensity
-        selectedOpacity: 0.06, // Subtle selection
-        disabledOpacity: 0.2, // Reduced opacity
-        focusOpacity: 0.08, // Subtle focus
+        activatedOpacity: 0.38,
+        selectedOpacity: 0.06,
+        disabledOpacity: 0.2,
+        focusOpacity: 0.08,
       },
       primary: {
         main: "#fff",
         text: "#f5f5f5",
       },
       secondary: {
-        main: "rgb(142, 142, 147)", // systemGray
-        text: "rgb(174, 174, 178)", // systemGray for dark mode
+        main: "rgb(142, 142, 147)",
+        text: "rgb(174, 174, 178)",
       },
       success: {
-        main: "rgb(48, 209, 88)", // green for dark
-        text: "rgb(71, 217, 104)", // green for dark
+        main: "rgb(48, 209, 88)",
+        text: "rgb(71, 217, 104)",
       },
       error: {
-        main: "rgb(255, 69, 58)", // red for dark
-        text: "rgb(255, 97, 101)", // red for dark
+        main: "rgb(255, 69, 58)",
+        text: "rgb(255, 97, 101)",
       },
       warning: {
-        main: "rgb(255, 214, 10)", // yellow for dark
-        text: "rgb(254, 223, 67)", // yellow for dark
+        main: "rgb(255, 214, 10)",
+        text: "rgb(254, 223, 67)",
       },
       info: {
-        main: "rgb(0, 145, 255)", // blue for dark
-        text: "rgb(92, 184, 255)", // blue for dark
+        main: "rgb(0, 145, 255)",
+        text: "rgb(92, 184, 255)",
       },
       common: {
         background: "rgb(0, 0, 0)",
         onBackground: "#f5f5f5",
       },
       background: {
-        default: "rgb(0, 0, 0)", // systemGrayDark
-        paper: "rgb(18, 18, 18)", // systemGrayDark
+        default: "rgb(0, 0, 0)",
+        paper: "rgb(18, 18, 18)",
       },
     },
   },

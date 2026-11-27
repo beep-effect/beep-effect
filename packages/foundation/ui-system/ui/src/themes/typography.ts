@@ -10,7 +10,6 @@ import type { ThemeOptions } from "./types.ts";
 
 const breakpoints = createBreakpoints({});
 
-// Responsive heading styles extracted from tailwind-prose configuration
 const h1Styles = {
   "--_fs": "2.25rem",
   "--_lh": "1.11111111",
@@ -107,8 +106,8 @@ export const typography: ThemeOptions["typography"] = {
   h2: h2Styles,
   h3: h3Styles,
   h4: h4Styles,
-  h5: h4Styles, // use h4 styles since h5 is rarely used
-  h6: h4Styles, // use h4 styles since h6 is rarely used
+  h5: h4Styles,
+  h6: h4Styles,
   body2: {
     lineHeight: "1.4285714286",
   },

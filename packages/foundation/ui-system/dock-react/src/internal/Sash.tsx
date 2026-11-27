@@ -6,7 +6,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { makeOperation } from "./AdapterState.ts";
-import { clampRatio, positionOf, px, releaseCapture, splitExtent } from "./DropCompiler.ts";
+import { clampRatio, positionOf, preventNativeSelection, px, releaseCapture, splitExtent } from "./DropCompiler.ts";
 import { RatioOverride, SashDrag } from "./Gesture.models.ts";
 import type React from "react";
 import type { DockAtomGraph } from "../DockReact.types.ts";
@@ -28,11 +28,6 @@ export const Sash = (props: {
       const current = props.graph.registry.get(props.state.resizeAtom);
       props.graph.registry.set(props.state.resizeAtom, O.none());
       props.graph.registry.set(props.state.ratioOverrideAtom, O.none());
-      // A synthetic pointercancel neither releases capture implicitly (a
-      // real input-source cancel does) nor carries the captured pointerId,
-      // so release the identity recorded at the press; without this the
-      // sash keeps routing the pointer stream (and its hover state) until
-      // the eventual pointerup.
       O.match(current, {
         onNone: () => undefined,
         onSome: (drag) => {
@@ -88,11 +83,7 @@ export const Sash = (props: {
       if (O.isNone(split)) return;
       const extent = splitExtent(props.graph, props.state, split.value);
       if (extent <= 0) return;
-      // Without this the browser anchors a native text selection at the
-      // press point and smears it across neighboring panels for the whole
-      // drag; over an existing selection it can even escalate to native
-      // drag-and-drop, which cancels the pointer stream mid-resize.
-      event.preventDefault();
+      preventNativeSelection(event);
       node.setPointerCapture?.(event.pointerId);
       props.graph.registry.set(
         props.state.resizeAtom,

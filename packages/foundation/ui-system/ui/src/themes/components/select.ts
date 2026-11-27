@@ -43,7 +43,7 @@ export const selectTheme: ThemeComponents = {
         "&.MuiOutlinedInput-input": {
           paddingBlock: CONTROL_HEIGHTS.md / 2 - 10,
           paddingInline: 14,
-          minHeight: "1.42857em", // 20px
+          minHeight: "1.42857em",
           ...(CONTROL_HEIGHTS.md !== CONTROL_TOUCH_HEIGHTS.md && {
             [TOUCH_MEDIA_QUERY]: {
               paddingBlock: CONTROL_TOUCH_HEIGHTS.md / 2 - 11.5,

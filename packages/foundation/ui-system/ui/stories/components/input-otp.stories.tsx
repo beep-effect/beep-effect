@@ -5,16 +5,8 @@ import type { ComponentProps, ReactNode, SyntheticEvent } from "react";
 
 type InputOTPProps = ComponentProps<typeof InputOTP>;
 
-// `InputOTP`'s props are a union: a `render`-branch (`render` required, `children?: never`) and
-// a `children`-branch (`children` required, `render?: never`). Storybook resolves the union to
-// the `render`-branch, which makes `render` a required arg that collides with the story's own
-// `render` and forbids `children`. Pin the story args to the `children`-branch so composed slots
-// are allowed and `render` is not a required arg.
 type InputOTPChildrenProps = Extract<InputOTPProps, { children?: ReactNode }>;
 
-// Spreading the optional-`undefined` story args directly trips `exactOptionalPropertyTypes`, so
-// build only the props each story actually sets, dropping any `undefined`. Each story supplies
-// its own `children` (the composed slots) via JSX.
 type InputOTPControls = Pick<
   InputOTPProps,
   "maxLength" | "pattern" | "disabled" | "containerClassName" | "onComplete" | "id"
@@ -85,8 +77,6 @@ const meta = {
   args: {
     maxLength: 6,
     onComplete: fn(),
-    // Each story renders its own slot composition through `render`; this default only
-    // satisfies the required `children` arg of the pinned `children`-branch.
     children: null,
   },
 } satisfies Meta<InputOTPChildrenProps>;

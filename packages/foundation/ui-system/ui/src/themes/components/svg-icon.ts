@@ -31,19 +31,19 @@ export const svgIconTheme: ThemeComponents = {
       {
         props: { fontSize: "small" },
         style: {
-          fontSize: "var(--Icon-size, 1.125rem)", // 18px
+          fontSize: "var(--Icon-size, 1.125rem)",
         },
       },
       {
         props: { fontSize: "medium" },
         style: {
-          fontSize: "var(--Icon-size, 1.25rem)", // 20px
+          fontSize: "var(--Icon-size, 1.25rem)",
         },
       },
       {
         props: { fontSize: "large" },
         style: {
-          fontSize: "var(--Icon-size, 2rem)", // 32px
+          fontSize: "var(--Icon-size, 2rem)",
         },
       },
       {

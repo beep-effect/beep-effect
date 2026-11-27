@@ -60,11 +60,13 @@ const GenericFontFamily = LiteralKit([
 
 const isGenericFontFamily = S.is(GenericFontFamily);
 
-// Control characters are schema-invalid (PrintableText), so escaping covers the two
-// printable metacharacters CSS strings care about.
-const escapeCssString: (value: string) => string = flow(Str.replaceAll("\\", "\\\\"), Str.replaceAll('"', '\\"'));
+const escapePrintableCssString: (value: string) => string = flow(
+  Str.replaceAll("\\", "\\\\"),
+  Str.replaceAll('"', '\\"')
+);
 
-const quoteFamily = (family: string): string => (isGenericFontFamily(family) ? family : `"${escapeCssString(family)}"`);
+const quoteFamily = (family: string): string =>
+  isGenericFontFamily(family) ? family : `"${escapePrintableCssString(family)}"`;
 
 /**
  * Render a {@link FontStack} as a CSS font-family list, escaping named families and leaving generic keywords bare.

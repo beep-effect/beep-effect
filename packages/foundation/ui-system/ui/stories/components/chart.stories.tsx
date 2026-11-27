@@ -27,19 +27,6 @@ import type { ChartConfig } from "@beep/ui/components/chart";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { PieSectorShapeProps } from "recharts";
 
-/**
- * `ChartContainer` is the responsive root of the chart system, built on Recharts. It
- * provides the chart config context and injects per-series theme CSS variables
- * (`--color-<key>`) consumed by the underlying Recharts primitives. Compose it with
- * Recharts components (`BarChart`, `LineChart`, `AreaChart`, `PieChart`, axes, grids)
- * and the themed helpers `ChartTooltip` + `ChartTooltipContent` and `ChartLegend` +
- * `ChartLegendContent` to build a complete chart.
- *
- * The `config` prop maps each data series key to a `label`, optional `icon`, and a
- * `color` (or per-theme colors). Series fills then reference `var(--color-<key>)`.
- *
- * Imported from `@beep/ui/components/chart`.
- */
 const chartData = [
   { desktop: 186, mobile: 80, month: "January" },
   { desktop: 305, mobile: 200, month: "February" },
@@ -96,9 +83,6 @@ const pieConfig = {
 
 const monthTickFormatter = (value: string): string => Str.slice(0, 3)(value);
 
-// `ChartContainer` requires a single Recharts `children` element, so the story args type
-// treats `children` as required. Every story supplies its own composition through `render`,
-// so this default only satisfies the type and is never the rendered output.
 const defaultChartChildren = (
   <BarChart accessibilityLayer data={[...chartData]}>
     <Bar dataKey="desktop" fill="var(--color-desktop)" radius={4} isAnimationActive={false} />

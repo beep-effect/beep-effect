@@ -3,14 +3,6 @@ import { fn } from "storybook/test";
 import type { GraphLink, GraphNode } from "@beep/ui/components/knowledge-graph";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
-/**
- * `KnowledgeGraph` is a force-directed graph renderer built on D3. It lays out `nodes`
- * with a physics simulation, draws `links` between them, colors nodes by `type`, and
- * supports drag, zoom/pan, hover tooltips, an optional legend, and optional link labels.
- * It also exposes an imperative handle (`resetZoom`, `exportAsSVG`, `exportAsPNG`) via ref.
- *
- * Imported from `@beep/ui/components/knowledge-graph`.
- */
 const nodes: GraphNode[] = [
   { id: "effect", label: "Effect", type: "library" },
   { id: "schema", label: "Schema", type: "library" },

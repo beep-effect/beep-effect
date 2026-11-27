@@ -170,9 +170,6 @@ describe("renderWordmarkSvg escaping", () => {
 });
 
 describe("BrandIdentity properties", () => {
-  // Schema-derived property coverage: every arbitrary identity the schemas admit
-  // round-trips losslessly, so the codec assertions above generalize past the
-  // handpicked fixtures.
   it.effect.prop(
     "round-trips arbitrary identities through encode and decode",
     [Arbitrary.schema(BrandIdentity)],

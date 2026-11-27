@@ -244,7 +244,6 @@ export const buttonTheme: ThemeComponents = {
               cursor: "not-allowed",
             },
           },
-          // When button contains only an icon (with or without TouchRipple)
           "&:has(> svg:only-child, > svg + .MuiTouchRipple-root)": iconOnlyButtonStyles,
           variants: [
             ...buttonSizeVariants,

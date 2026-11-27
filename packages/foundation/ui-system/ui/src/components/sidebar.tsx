@@ -299,7 +299,6 @@ function Sidebar({
     );
   }
 
-  // Non-fixed (relative) positioning for embedded sidebars
   if (!fixed) {
     return (
       <div
@@ -336,7 +335,6 @@ function Sidebar({
     );
   }
 
-  // Fixed positioning (default behavior)
   return (
     <div
       data-slot="sidebar-container"
@@ -346,7 +344,6 @@ function Sidebar({
       data-variant={variant}
       data-side={side}
     >
-      {/* This handles the sidebar gap on desktop */}
       <div
         className={cn(
           "relative w-(--sidebar-width) bg-transparent transition-width duration-200 ease-linear",
@@ -804,7 +801,7 @@ function SidebarMenuButton({
 
   return (
     <Tooltip>
-      <TooltipTrigger render={button}>{/* render prop handles the trigger element */}</TooltipTrigger>
+      <TooltipTrigger render={button} />
       <TooltipContent
         side="right"
         align="center"
