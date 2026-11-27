@@ -170,9 +170,8 @@ const overJob = Effect.fn("overJob")(function* <A, E>(
 }, Effect.scoped);
 
 describe("contact seeding", () => {
-  // GraphPathSegment is a custom non-empty filter without generation bounds.
-  // Single-run properties use the stated size, avoiding zero-size exhaustion.
-  for (const seed of A.range(1, 25)) {
+  const nonzeroSizesForUnboundedSegments = A.range(1, 25);
+  for (const seed of nonzeroSizesForUnboundedSegments) {
     it.effect.prop(
       `preserves arbitrary rollback journals through persisted JSON (seed ${seed})`,
       [Arbitrary.schema(RunJournal)],
@@ -260,11 +259,13 @@ describe("contact seeding", () => {
             vcfOnly: 0,
           });
           expect(O.getOrThrow(census.census).csvInputs[0]?.inputsSharingHash).toBe(2);
-          // The census header is the row parseOutlookCsv reads: a byte-order mark and blank rows before it are skipped.
           const padded = path.join(root, "padded.csv");
           yield* fs.writeFileString(padded, `﻿\n,,\n${csv}`);
           const paddedCensus = yield* loadContacts(ContactInputs.make({ csv: [padded], vcf: [] }), true);
-          expect(O.getOrThrow(paddedCensus.census).csvInputs[0]).toMatchObject({
+          expect(
+            O.getOrThrow(paddedCensus.census).csvInputs[0],
+            "the census header is the first row parseOutlookCsv reads, after the BOM and blank rows"
+          ).toMatchObject({
             columnCount: 4,
             headerNames: ["First Name", "Last Name", "Company", "E-mail Address"],
             recordCount: 1,

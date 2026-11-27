@@ -26,7 +26,6 @@ const blockedFirst: Order.Order<LaneRow> = Order.mapInput(Order.Number, (lane: L
   LaneState.is.blocked(lane.state) ? 0 : 1
 );
 
-// Newest note first inside each state group, so the freshest work leads.
 const newestFirst: Order.Order<LaneRow> = Order.mapInput(
   Order.Number,
   (lane: LaneRow) => -DateTime.toEpochMillis(lane.recordedAt)
@@ -170,7 +169,6 @@ export const prLink =
   (pr: O.Option<number>): O.Option<string> =>
     O.map(pr, (number) => `https://${repository.host}/${repository.owner}/${repository.name}/pull/${number}`);
 
-// Cell widths of one board row; only `rowColumns` builds them and `rowText` reads them.
 class RowColumns extends S.Opaque<RowColumns, { readonly brand: unique symbol }>()(
   S.Struct({
     lane: S.Int,

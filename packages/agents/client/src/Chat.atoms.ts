@@ -27,7 +27,7 @@ import * as Clock from "effect/Clock";
 import * as Config from "effect/Config";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
-import { constant } from "effect/Function";
+import { constant, constTrue } from "effect/Function";
 import * as Match from "effect/Match";
 import * as Metric from "effect/Metric";
 import * as KeyValueStore from "effect/persistence/KeyValueStore";
@@ -60,12 +60,6 @@ const StreamingTurnReconciliation = LiteralKit(["timeline", "receipt"]).pipe(
 );
 type StreamingTurnReconciliation = typeof StreamingTurnReconciliation.Type;
 
-// Ambient telemetry (logger/tracer/metrics are fiber-runtime concerns, not
-// typed services) rides every atom runtime via the global layer; this is what
-// threads the client span context onto outgoing rpc envelopes so webview spans
-// join the sidecar's `RpcServer.*` spans into one trace. Env-gated: collapses to
-// Layer.empty without an OTLP endpoint, so tests/dev without a collector are
-// unaffected (see ClientObservability.ts).
 Atom.runtime.addGlobalLayer(ClientObservabilityLive);
 
 /**
@@ -140,16 +134,8 @@ export class ChatClient extends AtomRpc.Service<ChatClient>()("ChatClient", {
   protocol: (get) => get(chatProtocolLayerAtom),
 }) {}
 
-// ---------------------------------------------------------------------------
-// Threads
-// ---------------------------------------------------------------------------
-
-// Thread lists key on both a per-workspace key (invalidated when that
-// workspace's threads change) and a shared `threads` key (invalidated by a turn,
-// which only knows its threadId — not its workspaceId — yet still bumps the
-// thread's `lastActivityAt`/title and so must refresh every visible list).
-const THREADS_KEY = "threads" as const;
-const workspaceThreadsKey = (workspaceId: WorkspaceId) => `${THREADS_KEY}:${workspaceId}`;
+const ALL_THREAD_LISTS_KEY = "threads" as const;
+const workspaceThreadsKey = (workspaceId: WorkspaceId) => `${ALL_THREAD_LISTS_KEY}:${workspaceId}`;
 
 /**
  * The thread list for a workspace, refetched whenever a thread or turn mutates.
@@ -181,13 +167,19 @@ export const threadsAtoms = Atom.family((workspaceId: WorkspaceId) =>
     "ListThreads",
     { workspaceId },
     {
-      reactivityKeys: [THREADS_KEY, workspaceThreadsKey(workspaceId)],
+      reactivityKeys: [ALL_THREAD_LISTS_KEY, workspaceThreadsKey(workspaceId)],
     }
   )
 );
 
 /**
  * The user's explicit thread selection — none means "follow the list".
+ *
+ * **Gotchas**
+ *
+ * The selection is kept alive, so it survives the chat surface unmounting and
+ * the registry's idle sweep. A reset to none would follow the list and send the
+ * user's next message to another conversation.
  *
  * **Example** (Set selected thread option)
  *
@@ -209,15 +201,6 @@ export const threadsAtoms = Atom.family((workspaceId: WorkspaceId) =>
  * @category atoms
  * @since 0.0.0
  */
-// Kept alive because the selection outlives the view that shows it. Every
-// subscriber lives inside the chat surface, which the desktop unmounts when the
-// user switches to Ontology, Vault sync, or Home — so the selection dropped to
-// zero listeners, and 30 seconds later the registry's idle sweep reset it to
-// `O.none()`. That default means "follow the list", so the user came back to the
-// most-recently-updated thread instead of the one they had open, with no error
-// and nothing to explain it. Anything they typed next went to the wrong
-// conversation. Under 30 seconds the same trip preserved the selection, which is
-// what made it look intermittent.
 export const selectedThreadAtom = O.none<ThreadId>().pipe(Atom.make<O.Option<ThreadId>>, Atom.keepAlive);
 
 const timelineKey = (threadId: ThreadId) => `timeline:${threadId}`;
@@ -316,18 +299,13 @@ export const createThreadAtom = ChatClient.runtime.fn<CreateThreadAtomInput>()(
   Effect.fn("createThread")(function* (input, ctx) {
     const client = yield* ChatClient;
     const thread = yield* Reactivity.mutation(client("CreateThread", input), [
-      THREADS_KEY,
+      ALL_THREAD_LISTS_KEY,
       workspaceThreadsKey(input.workspaceId),
     ]);
     ctx.set(selectedThreadAtom, O.some(thread.id));
   })
 );
 
-// ---------------------------------------------------------------------------
-// Drafts
-// ---------------------------------------------------------------------------
-
-// drafts persist in localStorage so unsent composer content survives restarts
 const draftsRuntime = Atom.runtime(KeyValueStore.layerStorage(() => globalThis.localStorage));
 
 /**
@@ -400,10 +378,6 @@ export const draftAtoms = Atom.family((threadId: ThreadId) =>
  * @since 0.0.0
  */
 export const draftRevisionAtoms = Atom.family((_threadId: ThreadId) => Atom.make(0));
-
-// ---------------------------------------------------------------------------
-// Streaming turn
-// ---------------------------------------------------------------------------
 
 /**
  * A locally rendered assistant turn: optimistic user content plus the assistant
@@ -634,7 +608,6 @@ export class EditTarget extends S.Opaque<EditTarget, { readonly brand: unique sy
  */
 export const editTargetAtom = Atom.make<O.Option<EditTarget>>(O.none());
 
-// client-perceived quality metrics — exported through the same OTLP layer
 const perceivedLatency = Metric.timer("ui_turn_perceived_latency", {
   description: "Send action to first streamed block, as the user experiences it",
   boundaries: [100, 250, 500, 1000, 2000, 4000, 8000, 16000, 30000, 60000],
@@ -813,14 +786,8 @@ export const TurnRequest = S.Union([SendTurnRequest, EditTurnRequest]).pipe(
  */
 export type TurnRequest = typeof TurnRequest.Type;
 
-// How hard the client chases the receipt the server records after a turn stops
-// or fails. Exhaustion keeps the prompt in a non-sendable reconciliation state;
-// only an explicit `not_persisted` receipt may restore a sendable draft.
 const TURN_RECEIPT_POLL_ATTEMPTS = 8;
 const TURN_RECEIPT_POLL_INTERVAL = Duration.millis(150);
-// The interval is real wall-clock time between receipt reads. Tests set
-// `BEEP_TURN_RECEIPT_POLL_INTERVAL` to a few millis so a starved CI runner
-// cannot stretch eight polls past their timeout; production keeps the default.
 const turnReceiptPollInterval = Config.Duration("BEEP_TURN_RECEIPT_POLL_INTERVAL").pipe(
   Config.withDefault(TURN_RECEIPT_POLL_INTERVAL),
   Effect.orElseSucceed(constant(TURN_RECEIPT_POLL_INTERVAL))
@@ -830,10 +797,9 @@ const isUncertainTurnRequestStatus = (status: O.Option<TurnRequestStatus>): bool
 const terminalAssistantBlock = (text: "(failed)" | "(stopped)"): AssistantBlock =>
   ParagraphBlock.make({ children: [TextInline.make({ text })] });
 
-// Cleanup from an interrupted fn node can overlap the replacement invocation.
-// A generation guard keeps the old finalizer from clearing or restoring state
-// owned by the newer turn.
-const turnGenerationAtom = Atom.keepAlive(Atom.make(0));
+const latestTurnGenerationAtom = Atom.keepAlive(Atom.make(0));
+
+const keepFallbackAddedDuringPoll = constTrue;
 
 /**
  * Drives one assistant turn: fires the streaming rpc, appends blocks into
@@ -852,6 +818,22 @@ const turnGenerationAtom = Atom.keepAlive(Atom.make(0));
  * services — which outlive the node — via `registry.set(streamingTurnAtom, ...)`
  * and `reactivity.invalidateUnsafe(turnKeys)`. The error path
  * (`Effect.tapError`) still runs on the live fiber, so it may use `ctx.set`.
+ *
+ * A stopped or failed turn gives its prompt back as a sendable draft only on
+ * this request's exact `not_persisted` receipt. Missing or uncertain receipt
+ * evidence after bounded polling keeps it non-sendable, because a retry would
+ * duplicate a durable user row; timeline growth cannot stand in for the
+ * receipt, since another window may share the thread.
+ *
+ * A failed stream may still have committed the user row and a terminal
+ * assistant marker, so failure also refreshes the timeline, keeping a local
+ * terminal turn when that read fails or the receipt stays uncertain. A defect
+ * only clears the streaming turn and gives the prompt back on the same
+ * `not_persisted` receipt; it neither refreshes the timeline nor keeps a
+ * terminal turn.
+ *
+ * A completed reply stays visible until the refreshed timeline replaces it; a
+ * failed refresh keeps the streamed reply and still ends generation activity.
  *
  * **Example** (Type run-turn write value)
  *
@@ -894,8 +876,8 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
       A.map(all1, (value) => `${value}`),
       ":"
     );
-    const generation = registry.get(turnGenerationAtom) + 1;
-    ctx.set(turnGenerationAtom, generation);
+    const generation = registry.get(latestTurnGenerationAtom) + 1;
+    ctx.set(latestTurnGenerationAtom, generation);
     yield* Effect.annotateCurrentSpan({ turn_kind: turn._tag, thread_id: turn.threadId });
     yield* Metric.update(Metric.withAttributes(turnAttempts, { kind: turn._tag }), 1);
     yield* Effect.logInfo("assistant turn started").pipe(Effect.annotateLogs({ turn: turn._tag }));
@@ -938,9 +920,7 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
             blocks,
           }),
     });
-    // a completed turn changes this thread's timeline and bumps its activity in
-    // every workspace list, so invalidate both the timeline and the shared list
-    const turnKeys = [timelineKey(turn.threadId), THREADS_KEY];
+    const turnKeys = [timelineKey(turn.threadId), ALL_THREAD_LISTS_KEY];
     const startedAt = yield* Clock.currentTimeMillis;
     const recordDuration = Effect.gen(function* () {
       const endedAt = yield* Clock.currentTimeMillis;
@@ -965,11 +945,7 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
       )
     );
     const timelineAtom = threadTimelineAtoms(turn.threadId);
-    // Reactivity invalidation notifies query atoms, but a function atom can read
-    // the previous success before that notification has rebuilt the query node.
-    // Subscribe before refreshing and wait for a distinct non-waiting result so
-    // this result belongs to the post-turn fetch rather than the cached timeline.
-    const refreshTimeline = (
+    const refreshUntilPostTurnTimeline = (
       refresh: () => void
     ): Effect.Effect<void, ChatActionError | RpcClientError.RpcClientError> =>
       Effect.callback((resume) => {
@@ -1047,8 +1023,7 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
                 O.getOrElse(() => true)
               )
             ),
-            // Preserve fallbacks appended while receipt reads were in flight.
-            O.getOrElse(() => true)
+            O.getOrElse(keepFallbackAddedDuringPoll)
           )
         );
         A.forEach(O.toArray(draftToRestore), (fallback) => {
@@ -1075,8 +1050,6 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
       ),
       turnKeys
     ).pipe(
-      // error policy lives here, in Effect: clear the partial turn and log. The
-      // error fiber is still live, so `ctx.set` is safe here.
       Effect.tapError(
         Effect.fnUntraced(function* (error) {
           ctx.set(streamingTurnAtom, O.none());
@@ -1084,18 +1057,10 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
           ctx.set(turnErrorAtom, O.some(turnError));
           const requestStatus = yield* pollTurnRequestStatus;
           if (O.contains(requestStatus, "not_persisted")) {
-            // Give the user back what they wrote only when the server did not
-            // commit it. Restoring a durable prompt would make retry duplicate
-            // its user row.
             ctx.set(draftAtoms(turn.threadId), O.some(turn.content));
             ctx.set(draftRevisionAtoms(turn.threadId), registry.get(draftRevisionAtoms(turn.threadId)) + 1);
           } else {
-            // Reactivity.mutation invalidates only on success. A failed stream
-            // may still have committed the user row and a terminal assistant
-            // marker, so explicitly refresh those durable states. Preserve a
-            // local terminal turn if that read fails too, or if the exact
-            // request receipt remains uncertain after bounded polling.
-            yield* refreshTimeline(() => reactivity.invalidateUnsafe(turnKeys)).pipe(
+            yield* refreshUntilPostTurnTimeline(() => reactivity.invalidateUnsafe(turnKeys)).pipe(
               Effect.tap(() =>
                 isUncertainTurnRequestStatus(requestStatus)
                   ? retainTerminalTurn("(failed)", StreamingTurnReconciliation.Enum.receipt)
@@ -1132,11 +1097,6 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
           );
         })
       ),
-      // defects bypass the typed channel above entirely: without this tap a
-      // died turn clears no streaming state, sets no turnErrorAtom, and the
-      // send disappears with the composer already emptied. Mirror the failure
-      // policy: surface the error, and give the prompt back only when the
-      // server provably never persisted it.
       Effect.tapDefect(
         Effect.fnUntraced(function* (defect) {
           ctx.set(streamingTurnAtom, O.none());
@@ -1157,18 +1117,6 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
           );
         })
       ),
-      // user-cancelled (Atom.Interrupt write): drop the partial turn and
-      // refetch — the user message persisted before the stream started. The
-      // Interrupt write refreshes the fn node BEFORE this fiber unwinds, so
-      // `ctx` is already disposed and its writes are silently dropped — go
-      // through the registry and reactivity services, which outlive the node.
-      //
-      // The exact request receipt distinguishes a queued cancellation from a
-      // request whose user or assistant row committed. Aggregate timeline growth
-      // cannot do that when another window is using the same thread. Restore the
-      // prompt only when this request is confirmed not persisted. Missing or
-      // unavailable receipt evidence must stay non-sendable because a durable
-      // user row must never be duplicated by retry.
       Effect.onInterrupt(() =>
         Metric.update(Metric.withAttributes(turnCancelled, { kind: turn._tag }), 1).pipe(
           Effect.andThen(Effect.logInfo("assistant turn cancelled").pipe(Effect.annotateLogs({ turn: turn._tag }))),
@@ -1176,7 +1124,7 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
             pollTurnRequestStatus.pipe(
               Effect.flatMap(
                 Effect.fnUntraced(function* (requestStatus) {
-                  if (registry.get(turnGenerationAtom) !== generation) return;
+                  if (registry.get(latestTurnGenerationAtom) !== generation) return;
                   if (O.contains(requestStatus, "not_persisted")) {
                     registry.set(draftAtoms(turn.threadId), O.some(turn.content));
                     registry.set(
@@ -1202,7 +1150,7 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
                         )
                       );
                     }
-                    yield* refreshTimeline(() => reactivity.invalidateUnsafe(turnKeys)).pipe(
+                    yield* refreshUntilPostTurnTimeline(() => reactivity.invalidateUnsafe(turnKeys)).pipe(
                       Effect.tap(() =>
                         requestStatusUncertain
                           ? retainTerminalTurn("(stopped)", StreamingTurnReconciliation.Enum.receipt)
@@ -1247,14 +1195,7 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
       ),
       Effect.ensuring(recordDuration)
     );
-    // wait for the refetched timeline before dropping the streamed turn, so the
-    // persisted rendering swaps in without a gap.
-    //
-    // A failure here is a *display* problem — the turn itself already streamed
-    // and persisted. Keep the streamed value as the local fallback; activity is
-    // derived separately from this fn atom, so a failed refresh neither loses the
-    // reply nor leaves the composer/Stop control believing generation continues.
-    yield* refreshTimeline(() => ctx.refresh(timelineAtom)).pipe(
+    yield* refreshUntilPostTurnTimeline(() => ctx.refresh(timelineAtom)).pipe(
       Effect.tap(() =>
         reconcileReceiptFallbacks.pipe(
           Effect.andThen(

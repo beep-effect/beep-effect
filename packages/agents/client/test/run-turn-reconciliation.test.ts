@@ -87,8 +87,6 @@ const completedTimeline = ThreadTimeline.make({
   ],
 });
 
-// Receipt polls are real wall-clock delays in the product; a few millis keep a
-// starved CI runner from stretching eight of them past the case's timeout.
 const FastReceiptPollLayer = ConfigProvider.layer(
   ConfigProvider.fromUnknown({ BEEP_TURN_RECEIPT_POLL_INTERVAL: "2 millis" })
 );
@@ -131,7 +129,7 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
     "retains unreconciled per-thread replies across view unmounts",
     Effect.fnUntraced(function* () {
       const atom = unreconciledTurnAtoms(threadId);
-      const removable = Atom.make(false);
+      const sweptControlAtom = Atom.make(false);
       const registry = yield* Effect.acquireRelease(
         Effect.sync(() => AtomRegistry.make({ defaultIdleTTL: 1, timeoutResolution: 1 })),
         (registry) => Effect.sync(() => registry.dispose())
@@ -140,16 +138,15 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
       yield* Effect.scoped(
         Effect.gen(function* () {
           yield* AtomRegistry.mount(registry, atom);
-          yield* AtomRegistry.mount(registry, removable);
-          registry.set(removable, true);
-          assertTrue(registry.get(removable));
+          yield* AtomRegistry.mount(registry, sweptControlAtom);
+          registry.set(sweptControlAtom, true);
+          assertTrue(registry.get(sweptControlAtom));
           registry.set(atom, [fallback]);
         })
       );
 
       yield* Effect.sleep(Duration.millis(20));
-      // The same registry must have swept an ordinary atom during this interval.
-      assertFalse(registry.get(removable));
+      assertFalse(registry.get(sweptControlAtom));
       expect(registry.get(atom)).toStrictEqual([fallback]);
     })
   );
@@ -183,9 +180,6 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
       registry.set(runTurnAtom, SendTurnRequest.make({ threadId, content }));
       yield* Deferred.await(streamStarted);
 
-      // The server persists the user row before the interrupted stream records
-      // its assistant `(stopped)` marker. Every bounded refresh sees only that
-      // user row: total-count growth must not be accepted as reconciliation.
       timeline = userOnlyTimeline;
       registry.set(runTurnAtom, Atom.Interrupt);
       yield* waitForAtom(registry, streamingTurnAtom, O.isNone);

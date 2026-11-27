@@ -59,7 +59,6 @@ const runtimeAttribute = (key: string, attribute: string): R.ReadonlyRecord<stri
     thunkEmptyReadonlyRecord<string, string>
   );
 
-// browser/runtime-derived config boundary — no vite env, no node `process`.
 const resolveOtlpBaseUrl = (): O.Option<string> =>
   O.orElse(readRuntimeString("__BEEP_OTLP_URL__"), () => resolveBrowserHttpUrl(globalThis.window, "/otlp"));
 
@@ -83,6 +82,12 @@ const resourceAttributes = (): R.ReadonlyRecord<string, string> => ({
  * exporter (traces/logs/metrics over JSON) whose tracer threads client span
  * context onto rpc envelopes; absent ⇒ {@link Layer.empty}, so the exporter is
  * opt-in and dev/tests without a collector are unaffected.
+ *
+ * **Details**
+ *
+ * The base URL comes from the `__BEEP_OTLP_URL__` runtime value or the
+ * browser's `/otlp` route, never from Vite environment variables or Node's
+ * `process`.
  *
  * **Example** (Verify is a Layer)
  *

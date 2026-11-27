@@ -9,8 +9,7 @@ import { makeCommandSource } from "@/LaneSource";
 import { LanesSnapshot } from "@/Lanes";
 import { ROWS, report } from "./fixtures.ts";
 
-// Only the spawner is real: these commands set no cwd, so it never reads the file system.
-const SpawnerLayer = BunChildProcessSpawner.layer.pipe(
+const SpawnerOverNoopFileSystem = BunChildProcessSpawner.layer.pipe(
   Layer.provide(Layer.mergeAll(FileSystem.layerNoop({}), Path.layer))
 );
 
@@ -20,7 +19,7 @@ const readWith = Effect.fn("readWith")(function* (command: ChildProcess.Command)
 });
 
 describe("LaneSource", () => {
-  it.layer(SpawnerLayer, { timeout: "30 seconds" })((it) => {
+  it.layer(SpawnerOverNoopFileSystem, { timeout: "30 seconds" })((it) => {
     it.effect("decodes the command's stdout into lanes", () =>
       Effect.gen(function* () {
         const snapshot = yield* readWith(ChildProcess.make("printf", ["%s", yield* report(ROWS)]));

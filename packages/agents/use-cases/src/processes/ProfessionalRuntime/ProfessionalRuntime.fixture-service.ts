@@ -52,7 +52,6 @@ const sameScope = S.toEquivalence(RuntimeScope);
 const sameOrderedStrings = (left: ReadonlyArray<string>, right: ReadonlyArray<string>): boolean =>
   left.length === right.length && A.every(left, (value, index) => value === right[index]);
 
-// TODO(effect-native-migration): model schema
 const toPlainJson = (value: unknown): string => encodeUnknownJsonSync(value);
 
 const spanIdsFromEvidence = (evidence: RuntimeEvidenceRef): ReadonlyArray<string> => [
@@ -224,12 +223,10 @@ const requirePromotionClear = Effect.fn("agents.professional_runtime.require_pro
     { concurrency: 1, discard: true }
   );
 
-  // The first pass establishes policy clearance before acceptance work. The
-  // second pass is the acceptance-time revision check: vertical gates must
-  // re-read their authority, so a citation appended during the first pass is
-  // visible before this function returns an accepted candidate.
-  yield* evaluateSubjects;
-  yield* evaluateSubjects;
+  const establishPolicyClearance = evaluateSubjects;
+  const recheckAuthorityAtAcceptance = evaluateSubjects;
+  yield* establishPolicyClearance;
+  yield* recheckAuthorityAtAcceptance;
 
   yield* Effect.annotateCurrentSpan({ "agents.professional_runtime.promotion_outcome": "clear" });
 });
