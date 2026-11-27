@@ -14,8 +14,7 @@ import { SOURCES } from "./sources.ts";
 describe("GritQL rules", () => {
   for (const rule of RULE_NAMES) {
     const { invalid, invalidCount, valid, messageIncludes } = SOURCES[rule];
-    // Rules ship advisory: severity matches the registry value ("warn" -> "warning").
-    const expectedSeverity = RULES[rule].severity === "error" ? "error" : "warning";
+    const advisorySeverityFromRegistry = RULES[rule].severity === "error" ? "error" : "warning";
 
     describe(rule, () => {
       it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) =>
@@ -24,7 +23,7 @@ describe("GritQL rules", () => {
             const { diagnostics } = yield* runRule(rule, invalid);
             expect(diagnostics.length).toBe(invalidCount);
             expect(A.every(diagnostics, (d) => Str.includes(messageIncludes)(d.message))).toBe(true);
-            expect(A.every(diagnostics, (d) => d.severity === expectedSeverity)).toBe(true);
+            expect(A.every(diagnostics, (d) => d.severity === advisorySeverityFromRegistry)).toBe(true);
           })
         )
       );

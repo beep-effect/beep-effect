@@ -139,7 +139,9 @@ const answerOn = Effect.fnUntraced(function* (
  * `ingest` records a report under a scope, once per run id. `answer` labels
  * a report's items and computes its delta from the lane's earlier local runs
  * on the report's branch, excluding observations that carry the report's
- * own run id. `ingest` keeps that answer with the run, and a replayed record
+ * own run id. `ingest` keeps with the run the answer this process rendered
+ * for it, the one its console showed (or, when the console had no answer, the
+ * one it can read now, or none), and a replayed record
  * on the same branch is answered with it, so it renders as the run it replays
  * whatever was recorded or pruned since. `runs`
  * lists a subject's history; `series` shows one item's series by branch.
@@ -187,7 +189,6 @@ export const makeGateHistoryStore = Effect.fnUntraced(function* (
   backend?: HistoryBackend
 ): Effect.fn.Return<GateHistoryStoreShape> {
   const store = backend ?? (yield* makeMemoryBackend(config));
-  // What this process rendered, by run, so ingest keeps the answer the console showed.
   const rendered = yield* Ref.make(HashMap.empty<string, HistoryAnswer>());
   const answer = Effect.fnUntraced(function* (report: GateReport, scope: HistoryScope) {
     const branch = O.getOrElse(report.branch, () => scope.branch);
@@ -195,7 +196,6 @@ export const makeGateHistoryStore = Effect.fnUntraced(function* (
     yield* Ref.update(rendered, HashMap.set(report.runId, found));
     return found;
   });
-  // A run whose console had no answer keeps the one it can read now, or none.
   const answerToKeep = Effect.fnUntraced(function* (report: GateReport, scope: HistoryScope) {
     const byRun = yield* Ref.get(rendered);
     const shown = HashMap.get(byRun, report.runId);

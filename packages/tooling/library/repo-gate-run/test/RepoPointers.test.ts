@@ -1,5 +1,3 @@
-// AC-L9: every pointer line of every cell names repo CLI commands from the
-// pointer table, never an MCP tool, a bare tool or a document.
 import { FoldResult } from "@beep/gate-report/CauseFold";
 import { CellContext, ConsoleInput, dispatchTable } from "@beep/gate-report/Dispatch";
 import { GateReport, Totals } from "@beep/gate-report/GateReport";
@@ -29,14 +27,12 @@ import type { RepoCommand } from "@beep/repo-gate-run/RepoPointers";
 
 const GATES = ["test", "check"] as const;
 
-// Upstream's MCP tool names, spelled in parts so a search of this package for
-// them (the AC-L9 check) finds only real pointers.
-const mcpTool = (...parts: ReadonlyArray<string>): string => A.join(parts, "_");
+const mcpToolSpelledInParts = (...parts: ReadonlyArray<string>): string => A.join(parts, "_");
 const upstreamTools = [
-  mcpTool("test", "errors"),
-  mcpTool("failure", "signature", "get"),
-  mcpTool("file", "coverage"),
-  mcpTool("test", "coverage"),
+  mcpToolSpelledInParts("test", "errors"),
+  mcpToolSpelledInParts("failure", "signature", "get"),
+  mcpToolSpelledInParts("file", "coverage"),
+  mcpToolSpelledInParts("test", "coverage"),
 ];
 
 const reportFor = (gate: string) =>
@@ -55,7 +51,6 @@ const reportFor = (gate: string) =>
     totals: Totals.make({ collected: 1, failed: 1 }),
   });
 
-// Every cell of the dispatch table for every gate, through the console.
 const pointerLines = A.flatMap(GATES, (gate) =>
   A.flatMap(RunShape.literals, (shape) =>
     A.flatMap(RunOutcome.literals, (outcome) => {
@@ -85,15 +80,15 @@ describe("AC-L9: next steps are commands", () => {
   it("refuses an MCP tool name, a bare tool, a document and an unknown repo command", () => {
     const refused = (line: string, violation: PointerLineError["violation"], command: string) =>
       assertFailure(verifyPointerLine(line, repoCommands), PointerLineError.make({ violation, command }));
-    refused(`next: ${mcpTool("test", "errors")}`, "mcp-tool", mcpTool("test", "errors"));
+    refused(`next: ${mcpToolSpelledInParts("test", "errors")}`, "mcp-tool", mcpToolSpelledInParts("test", "errors"));
     refused("next: vitest run --reporter=verbose", "bare-tool", "vitest run --reporter=verbose");
     refused("next: see docs/runbooks/gates.md", "documentation", "see docs/runbooks/gates.md");
     refused("next: https://example.com/gates", "documentation", "https://example.com/gates");
     refused("next: bun run beep gate list", "unknown-command", "bun run beep gate list");
     refused(
-      `next: bun run beep gate show test; ${mcpTool("failure", "signature", "get")}`,
+      `next: bun run beep gate show test; ${mcpToolSpelledInParts("failure", "signature", "get")}`,
       "mcp-tool",
-      mcpTool("failure", "signature", "get")
+      mcpToolSpelledInParts("failure", "signature", "get")
     );
     refused("run vitest", "bare-tool", "run vitest");
   });
@@ -103,12 +98,11 @@ describe("AC-L9: next steps are commands", () => {
     assert.isFalse(A.some(texts, (text) => A.some(upstreamTools, (tool) => Str.includes(tool)(text))));
   });
 
-  // Every pointer command is built; the repo CLI's `gate-pointers` test resolves
-  // each one in its real command tree.
   it("every pointer command is live", () => {
     assert.deepStrictEqual(
       A.filter(repoCommands, (command) => CommandStatus.is.planned(command.status)),
-      A.empty<RepoCommand>()
+      A.empty<RepoCommand>(),
+      "every pointer command is built; the repo CLI's gate-pointers test resolves each in its real command tree"
     );
   });
 });

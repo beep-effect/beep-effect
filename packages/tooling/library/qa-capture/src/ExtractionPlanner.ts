@@ -243,6 +243,13 @@ const distancePx = (down: PointerDownEvent, x: number, y: number): number => Mat
  * Pairing state (open transitions, animations, gestures, hovers) is tracked
  * with `MutableHashMap`s local to the call; the function stays pure.
  *
+ * A cancelled press below the drag threshold yields no window; a cancelled
+ * drag keeps its drag window and post-roll under a `drag-cancel:` label, so
+ * the post-cancel reset is judged apart from a completed drag. A hover strip
+ * is anchored, not fractional: pre-roll before the enter, a fixed offset after
+ * it, and post-roll after the leave. A transition or animation that never
+ * ends closes after its computed duration.
+ *
  * **Example** (Plan windows from markers)
  *
  * ```ts
@@ -332,10 +339,6 @@ export const planWindows: {
         onSome: (tracked) => {
           const travelled = Math.max(tracked.maxDistancePx, distancePx(tracked.down, event.x, event.y));
           const isDrag = O.exists(dragRule, (rule) => travelled >= rule.minDistancePx);
-          // A cancelled press below the drag threshold left nothing on
-          // screen worth judging; a cancelled drag must show the
-          // post-cancel reset, so it keeps the drag window (and its
-          // post-roll) under a label the judge can tell apart.
           if (isDrag) {
             pushSpan(dragRule, tracked.down.tEpochMs, event.tEpochMs, `drag-cancel:${tracked.down.selectorPath}`, [
               tracked.down.seq,
@@ -364,8 +367,6 @@ export const planWindows: {
           }
           const startEpochMs = Math.max(0, enter.tEpochMs - rule.preRollMs);
           const endEpochMs = event.tEpochMs + rule.postRollMs;
-          // The hover strip is anchored, not fractional: enter-50,
-          // enter+150, leave+50 per the planner doctrine.
           pushSpan(
             hoverRule,
             enter.tEpochMs,
@@ -429,7 +430,6 @@ export const planWindows: {
     handleEvent(event);
   });
 
-  // Close dangling transition/animation starts using their computed duration.
   MutableHashMap.forEach(state.openTransitions, (start) =>
     pushSpan(
       transitionRule,
@@ -676,6 +676,10 @@ export class BudgetFitResult extends S.Opaque<BudgetFitResult, { readonly brand:
  * (latest start first inside a priority). Every step is recorded in
  * `dropped`; the returned estimate never exceeds the budget.
  *
+ * A GIF window longer than `maxGifSeconds` is recorded as `gif-capped` before
+ * the ladder runs but keeps its true span: estimation and request building
+ * both apply the cap.
+ *
  * **Example** (Fit empty list under budget)
  *
  * ```ts
@@ -694,8 +698,6 @@ export const applyBudget: {
   const dropped: Array<DroppedWindow> = [];
   let current: ReadonlyArray<ExtractionWindow> = windows;
 
-  // Record capped GIF windows up front; estimation and request building both
-  // apply the cap, the window itself keeps its true span.
   A.forEach(current, (window) => {
     const overCap = O.isSome(window.gif) && (window.endEpochMs - window.startEpochMs) / 1000 > budget.maxGifSeconds;
     if (overCap) {
@@ -709,7 +711,6 @@ export const applyBudget: {
 
   const overBudget = (): boolean => estimateTotal(current, budget) > budget.maxTotalBytes;
 
-  // Step 1: drop P2 windows.
   if (overBudget()) {
     A.forEach(
       A.filter(current, (window) => window.priority === "P2"),
@@ -720,7 +721,6 @@ export const applyBudget: {
     current = A.filter(current, (window) => window.priority !== "P2");
   }
 
-  // Step 2: reduce GIF fps.
   if (overBudget()) {
     current = A.map(current, (window) =>
       O.match(
@@ -740,7 +740,6 @@ export const applyBudget: {
     );
   }
 
-  // Step 3: reduce GIF width.
   if (overBudget()) {
     current = A.map(current, (window) =>
       O.match(
@@ -760,7 +759,6 @@ export const applyBudget: {
     );
   }
 
-  // Step 4: GIFs become strips.
   if (overBudget()) {
     current = A.map(current, (window) =>
       O.match(window.gif, {
@@ -773,7 +771,6 @@ export const applyBudget: {
     );
   }
 
-  // Step 5: drop whole windows until the estimate fits.
   let ordered = A.sort(current, byBudgetDropOrder);
   while (estimateTotal(ordered, budget) > budget.maxTotalBytes && A.isReadonlyArrayNonEmpty(ordered)) {
     const head = A.headNonEmpty(ordered);

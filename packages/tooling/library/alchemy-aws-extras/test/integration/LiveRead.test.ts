@@ -44,8 +44,7 @@ const environment = Layer.succeed(
   }).pipe(Effect.orDie)
 );
 
-/** The `read` lifecycle method, with its failure named (providers type it `any`). */
-type ReadFn = (input: {
+type ReadWithNamedFailure = (input: {
   readonly id: string;
   readonly fqn: string;
   readonly instanceId: string;
@@ -55,7 +54,7 @@ type ReadFn = (input: {
 
 const readAttributes = Effect.fn("LiveRead.readAttributes")(function* (type: string, olds: object) {
   const collection = yield* Providers;
-  const read: ReadFn | undefined = collection.get(type)?.read;
+  const read: ReadWithNamedFailure | undefined = collection.get(type)?.read;
   if (read === undefined) return yield* Effect.die(`no read for ${type}`);
   return yield* read({ id: type, fqn: type, instanceId: "live-read", olds, output: undefined });
 });

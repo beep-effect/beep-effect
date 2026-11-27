@@ -62,8 +62,6 @@ const CodegenKitTestLayer = Layer.mergeAll(
   CodegenKit.layer().pipe(Layer.provide(readonlyFormatterPlatform))
 );
 
-// The only writes a generated-file check may perform are to the temporary files the
-// kit itself stages for its unified diff; every other write or directory creation dies.
 const readonlyCheckFileSystem = Layer.effect(
   FileSystem.FileSystem,
   Effect.gen(function* () {
@@ -913,8 +911,7 @@ const acpTransforms: ReadonlyArray<NamedTransform> = [
   "distributeAllOf",
 ];
 
-// The ACP `IdleStateUpdate` shape since schema-v2.0.0-alpha.9: union branches narrow the base `stopReason`.
-const idleStateUpdate = {
+const acpIdleStateUpdate = {
   type: "object",
   properties: {
     usage: { type: "string" },
@@ -1310,9 +1307,9 @@ it.layer(CodegenKitTestLayer, { timeout: "10 seconds" })("@beep/codegen-kit ACP 
       expect(unionLast).toEqual(expected);
       expect(hook(unionFirst)).toEqual(expected);
 
-      // Without outer annotations the union keeps its own description in either member order.
-      expect(hook({ allOf: [modeRef, messageRef] })).toEqual({ ...expected, description: "Form mode" });
-      expect(hook({ allOf: [messageRef, modeRef] })).toEqual({ ...expected, description: "Form mode" });
+      const ownDescription = "without outer annotations the union keeps its own description in either member order";
+      expect(hook({ allOf: [modeRef, messageRef] }), ownDescription).toEqual({ ...expected, description: "Form mode" });
+      expect(hook({ allOf: [messageRef, modeRef] }), ownDescription).toEqual({ ...expected, description: "Form mode" });
     })
   );
 
@@ -1413,15 +1410,19 @@ it.layer(CodegenKitTestLayer, { timeout: "10 seconds" })("@beep/codegen-kit ACP 
       expect(hook({ allOf: [captionRef, blockRef] })).toEqual(expected);
       expect(hook(unionFirst)).toEqual(expected);
 
-      // Annotations beside a member's `$ref` override the referenced definition's and rank as that
-      // member's own; the node's own win over every member.
       const useSite = { $ref: "#/$defs/Block", description: "Use site" };
-      expect(hook({ allOf: [useSite, captionRef] })).toEqual({ ...expected, description: "Use site" });
-      expect(hook({ allOf: [captionRef, useSite] })).toEqual({ ...expected, description: "Use site" });
+      const besideRef = "annotations beside a member's $ref override the referenced definition's as that member's own";
+      expect(hook({ allOf: [useSite, captionRef] }), besideRef).toEqual({ ...expected, description: "Use site" });
+      expect(hook({ allOf: [captionRef, useSite] }), besideRef).toEqual({ ...expected, description: "Use site" });
       expect(hook({ allOf: [blockRef, { ...captionRef, description: "Captioned" }] })).toEqual(expected);
-      expect(hook({ title: "Outer", allOf: [captionRef, blockRef] })).toEqual({ ...expected, title: "Outer" });
+      expect(
+        hook({ title: "Outer", allOf: [captionRef, blockRef] }),
+        "the node's own annotations win over every member"
+      ).toEqual({
+        ...expected,
+        title: "Outer",
+      });
 
-      // Objects resolve a conflict right over left wherever the union sits among the members.
       const metaRef = { $ref: "#/$defs/Meta" };
       const sides = A.map(
         [
@@ -1432,14 +1433,19 @@ it.layer(CodegenKitTestLayer, { timeout: "10 seconds" })("@beep/codegen-kit ACP 
         ],
         (allOf) => hook({ allOf })["x-side"]
       );
-      expect(sides).toEqual(["server", "server", "server", "client"]);
+      expect(sides, "objects resolve a conflict right over left wherever the union sits among the members").toEqual([
+        "server",
+        "server",
+        "server",
+        "client",
+      ]);
 
-      // Between two unions, as between two objects, the later member wins.
       const localeRef = { $ref: "#/$defs/Locale" };
       const localeLast = hook({ allOf: [blockRef, localeRef] });
       const localeFirst = hook({ allOf: [localeRef, blockRef] });
-      expect([localeLast.description, localeLast.title]).toEqual(["Locale", "Locale"]);
-      expect([localeFirst.description, localeFirst.title]).toEqual(["Content block", "Block"]);
+      const laterUnionWins = "between two unions, as between two objects, the later member wins";
+      expect([localeLast.description, localeLast.title], laterUnionWins).toEqual(["Locale", "Locale"]);
+      expect([localeFirst.description, localeFirst.title], laterUnionWins).toEqual(["Content block", "Block"]);
     })
   );
 
@@ -1591,7 +1597,7 @@ it.layer(CodegenKitTestLayer, { timeout: "10 seconds" })("@beep/codegen-kit ACP 
   it.effect("intersects a base property into every union branch that narrows it", () =>
     Effect.sync(() => {
       const hook = composeTransforms(acpTransforms, {});
-      const narrowed = hook(idleStateUpdate);
+      const narrowed = hook(acpIdleStateUpdate);
 
       expect(narrowed).toEqual({
         anyOf: [
@@ -1618,7 +1624,7 @@ it.layer(CodegenKitTestLayer, { timeout: "10 seconds" })("@beep/codegen-kit ACP 
       });
       expect(hook(narrowed)).toEqual(narrowed);
 
-      const pushedDown = composeTransforms(["intersectSiblingProperties"], {})(idleStateUpdate);
+      const pushedDown = composeTransforms(["intersectSiblingProperties"], {})(acpIdleStateUpdate);
       expect(pushedDown.properties).toEqual({ usage: { type: "string" } });
 
       const unchanged: JsonSchema.JsonSchema = {
@@ -1767,7 +1773,7 @@ it.layer(CodegenKitTestLayer, { timeout: "10 seconds" })("@beep/codegen-kit ACP 
       expect(raw).toContain("(?!(?:form|url)$)");
 
       const idleConfig = GenerateConfig.make({ ...config("idle.gen.ts"), transforms: acpTransforms });
-      const generate5 = yield* kit.generate({ $defs: { IdleStateUpdate: idleStateUpdate } }, idleConfig);
+      const generate5 = yield* kit.generate({ $defs: { IdleStateUpdate: acpIdleStateUpdate } }, idleConfig);
       const idle = yield* kit.postProcess(generate5, idleConfig);
       expect(idle).toContain('"stopReason": S.tag("end_turn")');
       expect(idle).toContain('"stopReason": S.optionalKey(S.Null)');
@@ -1872,14 +1878,13 @@ it.layer(CodegenKitTestLayer, { timeout: "10 seconds" })("@beep/codegen-kit ACP 
         prefix: "codegen-kit-test-",
       });
       const target = path.join(directory, "Current.ts");
-      // Fits the repository's 120-column policy, but not the OpenAPI 80-column policy.
-      const content =
+      const fits120ColumnsNot80 =
         'export const palette = { alpha: "aaaaaaaaaaaa", beta: "bbbbbbbbbbbb", gamma: "cccccccccccc" };\n';
-      yield* fs.writeFileString(target, content);
-      const reports = yield* checkWithoutWrites([GeneratedModule.make({ path: target, content })]);
+      yield* fs.writeFileString(target, fits120ColumnsNot80);
+      const reports = yield* checkWithoutWrites([GeneratedModule.make({ path: target, content: fits120ColumnsNot80 })]);
       expect(A.map(reports, (report) => report.status)).toEqual(["clean"]);
       const actual = yield* fs.readFileString(target);
-      expect(actual).toBe(content);
+      expect(actual).toBe(fits120ColumnsNot80);
     })
   );
 
@@ -1930,9 +1935,7 @@ it.layer(CodegenKitTestLayer, { timeout: "10 seconds" })("@beep/codegen-kit ACP 
       const current = "export const retained = true;\n";
       yield* fs.writeFileString(target, current);
       const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-      // The repository allows formatting syntax errors. Use an actual failing
-      // process with nonempty stdout to test exit-status rejection directly.
-      const rejectedFormatter = ChildProcessSpawner.make(() =>
+      const exitSevenFormatter = ChildProcessSpawner.make(() =>
         spawner.spawn(
           ChildProcess.make(
             process.execPath,
@@ -1943,9 +1946,11 @@ it.layer(CodegenKitTestLayer, { timeout: "10 seconds" })("@beep/codegen-kit ACP 
       );
       const failure = yield* checkWithoutWrites([
         GeneratedModule.make({ path: target, content: "export const generated = true;\n" }),
-      ]).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, rejectedFormatter), Effect.flip);
+      ]).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, exitSevenFormatter), Effect.flip);
       expect(failure._tag).toBe("CodegenFormatError");
-      expect(failure.message).toContain("exit code 7");
+      expect(failure.message, "a nonzero exit with nonempty stdout is rejected on its status alone").toContain(
+        "exit code 7"
+      );
       const actual = yield* fs.readFileString(target);
       expect(actual).toBe(current);
     })

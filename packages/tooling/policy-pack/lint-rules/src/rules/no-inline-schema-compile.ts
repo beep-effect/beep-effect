@@ -25,9 +25,6 @@ import {
 import type { ESTree } from "@oxlint/plugins";
 import type { AstNode, MaybeNode } from "./utils.ts";
 
-// Effect caches each schema's parser per AST, so a decoder/encoder over a hoisted schema
-// compiles once however often it is called. A schema constructed inline in a function body
-// is a new AST on every call, misses that cache, and recompiles.
 const COMPILER_METHODS = HashSet.fromIterable([
   "is",
   "asserts",
@@ -57,13 +54,8 @@ const COMPILER_METHODS = HashSet.fromIterable([
   "encodeUnknownResult",
   "encodeUnknownSync",
 ]);
-
-// Sources whose `Schema` binding we trust: `effect` re-exports `Schema`; `effect/Schema` is the
-// module itself (namespace/default) and re-exports a `Schema` named member.
 const SCHEMA_NAMED_SOURCES = HashSet.fromIterable(["effect", "effect/Schema"]);
 const SCHEMA_MODULE_SOURCES = HashSet.fromIterable(["effect/Schema"]);
-
-// Schema instance methods that derive a new schema, and so a new AST, from their receiver.
 const SCHEMA_BUILDER_METHODS = HashSet.fromIterable(["annotate", "annotateKey", "check", "pipe"]);
 
 type ModuleStatement = ESTree.Program["body"][number];
@@ -94,6 +86,13 @@ const inlineSchemaMessage = (method: string) =>
  * `rowSchema.pipe(...)` over one) cannot move to module scope and is left
  * alone, as is any construction taking a function literal argument.
  *
+ * Only the schema argument, the call's first, is inspected. `Schema` is
+ * recognized as a named `Schema` import from `effect` or `effect/Schema`, or
+ * as the `effect/Schema` module itself (namespace or default import).
+ * Module-scope bindings are collected before the walk, so a use above its
+ * declaration still resolves. An argument-free `.pipe()` returns its receiver
+ * and is not a derivation.
+ *
  * **Example** (Schema compile rule description)
  *
  * ```ts
@@ -117,10 +116,7 @@ export default defineRule({
     },
   },
   createOnce(context) {
-    // Local names bound to the Schema module via imports (namespace, default, named, aliases).
     const schemaIdentifiers = MutableHashSet.empty<string>();
-    // Names bound at module scope: import locals and top-level const/let/var, class and function
-    // declarations, collected up front so a use above its declaration still resolves.
     const moduleBindings = MutableHashSet.empty<string>();
     let functionDepth = 0;
 
@@ -149,8 +145,6 @@ export default defineRule({
         Match.when({ type: "ExportNamedDeclaration" }, ({ declaration }) => recordModuleStatement(declaration)),
         Match.orElse(() => undefined)
       );
-
-    // A schema expression is hoistable only when every leaf resolves to a module-scope binding.
     const isStaticSchemaReference = (node: MaybeNode): boolean => {
       const expression = unwrapExpression(node);
       if (O.isNone(expression)) return false;
@@ -163,8 +157,6 @@ export default defineRule({
         node,
         (expression) => expression.type === "Identifier" && MutableHashSet.has(schemaIdentifiers, expression.name)
       );
-
-    // Resolve a `<schemaBinding>.<method>` access to its compiler method name, if tracked.
     const compilerMethod = (callee: MaybeNode): O.Option<string> =>
       unwrapMemberExpression(callee).pipe(
         O.filter(
@@ -175,8 +167,6 @@ export default defineRule({
         O.flatMap((access) => getPropertyName(access.property)),
         O.filter((method) => HashSet.has(COMPILER_METHODS, method))
       );
-
-    // Narrow `node` to a `<schemaBinding>.<method>(...)` call, yielding method name + arguments.
     const asSchemaMethodCall = (
       node: MaybeNode
     ): O.Option<{ readonly method: O.Option<string>; readonly args: ReadonlyArray<ESTree.Argument> }> =>
@@ -189,9 +179,6 @@ export default defineRule({
           )
         )
       );
-
-    // Narrow `node` to a `<receiver>.<builder>(...)` call that derives a new schema, yielding the
-    // receiver + arguments. A bare `Model.pipe()` returns its receiver unchanged, so it needs arguments.
     const asSchemaBuilderCall = (
       node: MaybeNode
     ): O.Option<{ readonly receiver: O.Option<AstNode>; readonly args: ReadonlyArray<ESTree.Argument> }> =>
@@ -241,9 +228,6 @@ export default defineRule({
         Match.orElse(thunkFalse)
       );
     };
-
-    // The nodes an inline construction is built from: the arguments of a `<schemaBinding>.<method>(...)`
-    // call, or the receiver plus arguments of a builder such as `Model.pipe(Schema.check(...))`.
     const inlineConstructionParts = (node: MaybeNode): O.Option<ReadonlyArray<MaybeNode>> =>
       O.orElse(
         O.map(asSchemaMethodCall(node), ({ args }) => args),
@@ -252,9 +236,6 @@ export default defineRule({
 
     const isStaticInlineConstruction = (node: MaybeNode): boolean =>
       O.exists(inlineConstructionParts(node), A.every(isStaticSchemaExpression));
-
-    // Report only when the first argument constructs a static schema inline; a plain schema
-    // reference hits the per-AST parser cache and is fine inside a function body.
     const reportMessage = (method: string, firstArg: MaybeNode): O.Option<string> =>
       isStaticInlineConstruction(firstArg) ? O.some(inlineSchemaMessage(method)) : O.none();
 
@@ -264,8 +245,6 @@ export default defineRule({
         namespace: () => HashSet.has(SCHEMA_MODULE_SOURCES, source),
         default: () => HashSet.has(SCHEMA_MODULE_SOURCES, source),
       });
-
-    // Record `import { Schema }` / `import * as Schema` / `import Schema` bindings to the Schema module.
     const recordBinding = (source: string, binding: ImportBinding) => {
       if (tracksSchema(source, binding)) MutableHashSet.add(schemaIdentifiers, binding.local);
     };

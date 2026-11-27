@@ -491,6 +491,11 @@ const encodeNextConfigResult = NextConfig.encodeResult;
 /**
  * Decode unknown input into a public Next.js configuration value.
  *
+ * **Gotchas**
+ *
+ * The decoder is unary and takes no parse options: a dual is undecidable when
+ * the input is `unknown`. Pass options to `NextConfig.decodeEffect` directly.
+ *
  * **Example** (Decode config with Effect)
  *
  * ```ts
@@ -503,8 +508,6 @@ const encodeNextConfigResult = NextConfig.encodeResult;
  * @category decoding
  * @since 0.0.0
  */
-// unary by contract: `options` stays reachable through `NextConfig.decodeEffect`;
-// a dual is undecidable here because `input` is `unknown`.
 export const decodeNextConfig: (input: unknown) => Effect.Effect<NextConfig, S.SchemaError> = NextConfig.decodeEffect;
 
 /**

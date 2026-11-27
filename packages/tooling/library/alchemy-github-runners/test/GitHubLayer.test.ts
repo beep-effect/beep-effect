@@ -75,14 +75,12 @@ const responses: Readonly<Record<string, FakeAnswer>> = {
   "GET /repos/beep-effect/beep-effect/actions/runners/21": ok(runner(21, false)),
   "GET /repos/beep-effect/beep-effect/actions/runners": ok(`{"total_count":1,"runners":[${runner(21, false)}]}`),
   "DELETE /repos/beep-effect/beep-effect/actions/runners/21": { status: 204, body: "" },
-  // A primary rate limit answered with 403, and a permission refusal answered with 403.
   "GET /repos/beep-effect/beep-effect/actions/jobs/8": {
     status: 403,
     body: '{"message":"API rate limit exceeded for installation ID 42."}',
     headers: { "content-type": "application/json", "x-ratelimit-remaining": "0", "x-ratelimit-reset": "0" },
   },
   "GET /repos/beep-effect/beep-effect/actions/jobs/9": ok('{"message":"Resource not accessible by integration"}', 403),
-  // A 403 asking to wait, a 429, and a secondary rate limit with no hint headers.
   "GET /repos/beep-effect/beep-effect/actions/jobs/10": {
     status: 403,
     body: '{"message":"Forbidden"}',
@@ -252,27 +250,29 @@ describe("live GitHub layers over distilled", () => {
         map({ _tag: "UnknownGithubError", message: "no status" }),
         map({ _tag: "UnknownGithubError", message: "text status", status: "410" } as { _tag: string; message: string }),
         map({ _tag: "UnknownGithubError", message: "fraction", status: 410.5 } as { _tag: string; message: string }),
-        // A mapped tag keeps the mapped status, whatever status the error also carries.
         map({ _tag: "Forbidden", message: "Resource not accessible", status: 503 } as {
           _tag: string;
           message: string;
         }),
-        // A message that is not text is read by its tag and never as a rate limit.
         map({ _tag: "Forbidden", message: { text: "rate limit" } }),
         map({ _tag: "SocketError", message: { reason: "reset" } }),
       ],
       (error) => [error.status, error.rateLimited, error.message, classifyFailure("generateJitConfig")(error)] as const
     );
-    deepStrictEqual(rows, [
-      [O.some(410), false, "gone", "deterministic"],
-      [O.some(503), false, "unavailable", "transient"],
-      [O.none(), false, "no status", "transient"],
-      [O.none(), false, "text status", "transient"],
-      [O.none(), false, "fraction", "transient"],
-      [O.some(403), false, "Resource not accessible", "deterministic"],
-      [O.some(403), false, "Forbidden", "deterministic"],
-      [O.none(), false, "SocketError", "transient"],
-    ]);
+    deepStrictEqual(
+      rows,
+      [
+        [O.some(410), false, "gone", "deterministic"],
+        [O.some(503), false, "unavailable", "transient"],
+        [O.none(), false, "no status", "transient"],
+        [O.none(), false, "text status", "transient"],
+        [O.none(), false, "fraction", "transient"],
+        [O.some(403), false, "Resource not accessible", "deterministic"],
+        [O.some(403), false, "Forbidden", "deterministic"],
+        [O.none(), false, "SocketError", "transient"],
+      ],
+      "a mapped tag keeps its mapped status; a non-text message is read by its tag, never as a rate limit"
+    );
   });
 
   it.effect("reads every page of runner groups, and a missing group only after the last one", () =>
@@ -307,7 +307,6 @@ describe("live GitHub layers over distilled", () => {
           Effect.gen(function* () {
             const github = yield* GitHubRunners;
             return yield* github.runnerGroupId(token, "beep-effect", groupName);
-            // The client would retry a 5xx itself; the mapping is what this test reads.
           }).pipe(GitHubRetry.none)
         );
       const secondPage = ok(`{"total_count":101,"runner_groups":[${group(101, "beep-ec2-heavy")}]}`);
@@ -394,7 +393,6 @@ describe("live GitHub layers over distilled", () => {
                 github.isJobQueued(token, { owner: "beep-effect", repo: "beep-effect", jobId }).pipe(Effect.flip),
               { concurrency: 1 }
             );
-            // The client would wait out the rate limit itself; the mapping is what this test reads.
           }).pipe(GitHubRetry.none)
         );
         deepStrictEqual(
@@ -408,7 +406,8 @@ describe("live GitHub layers over distilled", () => {
             [true, O.some("TooManyRequests"), "transient"],
             [true, O.some("TooManyRequests"), "transient"],
             [false, O.some("Forbidden"), "deterministic"],
-          ]
+          ],
+          "a primary-limit 403, a 403 with retry-after, a 429 and a hintless secondary limit are rate limits; a refusal is not"
         );
         expect(
           A.map(

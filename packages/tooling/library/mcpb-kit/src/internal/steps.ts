@@ -27,12 +27,6 @@ import type { McpbRuntimePin } from "../McpbKit.models.ts";
 const $I = $McpbKitId.create("internal/steps");
 
 const DuckDbVersion = "2.0.1-r.1";
-/*
- * sha512 integrity published by the npm registry for
- * @duckdb/node-bindings-win32-x64@2.0.1-r.1, checked against the downloaded tarball.
- * Packaging verifies this pin before extracting a user-installed artifact;
- * a DuckDB catalog bump must update both constants.
- */
 const WindowsBindingsSha512 =
   "tIyo4NP52GhxRz5ReL9wy6JqcMNfsRr2mVOO40lsx9GB8jE1SRyXZEVFoIskQST8jTiSZV+ezLOPIof62Va/SA==";
 const WindowsBindingsUrl = `https://registry.npmjs.org/@duckdb/node-bindings-win32-x64/-/node-bindings-win32-x64-${DuckDbVersion}.tgz`;
@@ -202,10 +196,10 @@ export const ensureWindowsBindings = Effect.fn("McpbPackage.ensureWindowsBinding
       message: `Installed DuckDB bindings ${installedManifest.version} differ from pinned ${DuckDbVersion}; update DuckDbVersion and WindowsBindingsSha512 together.`,
     });
   }
-  // Keyed by the pinned version, so an unpack left by an older pin is never reused.
+  const bindingsEntryPerPinnedVersion = `node-bindings-win32-x64-${DuckDbVersion}`;
   return yield* fillCacheEntry(
     cacheDir,
-    `node-bindings-win32-x64-${DuckDbVersion}`,
+    bindingsEntryPerPinnedVersion,
     "duckdb.node",
     Effect.fnUntraced(function* (staging, packageDir) {
       const tarball = path.join(staging, `node-bindings-win32-x64-${DuckDbVersion}.tgz`);
@@ -254,10 +248,10 @@ export const ensureRuntime = Effect.fn("McpbPackage.ensureRuntime")(function* (
       message: `Repository .bun-version ${repoVersion} differs from the pinned Bun runtime ${pin.version}; update the runtime pin's version and sha256 together.`,
     });
   }
-  // Keyed by the pinned version, so an unpack left by an older pin is never reused.
+  const runtimeEntryPerPinnedVersion = `${pin.asset}-${pin.version}`;
   const runtimeDir = yield* fillCacheEntry(
     cacheDir,
-    `${pin.asset}-${pin.version}`,
+    runtimeEntryPerPinnedVersion,
     pin.executable,
     Effect.fnUntraced(function* (staging, unpacked) {
       const archive = path.join(staging, `${pin.asset}-${pin.version}.zip`);
@@ -284,13 +278,10 @@ export const ensureRuntime = Effect.fn("McpbPackage.ensureRuntime")(function* (
   return path.join(runtimeDir, pin.executable);
 });
 
-// Portable Executable layout: the DOS header holds the PE header offset at
-// 0x3c; the optional header starts 24 bytes after the PE signature, and its
-// data directories start at byte 96 (PE32) or 112 (PE32+) of that header.
-// Directory 4 is the certificate table: a file offset and a size.
 const DosMagic = 0x5a4d;
+const DosPeHeaderOffsetField = 0x3c;
 const PeSignature = 0x4550;
-const OptionalHeaderOffset = 24;
+const OptionalHeaderOffsetAfterSignature = 24;
 const OptionalHeaders = [
   { magic: 0x10b, directories: 96 },
   { magic: 0x20b, directories: 112 },
@@ -319,9 +310,9 @@ export const hasCertificateTable = (bytes: Uint8Array): boolean =>
   O.gen(function* () {
     const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
     const dosMagic = yield* readUint(view, 0, 2);
-    const peOffset = yield* readUint(view, 0x3c, 4);
+    const peOffset = yield* readUint(view, DosPeHeaderOffsetField, 4);
     const signature = yield* readUint(view, peOffset, 4);
-    const optionalHeader = peOffset + OptionalHeaderOffset;
+    const optionalHeader = peOffset + OptionalHeaderOffsetAfterSignature;
     const optionalMagic = yield* readUint(view, optionalHeader, 2);
     const layout = yield* A.findFirst(OptionalHeaders, ({ magic }) => magic === optionalMagic);
     const directories = optionalHeader + layout.directories;

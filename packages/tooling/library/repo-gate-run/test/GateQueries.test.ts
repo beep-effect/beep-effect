@@ -50,7 +50,6 @@ const recordOf = (runId: string) =>
       outcome: "some-fail",
       units: [],
       items: [
-        // A skipped item ahead of the failures: positions count failing and warning items only.
         Item.make({ ...failedTest("skips"), outcome: "skipped", detail: O.none(), location: O.none() }),
         Item.make({ ...failedTest("adds"), outcome: "passed", detail: O.none(), location: O.none() }),
         failedTest("subtracts"),
@@ -102,7 +101,11 @@ describe("GateQueries", () => {
         const byText = yield* gate.showItem(
           ItemQuery.make({ run: root("run-1"), selector: ItemSelector.cases.ByText.make({ text: "subtracts" }) })
         );
-        assert.strictEqual(second.item.name, "divides");
+        assert.strictEqual(
+          second.item.name,
+          "divides",
+          "positions count failing and warning items only, so the skipped item ahead shifts nothing"
+        );
         assert.strictEqual(second.runId, "run-2");
         assert.deepStrictEqual(second.lines, itemLines(fullItem));
         assert.strictEqual(byText.item.name, "subtracts");

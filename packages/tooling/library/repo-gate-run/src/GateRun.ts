@@ -151,7 +151,6 @@ const runIdOf: (target: RecordTarget) => string = RecordTarget.match({
   RootTarget: (target) => target.runId,
 });
 
-// What a run states about itself when its events do not: taken from the request.
 const statedRun = (request: GateRunRequest, startedAt: DateTime.Utc) => ({
   runId: runIdOf(request.target),
   gate: request.target.gate,
@@ -212,11 +211,6 @@ export const fallbackReport: {
 const isEnd = (event: GateEvent): boolean =>
   GateEvent.guards.RunFinished(event) || GateEvent.guards.RunCancelled(event);
 
-// The reducer resets on every `RunStarted`, so only the events from the last start describe the
-// run: a missing start is stated from the request and makes the run errored, its items kept, and a
-// run with no end after its last start (a rerun cut off when the tool exited) gets an errored
-// finish carrying the tool's exit code.
-// A run whose start was never seen was not observed whole: its finish, whatever it said, is errored.
 const unobserved = (event: GateEvent): GateEvent =>
   GateEvent.guards.RunFinished(event) ? GateEvent.cases.RunFinished.make({ ...event, reason: "errored" }) : event;
 
@@ -237,9 +231,6 @@ const completeEvents = (
   ];
 };
 
-// The record step failed, hung or died: settle the report here, with no excerpt, and name the
-// record and log as unavailable: a write may have landed, but nothing confirmed it. Completed
-// events reduce; should they not, the fallback report still gives the console a verdict.
 const unrecorded = Effect.fnUntraced(function* (request: GateRunRequest, reason: string) {
   const startedAt = yield* DateTime.now;
   const source = RunSource.match(request.source, {
@@ -253,8 +244,6 @@ const unrecorded = Effect.fnUntraced(function* (request: GateRunRequest, reason:
   });
 });
 
-// A failure's own message when it has one (a tagged error, an Error, a string), else the first
-// line of the rendered cause.
 const messageOf = (error: unknown): O.Option<string> =>
   pipe(
     O.liftPredicate(error, P.isString),
@@ -276,9 +265,6 @@ const causeReason = (cause: Cause.Cause<unknown>): string =>
     O.getOrElse(() => firstLine(cause))
   );
 
-// Persist first, under the record deadline: the path line needs the log's written size. Any
-// failure of the step (a write error the recorder could not absorb, a log stream error, malformed
-// events, a defect) or a missed deadline becomes an omission, and the console renders regardless.
 const recordWithin = Effect.fnUntraced(function* <E, R>(
   recorder: GateRecorderShape,
   request: GateRunRequest,
@@ -315,7 +301,6 @@ const readHistory = (history: GateHistoryShape, report: GateReport, deadlineMs: 
         }),
       })
     ),
-    // A history failure or a defect alike leaves the console without labels and delta.
     Effect.catchCause(flow(causeReason, withoutHistory, Effect.succeed))
   );
 

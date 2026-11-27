@@ -154,7 +154,9 @@ export type ProjectGitRepository = typeof ProjectGitRepository.Type;
  * Vercel and never reset. `teamId` and `gitRepository` are part of the
  * project's identity: changing either replaces the project, because the
  * project API has no call that moves a project between teams or relinks
- * its repository.
+ * its repository. Names are unique within a team, so a replacement that
+ * keeps its team and name deletes the old project first, and reads that
+ * previous generation as owned.
  *
  * **Example** (Next.js project props)
  *
@@ -359,30 +361,11 @@ export const Project: DeclaredResource<Project> = ProjectClass;
 
 const gitRepositoryEquivalence = S.toEquivalence(S.UndefinedOr(ProjectGitRepository));
 
-/**
- * A team or linked-repository change replaces the project: the project API cannot move a
- * project between teams or relink its repository.
- *
- * @param news - The declared props.
- * @param olds - The props of the deployed generation.
- * @returns Whether the change needs a replacement.
- */
 const replacesProject = (news: ProjectProps, olds: ProjectProps): boolean =>
   news.teamId !== olds.teamId || !gitRepositoryEquivalence(news.gitRepository, olds.gitRepository);
 
-/**
- * The declared git provider a reported link type belongs to: Vercel reports GitHub links as
- * `github`, `github-limited` or `github-custom-host`.
- *
- * @param linkType - The link `type` Vercel reports.
- * @returns The provider to compare with a declared `gitRepository.type`.
- */
 const gitProviderOf = (linkType: string): string => (Str.startsWith("github")(linkType) ? "github" : linkType);
 
-/**
- * The repository an existing project is linked to must be the declared one: the project API
- * cannot relink it, so an adopted project with another link fails instead of drifting.
- */
 const assertRepository = Effect.fn("Vercel.Project.assertRepository")(function* (
   news: ProjectProps,
   observed: ProjectAttributes | undefined
@@ -483,14 +466,6 @@ const readProject = Effect.fn("Vercel.Project.read")(function* (idOrName: string
 const protectionBody = (protection: DeploymentProtection): projects.UpdateProjectRequestSsoProtection | null =>
   DeploymentProtection.is.none(protection) ? null : { deploymentType: protection };
 
-/**
- * The settings in `news` that differ from what Vercel reports.
- *
- * @param name - The project name to keep or rename to.
- * @param news - The declared props.
- * @param current - The project as Vercel reports it.
- * @returns The `updateProject` fields to send; empty when nothing differs.
- */
 const projectPatch = (name: string, news: ProjectProps, current: ProjectAttributes) => {
   const differs = <A>(desired: A | undefined, observed: A | undefined): O.Option<A> =>
     O.filter(O.fromUndefinedOr(desired), (value) => value !== observed);
@@ -527,15 +502,11 @@ export const ProjectProvider = Provider.succeed(ProjectClass, {
     const idOrName = output?.projectId ?? (yield* projectName(id, olds, instanceId));
     const state = yield* readProject(idOrName, olds?.teamId);
     if (state === undefined) return undefined;
-    // Projects carry no ownership marker: without prior state the project is foreign,
-    // unless it is this resource's own previous generation (a delete-first replacement).
     return output !== undefined || state.projectId === previous?.projectId ? state : Unowned(state);
   }),
   diff: Effect.fn("Vercel.Project.provider.diff")(function* ({ news, olds, output }) {
     if (!isResolved(news)) return undefined;
-    // Plan-time guard: an adopted (or relinked-outside-the-stack) project keeps its link.
     if (!replacesProject(news, olds)) return yield* assertRepository(news, output);
-    // Names are unique within a team, so a replacement that keeps its team and name deletes first.
     return { action: "replace", deleteFirst: news.teamId === olds.teamId && news.name === olds.name } as const;
   }),
   reconcile: Effect.fn("Vercel.Project.provider.reconcile")(function* ({ id, instanceId, news, output, session }) {

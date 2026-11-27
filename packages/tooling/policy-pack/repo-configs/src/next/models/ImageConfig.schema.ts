@@ -288,6 +288,7 @@ export class ImageConfigComplete extends S.Opaque<ImageConfigComplete, { readonl
 
     /** @see [Maximum Disk Cache Size (in bytes)](https://nextjs.org/docs/api-reference/next/image#maximumdiskcachesize) */
     maximumDiskCacheSize: S.UndefinedOr(S.Natural).annotateKey({
+      description: "Disk cache cap in bytes; undefined lets Next.js detect it.",
       documentation: "https://nextjs.org/docs/api-reference/next/image#maximumdiskcachesize",
     }),
 
@@ -326,6 +327,7 @@ export class ImageConfigComplete extends S.Opaque<ImageConfigComplete, { readonl
       S.Array,
       S.mutable,
       S.annotateKey({
+        description: "Remote images Next.js may optimize; an empty list allows none.",
         documentation: "https://nextjs.org/docs/api-reference/next/image#remotepatterns",
       })
     ),
@@ -336,6 +338,7 @@ export class ImageConfigComplete extends S.Opaque<ImageConfigComplete, { readonl
       S.mutable,
       S.UndefinedOr,
       S.annotateKey({
+        description: "Local images Next.js may optimize; undefined allows every local image.",
         documentation: "https://nextjs.org/docs/api-reference/next/image#localPatterns",
       })
     ),
@@ -399,17 +402,17 @@ export const ImageConfig = ImageConfigComplete.mapFields(Struct.map(S.optionalKe
         loader: "default",
         loaderFile: "",
         disableStaticImages: false,
-        minimumCacheTTL: 14400, // 4 hours
+        minimumCacheTTL: 4 * 60 * 60,
         formats: ["image/webp"],
-        maximumDiskCacheSize: undefined, // auto-detect by default
+        maximumDiskCacheSize: undefined,
         maximumRedirects: 3,
-        maximumResponseBody: 50_000_000, // 50 MB
+        maximumResponseBody: 50_000_000,
         dangerouslyAllowLocalIP: false,
         dangerouslyAllowSVG: false,
         contentSecurityPolicy: `script-src 'none'; frame-src 'none'; sandbox;`,
         contentDispositionType: "attachment",
-        localPatterns: undefined, // default: allow all local images
-        remotePatterns: [], // default: allow no remote images
+        localPatterns: undefined,
+        remotePatterns: [],
         qualities: [75],
         unoptimized: false,
         customCacheHandler: false,

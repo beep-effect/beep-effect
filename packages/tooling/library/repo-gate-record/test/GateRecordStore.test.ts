@@ -41,9 +41,7 @@ const record = (runId: string) =>
     }),
   });
 
-// Each test addresses its own package, since a layer's store is shared by
-// the tests of its block.
-const packageTarget = (name: string) =>
+const isolatedPackageTarget = (name: string) =>
   RecordTarget.cases.PackageTarget.make({ packageDir: `packages/${name}`, gate: "test" });
 const rootTarget = (runId: string) => RecordTarget.cases.RootTarget.make({ gate: "test", runId });
 const runIds = (count: number) => A.makeBy(count, (index) => `run-${index + 10}`);
@@ -51,8 +49,7 @@ const runIds = (count: number) => A.makeBy(count, (index) => `run-${index + 10}`
 const LOG_TEXT = "line one\nline two ✓\n";
 const logStream = Stream.make(encoder.encode("line one\n"), encoder.encode("line two ✓\n"));
 
-// A name source that draws the given values in turn, then repeats the last.
-const drawing = (values: A.NonEmptyReadonlyArray<number>): Random.Random => {
+const drawsInTurnThenRepeatsLast = (values: A.NonEmptyReadonlyArray<number>): Random.Random => {
   let drawn = 0;
   return {
     nextDoubleUnsafe: () => A.getUnsafe(values, Math.min(drawn++, values.length - 1)),
@@ -62,12 +59,11 @@ const drawing = (values: A.NonEmptyReadonlyArray<number>): Random.Random => {
 
 const sameRecord = S.toEquivalence(GateRecord);
 
-// The rules every store obeys, live or in memory.
 const storeRules = (it: Vitest.MethodsNonLive<GateRecordStore>) => {
   it.effect("writes the whole raw stream and counts its bytes", () =>
     Effect.gen(function* () {
       const store = yield* GateRecordStore;
-      const written = yield* store.writeLog(packageTarget("log"), logStream);
+      const written = yield* store.writeLog(isolatedPackageTarget("log"), logStream);
       assert.strictEqual(written.path, "packages/log/.beep/gates/test/report.log");
       assert.strictEqual(written.bytes, encoder.encode(LOG_TEXT).length);
     })
@@ -76,9 +72,9 @@ const storeRules = (it: Vitest.MethodsNonLive<GateRecordStore>) => {
   it.effect("reads back the record it wrote, with its original run id", () =>
     Effect.gen(function* () {
       const store = yield* GateRecordStore;
-      const written = yield* store.writeRecord(packageTarget("read"), record("r1"));
-      const read = yield* store.readRecord(packageTarget("read"));
-      assert.strictEqual(written.path, recordLocation(packageTarget("read")).record);
+      const written = yield* store.writeRecord(isolatedPackageTarget("read"), record("r1"));
+      const read = yield* store.readRecord(isolatedPackageTarget("read"));
+      assert.strictEqual(written.path, recordLocation(isolatedPackageTarget("read")).record);
       assert.isTrue(sameRecord(read, record("r1")));
       assert.strictEqual(recordProvenance(read, "r2"), "replay");
       assert.strictEqual(recordProvenance("r1")(read), "fresh");
@@ -88,9 +84,9 @@ const storeRules = (it: Vitest.MethodsNonLive<GateRecordStore>) => {
   it.effect("overwrites a package record on the next run", () =>
     Effect.gen(function* () {
       const store = yield* GateRecordStore;
-      yield* store.writeRecord(packageTarget("again"), record("r1"));
-      yield* store.writeRecord(packageTarget("again"), record("r2"));
-      const read = yield* store.readRecord(packageTarget("again"));
+      yield* store.writeRecord(isolatedPackageTarget("again"), record("r1"));
+      yield* store.writeRecord(isolatedPackageTarget("again"), record("r2"));
+      const read = yield* store.readRecord(isolatedPackageTarget("again"));
       assert.strictEqual(read.report.runId, "r2");
     })
   );
@@ -119,7 +115,7 @@ const storeRules = (it: Vitest.MethodsNonLive<GateRecordStore>) => {
   it.effect("reports a missing record and lists no runs for an unused gate", () =>
     Effect.gen(function* () {
       const store = yield* GateRecordStore;
-      const missing = yield* Effect.flip(store.readRecord(packageTarget("missing")));
+      const missing = yield* Effect.flip(store.readRecord(isolatedPackageTarget("missing")));
       const runs = yield* store.listRuns("check");
       assert.strictEqual(missing.reason, "missing");
       assert.deepStrictEqual(runs, []);
@@ -129,57 +125,57 @@ const storeRules = (it: Vitest.MethodsNonLive<GateRecordStore>) => {
   it.effect("returns a stream failure as it is", () =>
     Effect.gen(function* () {
       const store = yield* GateRecordStore;
-      const failure = yield* Effect.flip(store.writeLog(packageTarget("stream"), Stream.fail("tool crashed")));
+      const failure = yield* Effect.flip(store.writeLog(isolatedPackageTarget("stream"), Stream.fail("tool crashed")));
       assert.strictEqual(failure, "tool crashed");
     })
   );
 };
 
-// The platform store over an in-memory file system that keeps POSIX errors
-// (EISDIR, ENOTDIR), so the platform code path runs with no disk.
-const platform = Layer.mergeAll(MemoryFileSystem.layer, Path.layer);
+const memoryPlatformWithPosixErrors = Layer.mergeAll(MemoryFileSystem.layer, Path.layer);
 
-const liveStore = GateRecordStore.layer("/repo").pipe(Layer.provideMerge(platform));
+const liveStore = GateRecordStore.layer("/repo").pipe(Layer.provideMerge(memoryPlatformWithPosixErrors));
 
 describe("GateRecordStore", () => {
   it.layer(GateRecordStore.layerMemory, { timeout: "30 seconds" })("in memory", storeRules);
 
   it.layer(liveStore, { timeout: "30 seconds" })("on the file system", storeRules);
 
-  it.layer(platform, { timeout: "30 seconds" })("on a file system that refuses", (it) => {
+  it.layer(memoryPlatformWithPosixErrors, { timeout: "30 seconds" })("on a file system that refuses", (it) => {
     it.effect("a taken temporary name is redrawn: both writes complete and leave the holder's file alone", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const store = yield* GateRecordStore.make("/repo-collide");
         const dir = "/repo-collide/packages/glob/.beep/gates/test";
-        // The name source draws the same candidate first every time, so each write collides once.
         const taken = yield* Random.nextIntBetween(0, 0x7fffffff).pipe(
-          Effect.provideService(Random.Random, drawing([0.5]))
+          Effect.provideService(Random.Random, drawsInTurnThenRepeatsLast([0.5]))
         );
         const holder = `${dir}/report.json.${taken.toString(36)}.tmp`;
         yield* fs.makeDirectory(dir, { recursive: true });
         yield* fs.writeFileString(holder, "a writer's unfinished contents");
         yield* store
-          .writeRecord(packageTarget("glob"), record("r1"))
-          .pipe(Effect.provideService(Random.Random, drawing([0.5, 0.5, 0.25])));
-        const first = yield* store.readRecord(packageTarget("glob"));
+          .writeRecord(isolatedPackageTarget("glob"), record("r1"))
+          .pipe(Effect.provideService(Random.Random, drawsInTurnThenRepeatsLast([0.5, 0.5, 0.25])));
+        const first = yield* store.readRecord(isolatedPackageTarget("glob"));
         yield* store
-          .writeRecord(packageTarget("glob"), record("r2"))
-          .pipe(Effect.provideService(Random.Random, drawing([0.5, 0.75])));
-        const second = yield* store.readRecord(packageTarget("glob"));
-        // A name source that only ever draws the taken name runs out of attempts.
+          .writeRecord(isolatedPackageTarget("glob"), record("r2"))
+          .pipe(Effect.provideService(Random.Random, drawsInTurnThenRepeatsLast([0.5, 0.75])));
+        const second = yield* store.readRecord(isolatedPackageTarget("glob"));
         const exhausted = yield* Effect.flip(
           store
-            .writeRecord(packageTarget("glob"), record("r3"))
-            .pipe(Effect.provideService(Random.Random, drawing([0.5])))
+            .writeRecord(isolatedPackageTarget("glob"), record("r3"))
+            .pipe(Effect.provideService(Random.Random, drawsInTurnThenRepeatsLast([0.5])))
         );
         const held = yield* fs.readFileString(holder);
         const names = yield* fs.readDirectory(dir);
         assert.strictEqual(first.report.runId, "r1");
         assert.strictEqual(second.report.runId, "r2");
-        assert.strictEqual(held, "a writer's unfinished contents");
+        assert.strictEqual(held, "a writer's unfinished contents", "the holder's file is left alone");
         assert.instanceOf(exhausted, GateRecordWriteError);
-        assert.include(exhausted.message, "AlreadyExists");
+        assert.include(
+          exhausted.message,
+          "AlreadyExists",
+          "a name source that only ever draws the taken name runs out of attempts"
+        );
         assert.deepStrictEqual(
           A.sort(names, Order.String),
           A.sort(["report.json", `report.json.${taken.toString(36)}.tmp`], Order.String)
@@ -189,7 +185,7 @@ describe("GateRecordStore", () => {
     it.effect("overlapping writes of one record each publish whole contents and leave no temporary file", () =>
       Effect.gen(function* () {
         const store = yield* GateRecordStore.make("/repo-overlap");
-        const target = packageTarget("glob");
+        const target = isolatedPackageTarget("glob");
         const written = yield* Effect.all(
           A.map(["r1", "r2", "r3"], (runId) => store.writeRecord(target, record(runId))),
           { concurrency: "unbounded" }
@@ -209,7 +205,7 @@ describe("GateRecordStore", () => {
         const store = yield* GateRecordStore.make("/repo-blocked");
         const dir = "/repo-blocked/packages/glob/.beep/gates/test";
         yield* fs.makeDirectory(`${dir}/report.json/held`, { recursive: true });
-        const failure = yield* Effect.flip(store.writeRecord(packageTarget("glob"), record("r1")));
+        const failure = yield* Effect.flip(store.writeRecord(isolatedPackageTarget("glob"), record("r1")));
         const names = yield* fs.readDirectory(dir);
         assert.instanceOf(failure, GateRecordWriteError);
         assert.deepStrictEqual(names, ["report.json"]);
@@ -240,7 +236,7 @@ describe("GateRecordStore", () => {
         const path = yield* Path.Path;
         const root = "/repo-unreadable";
         const store = yield* GateRecordStore.make(root);
-        const target = packageTarget("glob");
+        const target = isolatedPackageTarget("glob");
         const recordPath = path.join(root, recordLocation(target).record);
         yield* fs.makeDirectory(recordPath, { recursive: true });
         const unreadable = yield* Effect.flip(store.readRecord(target));
@@ -281,9 +277,9 @@ describe("GateRecordStore", () => {
     it.effect("fails every write with a write error and keeps nothing", () =>
       Effect.gen(function* () {
         const store = yield* GateRecordStore;
-        const log = yield* Effect.flip(store.writeLog(packageTarget("glob"), logStream));
-        const written = yield* Effect.flip(store.writeRecord(packageTarget("glob"), record("r1")));
-        const read = yield* Effect.flip(store.readRecord(packageTarget("glob")));
+        const log = yield* Effect.flip(store.writeLog(isolatedPackageTarget("glob"), logStream));
+        const written = yield* Effect.flip(store.writeRecord(isolatedPackageTarget("glob"), record("r1")));
+        const read = yield* Effect.flip(store.readRecord(isolatedPackageTarget("glob")));
         assert.instanceOf(log, GateRecordWriteError);
         assert.instanceOf(written, GateRecordWriteError);
         assert.strictEqual(read.reason, "missing");
@@ -298,8 +294,8 @@ describe("GateRecordStore", () => {
       ([generated]) =>
         Effect.gen(function* () {
           const store = yield* GateRecordStore;
-          yield* store.writeRecord(packageTarget("prop"), generated);
-          const read = yield* store.readRecord(packageTarget("prop"));
+          yield* store.writeRecord(isolatedPackageTarget("prop"), generated);
+          const read = yield* store.readRecord(isolatedPackageTarget("prop"));
           assert.isTrue(sameRecord(read, generated));
         }),
       { arbitrary: fcRuns(50) }
