@@ -117,6 +117,11 @@ export interface DeploymentEnvironmentShape {
    * target: wait timers, reviewers, deployment-branch policies and whatever
    * GitHub adds next.
    *
+   * **Gotchas**
+   *
+   * A `config` key named `owner`, `repo` or `environment_name` is overridden by
+   * the coordinates: it can never retarget the request at another repository.
+   *
    * **Example** (Construct the upsert operation)
    *
    * ```ts
@@ -248,10 +253,6 @@ const make = (client: GitHubClient["Service"]): DeploymentEnvironmentShape => {
       yield* Effect.annotateCurrentSpan({ owner, repo, environment: name });
 
       yield* client.request("PUT /repos/{owner}/{repo}/environments/{environment_name}", {
-        // It spreads FIRST so the coordinates below stay authoritative: a caller
-        // key named `owner`, `repo` or `environment_name` would otherwise
-        // silently retarget the request at a different repository, with no
-        // error and with the span still annotating the intended one.
         ...config,
         owner,
         repo,
@@ -266,9 +267,6 @@ const make = (client: GitHubClient["Service"]): DeploymentEnvironmentShape => {
       yield* Effect.annotateCurrentSpan({ owner, repo });
 
       const environments = yield* client.paginate("GET /repos/{owner}/{repo}/environments", { owner, repo });
-      // Paginated, so this is already an array — octokit's paginator normalises
-      // the envelope, including the case where a repository with none answers
-      // without the key at all.
       return yield* Effect.forEach(
         environments,
         (environment) =>

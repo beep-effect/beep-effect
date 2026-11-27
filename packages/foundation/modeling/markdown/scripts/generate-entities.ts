@@ -31,12 +31,10 @@ import * as Tuple from "effect/Tuple";
 
 const SOURCE = "https://html.spec.whatwg.org/entities.json";
 
-/** The document's shape: `&name;` keys, each with its replacement string. */
 const EntitiesDocument = S.Record(S.String, S.Struct({ characters: S.String }));
 
 const byName: Order.Order<readonly [string, string]> = Order.mapInput(Order.String, ([name]) => name);
 
-/** The semicolon-terminated names, stripped of `&` and `;`, in code-unit order. */
 const entriesOf = (document: typeof EntitiesDocument.Type): ReadonlyArray<readonly [string, string]> =>
   pipe(
     R.toEntries(document),
@@ -107,8 +105,6 @@ const program = Effect.gen(function* () {
   yield* Effect.log(`wrote ${entries.length} entities to ${target}`);
 });
 
-// The fetch needs an HTTP client and the write a file system; both come from
-// one scoped build of the platform layers.
 const main = Effect.scoped(
   Effect.gen(function* () {
     const platform = yield* Layer.build(Layer.mergeAll(NodeServices.layer, FetchHttpClient.layer));

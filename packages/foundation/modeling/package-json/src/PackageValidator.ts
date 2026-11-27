@@ -72,7 +72,6 @@ export declare namespace RuleFailure {
   export type Encoded = typeof RuleFailure.Encoded;
 }
 
-/** The check every rule implements: succeed, or fail with a rule failure. */
 type RuleCheck = (pkg: Package) => Effect.Effect<void, RuleFailure.Encoded>;
 
 const RuleCheck = S.declare((u: unknown): u is RuleCheck => P.isFunction(u)).pipe(
@@ -207,8 +206,6 @@ export class PackageValidationError extends S.TaggedError<PackageValidationError
   }
 }
 
-// ── Default rules ─────────────────────────────────────────────────────────────
-
 const hasLicense: ValidationRule = ValidationRule.make({
   name: "has-license",
   validate: (pkg) =>
@@ -227,7 +224,6 @@ const hasDescription: ValidationRule = ValidationRule.make({
 
 const hasRepository: ValidationRule = ValidationRule.make({
   name: "has-repository",
-  // `repository` is a modeled field, so it is read directly rather than from `pkg.rest`.
   validate: (pkg) =>
     pkg.repository !== undefined
       ? Effect.void

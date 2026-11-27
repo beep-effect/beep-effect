@@ -1,0 +1,31 @@
+{
+  "previous": {
+    "//": "8c96c095567ba93299c124dd9d4b6fdff8424e0e6db1f617cc38748704f8dc7b",
+    "@beep/ciops": "ae58a6caaf9c5be1a9b4405a34fbac592b1b4b579ff162abc28e6e6302857dd1",
+    "@beep/eyecite": "f2e7675e3faf447273abd327f3a6cbb433c42aa88e5f38b29f0edf5039ecce75",
+    "@beep/law-practice-server": "5751c7e8edb2a6542268ab850b19ea7819d7579e4021182eeb6b9d89469fc54e",
+    "@beep/ontology": "18c3bb8a67e5a24af8055891c85cea2e0d6542b47383595e81a0b8e0a8cf9e15",
+    "@beep/repo-cli": "fc14e39b418200fe903d7ab09e0c3bcc93620d4dc1ce9623865f51843a53ad51",
+    "@beep/semantica": "091fd59f8c7e259b8cc4a96fd4f8fb0c3f47d78e947cdeb7c23c05b1a151a12b"
+  },
+  "review": {
+    "reviewer": "Claude Opus 5.5 (route-soundness-repair ROUT-03 slice 2 lane)",
+    "reason": "Re-record the root subject and six packages after their per-package turbo.json files declared the goal and exploration paths, and the law-practice use-cases fixtures, that their tests read as test inputs. Configuration review only; no qualification is granted.",
+    "basis": {
+      "path": "docs/reports/rout-03-slice-2-cache-review-2026-11-26.md",
+      "sha256": "08d809e1d5cea47d4cdeb26a9ca56f7fec2af2b0f076b7b2c01319d1aba03dd5"
+    }
+  },
+  "subjects": [
+    "//",
+    "@beep/ciops",
+    "@beep/eyecite",
+    "@beep/law-practice-server",
+    "@beep/ontology",
+    "@beep/repo-cli",
+    "@beep/semantica"
+  ],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.5",
+  "epoch": "qualification-v3"
+}

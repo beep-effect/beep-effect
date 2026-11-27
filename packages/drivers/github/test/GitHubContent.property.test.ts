@@ -12,9 +12,8 @@ import type { Reply } from "./support/fixtures.ts";
 const runs = { arbitrary: fcRuns(100) };
 
 describe("GitHubContent text fidelity", () => {
-  // A one-response script repeats its current response for each generated read.
-  const replies: Array<Reply> = [{ status: 200 }];
-  const { script, base } = harness(replies);
+  const repeatedReply: Array<Reply> = [{ status: 200 }];
+  const { script, base } = harness(repeatedReply);
   it.layer(GitHubContent.layer.pipe(Layer.provideMerge(base)), { timeout: "30 seconds" })((it) => {
     it.effect.prop(
       "base64 reading preserves Unicode text and tolerates whitespace in its wire encoding",
@@ -23,7 +22,10 @@ describe("GitHubContent text fidelity", () => {
         Effect.gen(function* () {
           const text = input.toWellFormed();
           const encoded = Buffer.from(text, "utf8").toString("base64");
-          replies[0] = { status: 200, body: { type: "file", encoding: "base64", content: ` \n${encoded}\t\r\n` } };
+          repeatedReply[0] = {
+            status: 200,
+            body: { type: "file", encoding: "base64", content: ` \n${encoded}\t\r\n` },
+          };
           const before = script.calls.length;
           const content = yield* GitHubContent;
           const gotFileOption = yield* content.getFileOption("text.txt");

@@ -300,9 +300,6 @@ export const TypesVersionsField = S.Record(S.String, S.Record(S.String, S.Array(
  */
 export type TypesVersionsField = typeof TypesVersionsField.Type;
 
-// The declared `workspaces` object keys plus the open rest. Validation only:
-// a struct parse rebuilds its output with the declared keys first, so it is
-// never the decoded value (see `WorkspacesConfig`).
 const WorkspacesConfigShape = S.StructWithRest(
   S.Struct({
     packages: S.String.pipe(

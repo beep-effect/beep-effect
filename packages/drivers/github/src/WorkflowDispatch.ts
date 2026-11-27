@@ -214,6 +214,8 @@ export interface WorkflowDispatchShape {
    * Discovery filters by workflow, event, branch and creation time, then retains
    * one run id. Concurrent dispatches of the same workflow on the same ref can
    * still be confused because GitHub's dispatch response supplies no run id.
+   * The creation-time filter starts at a timestamp read before dispatching, so
+   * a run created in the same second is still found.
    */
   readonly dispatchAndWait: {
     (
@@ -309,6 +311,11 @@ export class WorkflowDispatch extends Context.Service<WorkflowDispatch, Workflow
   /**
    * An in-memory double; unstubbed members die naming themselves.
    *
+   * **Gotchas**
+   *
+   * An unstubbed `list` dies when it is run, not when the double is built, so a
+   * test that provides the double but never reads `list` is unaffected.
+   *
    * **Example** (Stub the workflow list)
    *
    * ```ts
@@ -326,9 +333,6 @@ export class WorkflowDispatch extends Context.Service<WorkflowDispatch, Workflow
   static readonly makeTest = (overrides: Partial<WorkflowDispatchShape> = {}): WorkflowDispatchShape => ({
     dispatch: overrides.dispatch ?? (() => unstubbed("dispatch")),
     runStatus: overrides.runStatus ?? (() => unstubbed("runStatus")),
-    // A value member, so the stub has to defer: `unstubbed()` throws, and
-    // throwing while BUILDING the double would fail every test that provides
-    // it rather than the ones that actually read `list`.
     list: overrides.list ?? Effect.sync(() => unstubbed("list")),
     dispatchAndWait: overrides.dispatchAndWait ?? (() => unstubbed("dispatchAndWait")),
   });
@@ -426,9 +430,6 @@ const make = (client: GitHubClient["Service"]): WorkflowDispatchShape => {
   const list = Effect.fn("WorkflowDispatch.list")(function* () {
     const { owner, repo } = yield* Repo;
     yield* Effect.annotateCurrentSpan({ owner, repo });
-    // Paginated. A single `request` returns one page, so a repository with more
-    // workflows than a page holds would silently report a subset — and the
-    // symptom is a length that disagrees with GitHub's own total_count.
     const workflows = yield* client.paginate("GET /repos/{owner}/{repo}/actions/workflows", {
       owner,
       repo,
@@ -484,9 +485,6 @@ const make = (client: GitHubClient["Service"]): WorkflowDispatchShape => {
           timeout: Duration.format(timeout),
         });
 
-        // GitHub answers a dispatch with 204 and no run id, so the run has to be
-        // found by when it was created. `dispatchedAt` is read before the
-        // dispatch so a run created in the same second is not missed.
         const expired = GitHubError.rejected(
           "WorkflowDispatch.dispatchAndWait",
           408,
@@ -521,12 +519,11 @@ const make = (client: GitHubClient["Service"]): WorkflowDispatchShape => {
             selectedId = O.map(found, (run) => run.id);
             return found;
           });
-          const settled = yield* Effect.repeat(poll(), {
+          const completedRun = yield* Effect.repeat(poll(), {
             while: (found) => O.isNone(found) || found.value.isDone === false,
             schedule: Schedule.spaced(interval),
           });
-          // The repeat predicate stops only for a present, completed run.
-          return O.getOrThrow(settled);
+          return O.getOrThrow(completedRun);
         }).pipe(Effect.timeoutOrElse({ duration: timeout, orElse: () => Effect.fail(expired) }));
       })
     ),

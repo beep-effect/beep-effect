@@ -23,8 +23,7 @@ const JsonValue = S.fromJsonString(S.Unknown);
 
 const decodeSecretInfos = S.decodeResult(S.Array(SecretInfo));
 
-/** A base64 Curve25519 public key, so the seal has something real to work against. */
-const PUBLIC_KEY = { key: Base64.encode(new Uint8Array(32).fill(7)), key_id: "key-123" };
+const CURVE25519_PUBLIC_KEY = { key: Base64.encode(new Uint8Array(32).fill(7)), key_id: "key-123" };
 
 const run = Effect.fn("run")(function* <A, E>(
   effect: Effect.Effect<A, E, RepositorySecret | GitHubClient | Repo>,
@@ -40,9 +39,8 @@ const run = Effect.fn("run")(function* <A, E>(
       )
     )
   );
-  // The caller's test scope owns the layer, so its finalizers run when the test ends.
-  const context = yield* Layer.build(layer);
-  const value = yield* Effect.provideContext(effect, context);
+  const testScopedContext = yield* Layer.build(layer);
+  const value = yield* Effect.provideContext(effect, testScopedContext);
   return { value, requested, routes: A.map(requested, (c) => c.route) };
 });
 
@@ -55,7 +53,7 @@ describe("RepositorySecret, per store", () => {
         const { requested, routes } = yield* run(
           Effect.flatMap(RepositorySecret, (s) => s.set("TOKEN", Redacted.make("plaintext"), scope)),
           {
-            [`GET /repos/{owner}/{repo}/${scope}/secrets/public-key`]: Result.succeed(PUBLIC_KEY),
+            [`GET /repos/{owner}/{repo}/${scope}/secrets/public-key`]: Result.succeed(CURVE25519_PUBLIC_KEY),
             [`PUT /repos/{owner}/{repo}/${scope}/secrets/{secret_name}`]: Result.succeed(""),
           }
         );
@@ -70,11 +68,10 @@ describe("RepositorySecret, per store", () => {
         assert.strictEqual(put?.params.repo, "widget");
         assert.strictEqual(put?.params.secret_name, "TOKEN");
         assert.strictEqual(put?.params.key_id, "key-123");
-        // The plaintext must never appear in the request, on any path.
         assert.notStrictEqual(put?.params.encrypted_value, "plaintext");
         assert.strictEqual(typeof put?.params.encrypted_value, "string");
         const value1 = yield* S.encodeEffect(JsonValue)(put?.params);
-        assert.notInclude(value1, "plaintext");
+        assert.notInclude(value1, "plaintext", "the plaintext never appears in the request");
       })
     );
 
@@ -130,7 +127,8 @@ describe("RepositorySecret, per environment", () => {
       const { requested, routes } = yield* run(
         Effect.flatMap(RepositorySecret, (s) => s.setForEnvironment("prod", "TOKEN", Redacted.make("plaintext"))),
         {
-          "GET /repos/{owner}/{repo}/environments/{environment_name}/secrets/public-key": Result.succeed(PUBLIC_KEY),
+          "GET /repos/{owner}/{repo}/environments/{environment_name}/secrets/public-key":
+            Result.succeed(CURVE25519_PUBLIC_KEY),
           "PUT /repos/{owner}/{repo}/environments/{environment_name}/secrets/{secret_name}": Result.succeed({}),
         }
       );
@@ -182,8 +180,6 @@ describe("RepositorySecret, when the public key is unusable", () => {
       const exit = yield* run(
         Effect.flatMap(RepositorySecret, (s) => s.set("TOKEN", Redacted.make("plaintext"))),
         {
-          // Garbage from the API is INPUT, so it fails typed. A throw here
-          // would be a defect escaping from the secrets path.
           "GET /repos/{owner}/{repo}/actions/secrets/public-key": Result.succeed({
             key: "!!! not base64 !!!",
             key_id: "k",
@@ -192,10 +188,9 @@ describe("RepositorySecret, when the public key is unusable", () => {
       ).pipe(Effect.exit);
 
       const value3 = yield* S.encodeEffect(JsonValue)(exit);
-      assert.include(value3, "public key");
-      // And nothing was written.
+      assert.include(value3, "public key", "a malformed API public key is input and fails typed, not as a defect");
       const value4 = yield* S.encodeEffect(JsonValue)(exit);
-      assert.notInclude(value4, "plaintext");
+      assert.notInclude(value4, "plaintext", "nothing was written");
     })
   );
 });
@@ -207,8 +202,7 @@ describe("the Redacted seam", () => {
     assert.notInclude(String(value), "hunter2");
     assert.notInclude(Result.getOrThrowWith(S.encodeUnknownResult(JsonValue)({ value }), identity), "hunter2");
     assert.notInclude(`${value}`, "hunter2");
-    // And it is still readable where the code deliberately asks.
-    assert.strictEqual(Redacted.value(value), "hunter2");
+    assert.strictEqual(Redacted.value(value), "hunter2", "still readable where the code deliberately asks");
   });
 });
 
