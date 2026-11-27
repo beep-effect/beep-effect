@@ -36,6 +36,7 @@ loads. The package also owns the root oxlint custom plugin for repository-specif
 | `no-hand-rolled-git-gh-spawn` | error | repo-cli and ai-metrics `src/**` | No hand-rolled `git`/`gh` spawn (program literal plus argv, `{ command, args }` runner spec, Bun argv, `ghOutput`); use `@beep/git`, `@beep/github`, `@beep/commands`, or `biome-ignore ...: KEEP (D-nn): <reason>` (`goals/repo-cli-gh-git-consolidation`, D-23). |
 | `no-unrecorded-spawner-double` | error | repo-cli and ai-metrics `test/**` | No hand-rolled `ChildProcessSpawner.make(...)` double; use `ScriptedSpawner`, or `biome-ignore ...: Own double: <reason>` (D-14). Never-spawn `Effect.die` guards are exempt. |
 | `prefer-schema-make-option` | error | `packages/**`, `apps/**` | An `Option` of a schema value comes from `X.makeOption(...)`, not `O.some(X.make(...))` (EF-35b). Receivers rooted at a non-Schema `effect/<Module>` namespace import are allowed; any other non-schema receiver, or a fail-closed site whose `None` reads as a pass (a guard, refusal or gate), takes `biome-ignore lint/plugin/prefer-schema-make-option: <reason>`. |
+| `no-annotation-after-decoding-default` | error | all | Annotate a schema field before `withDecodingDefault*`; an annotation after the default never reaches `toJsonSchemaDocument`. |
 
 Scope is set where the root `biome.jsonc` registers the rule: the top-level
 `plugins` array for `all`, an `overrides` entry otherwise. The presets in

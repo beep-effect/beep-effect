@@ -86,3 +86,19 @@ describe("@beep/agents-server schema parity", () => {
     { arbitrary: fcRuns(25) }
   );
 });
+
+describe("ScanState JSON Schema key annotations", () => {
+  it("emits the current key annotation in toJsonSchemaDocument because annotateKey runs before withDecodingDefaultTypeKey", () => {
+    expect(S.toJsonSchemaDocument(ScanState).definitions).toMatchObject({
+      "@beep/agents-server/AssistantTurn/ScanState/ScanState": {
+        properties: {
+          current: {
+            allOf: expect.arrayContaining([
+              { description: "Current JSON object slice being accumulated while scanner depth is positive." },
+            ]),
+          },
+        },
+      },
+    });
+  });
+});

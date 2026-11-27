@@ -345,9 +345,9 @@ export class WorkspacePackage extends S.Class<WorkspacePackage, { readonly brand
     ),
     /** Whether the package is marked private. */
     private: S.Boolean.pipe(
+      $I.annoteKey("WorkspacePackage.private", { description: "Whether the package is marked private." }),
       S.withDecodingDefaultKey(Effect.succeed(false)),
-      S.withConstructorDefault(Effect.succeed(false)),
-      $I.annoteKey("WorkspacePackage.private", { description: "Whether the package is marked private." })
+      S.withConstructorDefault(Effect.succeed(false))
     ),
     /** Production dependencies. */
     dependencies: DependencyMap.pipe(
@@ -383,12 +383,12 @@ export class WorkspacePackage extends S.Class<WorkspacePackage, { readonly brand
      * values constructed or decoded without the field.
      */
     manifestRecord: S.Record(S.String, S.Unknown).pipe(
-      S.withDecodingDefaultKey(Effect.succeed(EMPTY_MANIFEST)),
-      S.withConstructorDefault(Effect.succeed(EMPTY_MANIFEST)),
       $I.annoteKey("WorkspacePackage.manifestRecord", {
         description:
           "The package's `package.json` as read — tolerant access to every field outside the typed discovery slice (`scripts`, `exports`, …) without a second file read.",
-      })
+      }),
+      S.withDecodingDefaultKey(Effect.succeed(EMPTY_MANIFEST)),
+      S.withConstructorDefault(Effect.succeed(EMPTY_MANIFEST))
     ),
   },
   $I.annote("WorkspacePackage", {

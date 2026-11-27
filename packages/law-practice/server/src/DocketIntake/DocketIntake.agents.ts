@@ -72,23 +72,27 @@ export class DocketAgentsOptions extends S.Opaque<DocketAgentsOptions, { readonl
   S.Struct({
     maxBodyChars: PositiveCount.pipe(
       S.withConstructorDefault(Effect.succeed(docketAgentsOptionsMaxBodyCharsDefault)),
+      S.annotateKey({ description: "Most characters of a message body sent to either agent." }),
       S.withDecodingDefaultTypeKey(Effect.succeed(docketAgentsOptionsMaxBodyCharsDefault))
-    ).annotateKey({ description: "Most characters of a message body sent to either agent." }),
+    ),
     paralegalTimeout: S.Duration.pipe(
       S.withConstructorDefault(Effect.succeed(docketAgentsOptionsParalegalTimeoutDefault)),
+      S.annotateKey({ description: "Time limit of one paralegal call; 60 seconds by default." }),
       S.withDecodingDefaultTypeKey(Effect.succeed(docketAgentsOptionsParalegalTimeoutDefault))
-    ).annotateKey({ description: "Time limit of one paralegal call; 60 seconds by default." }),
+    ),
     retryBaseDelay: S.Duration.pipe(
       S.withConstructorDefault(Effect.succeed(docketAgentsOptionsRetryBaseDelayDefault)),
+      S.annotateKey({
+        description:
+          "First delay before a retryable model failure is tried again; it doubles on each of at most three retries. 500 milliseconds by default.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(docketAgentsOptionsRetryBaseDelayDefault))
-    ).annotateKey({
-      description:
-        "First delay before a retryable model failure is tried again; it doubles on each of at most three retries. 500 milliseconds by default.",
-    }),
+    ),
     secretaryTimeout: S.Duration.pipe(
       S.withConstructorDefault(Effect.succeed(docketAgentsOptionsSecretaryTimeoutDefault)),
+      S.annotateKey({ description: "Time limit of one secretary call; 120 seconds by default." }),
       S.withDecodingDefaultTypeKey(Effect.succeed(docketAgentsOptionsSecretaryTimeoutDefault))
-    ).annotateKey({ description: "Time limit of one secretary call; 120 seconds by default." }),
+    ),
   }).pipe($I.annoteSchema("DocketAgentsOptions", { description: "Settings of the docket intake agents." }))
 ) {}
 

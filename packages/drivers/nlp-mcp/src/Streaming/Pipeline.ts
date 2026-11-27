@@ -163,10 +163,11 @@ export class PipelineProcessOptions extends S.Opaque<PipelineProcessOptions, { r
   S.Struct({
     maxLines: PositiveInteger.pipe(
       S.withConstructorDefault(Effect.succeed(Number.MAX_SAFE_INTEGER)),
+      S.annotateKey({
+        description: "Maximum number of raw lines to read before processing.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(Number.MAX_SAFE_INTEGER))
-    ).annotateKey({
-      description: "Maximum number of raw lines to read before processing.",
-    }),
+    ),
     skipEmpty: SchemaUtils.BoolKeyDefaultFalse.annotateKey({
       description: "Drop lines that are empty after trimming before applying stages.",
     }),

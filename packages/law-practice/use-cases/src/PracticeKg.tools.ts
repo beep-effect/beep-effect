@@ -90,10 +90,11 @@ export type PracticeKgToolFailureReason = typeof PracticeKgToolFailureReason.Typ
 
 const BudgetBytes = PosInt.pipe(
   S.withConstructorDefault(Effect.succeed(defaultBudgetBytes)),
+  S.annotateKey({
+    description: "Maximum serialized response size in bytes. Defaults to 8000.",
+  }),
   S.withDecodingDefaultTypeKey(Effect.succeed(defaultBudgetBytes))
-).annotateKey({
-  description: "Maximum serialized response size in bytes. Defaults to 8000.",
-});
+);
 
 /**
  * **Example** (Fall back to the default response budget)

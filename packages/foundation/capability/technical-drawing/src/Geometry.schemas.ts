@@ -115,8 +115,8 @@ export class Rotation extends S.Opaque<Rotation, { readonly brand: unique symbol
     axis: Vec3.annotateKey({ description: "Axis direction; need not be normalised." }),
     origin: Vec3.pipe(
       S.withConstructorDefault(Effect.succeed([0, 0, 0] as const)),
-      S.withDecodingDefaultTypeKey(Effect.succeed([0, 0, 0] as const)),
-      S.annotateKey({ description: "Point the axis passes through. Defaults to the origin." })
+      S.annotateKey({ description: "Point the axis passes through. Defaults to the origin." }),
+      S.withDecodingDefaultTypeKey(Effect.succeed([0, 0, 0] as const))
     ),
     degrees: S.Finite.annotateKey({ description: "Signed rotation angle in degrees (right-hand rule)." }),
   }).pipe(
@@ -180,13 +180,13 @@ export type PartLineStyle = typeof PartLineStyle.Type;
 const primitiveFields = {
   rotate: S.Array(Rotation).pipe(
     S.withConstructorDefault(Effect.succeed([])),
-    S.withDecodingDefaultTypeKey(Effect.succeed([])),
-    S.annotateKey({ description: "Rotations applied in order, before the translation." })
+    S.annotateKey({ description: "Rotations applied in order, before the translation." }),
+    S.withDecodingDefaultTypeKey(Effect.succeed([]))
   ),
   translate: Vec3.pipe(
     S.withConstructorDefault(Effect.succeed([0, 0, 0] as const)),
-    S.withDecodingDefaultTypeKey(Effect.succeed([0, 0, 0] as const)),
-    S.annotateKey({ description: "Translation applied after the rotations." })
+    S.annotateKey({ description: "Translation applied after the rotations." }),
+    S.withDecodingDefaultTypeKey(Effect.succeed([0, 0, 0] as const))
   ),
   lineStyle: S.OptionFromOptionalKey(PartLineStyle).pipe(
     S.withConstructorDefault(Effect.succeedNone),
@@ -428,16 +428,16 @@ export class Part extends S.Opaque<Part, { readonly brand: unique symbol }>()(
       .annotateKey({ description: "Primitives fused together, in order." }),
     subtract: S.Array(Primitive).pipe(
       S.withConstructorDefault(Effect.succeed([])),
-      S.withDecodingDefaultTypeKey(Effect.succeed([])),
-      S.annotateKey({ description: "Primitives cut from the fused result, in order." })
+      S.annotateKey({ description: "Primitives cut from the fused result, in order." }),
+      S.withDecodingDefaultTypeKey(Effect.succeed([]))
     ),
     lineStyle: PartLineStyle.pipe(
       S.withConstructorDefault(Effect.succeed("solid" as const)),
-      S.withDecodingDefaultTypeKey(Effect.succeed("solid" as const)),
       S.annotateKey({
         description:
           "How the part's visible edges are drawn: solid, or broken for unclaimed subject matter (37 CFR 1.152). Defaults to solid.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed("solid" as const))
     ),
   }).pipe(
     $I.annoteSchema("Part", {
@@ -567,11 +567,11 @@ export class OverlayLine extends S.Opaque<OverlayLine, { readonly brand: unique 
     ),
     lift: S.Finite.pipe(
       S.withConstructorDefault(Effect.succeed(0.01)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(0.01)),
       S.annotateKey({
         description:
           "Model units the line is moved along its facing, toward the viewer, so hidden-line removal sees it in front of the face it lies on. Ignored without a facing. Defaults to 0.01.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0.01))
     ),
   }).pipe(
     $I.annoteSchema("OverlayLine", {
@@ -641,8 +641,8 @@ export class ModelSpec extends S.Opaque<ModelSpec, { readonly brand: unique symb
   S.Struct({
     units: LengthUnit.pipe(
       S.withConstructorDefault(Effect.succeed("mm" as const)),
-      S.withDecodingDefaultTypeKey(Effect.succeed("mm" as const)),
-      S.annotateKey({ description: "Unit of every length in the model. Defaults to mm." })
+      S.annotateKey({ description: "Unit of every length in the model. Defaults to mm." }),
+      S.withDecodingDefaultTypeKey(Effect.succeed("mm" as const))
     ),
     parts: S.Array(Part)
       .check(
@@ -666,10 +666,10 @@ export class ModelSpec extends S.Opaque<ModelSpec, { readonly brand: unique symb
       .annotateKey({ description: "Parts kept as separate solids in one compound." }),
     overlays: S.Array(OverlayLine).pipe(
       S.withConstructorDefault(Effect.succeed([])),
-      S.withDecodingDefaultTypeKey(Effect.succeed([])),
       S.annotateKey({
         description: "Authored emphasis and broken overlay lines, projected with the parts. Defaults to none.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed([]))
     ),
   }).pipe(
     $I.annoteSchema("ModelSpec", {
@@ -773,8 +773,8 @@ export class Camera extends S.Opaque<Camera, { readonly brand: unique symbol }>(
     up: Vec3.annotateKey({ description: "Approximate up direction; projected to be orthogonal to `eye`." }),
     target: Vec3.pipe(
       S.withConstructorDefault(Effect.succeed([0, 0, 0] as const)),
-      S.withDecodingDefaultTypeKey(Effect.succeed([0, 0, 0] as const)),
-      S.annotateKey({ description: "View-plane point the camera looks at. Defaults to the origin." })
+      S.annotateKey({ description: "View-plane point the camera looks at. Defaults to the origin." }),
+      S.withDecodingDefaultTypeKey(Effect.succeed([0, 0, 0] as const))
     ),
     focus: S.OptionFromOptionalKey(PositiveLength).pipe(
       S.withConstructorDefault(Effect.succeedNone),
@@ -988,11 +988,11 @@ export class ShadingStretchSkip extends S.Opaque<ShadingStretchSkip, { readonly 
     stretches: S.Natural.annotateKey({ description: "Visible stretches skipped for this reason." }),
     fitting: S.Natural.pipe(
       S.withConstructorDefault(Effect.succeed(0)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(0)),
       S.annotateKey({
         description:
           "How many of those stretches had measured room for a band: legible chords at least 3.4 minimum pitches across. Defaults to 0.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0))
     ),
   }).pipe(
     $I.annoteSchema("ShadingStretchSkip", {
@@ -1039,35 +1039,35 @@ export class ShadingCoverage extends S.Opaque<ShadingCoverage, { readonly brand:
     }),
     lostFaces: S.Natural.pipe(
       S.withConstructorDefault(Effect.succeed(0)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(0)),
       S.annotateKey({
         description:
           "Faces given shading lines whose every stroke the hidden-line and legibility passes, or on the sheet the re-clip beside separated outlines, then removed; counted in `shadedFaces` too. Defaults to 0.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0))
     ),
     lostStretches: S.Natural.pipe(
       S.withConstructorDefault(Effect.succeed(0)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(0)),
       S.annotateKey({
         description:
           "Visible stretches of faces that were planned at least two shading lines and drew none after the hidden-line and legibility passes, or on the sheet after the re-clip beside separated outlines; a face with another stretch still drawn is not a lost face. Defaults to 0.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0))
     ),
     skippedStretches: S.Array(ShadingStretchSkip).pipe(
       S.withConstructorDefault(Effect.succeed([])),
-      S.withDecodingDefaultTypeKey(Effect.succeed([])),
       S.annotateKey({
         description:
           "Visible stretches of faces given shading lines that drew no band by design, per reason, in reason order; zero counts left out. Defaults to none.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed([]))
     ),
     redrawnStretches: S.Natural.pipe(
       S.withConstructorDefault(Effect.succeed(0)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(0)),
       S.annotateKey({
         description:
           "Tapered bands that hidden-line removal and the legibility pass left with fewer than two strokes, drawn again on their whole chords and cut back to their taper. Defaults to 0.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0))
     ),
   }).pipe(
     $I.annoteSchema("ShadingCoverage", {
@@ -1144,8 +1144,8 @@ export class EdgeSet extends S.Opaque<EdgeSet, { readonly brand: unique symbol }
     hidden: S.Array(Segment2).annotateKey({ description: "Hidden edges, including silhouettes." }),
     shading: S.Array(Segment2).pipe(
       S.withConstructorDefault(Effect.succeed([])),
-      S.withDecodingDefaultTypeKey(Effect.succeed([])),
-      S.annotateKey({ description: "Visible surface-shading lines; empty when the view was not shaded." })
+      S.annotateKey({ description: "Visible surface-shading lines; empty when the view was not shaded." }),
+      S.withDecodingDefaultTypeKey(Effect.succeed([]))
     ),
     shadingCoverage: S.OptionFromOptionalKey(ShadingCoverage).pipe(
       S.withConstructorDefault(Effect.succeedNone),
@@ -1153,27 +1153,27 @@ export class EdgeSet extends S.Opaque<EdgeSet, { readonly brand: unique symbol }
     ),
     shadingBands: S.Array(ShadingBand).pipe(
       S.withConstructorDefault(Effect.succeed([])),
-      S.withDecodingDefaultTypeKey(Effect.succeed([])),
       S.annotateKey({
         description:
           "Visible stretches that drew shading lines, each with its face and its strokes' indices in `shading`; every stroke belongs to one band. Empty when the view was not shaded.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed([]))
     ),
     broken: S.Array(Segment2).pipe(
       S.withConstructorDefault(Effect.succeed([])),
-      S.withDecodingDefaultTypeKey(Effect.succeed([])),
       S.annotateKey({
         description:
           "Visible edges of broken-line parts and of the surface only broken primitives cover, and visible pieces of broken overlay lines (unclaimed subject matter), drawn dashed; empty when nothing is broken.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed([]))
     ),
     emphasis: S.Array(Segment2).pipe(
       S.withConstructorDefault(Effect.succeed([])),
-      S.withDecodingDefaultTypeKey(Effect.succeed([])),
       S.annotateKey({
         description:
           "Visible pieces of emphasis overlay lines, drawn heavier than the outlines; empty when the model has none.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed([]))
     ),
   }).pipe(
     $I.annoteSchema("EdgeSet", {
@@ -1333,21 +1333,21 @@ export class ShadingPlan extends S.Opaque<ShadingPlan, { readonly brand: unique 
     maxPitch: PositiveLength.annotateKey({ description: "Line pitch on the faintest shaded faces, in model units." }),
     litThreshold: ExposureThreshold.pipe(
       S.withConstructorDefault(Effect.succeed(0.75)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(0.75)),
       S.annotateKey({
         description:
           "Exposure above which a face stays unshaded under the uniform style; graded shading ignores it. Defaults to 0.75.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0.75))
     ),
     style: ShadingStyle.pipe(
       S.withConstructorDefault(Effect.succeed("uniform" as const)),
-      S.withDecodingDefaultTypeKey(Effect.succeed("uniform" as const)),
-      S.annotateKey({ description: "Line spacing style. Defaults to `uniform`." })
+      S.annotateKey({ description: "Line spacing style. Defaults to `uniform`." }),
+      S.withDecodingDefaultTypeKey(Effect.succeed("uniform" as const))
     ),
     axis: HatchAxis.pipe(
       S.withConstructorDefault(Effect.succeed("longest-edge" as const)),
-      S.withDecodingDefaultTypeKey(Effect.succeed("longest-edge" as const)),
-      S.annotateKey({ description: "Which way lines run on a face. Defaults to `longest-edge`." })
+      S.annotateKey({ description: "Which way lines run on a face. Defaults to `longest-edge`." }),
+      S.withDecodingDefaultTypeKey(Effect.succeed("longest-edge" as const))
     ),
     minFaceSpan: S.Finite.check(
       S.isGreaterThanOrEqualTo(
@@ -1360,11 +1360,11 @@ export class ShadingPlan extends S.Opaque<ShadingPlan, { readonly brand: unique 
       )
     ).pipe(
       S.withConstructorDefault(Effect.succeed(0)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(0)),
       S.annotateKey({
         description:
           "Projected width, in model units, below which a face is a sliver and gets no lines. Defaults to 0 (no slivers).",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0))
     ),
     minStroke: S.Finite.check(
       S.isGreaterThanOrEqualTo(
@@ -1377,11 +1377,11 @@ export class ShadingPlan extends S.Opaque<ShadingPlan, { readonly brand: unique 
       )
     ).pipe(
       S.withConstructorDefault(Effect.succeed(0)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(0)),
       S.annotateKey({
         description:
           "Projected length, in model units, below which a cut chord is dropped instead of drawn: near a pointed corner the strokes would read as a dot ladder (the 1993 Guide's strokes are 2-8 mm on the sheet). Defaults to 0 (every chord is drawn).",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0))
     ),
     clearance: S.OptionFromOptionalKey(PositiveLength).pipe(
       S.withConstructorDefault(Effect.succeedNone),
@@ -1462,11 +1462,11 @@ export class ModelSummary extends S.Opaque<ModelSummary, { readonly brand: uniqu
     edgeCount: S.Natural.annotateKey({ description: "Number of edges across all parts." }),
     partOverlaps: S.Natural.pipe(
       S.withConstructorDefault(Effect.succeed(0)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(0)),
       S.annotateKey({
         description:
           "Pairs of parts whose common volume exceeds the kernel tolerance; parts that only touch do not count. Defaults to 0.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0))
     ),
   }).pipe(
     $I.annoteSchema("ModelSummary", {

@@ -85,18 +85,18 @@ export class PhoenixConfigInput extends S.Opaque<PhoenixConfigInput, { readonly 
       }),
     baseUrl: PhoenixBaseUrl.pipe(
       S.withConstructorDefault(Effect.succeed(phoenixConfigInputBaseUrlDefault)),
+      S.annotateKey({
+        description: "Phoenix API base URL accepted by the SDK client.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(phoenixConfigInputBaseUrlDefault))
-    ).annotateKey({
-      description: "Phoenix API base URL accepted by the SDK client.",
-    }),
-    headers: S.Record(S.String, S.String)
-      .pipe(
-        S.withConstructorDefault(Effect.succeed(phoenixConfigInputHeadersDefault)),
-        S.withDecodingDefaultTypeKey(Effect.succeed(phoenixConfigInputHeadersDefault))
-      )
-      .annotateKey({
+    ),
+    headers: S.Record(S.String, S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(phoenixConfigInputHeadersDefault)),
+      S.annotateKey({
         description: "Additional Phoenix API request headers.",
       }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(phoenixConfigInputHeadersDefault))
+    ),
   }).pipe(
     $I.annoteSchema("PhoenixConfigInput", {
       description: "Runtime configuration accepted by the Phoenix API driver layer.",

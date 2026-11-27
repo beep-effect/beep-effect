@@ -109,16 +109,18 @@ class AiProviderCliPaths extends S.Opaque<AiProviderCliPaths, { readonly brand: 
   S.Struct({
     claudePath: S.NonEmptyString.pipe(
       S.withConstructorDefault(Effect.succeed("claude")),
+      S.annotateKey({
+        description: "Executable command or path for Claude CLI auth probes.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed("claude"))
-    ).annotateKey({
-      description: "Executable command or path for Claude CLI auth probes.",
-    }),
+    ),
     codexPath: S.NonEmptyString.pipe(
       S.withConstructorDefault(Effect.succeed("codex")),
+      S.annotateKey({
+        description: "Executable command or path for Codex CLI auth probes.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed("codex"))
-    ).annotateKey({
-      description: "Executable command or path for Codex CLI auth probes.",
-    }),
+    ),
   }).pipe(
     $I.annoteSchema("AiProviderCliPaths", {
       description: "Configuration for the AI provider CLI executable paths",

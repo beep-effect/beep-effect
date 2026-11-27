@@ -86,14 +86,13 @@ const sanityQueryRequestParamsDefault = R.empty();
  */
 export class SanityQueryRequest extends S.Opaque<SanityQueryRequest, { readonly brand: unique symbol }>()(
   S.Struct({
-    params: S.Record(S.String, SanityQueryParamValue)
-      .pipe(
-        S.withConstructorDefault(Effect.succeed(sanityQueryRequestParamsDefault)),
-        S.withDecodingDefaultTypeKey(Effect.succeed(sanityQueryRequestParamsDefault))
-      )
-      .annotateKey({
+    params: S.Record(S.String, SanityQueryParamValue).pipe(
+      S.withConstructorDefault(Effect.succeed(sanityQueryRequestParamsDefault)),
+      S.annotateKey({
         description: "GROQ query variables serialized as scalar JSON values.",
       }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(sanityQueryRequestParamsDefault))
+    ),
     query: S.String.annotateKey({
       description: "GROQ query text submitted to the Sanity content API.",
     }),

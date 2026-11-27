@@ -729,9 +729,9 @@ export class CriticSeatUnavailable extends S.Opaque<CriticSeatUnavailable, { rea
       description: "The path the failure names; null when the message names none.",
     }),
     limit: S.OptionFromNullOr(CriticSeatLimit).pipe(
+      S.annotateKey({ description: "The limit the seat reached; null when it stopped at none." }),
       S.withDecodingDefaultKey(Effect.succeed(null)),
-      S.withConstructorDefault(Effect.succeedNone),
-      S.annotateKey({ description: "The limit the seat reached; null when it stopped at none." })
+      S.withConstructorDefault(Effect.succeedNone)
     ),
     detail: S.NonEmptyString.annotateKey({ description: "One sentence for the loop record and the summary." }),
   }).pipe(
@@ -778,11 +778,11 @@ export class CriticRunRecord extends S.Opaque<CriticRunRecord, { readonly brand:
     startedAt: S.NonEmptyString.annotateKey({ description: "ISO-8601 start." }),
     finishedAt: S.NonEmptyString.annotateKey({ description: "ISO-8601 end." }),
     unavailable: S.OptionFromNullOr(CriticSeatUnavailable).pipe(
-      S.withDecodingDefaultKey(Effect.succeed(null)),
-      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Why the seat ended without a report: it could not start or stopped at a limit; null otherwise.",
-      })
+      }),
+      S.withDecodingDefaultKey(Effect.succeed(null)),
+      S.withConstructorDefault(Effect.succeedNone)
     ),
   }).pipe(
     $I.annoteSchema("CriticRunRecord", {
@@ -1068,8 +1068,8 @@ export class CriticClaudeResult extends S.Opaque<CriticClaudeResult, { readonly 
   S.Struct({
     type: S.tag("result").annotateKey({ description: "Event kind; only the result event ends a run." }),
     is_error: S.Boolean.pipe(
-      S.withDecodingDefaultKey(Effect.succeed(false)),
-      S.annotateKey({ description: "Whether the run ended in an error; absent means it did not." })
+      S.annotateKey({ description: "Whether the run ended in an error; absent means it did not." }),
+      S.withDecodingDefaultKey(Effect.succeed(false))
     ),
     result: S.OptionFromOptionalKey(S.String).annotateKey({
       description: "The reviewer's final message, absent when the run stopped without one.",

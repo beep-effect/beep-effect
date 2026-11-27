@@ -257,16 +257,18 @@ export class AnthropicLanguageModelOptions extends S.Opaque<
   S.Struct({
     maxTokens: PosInt.pipe(
       S.withConstructorDefault(Effect.succeed(anthropicLanguageModelOptionsMaxTokensDefault)),
+      S.annotateKey({
+        description: "Positive maximum output-token budget forwarded to Anthropic as `max_tokens`.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(anthropicLanguageModelOptionsMaxTokensDefault))
-    ).annotateKey({
-      description: "Positive maximum output-token budget forwarded to Anthropic as `max_tokens`.",
-    }),
+    ),
     model: S.String.pipe(
       S.withConstructorDefault(Effect.succeed(ANTHROPIC_DEFAULT_MODEL)),
+      S.annotateKey({
+        description: "Anthropic model identifier used by the language-model layer.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(ANTHROPIC_DEFAULT_MODEL))
-    ).annotateKey({
-      description: "Anthropic model identifier used by the language-model layer.",
-    }),
+    ),
     temperature: S.optionalKey(S.Finite.check(S.isBetween({ maximum: 1, minimum: 0 }))).annotateKey({
       description: "Sampling temperature from 0 to 1 forwarded as `temperature`; the provider default when absent.",
     }),

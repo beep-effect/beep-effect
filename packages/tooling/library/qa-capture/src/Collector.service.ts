@@ -170,10 +170,10 @@ export class CollectorServeOptions extends S.Opaque<CollectorServeOptions, { rea
   S.Struct({
     allowedOrigins: S.Array(S.String).pipe(
       S.withConstructorDefault(Effect.succeed(collectorServeOptionsAllowedOriginsDefault)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(collectorServeOptionsAllowedOriginsDefault)),
       $I.annoteKey("CollectorServeOptions.allowedOrigins", {
         description: "CORS origins allowed to post witness events; the CLI scopes this to app origins.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(collectorServeOptionsAllowedOriginsDefault))
     ),
     eventsPath: S.String.pipe(
       $I.annoteKey("CollectorServeOptions.eventsPath", {
@@ -182,24 +182,24 @@ export class CollectorServeOptions extends S.Opaque<CollectorServeOptions, { rea
     ),
     handlePath: S.Option(S.String).pipe(
       S.withConstructorDefault(Effect.succeed(O.none<string>())),
-      S.withDecodingDefaultKey(Effect.succeed(O.none<string>())),
       $I.annoteKey("CollectorServeOptions.handlePath", {
         description: "Discovery handle file path (.beep/qa/current.json); written while live when present.",
-      })
+      }),
+      S.withDecodingDefaultKey(Effect.succeed(O.none<string>()))
     ),
     hostname: S.String.pipe(
       S.withConstructorDefault(Effect.succeed("127.0.0.1")),
-      S.withDecodingDefaultTypeKey(Effect.succeed("127.0.0.1")),
       $I.annoteKey("CollectorServeOptions.hostname", {
         description: "Loopback hostname to bind.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed("127.0.0.1"))
     ),
     port: CollectorBindPort.pipe(
       S.withConstructorDefault(Effect.succeed(43117)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(43117)),
       $I.annoteKey("CollectorServeOptions.port", {
         description: "TCP port to bind; 0 requests an ephemeral port.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(43117))
     ),
     round: RoundNumber.pipe(
       $I.annoteKey("CollectorServeOptions.round", {

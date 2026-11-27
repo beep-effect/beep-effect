@@ -97,8 +97,8 @@ export class MdParseOptions extends S.Opaque<MdParseOptions, { readonly brand: u
     ...MdSyntaxOptionFields,
     dialect: MarkdownDialect.pipe(
       S.withConstructorDefault(Effect.succeed(MarkdownDialect.Enum.gfm)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(MarkdownDialect.Enum.gfm)),
-      $I.annoteKey("MdParseOptions.dialect", { description: "Markdown grammar to parse with; gfm by default." })
+      $I.annoteKey("MdParseOptions.dialect", { description: "Markdown grammar to parse with; gfm by default." }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(MarkdownDialect.Enum.gfm))
     ),
   }).pipe(
     $I.annoteSchema("MdParseOptions", {

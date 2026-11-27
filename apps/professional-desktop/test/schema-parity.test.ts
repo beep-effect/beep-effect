@@ -276,3 +276,19 @@ describe("@beep/professional-desktop schema parity", () => {
     { arbitrary: fcRuns(25) }
   );
 });
+
+describe("ProfessionalDesktopMigrationOptions JSON Schema key annotations", () => {
+  it("emits the migrationsSchema key annotation in toJsonSchemaDocument because annotateKey runs before withDecodingDefaultTypeKey", () => {
+    expect(S.toJsonSchemaDocument(ProfessionalDesktopMigrationOptions).definitions).toMatchObject({
+      "@beep/professional-desktop/runtime/Migrations/ProfessionalDesktopMigrationOptions": {
+        properties: {
+          migrationsSchema: {
+            allOf: expect.arrayContaining([
+              { description: "Drizzle migration journal schema used by the Professional Desktop sidecar database." },
+            ]),
+          },
+        },
+      },
+    });
+  });
+});

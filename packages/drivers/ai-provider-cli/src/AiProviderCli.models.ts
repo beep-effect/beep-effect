@@ -269,14 +269,13 @@ const aiProviderCliProbeOptionsEnvDefault = R.empty();
  */
 export class AiProviderCliProbeOptions extends S.Opaque<AiProviderCliProbeOptions, { readonly brand: unique symbol }>()(
   S.Struct({
-    env: S.Record(S.String, S.String)
-      .pipe(
-        S.withConstructorDefault(Effect.succeed(aiProviderCliProbeOptionsEnvDefault)),
-        S.withDecodingDefaultTypeKey(Effect.succeed(aiProviderCliProbeOptionsEnvDefault))
-      )
-      .annotateKey({
+    env: S.Record(S.String, S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(aiProviderCliProbeOptionsEnvDefault)),
+      S.annotateKey({
         description: "Environment overlay supplied only to the provider CLI child process.",
       }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(aiProviderCliProbeOptionsEnvDefault))
+    ),
     executable: S.OptionFromOptionalKey(S.NonEmptyString)
       .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({
@@ -321,14 +320,13 @@ export class AiProviderCliRunRequest extends S.Opaque<AiProviderCliRunRequest, {
     args: S.Array(S.String).annotateKey({
       description: "Provider-specific auth status command arguments.",
     }),
-    env: S.Record(S.String, S.String)
-      .pipe(
-        S.withConstructorDefault(Effect.succeed(aiProviderCliRunRequestEnvDefault)),
-        S.withDecodingDefaultTypeKey(Effect.succeed(aiProviderCliRunRequestEnvDefault))
-      )
-      .annotateKey({
+    env: S.Record(S.String, S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(aiProviderCliRunRequestEnvDefault)),
+      S.annotateKey({
         description: "Environment overlay supplied only to the child process.",
       }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(aiProviderCliRunRequestEnvDefault))
+    ),
     executable: S.NonEmptyString.annotateKey({
       description: "Executable command or path used by the child process.",
     }),

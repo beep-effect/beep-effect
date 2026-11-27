@@ -741,15 +741,15 @@ export type MdFrontmatterFailure = typeof MdFrontmatterFailure.Type;
 export const MdSyntaxOptionFields = {
   html: MdHtmlPolicy.pipe(
     S.withConstructorDefault(Effect.succeed(MdHtmlPolicy.Enum.escapeAsText)),
-    S.withDecodingDefaultTypeKey(Effect.succeed(MdHtmlPolicy.Enum.escapeAsText)),
-    $I.annoteKey("MdSyntaxOptions.html", { description: "How raw HTML enters the document; escapeAsText by default." })
+    $I.annoteKey("MdSyntaxOptions.html", { description: "How raw HTML enters the document; escapeAsText by default." }),
+    S.withDecodingDefaultTypeKey(Effect.succeed(MdHtmlPolicy.Enum.escapeAsText))
   ),
   htmlComments: MdHtmlCommentPolicy.pipe(
     S.withConstructorDefault(Effect.succeed(MdHtmlCommentPolicy.Enum.drop)),
-    S.withDecodingDefaultTypeKey(Effect.succeed(MdHtmlCommentPolicy.Enum.drop)),
     $I.annoteKey("MdSyntaxOptions.htmlComments", {
       description: "How HTML comment nodes are handled; drop by default.",
-    })
+    }),
+    S.withDecodingDefaultTypeKey(Effect.succeed(MdHtmlCommentPolicy.Enum.drop))
   ),
   breakTag: SchemaUtils.BoolKeyDefaultTrue.pipe(
     $I.annoteKey("MdSyntaxOptions.breakTag", {
@@ -779,25 +779,25 @@ export const MdSyntaxOptionFields = {
   ),
   autolinkLiterals: MdAutolinkLiteralPolicy.pipe(
     S.withConstructorDefault(Effect.succeed(MdAutolinkLiteralPolicy.Enum.link)),
-    S.withDecodingDefaultTypeKey(Effect.succeed(MdAutolinkLiteralPolicy.Enum.link)),
-    $I.annoteKey("MdSyntaxOptions.autolinkLiterals", { description: "How GFM autolink literals enter the document." })
+    $I.annoteKey("MdSyntaxOptions.autolinkLiterals", { description: "How GFM autolink literals enter the document." }),
+    S.withDecodingDefaultTypeKey(Effect.succeed(MdAutolinkLiteralPolicy.Enum.link))
   ),
   softBreak: MdSoftBreak.pipe(
     S.withConstructorDefault(Effect.succeed(MdSoftBreak.Enum.space)),
-    S.withDecodingDefaultTypeKey(Effect.succeed(MdSoftBreak.Enum.space)),
-    $I.annoteKey("MdSyntaxOptions.softBreak", { description: "How soft line breaks enter text; space by default." })
+    $I.annoteKey("MdSyntaxOptions.softBreak", { description: "How soft line breaks enter text; space by default." }),
+    S.withDecodingDefaultTypeKey(Effect.succeed(MdSoftBreak.Enum.space))
   ),
   frontmatter: MdFrontmatterPolicy.pipe(
     S.withConstructorDefault(Effect.succeed(MdFrontmatterPolicy.Enum.decode)),
-    S.withDecodingDefaultTypeKey(Effect.succeed(MdFrontmatterPolicy.Enum.decode)),
-    $I.annoteKey("MdSyntaxOptions.frontmatter", { description: "What happens to captured frontmatter." })
+    $I.annoteKey("MdSyntaxOptions.frontmatter", { description: "What happens to captured frontmatter." }),
+    S.withDecodingDefaultTypeKey(Effect.succeed(MdFrontmatterPolicy.Enum.decode))
   ),
   onFrontmatterFailure: MdFrontmatterFailure.pipe(
     S.withConstructorDefault(Effect.succeed(MdFrontmatterFailure.Enum.loss)),
-    S.withDecodingDefaultTypeKey(Effect.succeed(MdFrontmatterFailure.Enum.loss)),
     $I.annoteKey("MdSyntaxOptions.onFrontmatterFailure", {
       description: "Whether a frontmatter decode failure is a loss or an error.",
-    })
+    }),
+    S.withDecodingDefaultTypeKey(Effect.succeed(MdFrontmatterFailure.Enum.loss))
   ),
   sourceMap: SchemaUtils.BoolKeyDefaultTrue.pipe(
     $I.annoteKey("MdSyntaxOptions.sourceMap", { description: "Whether to build the source map; on by default." })

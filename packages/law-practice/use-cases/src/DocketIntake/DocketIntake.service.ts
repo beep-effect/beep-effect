@@ -159,22 +159,26 @@ export class DocketIntakeConfig extends S.Opaque<DocketIntakeConfig, { readonly 
     }),
     maxAttempts: PositiveAttempts.pipe(
       S.withConstructorDefault(Effect.succeed(docketIntakeConfigMaxAttemptsDefault)),
+      S.annotateKey({
+        description: "Attempts after which a message that keeps failing gets a needs-review entry instead.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(docketIntakeConfigMaxAttemptsDefault))
-    ).annotateKey({
-      description: "Attempts after which a message that keeps failing gets a needs-review entry instead.",
-    }),
+    ),
     overlapMinutes: S.Natural.pipe(
       S.withConstructorDefault(Effect.succeed(docketIntakeConfigOverlapMinutesDefault)),
+      S.annotateKey({ description: "How far behind the cursor each poll re-reads, to catch late-arriving mail." }),
       S.withDecodingDefaultTypeKey(Effect.succeed(docketIntakeConfigOverlapMinutesDefault))
-    ).annotateKey({ description: "How far behind the cursor each poll re-reads, to catch late-arriving mail." }),
+    ),
     review: DocketReviewConfig.pipe(
       S.withConstructorDefault(Effect.succeed(docketIntakeConfigReviewDefault)),
+      S.annotateKey({ description: "Round limit and acceptance threshold of the review loop." }),
       S.withDecodingDefaultTypeKey(Effect.succeed(docketIntakeConfigReviewDefault))
-    ).annotateKey({ description: "Round limit and acceptance threshold of the review loop." }),
+    ),
     reviewNegatives: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(true)),
+      S.annotateKey({ description: "Whether agent 2 also reviews messages agent 1 found nothing to docket in." }),
       S.withDecodingDefaultTypeKey(Effect.succeed(true))
-    ).annotateKey({ description: "Whether agent 2 also reviews messages agent 1 found nothing to docket in." }),
+    ),
   }).pipe($I.annoteSchema("DocketIntakeConfig", { description: "Settings of the docket intake pipeline." }))
 ) {}
 

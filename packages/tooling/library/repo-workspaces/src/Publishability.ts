@@ -64,9 +64,9 @@ export class PublishTarget extends S.Opaque<PublishTarget, { readonly brand: uni
      * Whether to publish with a provenance attestation.
      */
     provenance: S.Boolean.pipe(
+      $I.annoteKey("PublishTarget.provenance", { description: "Whether to publish with a provenance attestation." }),
       S.withDecodingDefaultKey(Effect.succeed(false)),
-      S.withConstructorDefault(Effect.succeed(false)),
-      $I.annoteKey("PublishTarget.provenance", { description: "Whether to publish with a provenance attestation." })
+      S.withConstructorDefault(Effect.succeed(false))
     ),
   }).pipe($I.annoteSchema("PublishTarget", { description: "A resolved publish destination for a workspace package." }))
 ) {}

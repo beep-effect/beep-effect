@@ -126,10 +126,11 @@ export class DuckDbErrorFromUnknownOptions extends S.Opaque<
     ...DuckDbErrorLeadingContextFields,
     message: S.String.pipe(
       S.withConstructorDefault(Effect.succeed("DuckDB operation failed.")),
+      S.annotateKey({
+        description: "Human-readable failure summary.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed("DuckDB operation failed."))
-    ).annotateKey({
-      description: "Human-readable failure summary.",
-    }),
+    ),
     ...DuckDbErrorTrailingContextFields,
   }).pipe(
     $I.annoteSchema("DuckDbErrorFromUnknownOptions", {

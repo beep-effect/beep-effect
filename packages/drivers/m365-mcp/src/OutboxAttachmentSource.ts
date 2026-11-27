@@ -250,22 +250,26 @@ export class OutboxAttachmentPolicy extends S.Opaque<OutboxAttachmentPolicy, { r
   S.Struct({
     createMissingRoots: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(false)),
+      S.annotateKey({
+        description: "Create a missing root (mode 0700) instead of failing; used only for the default staging root.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(false))
-    ).annotateKey({
-      description: "Create a missing root (mode 0700) instead of failing; used only for the default staging root.",
-    }),
+    ),
     maxAttachmentBytes: PosInt.pipe(
       S.withConstructorDefault(Effect.succeed(OUTBOX_DEFAULT_MAX_ATTACHMENT_BYTES)),
+      S.annotateKey({ description: "Largest single attachment in bytes." }),
       S.withDecodingDefaultTypeKey(Effect.succeed(OUTBOX_DEFAULT_MAX_ATTACHMENT_BYTES))
-    ).annotateKey({ description: "Largest single attachment in bytes." }),
+    ),
     maxAttachments: PosInt.pipe(
       S.withConstructorDefault(Effect.succeed(OUTBOX_DEFAULT_MAX_ATTACHMENTS)),
+      S.annotateKey({ description: "Largest number of attachments on one message." }),
       S.withDecodingDefaultTypeKey(Effect.succeed(OUTBOX_DEFAULT_MAX_ATTACHMENTS))
-    ).annotateKey({ description: "Largest number of attachments on one message." }),
+    ),
     maxMessageAttachmentBytes: PosInt.pipe(
       S.withConstructorDefault(Effect.succeed(OUTBOX_DEFAULT_MAX_ATTACHMENT_BYTES)),
+      S.annotateKey({ description: "Largest total attachment size on one message, in bytes." }),
       S.withDecodingDefaultTypeKey(Effect.succeed(OUTBOX_DEFAULT_MAX_ATTACHMENT_BYTES))
-    ).annotateKey({ description: "Largest total attachment size on one message, in bytes." }),
+    ),
     roots: S.NonEmptyArray(S.NonEmptyString).annotateKey({
       description: "Absolute directories attachments may be read from.",
     }),

@@ -112,21 +112,27 @@ export class TagDecisionSummary extends S.Opaque<TagDecisionSummary, { readonly 
     outcome: TaggingOutcome.annotateKey({
       description: "Outcome tag of the decision.",
     }),
-    matterKey: S.OptionFromNullOr(MatterKey)
-      .pipe(S.withDecodingDefaultKey(Effect.succeed(null)), S.withConstructorDefault(Effect.succeedNone))
-      .annotateKey({
+    matterKey: S.OptionFromNullOr(MatterKey).pipe(
+      S.annotateKey({
         description: "Matched matter; none when unmatched.",
       }),
-    confidence: S.OptionFromNullOr(UnitInterval)
-      .pipe(S.withDecodingDefaultKey(Effect.succeed(null)), S.withConstructorDefault(Effect.succeedNone))
-      .annotateKey({
+      S.withDecodingDefaultKey(Effect.succeed(null)),
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
+    confidence: S.OptionFromNullOr(UnitInterval).pipe(
+      S.annotateKey({
         description: "Confidence of the match; none when unmatched.",
       }),
-    reason: S.OptionFromNullOr(UnmatchedReason)
-      .pipe(S.withDecodingDefaultKey(Effect.succeed(null)), S.withConstructorDefault(Effect.succeedNone))
-      .annotateKey({
+      S.withDecodingDefaultKey(Effect.succeed(null)),
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
+    reason: S.OptionFromNullOr(UnmatchedReason).pipe(
+      S.annotateKey({
         description: "Why no matter was assigned; none when matched.",
       }),
+      S.withDecodingDefaultKey(Effect.succeed(null)),
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
   }).pipe(
     $I.annoteSchema("TagDecisionSummary", {
       description: "Ledger-sized summary of a tagging decision: outcome, matter, confidence, and reason.",
@@ -208,16 +214,20 @@ export class TagLedgerEntry extends S.Opaque<TagLedgerEntry, { readonly brand: u
     messageId: MailMessageId.annotateKey({
       description: "Provider id of the tagged message.",
     }),
-    internetMessageId: S.OptionFromNullOr(InternetMessageId)
-      .pipe(S.withDecodingDefaultKey(Effect.succeed(null)), S.withConstructorDefault(Effect.succeedNone))
-      .annotateKey({
+    internetMessageId: S.OptionFromNullOr(InternetMessageId).pipe(
+      S.annotateKey({
         description: "RFC 5322 Message-ID of the tagged message, when known.",
       }),
-    conversationId: S.OptionFromNullOr(MailConversationId)
-      .pipe(S.withDecodingDefaultKey(Effect.succeed(null)), S.withConstructorDefault(Effect.succeedNone))
-      .annotateKey({
+      S.withDecodingDefaultKey(Effect.succeed(null)),
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
+    conversationId: S.OptionFromNullOr(MailConversationId).pipe(
+      S.annotateKey({
         description: "Conversation the tagged message belongs to, when known; later replies carry the matter over.",
       }),
+      S.withDecodingDefaultKey(Effect.succeed(null)),
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
     addedCategories: S.Array(MailCategoryName).annotateKey({
       description: "Owned categories this run added to the message.",
     }),
@@ -526,11 +536,12 @@ export class FilingLedgerEntry extends S.Opaque<FilingLedgerEntry, { readonly br
       description: "Document-store id of the stored file.",
     }),
     reconciled: S.Boolean.pipe(
+      S.annotateKey({
+        description: "Whether the file was recovered from an earlier intent rather than uploaded by this run.",
+      }),
       S.withDecodingDefaultKey(Effect.succeed(false)),
       S.withConstructorDefault(Effect.succeed(false))
-    ).annotateKey({
-      description: "Whether the file was recovered from an earlier intent rather than uploaded by this run.",
-    }),
+    ),
   }).pipe(
     $I.annoteSchema("FilingLedgerEntry", {
       description: "Filing-ledger line recording one attachment stored in a matter's folder.",
@@ -750,28 +761,35 @@ export class BackfillCheckpoint extends S.Opaque<BackfillCheckpoint, { readonly 
     since: S.DateTimeUtcFromString.annotateKey({
       description: "UTC instant the backfill starts from.",
     }),
-    lastReceivedAt: S.OptionFromNullOr(S.DateTimeUtcFromString)
-      .pipe(S.withDecodingDefaultKey(Effect.succeed(null)), S.withConstructorDefault(Effect.succeedNone))
-      .annotateKey({
+    lastReceivedAt: S.OptionFromNullOr(S.DateTimeUtcFromString).pipe(
+      S.annotateKey({
         description: "Received instant of the last processed message; none before the first page.",
       }),
-    lastMessageId: S.OptionFromNullOr(MailMessageId)
-      .pipe(S.withDecodingDefaultKey(Effect.succeed(null)), S.withConstructorDefault(Effect.succeedNone))
-      .annotateKey({
+      S.withDecodingDefaultKey(Effect.succeed(null)),
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
+    lastMessageId: S.OptionFromNullOr(MailMessageId).pipe(
+      S.annotateKey({
         description: "Id of the last processed message; none before the first page.",
       }),
-    coveredAtBoundary: S.Array(MailMessageId)
-      .pipe(S.withDecodingDefaultKey(Effect.succeed([])), S.withConstructorDefault(Effect.succeed([])))
-      .annotateKey({
+      S.withDecodingDefaultKey(Effect.succeed(null)),
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
+    coveredAtBoundary: S.Array(MailMessageId).pipe(
+      S.annotateKey({
         description:
           "Ids of the processed messages received exactly at lastReceivedAt; ties not listed are not covered.",
       }),
+      S.withDecodingDefaultKey(Effect.succeed([])),
+      S.withConstructorDefault(Effect.succeed([]))
+    ),
     processed: S.Natural.pipe(
+      S.annotateKey({
+        description: "Messages processed so far.",
+      }),
       S.withDecodingDefaultKey(Effect.succeed(0)),
       S.withConstructorDefault(Effect.succeed(0))
-    ).annotateKey({
-      description: "Messages processed so far.",
-    }),
+    ),
   }).pipe(
     $I.annoteSchema("BackfillCheckpoint", {
       description: "Resume point of the mail-tagging backfill.",

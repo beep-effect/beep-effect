@@ -317,12 +317,12 @@ export class Lockfile extends S.Class<Lockfile, { readonly brand: unique symbol 
       })
     ),
     importers: S.Array(LockfileImporter).pipe(
-      S.withDecodingDefaultKey(Effect.succeed([])),
-      S.withConstructorDefault(Effect.succeed(EMPTY_IMPORTERS)),
       $I.annoteKey("Lockfile.importers", {
         description:
           "Workspace importers and their declared dependencies, identified by root-relative path; empty for yarn",
-      })
+      }),
+      S.withDecodingDefaultKey(Effect.succeed([])),
+      S.withConstructorDefault(Effect.succeed(EMPTY_IMPORTERS))
     ),
     extension: S.optionalKey(S.Union([PnpmExtension, BunExtension])).pipe(
       $I.annoteKey("Lockfile.extension", {

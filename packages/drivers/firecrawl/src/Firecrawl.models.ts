@@ -36,8 +36,9 @@ export class FirecrawlScrapeRequest extends S.Opaque<FirecrawlScrapeRequest, { r
     url: S.String.check(S.isMinLength(1)).annotateKey({ description: "Absolute target URL." }),
     onlyMainContent: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(false)),
+      S.annotateKey({ description: "Whether Firecrawl may drop navigation, headers and footers." }),
       S.withDecodingDefaultTypeKey(Effect.succeed(false))
-    ).annotateKey({ description: "Whether Firecrawl may drop navigation, headers and footers." }),
+    ),
   }).pipe($I.annoteSchema("FirecrawlScrapeRequest", { description: "Target of one Firecrawl scrape." }))
 ) {}
 

@@ -199,9 +199,11 @@ export const AdmissionOutcome = AdmissionOutcomeKind.toTaggedUnion("outcome")({
   landed: {
     nodeId: NodeId.annotateKey({ description: "Node the write landed on." }),
     revisionId: RevisionId.annotateKey({ description: "Revision the write produced." }),
-    flags: S.Array(NearDuplicateFlag)
-      .pipe(S.withConstructorDefault(Effect.succeed([])), S.withDecodingDefaultKey(Effect.succeed([])))
-      .annotateKey({ description: "Advisory near-duplicate findings for the write; defaults to none." }),
+    flags: S.Array(NearDuplicateFlag).pipe(
+      S.withConstructorDefault(Effect.succeed([])),
+      S.annotateKey({ description: "Advisory near-duplicate findings for the write; defaults to none." }),
+      S.withDecodingDefaultKey(Effect.succeed([]))
+    ),
   },
   deferred: {
     nodeId: NodeId.annotateKey({ description: "Existing node the write deferred to." }),

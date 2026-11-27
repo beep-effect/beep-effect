@@ -141,10 +141,11 @@ export class OpenAiLanguageModelOptions extends S.Opaque<
   S.Struct({
     model: S.NonEmptyString.pipe(
       S.withConstructorDefault(Effect.succeed(OPENAI_DEFAULT_MODEL)),
+      S.annotateKey({
+        description: "OpenAI Responses API model identifier used by the language-model Layer.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(OPENAI_DEFAULT_MODEL))
-    ).annotateKey({
-      description: "OpenAI Responses API model identifier used by the language-model Layer.",
-    }),
+    ),
   }).pipe(
     $I.annoteSchema("OpenAiLanguageModelOptions", {
       description: "Options accepted by the OpenAI language-model Layer factory.",
@@ -186,10 +187,11 @@ export class OpenAiEmbeddingModelOptions extends S.Opaque<
     }),
     model: S.NonEmptyString.pipe(
       S.withConstructorDefault(Effect.succeed(OPENAI_DEFAULT_EMBEDDING_MODEL)),
+      S.annotateKey({
+        description: "OpenAI embeddings API model identifier used by the embedding-model Layer.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(OPENAI_DEFAULT_EMBEDDING_MODEL))
-    ).annotateKey({
-      description: "OpenAI embeddings API model identifier used by the embedding-model Layer.",
-    }),
+    ),
   }).pipe(
     $I.annoteSchema("OpenAiEmbeddingModelOptions", {
       description: "Options accepted by the OpenAI embedding-model Layer factory.",

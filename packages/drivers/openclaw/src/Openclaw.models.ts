@@ -179,23 +179,23 @@ export class OpenclawProcessRequest extends S.Opaque<OpenclawProcessRequest, { r
     args: S.Array(S.String).annotateKey({
       description: "Arguments passed to the executable; tokens never appear here.",
     }),
-    env: S.Record(S.String, S.String)
-      .pipe(
-        S.withConstructorDefault(Effect.succeed(openclawProcessRequestEnvDefault)),
-        S.withDecodingDefaultTypeKey(Effect.succeed(openclawProcessRequestEnvDefault))
-      )
-      .annotateKey({
+    env: S.Record(S.String, S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(openclawProcessRequestEnvDefault)),
+      S.annotateKey({
         description: "Hermetic environment supplied only to the child process.",
       }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(openclawProcessRequestEnvDefault))
+    ),
     executable: S.NonEmptyString.annotateKey({
       description: "Executable command or path used by the child process.",
     }),
     stdin: OpenclawProcessStdinBase.pipe(
       S.withConstructorDefault(Effect.succeed("ignore" as const)),
+      S.annotateKey({
+        description: "Standard-input policy; defaults to ignored unless a private stdin payload is present.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed("ignore" as const))
-    ).annotateKey({
-      description: "Standard-input policy; defaults to ignored unless a private stdin payload is present.",
-    }),
+    ),
     stdinText: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Private standard-input payload supplied to the child without placing it in argv.",
     }),
@@ -638,28 +638,26 @@ const openclawGatewayHealthPluginsLoadedDefault = A.empty();
  */
 export class OpenclawGatewayHealth extends S.Opaque<OpenclawGatewayHealth, { readonly brand: unique symbol }>()(
   S.Struct({
-    channels: S.Record(S.String, OpenclawChannelHealth)
-      .pipe(
-        S.withConstructorDefault(Effect.succeed(openclawGatewayHealthChannelsDefault)),
-        S.withDecodingDefaultTypeKey(Effect.succeed(openclawGatewayHealthChannelsDefault))
-      )
-      .annotateKey({
+    channels: S.Record(S.String, OpenclawChannelHealth).pipe(
+      S.withConstructorDefault(Effect.succeed(openclawGatewayHealthChannelsDefault)),
+      S.annotateKey({
         description: "Per-channel health projections keyed by channel name.",
       }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(openclawGatewayHealthChannelsDefault))
+    ),
     ok: S.Boolean.annotateKey({
       description: "Top-level gateway health verdict.",
     }),
     pluginErrorCount: S.Natural.annotateKey({
       description: "Number of plugin errors reported by the gateway.",
     }),
-    pluginsLoaded: S.Array(S.String)
-      .pipe(
-        S.withConstructorDefault(Effect.succeed(openclawGatewayHealthPluginsLoadedDefault)),
-        S.withDecodingDefaultTypeKey(Effect.succeed(openclawGatewayHealthPluginsLoadedDefault))
-      )
-      .annotateKey({
+    pluginsLoaded: S.Array(S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(openclawGatewayHealthPluginsLoadedDefault)),
+      S.annotateKey({
         description: "Names of plugins the gateway reports as loaded.",
       }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(openclawGatewayHealthPluginsLoadedDefault))
+    ),
   }).pipe(
     $I.annoteSchema("OpenclawGatewayHealth", {
       description: "Normalized projection of the authenticated gateway health call.",
@@ -1220,14 +1218,13 @@ export class OpenclawInvocationContext extends S.Opaque<OpenclawInvocationContex
       .annotateKey({
         description: "Absolute path exported as OPENCLAW_CONFIG_PATH, when set.",
       }),
-    extraEnv: S.Record(S.String, S.String)
-      .pipe(
-        S.withConstructorDefault(Effect.succeed(openclawInvocationContextExtraEnvDefault)),
-        S.withDecodingDefaultTypeKey(Effect.succeed(openclawInvocationContextExtraEnvDefault))
-      )
-      .annotateKey({
+    extraEnv: S.Record(S.String, S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(openclawInvocationContextExtraEnvDefault)),
+      S.annotateKey({
         description: "Additional environment entries; the gateway token travels here, never in argv.",
       }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(openclawInvocationContextExtraEnvDefault))
+    ),
     gatewayUrl: S.OptionFromOptionalKey(S.NonEmptyString)
       .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({
@@ -1238,10 +1235,11 @@ export class OpenclawInvocationContext extends S.Opaque<OpenclawInvocationContex
     }),
     nixMode: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(true)),
+      S.annotateKey({
+        description: "Whether OPENCLAW_NIX_MODE=1 is exported; managed deployments keep this on.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(true))
-    ).annotateKey({
-      description: "Whether OPENCLAW_NIX_MODE=1 is exported; managed deployments keep this on.",
-    }),
+    ),
     nodeBinDir: S.OptionFromOptionalKey(OpenclawAbsolutePath)
       .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({
