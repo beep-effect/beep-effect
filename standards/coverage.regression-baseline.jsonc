@@ -2834,13 +2834,13 @@
     },
     "@beep/api-docs": {
       "path": "apps/labs/api-docs",
-      "lines": 93.97,
-      "statements": 94.56,
+      "lines": 93.02,
+      "statements": 93.61,
       "branches": 100,
-      "functions": 94.87,
+      "functions": 95,
       "uncovered": {
-        "lines": 5,
-        "statements": 5,
+        "lines": 6,
+        "statements": 6,
         "branches": 0,
         "functions": 2
       },
@@ -2899,8 +2899,8 @@
           "branches": 100,
           "functions": 0,
           "uncovered": {
-            "lines": 4,
-            "statements": 4,
+            "lines": 5,
+            "statements": 5,
             "branches": 0,
             "functions": 1
           }
@@ -17804,13 +17804,13 @@
     },
     "@beep/lane-cockpit": {
       "path": "apps/labs/lane-cockpit",
-      "lines": 79.68,
-      "statements": 80,
+      "lines": 79.48,
+      "statements": 79.81,
       "branches": 90.9,
       "functions": 80.86,
       "uncovered": {
-        "lines": 39,
-        "statements": 42,
+        "lines": 40,
+        "statements": 43,
         "branches": 5,
         "functions": 22
       },
@@ -17881,8 +17881,8 @@
           "branches": 100,
           "functions": 0,
           "uncovered": {
-            "lines": 21,
-            "statements": 23,
+            "lines": 22,
+            "statements": 24,
             "branches": 0,
             "functions": 9
           }
