@@ -22,6 +22,7 @@ import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import {
+  FleetCheckJob,
   FleetDeliveryDetail,
   FleetHookDeliveriesPage,
   FleetHookDelivery,
@@ -31,7 +32,7 @@ import {
   FleetRunnersPage,
   FleetRunsPage,
   FleetRunsQuery,
-  FleetScheduledRun,
+  FleetWorkflowRun,
 } from "./FleetMissedEvent.schemas.ts";
 import type { FleetDeliveryId } from "./FleetMissedEvent.schemas.ts";
 
@@ -70,6 +71,8 @@ export class FleetReadError extends S.TaggedError<FleetReadError, { readonly bra
  *
  * Every member is a read: the check never redelivers, cancels, reruns or
  * writes. Paging is the caller's: it decides when a listing is complete.
+ * `workflowRuns` lists the check workflow's recent runs from every event,
+ * newest first; `checkJob` reads whether one of them ran its check job.
  * `requestCount` is the number of reads made through the service so far,
  * each retry included; {@link withFleetRequestCount} adds it to every layer.
  *
@@ -77,6 +80,7 @@ export class FleetReadError extends S.TaggedError<FleetReadError, { readonly bra
  * @since 0.0.0
  */
 export interface FleetGithubReadsShape {
+  readonly checkJob: (runId: number) => Effect.Effect<FleetCheckJob, FleetReadError>;
   readonly deliveriesPage: (
     hookId: FleetDeliveryId,
     cursor: O.Option<string>
@@ -89,7 +93,7 @@ export interface FleetGithubReadsShape {
   readonly requestCount: Effect.Effect<number>;
   readonly runnersPage: (page: number) => Effect.Effect<FleetRunnersPage, FleetReadError>;
   readonly runsPage: (query: FleetRunsQuery, page: number) => Effect.Effect<FleetRunsPage, FleetReadError>;
-  readonly scheduledRuns: (workflowFile: string) => Effect.Effect<ReadonlyArray<FleetScheduledRun>, FleetReadError>;
+  readonly workflowRuns: (workflowFile: string) => Effect.Effect<ReadonlyArray<FleetWorkflowRun>, FleetReadError>;
 }
 
 /**
@@ -101,8 +105,9 @@ export interface FleetGithubReadsShape {
  * `inProgressRuns`, and by creation time from `recentRuns`. `jobs` are
  * served by their `runId`. `deliveries` are newest first and served
  * `pageSize` at a time; `failDeliveryPageAt` fails that page (0-based) and
- * `failingDetails` fails those detail reads. `scheduledRuns` of `None` fails
- * the read.
+ * `failingDetails` fails those detail reads. `workflowRuns` of `None` fails
+ * the read. `checkJobs` serve each run's check job by `runId`, a run absent
+ * from them has `NotRan`, and `failingCheckJobs` fail those reads.
  *
  * **Example** (An empty fleet)
  *
@@ -126,7 +131,12 @@ export class FleetGithubFixture extends S.Opaque<FleetGithubFixture, { readonly 
     details: S.Array(FleetDeliveryDetail).pipe(S.withConstructorDefault(Effect.succeed([]))),
     failingDetails: S.Array(S.String).pipe(S.withConstructorDefault(Effect.succeed([]))),
     failDeliveryPageAt: S.Option(S.Finite).pipe(S.withConstructorDefault(Effect.succeedNone)),
-    scheduledRuns: FleetScheduledRun.pipe(S.Array, S.Option, S.withConstructorDefault(Effect.succeedSome([]))),
+    workflowRuns: FleetWorkflowRun.pipe(S.Array, S.Option, S.withConstructorDefault(Effect.succeedSome([]))),
+    checkJobs: S.Struct({ runId: S.Finite, job: FleetCheckJob }).pipe(
+      S.Array,
+      S.withConstructorDefault(Effect.succeed([]))
+    ),
+    failingCheckJobs: S.Array(S.Finite).pipe(S.withConstructorDefault(Effect.succeed([]))),
     pageSize: S.Finite.pipe(S.withConstructorDefault(Effect.succeed(100))),
   }).pipe($I.annoteSchema("FleetGithubFixture", { description: "The GitHub state the fake fleet reads serve." }))
 ) {}
@@ -152,12 +162,13 @@ export type FleetGithubReadCalls = Omit<FleetGithubReadsShape, "requestCount">;
  * const unread = () => Effect.fail(FleetReadError.make({ endpoint: "x", message: "unused" }))
  * const program = Effect.gen(function* () {
  *   const reads = yield* withFleetRequestCount({
+ *     checkJob: unread,
  *     deliveriesPage: unread,
  *     deliveryDetail: unread,
  *     jobsPage: unread,
  *     runnersPage: unread,
  *     runsPage: unread,
- *     scheduledRuns: unread,
+ *     workflowRuns: unread,
  *   })
  *   yield* Effect.ignore(reads.runnersPage(1))
  *   return yield* reads.requestCount
@@ -181,12 +192,13 @@ export const withFleetRequestCount = Effect.fnUntraced(function* (calls: FleetGi
       );
   return FleetGithubReads.of({
     requestCount: Ref.get(count),
+    checkJob: counted(calls.checkJob),
     deliveriesPage: counted(calls.deliveriesPage),
     deliveryDetail: counted(calls.deliveryDetail),
     jobsPage: counted(calls.jobsPage),
     runnersPage: counted(calls.runnersPage),
     runsPage: counted(calls.runsPage),
-    scheduledRuns: counted(calls.scheduledRuns),
+    workflowRuns: counted(calls.workflowRuns),
   });
 });
 
@@ -252,10 +264,18 @@ const makeFakeReads = Effect.fnUntraced(function* (fixture: FleetGithubFixture) 
             Effect.mapError(() => failure)
           );
     }),
-    scheduledRuns: Effect.fn("FleetGithubReads.fake.scheduledRuns")(function* (workflowFile: string) {
-      return yield* Effect.fromOption(fixture.scheduledRuns).pipe(
+    workflowRuns: Effect.fn("FleetGithubReads.fake.workflowRuns")(function* (workflowFile: string) {
+      return yield* Effect.fromOption(fixture.workflowRuns).pipe(
         Effect.mapError(() => fixtureFailure(`workflows/${workflowFile}/runs`))
       );
+    }),
+    checkJob: Effect.fn("FleetGithubReads.fake.checkJob")(function* (runId: number) {
+      return A.contains(fixture.failingCheckJobs, runId)
+        ? yield* fixtureFailure(`runs/${runId}/jobs`)
+        : pipe(
+            A.findFirst(fixture.checkJobs, (entry) => entry.runId === runId),
+            O.match({ onNone: () => FleetCheckJob.cases.NotRan.make({}), onSome: (entry) => entry.job })
+          );
     }),
   });
 });
