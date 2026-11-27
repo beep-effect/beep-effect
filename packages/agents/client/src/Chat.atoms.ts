@@ -827,8 +827,10 @@ const keepFallbackAddedDuringPoll = constTrue;
  *
  * A failed stream may still have committed the user row and a terminal
  * assistant marker, so failure also refreshes the timeline, keeping a local
- * terminal turn when that read fails or the receipt stays uncertain. Defects
- * take the same path as typed failures.
+ * terminal turn when that read fails or the receipt stays uncertain. A defect
+ * only clears the streaming turn and gives the prompt back on the same
+ * `not_persisted` receipt; it neither refreshes the timeline nor keeps a
+ * terminal turn.
  *
  * A completed reply stays visible until the refreshed timeline replaces it; a
  * failed refresh keeps the streamed reply and still ends generation activity.
