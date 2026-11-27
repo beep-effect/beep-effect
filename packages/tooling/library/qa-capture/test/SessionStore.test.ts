@@ -109,12 +109,10 @@ describe("@beep/qa-capture session store", () => {
         expect(exists11).toBe(false);
         const exists12 = yield* fs.exists(layout.sessionPath);
         expect(exists12).toBe(false);
-        // Legacy screenshot manifests stay untouched per the round-layout
-        // contract, and events.ndjson is the collector's to truncate at serve.
         const exists13 = yield* fs.exists(legacyManifestPath);
-        expect(exists13).toBe(true);
+        expect(exists13, "legacy screenshot manifests stay untouched").toBe(true);
         const readFileString14 = yield* fs.readFileString(layout.eventsPath);
-        expect(readFileString14).toBe("stale-events\n");
+        expect(readFileString14, "events.ndjson is the collector's to truncate at serve").toBe("stale-events\n");
       })
     );
   });

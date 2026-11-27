@@ -1,7 +1,3 @@
-// The record library sits in the dependency closure of every test task and
-// is loaded by a Vitest reporter in Vitest's main process, which is Bun or
-// Node. This suite runs under Bun; Node must load the whole package too,
-// which it cannot when any `bun:` module is reachable.
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
@@ -22,7 +18,11 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("runtime boundary", (it)
           cwd: path.resolve(import.meta.dirname, ".."),
         })
       );
-      assert.strictEqual(Str.trim(output), "true");
+      assert.strictEqual(
+        Str.trim(output),
+        "true",
+        "a Vitest reporter loads this library in Node as well as Bun, which fails when any bun: module is reachable"
+      );
     })
   );
 });

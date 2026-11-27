@@ -33,7 +33,6 @@ interface Statement {
   readonly Resource: ReadonlyArray<string>;
 }
 
-/** One harness per test: its own recorder, world, in-memory state and stage. */
 const harness = (stage: string) => {
   const recorder = new Recorder();
   const world = new World();
@@ -85,12 +84,11 @@ const fleet = (pools: A.NonEmptyReadonlyArray<RunnerPool>) =>
 
 type ScratchStack = Test.ScratchStack;
 
-/** The failures Alchemy declares for a stack deployment; the scratch stack erases them to `any`. */
-type DeployError = Effect.Error<Core.DeployResult<unknown>>;
+type AlchemyDeclaredDeployError = Effect.Error<Core.DeployResult<unknown>>;
 
 type ScratchDeploy = <A, E, R>(
   definition: Effect.Effect<A, E, R>
-) => Effect.Effect<Input.Resolve<A>, DeployError | E, Exclude<R, StackServices>>;
+) => Effect.Effect<Input.Resolve<A>, AlchemyDeclaredDeployError | E, Exclude<R, StackServices>>;
 
 const deploy = <A, E, R>(stack: ScratchStack, definition: Effect.Effect<A, E, R>) => {
   const run: ScratchDeploy = stack.deploy;
@@ -98,7 +96,7 @@ const deploy = <A, E, R>(stack: ScratchStack, definition: Effect.Effect<A, E, R>
 };
 
 const destroy = (stack: ScratchStack) => {
-  const run: () => Effect.Effect<void, DeployError> = stack.destroy;
+  const run: () => Effect.Effect<void, AlchemyDeclaredDeployError> = stack.destroy;
   return run();
 };
 
@@ -162,28 +160,34 @@ onePool.test.provider("one pool declares the whole fleet from shipped primitives
     expect(O.getOrUndefined(config.buildDlqUrl)).toBe(
       "https://sqs.us-east-1.amazonaws.com/123456789012/Runners-Poolheavy-BuildQueueDlq"
     );
-    // Scale-up may send to its build DLQ (a deterministic configure failure) and to job-retry, and to no other queue.
     const sends = A.filter(statementsOf(recorder, "Runners/Poolheavy/ScaleUp"), (statement) =>
       A.contains(statement.Action as ReadonlyArray<string>, "sqs:SendMessage")
     );
-    // Scale-up may delete only its own pool's token parameters (a failed configuration's leftover token).
     const deletes = A.filter(statementsOf(recorder, "Runners/Poolheavy/ScaleUp"), (statement) =>
       A.contains(statement.Action as ReadonlyArray<string>, "ssm:DeleteParameter")
     );
-    expect(A.map(deletes, (statement) => [statement.Action, statement.Resource] as const)).toStrictEqual([
+    expect(
+      A.map(deletes, (statement) => [statement.Action, statement.Resource] as const),
+      "scale-up may delete only its own pool's token parameters, a failed configuration's leftover"
+    ).toStrictEqual([
       [["ssm:DeleteParameter"], ["arn:aws:ssm:us-east-1:123456789012:parameter/beep-ci/heavy/tokens/*"]],
     ]);
-    expect(A.flatMap(sends, (statement) => statement.Resource as ReadonlyArray<string>)).toStrictEqual([
+    expect(
+      A.flatMap(sends, (statement) => statement.Resource as ReadonlyArray<string>),
+      "scale-up may send to its build DLQ (a deterministic configure failure) and to job-retry, nowhere else"
+    ).toStrictEqual([
       "arn:aws:sqs:us-east-1:123456789012:Runners-Poolheavy-BuildQueueDlq",
       "arn:aws:sqs:us-east-1:123456789012:Runners-Poolheavy-JobRetryQueue",
     ]);
 
-    // A message over the cap waits a day on the build queue and never reaches the DLQ for waiting alone.
     const queueSettings = (fqn: string) => {
       const { visibilityTimeout, messageRetentionPeriod, redrivePolicy } = O.getOrThrow(recorder.byFqn(fqn)).news;
       return { visibilityTimeout, messageRetentionPeriod, redrivePolicy };
     };
-    expect(queueSettings("Runners/Poolheavy/BuildQueue")).toStrictEqual({
+    expect(
+      queueSettings("Runners/Poolheavy/BuildQueue"),
+      "a message over the cap waits a day on the build queue and never reaches a DLQ for waiting alone"
+    ).toStrictEqual({
       visibilityTimeout: "1 minute",
       messageRetentionPeriod: "1 day",
       redrivePolicy: undefined,
@@ -196,13 +200,14 @@ onePool.test.provider("one pool declares the whole fleet from shipped primitives
     expect(jobRetryQueue.redrivePolicy).toMatchObject({ maxReceiveCount: 3 });
 
     const source = O.getOrThrow(recorder.byFqn("Runners/Poolheavy/ScaleUpSource"));
-    expect([source.news.functionName, source.news.functionResponseTypes]).toStrictEqual([
-      // By ARN, so lambda:FunctionArn in the deploy role policy reads the same value on every mapping call.
+    expect(
+      [source.news.functionName, source.news.functionResponseTypes],
+      "by ARN, so lambda:FunctionArn in the deploy role policy reads one value on every mapping call"
+    ).toStrictEqual([
       "arn:aws:lambda:us-east-1:123456789012:function-Runners-Poolheavy-ScaleUp",
       ["ReportBatchItemFailures"],
     ]);
 
-    // Every mapping names its function by ARN, not only the scale-up one.
     const mappingFunctions = A.map(recorder.ofType("Lambda.EventSourceMapping"), (entry) => [
       entry.fqn,
       entry.news.functionName,
@@ -211,7 +216,8 @@ onePool.test.provider("one pool declares the whole fleet from shipped primitives
       A.sort(
         mappingFunctions,
         Order.mapInput(Order.String, ([fqn]: ReadonlyArray<unknown>) => String(fqn))
-      )
+      ),
+      "every mapping names its function by ARN, not only the scale-up one"
     ).toStrictEqual([
       ["Runners/DeregisterRetrySource", "arn:aws:lambda:us-east-1:123456789012:function-Runners-TerminationWatcher"],
       ["Runners/Poolheavy/JobRetrySource", "arn:aws:lambda:us-east-1:123456789012:function-Runners-Poolheavy-JobRetry"],
@@ -227,9 +233,9 @@ onePool.test.provider("one pool declares the whole fleet from shipped primitives
 
     expect(fn(recorder, "Runners/Webhook").news.functionUrl).toBe(true);
     expect(out.webhookUrl).toBe("https://runners-webhook.lambda-url.on.aws/");
-    // Both ran at 93-98% of Lambda's 128 MB default before they were sized (2026-11-20).
     expect(
-      A.map(["Runners/SsmHousekeeper", "Runners/TerminationWatcher"], (fqn) => fn(recorder, fqn).news.memorySize)
+      A.map(["Runners/SsmHousekeeper", "Runners/TerminationWatcher"], (fqn) => fn(recorder, fqn).news.memorySize),
+      "both ran at 93-98% of Lambda's 128 MB default before they were sized (2026-11-20)"
     ).toStrictEqual([256, 256]);
     const webhook = yield* decodeWebhook(
       (fn(recorder, "Runners/Webhook").news.env as Record<string, unknown>)[runtimeConfigEnvName]
@@ -247,9 +253,9 @@ onePool.test.provider("one pool declares the whole fleet from shipped primitives
       "rate(1 day)",
     ]);
 
-    // The runner tarball mirror is a multipart upload, and a failed one is aborted.
     expect(
-      A.map(statementsOf(recorder, "Runners/RunnerBinariesSyncer"), (statement) => statement.Action)
+      A.map(statementsOf(recorder, "Runners/RunnerBinariesSyncer"), (statement) => statement.Action),
+      "the runner tarball mirror is a multipart upload, and a failed one is aborted"
     ).toStrictEqual([["s3:AbortMultipartUpload", "s3:GetObjectTagging", "s3:PutObject", "s3:PutObjectTagging"]]);
 
     const kms = A.filter(statementsOf(recorder, "Runners/TerminationWatcher"), (statement) =>
@@ -286,14 +292,15 @@ onePool.test.provider("one pool declares the whole fleet from shipped primitives
     expect(Str.includes("ghr:token_path")(String(template.news.userData))).toBe(true);
     const role = O.getOrThrow(recorder.byFqn("Runners/Poolheavy/RunnerRole"));
     expect(role.news.managedPolicyArns).toStrictEqual(["arn:aws:iam::123456789012:policy/beep-ci-runner-imds-disable"]);
-    // A runner decrypts only through Parameter Store, in its region, for a token of its own pool. The App
-    // parameters live under <root>/app, so no context this statement admits reaches them, on any key.
     const runnerPolicy = (role.news.inlinePolicies as Record<string, { readonly Statement: ReadonlyArray<Statement> }>)
       .runner;
     const decrypts = A.filter(runnerPolicy?.Statement ?? [], (statement) =>
       A.contains(statement.Action, "kms:Decrypt")
     );
-    expect(decrypts).toStrictEqual([
+    expect(
+      decrypts,
+      "a runner decrypts only via Parameter Store, in its region, for its own pool's token; never <root>/app"
+    ).toStrictEqual([
       {
         Effect: "Allow",
         Action: ["kms:Decrypt"],
@@ -358,8 +365,7 @@ twoPools.test.provider("two pools get their own queues and Lambdas behind one we
     const runnerTags = { "ghr:Application": "github-action-runner", "ghr:Owner": "beep-effect", "ghr:Type": "Org" };
     const heavyRunners = world.launch(1, { ...runnerTags, "ghr:environment": "beep-ci-heavy" });
     const overflowRunners = world.launch(1, { ...runnerTags, "ghr:environment": "beep-ci-overflow" });
-    // What the sweep reads at delete time must still exist when it terminates the first runner.
-    const sweepReads = [
+    const sweepReadsAtTerminate = [
       "SSM.Parameter:Runners/AppId",
       "SSM.Parameter:Runners/AppKey",
       "KMS.Key:Runners/SecretsKey",
@@ -371,8 +377,8 @@ twoPools.test.provider("two pools get their own queues and Lambdas behind one we
     };
     yield* destroy(stack);
     expect(world.terminated).toStrictEqual([...heavyRunners, ...overflowRunners]);
-    expect(A.map(deletedBeforeSweep, A.intersection(sweepReads))).toStrictEqual([[], []]);
-    expect(A.intersection(recorder.deleted, sweepReads)).toHaveLength(sweepReads.length);
+    expect(A.map(deletedBeforeSweep, A.intersection(sweepReadsAtTerminate))).toStrictEqual([[], []]);
+    expect(A.intersection(recorder.deleted, sweepReadsAtTerminate)).toHaveLength(sweepReadsAtTerminate.length);
   })
 );
 

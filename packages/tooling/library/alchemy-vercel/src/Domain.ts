@@ -187,12 +187,14 @@ const DomainClass = Resource<Domain>("Vercel.Domain");
  *
  * **Details**
  *
- * A domain belongs to one project at a time. Domains carry no ownership
- * marker, so a domain this stack did not create reads as foreign, on its own
- * project or on the `moveFrom` project, and needs `adopt(true)`. Adoption
- * from `moveFrom` moves the domain with `moveProjectDomain`. Each deploy asks
- * Vercel to verify an unverified domain; a domain whose DNS is not in place
- * yet stays `verified: false` with its challenges in `verification`.
+ * A domain belongs to one project at a time, so a same-name replacement
+ * deletes the old domain first, and reads that previous generation as owned.
+ * Domains carry no ownership marker, so a domain this stack did not create
+ * reads as foreign, on its own project or on the `moveFrom` project, and
+ * needs `adopt(true)`. Adoption from `moveFrom` moves the domain with
+ * `moveProjectDomain`. Each deploy asks Vercel to verify an unverified
+ * domain; a domain whose DNS is not in place yet stays `verified: false`
+ * with its challenges in `verification`.
  *
  * **Example** (Take over a domain from the old project)
  *
@@ -250,9 +252,6 @@ const readDomain = Effect.fn("Vercel.Domain.read")(function* (
   );
 });
 
-/**
- * The domain on its target project, else on the `moveFrom` project.
- */
 const locateDomain = Effect.fn("Vercel.Domain.locate")(function* (props: DomainProps) {
   const onTarget = yield* readDomain(props.project, props.name, props.teamId);
   if (onTarget !== undefined || props.moveFrom === undefined) return onTarget;
@@ -291,18 +290,13 @@ export const DomainProvider = Provider.succeed(DomainClass, {
     if (output !== undefined) return yield* readDomain(output.projectId, output.name, olds.teamId);
     const state = yield* locateDomain(olds);
     if (state === undefined) return undefined;
-    // Domains carry no ownership marker: without prior state the domain is foreign,
-    // unless it is this resource's own previous generation (a delete-first replacement).
     return state.name === previous?.name && state.projectId === previous.projectId ? state : Unowned(state);
   }),
   diff: Effect.fn("Vercel.Domain.provider.diff")(function* ({ news, olds, output }) {
     if (!isResolved(news)) return undefined;
     if (news.name !== olds.name || news.teamId !== olds.teamId) {
-      // A domain belongs to one project at a time: a same-name replacement deletes first.
       return { action: "replace", deleteFirst: news.name === olds.name } as const;
     }
-    // An unverified domain plans an update on every deploy, so reconcile asks Vercel to
-    // verify it again once its DNS is in place, even when the props are unchanged.
     return output !== undefined && !output.verified ? ({ action: "update" } as const) : undefined;
   }),
   reconcile: Effect.fn("Vercel.Domain.provider.reconcile")(function* ({ news, output, session }) {
@@ -331,7 +325,6 @@ export const DomainProvider = Provider.succeed(DomainClass, {
       return yield* Effect.die(`Vercel domain ${news.name} is missing from project ${target.id} after reconcile`);
     }
     if (placed.verified) return placed;
-    // An unverified domain waits on DNS; a refused verification leaves the challenges in the output.
     return yield* projects.verifyProjectDomain({ idOrName: target.id, domain: news.name, ...scope }).pipe(
       Effect.map(toAttributes),
       Effect.catchTag("BadRequest", () => Effect.succeed(placed))

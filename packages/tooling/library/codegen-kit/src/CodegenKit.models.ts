@@ -154,6 +154,17 @@ export type OutputFormat = typeof OutputFormat.Type;
  * transforms to them. A `$ref` names a definition only by its full pointer, `#/$defs/<name>` or
  * `#/components/schemas/<name>`. Unsupported shapes fail with a `CodegenTransformError`.
  *
+ * **Gotchas**
+ *
+ * `distributeAllOf` ranks annotations by scope, not by member order alone. The node's own
+ * annotations win over every member, and annotations beside a member's `$ref` override the
+ * referenced definition's as that member's own. A union member's annotations (`default`,
+ * `examples` and `discriminator` included) stay on the resulting `anyOf` in either member order,
+ * while an object member's only add the keys the union lacks; between two objects, or two unions,
+ * the later member wins. A `$ref` beside annotation-only siblings is kept rather than inlined.
+ * Only a bare `allOf` wrapper is flattened into its parent; one with sibling keywords keeps
+ * their annotation or constraint scope and is reduced as a member first.
+ *
  * **Example** (Select the ACP transform set)
  *
  * ```ts

@@ -105,13 +105,15 @@ describe("handleTerminationEvent", () => {
     Effect.gen(function* () {
       const world = new World();
       const foreign = seed(world, { ...tags, "ghr:environment": "someone-else" });
-      // Exact match only: an environment that merely extends the fleet's pool environment is another fleet's.
       const extended = seed(world, { ...tags, "ghr:environment": "beep-ci-heavy2" });
       const ownerless = seed(world, { "ghr:environment": "beep-ci-heavy" });
       const run = (instanceId: string) =>
         handleTerminationEvent({ config, event: warning(instanceId) }).pipe(Effect.provideContext(worldContext(world)));
       const outcomes = yield* Effect.forEach([foreign, extended, ownerless, "i-unknown"], run, { concurrency: 1 });
-      expect(outcomes).toStrictEqual([["ignored"], ["ignored"], ["ignored"], []]);
+      expect(
+        outcomes,
+        "exact match only: an environment extending the pool environment is another fleet's"
+      ).toStrictEqual([["ignored"], ["ignored"], ["ignored"], []]);
       expect(world.deletedRunners).toStrictEqual([]);
     })
   );
@@ -244,11 +246,7 @@ describe("sweepRunners", () => {
   );
 });
 
-describe("cross-fleet isolation during the cutover", () => {
-  // Both fleets share one AWS account and one GitHub org: each watcher receives the other's EC2 events and lists
-  // every runner, and a cross-fleet deregistration leaves no CloudTrail entry and has no IAM backstop. Each negative
-  // seeds, per pool, an idle runner (a deregistration is reachable) and a busy one (GitHub answers 422, so a retry
-  // would be queued); its positive control drives the same calls under the same live config.
+describe("cross-fleet isolation in one shared account and org, where a stray deregistration has no CloudTrail or IAM backstop", () => {
   const liveConfig = TerminationWatcherRuntimeConfig.make({
     environments: liveEnvironments,
     app: appParameterNames(liveSsmRoot),
@@ -272,11 +270,7 @@ describe("cross-fleet isolation during the cutover", () => {
     runnerName: (instanceId: string) => `${pool.runnerNamePrefix}${instanceId}`,
   }));
 
-  /**
-   * Per pool, launches an instance with an idle runner, then one with a busy runner (every delete answers 422).
-   * Runner ids count up from `firstRunnerId`; returns the instance ids in launch order.
-   */
-  const seedPools = (
+  const seedIdleThenBusyRunnerPerPool = (
     world: World,
     pools: ReadonlyArray<{
       readonly tags: Readonly<Record<string, string>>;
@@ -302,8 +296,7 @@ describe("cross-fleet isolation during the cutover", () => {
       detail: { "instance-id": instanceId, state },
     });
 
-  /** Drives a Spot interruption warning, then state changes to shutting-down and terminated. */
-  const driveTermination = (world: World) => (instanceId: string) =>
+  const driveWarningShutdownThenTerminated = (world: World) => (instanceId: string) =>
     Effect.forEach(
       [warning(instanceId), stateChange(instanceId, "shutting-down"), stateChange(instanceId, "terminated")],
       (event) => handleTerminationEvent({ config: liveConfig, event }).pipe(Effect.provideContext(worldContext(world))),
@@ -324,8 +317,7 @@ describe("cross-fleet isolation during the cutover", () => {
 
   const runnerIds = (world: World) => A.map(world.githubRunners, (runner) => runner.id);
 
-  /** Each queued retry as `[queue url, instance id, retry count]`. */
-  const queuedRetries = (world: World) =>
+  const queuedRetryUrlInstanceAndCount = (world: World) =>
     Effect.forEach(
       world.sent,
       (sent) => decodeRetry(sent.body).pipe(Effect.map((retry) => [sent.queueUrl, retry.instanceId, retry.retryCount])),
@@ -337,8 +329,8 @@ describe("cross-fleet isolation during the cutover", () => {
   it.effect("ignores every termination event for the old fleet's idle and busy runners in both pools", () =>
     Effect.gen(function* () {
       const world = new World();
-      const instances = seedPools(world, oldFleetPools, 101);
-      const outcomes = yield* Effect.forEach(instances, driveTermination(world), { concurrency: 1 });
+      const instances = seedIdleThenBusyRunnerPerPool(world, oldFleetPools, 101);
+      const outcomes = yield* Effect.forEach(instances, driveWarningShutdownThenTerminated(world), { concurrency: 1 });
       expect(outcomes).toStrictEqual(A.makeBy(4, () => ignoredThrice));
       expect([world.deletedRunners, world.sent, runnerIds(world)]).toStrictEqual([[], [], [101, 102, 103, 104]]);
     })
@@ -347,9 +339,9 @@ describe("cross-fleet isolation during the cutover", () => {
   it.effect("deregisters an idle runner and queues a retry for a busy one in either new-fleet pool (control)", () =>
     Effect.gen(function* () {
       const world = new World();
-      const instances = seedPools(world, newFleetPools, 201);
+      const instances = seedIdleThenBusyRunnerPerPool(world, newFleetPools, 201);
       const [, heavyBusy = "", , overflowBusy = ""] = instances;
-      const outcomes = yield* Effect.forEach(instances, driveTermination(world), { concurrency: 1 });
+      const outcomes = yield* Effect.forEach(instances, driveWarningShutdownThenTerminated(world), { concurrency: 1 });
       const idle = [["deregistered"], ["not-found"], ["not-found"]];
       const busy = A.makeBy(3, () => ["retry-queued"]);
       expect(outcomes).toStrictEqual([idle, busy, idle, busy]);
@@ -357,7 +349,7 @@ describe("cross-fleet isolation during the cutover", () => {
         [201, 203],
         [202, 204],
       ]);
-      const queued = yield* queuedRetries(world);
+      const queued = yield* queuedRetryUrlInstanceAndCount(world);
       expect(queued).toStrictEqual(
         A.flatMap([heavyBusy, overflowBusy], (instanceId) =>
           A.makeBy(3, () => [liveConfig.deregisterRetryQueueUrl, instanceId, 0])
@@ -374,8 +366,8 @@ describe("cross-fleet isolation during the cutover", () => {
         runnerName: (instanceId: string) => `beep-ci-${instanceId}`,
       };
       const untagged = { tags: {}, runnerName: (instanceId: string) => `beep-ci-${instanceId}` };
-      const instances = seedPools(world, [environmentless, untagged], 301);
-      const outcomes = yield* Effect.forEach(instances, driveTermination(world), { concurrency: 1 });
+      const instances = seedIdleThenBusyRunnerPerPool(world, [environmentless, untagged], 301);
+      const outcomes = yield* Effect.forEach(instances, driveWarningShutdownThenTerminated(world), { concurrency: 1 });
       expect(outcomes).toStrictEqual(A.makeBy(4, () => ignoredThrice));
       expect([world.deletedRunners, world.sent, runnerIds(world)]).toStrictEqual([[], [], [301, 302, 303, 304]]);
     })
@@ -384,7 +376,7 @@ describe("cross-fleet isolation during the cutover", () => {
   it.effect("ignores a deregister retry naming an old-fleet instance, idle or busy, and never re-queues it", () =>
     Effect.gen(function* () {
       const world = new World();
-      const instances = seedPools(world, oldFleetPools, 401);
+      const instances = seedIdleThenBusyRunnerPerPool(world, oldFleetPools, 401);
       const outcomes = yield* Effect.forEach(instances, retryOnce(world), { concurrency: 1 });
       expect(outcomes).toStrictEqual(["ignored", "ignored", "ignored", "ignored"]);
       expect([world.deletedRunners, world.sent, runnerIds(world)]).toStrictEqual([[], [], [401, 402, 403, 404]]);
@@ -394,7 +386,7 @@ describe("cross-fleet isolation during the cutover", () => {
   it.effect("deregisters on a deregister retry and re-queues a still-busy one in either new-fleet pool (control)", () =>
     Effect.gen(function* () {
       const world = new World();
-      const instances = seedPools(world, newFleetPools, 501);
+      const instances = seedIdleThenBusyRunnerPerPool(world, newFleetPools, 501);
       const [, heavyBusy = "", , overflowBusy = ""] = instances;
       const outcomes = yield* Effect.forEach(instances, retryOnce(world), { concurrency: 1 });
       expect(outcomes).toStrictEqual(["deregistered", "retry-queued", "deregistered", "retry-queued"]);
@@ -402,7 +394,7 @@ describe("cross-fleet isolation during the cutover", () => {
         [501, 503],
         [502, 504],
       ]);
-      const queued = yield* queuedRetries(world);
+      const queued = yield* queuedRetryUrlInstanceAndCount(world);
       expect(queued).toStrictEqual([
         [liveConfig.deregisterRetryQueueUrl, heavyBusy, 1],
         [liveConfig.deregisterRetryQueueUrl, overflowBusy, 1],
@@ -413,8 +405,6 @@ describe("cross-fleet isolation during the cutover", () => {
   it.effect("sweeps only the new fleet's instances, runners and tokens, never the old fleet's", () =>
     Effect.gen(function* () {
       const world = new World();
-      // The old fleet: one registered runner per pool, its per-instance token and runner config under the module's
-      // `/github-action-runners/<prefix>/runners` paths, and the App parameters both fleets read.
       const oldInstances = A.map(oldFleetPrefixes, (prefix, index) => {
         const [instanceId = ""] = world.launch(1, oldFleetTags(prefix));
         world.githubRunners.push(
@@ -473,7 +463,10 @@ describe("cross-fleet isolation during the cutover", () => {
           (instance) => instance.state
         )
       ).toStrictEqual(["running", "running"]);
-      expect(R.keys(world.ssm)).toStrictEqual(oldParameters);
+      expect(
+        R.keys(world.ssm),
+        "the old fleet's token and runner config under /github-action-runners/<prefix>/runners and shared App parameters stay"
+      ).toStrictEqual(oldParameters);
     })
   );
 });

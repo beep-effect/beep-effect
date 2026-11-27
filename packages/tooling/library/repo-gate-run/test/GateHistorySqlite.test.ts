@@ -94,8 +94,8 @@ describe.skipIf(!isBunRuntime)("GateHistorySqlite (Bun runtime)", () => {
           yield* Effect.sync(() => {
             const db = new Database(file);
             db.run("DROP TABLE gate_history_ingested");
-            // A version 1 store may hold a run's observations after pruning its row.
-            db.run("DELETE FROM gate_history_runs WHERE run_id = 'r1'");
+            const v1PrunedRowKeepsObservations = "DELETE FROM gate_history_runs WHERE run_id = 'r1'";
+            db.run(v1PrunedRowKeepsObservations);
             db.run("ALTER TABLE gate_history_runs DROP COLUMN partial");
             db.run("PRAGMA user_version = 1");
             db.close();
@@ -183,7 +183,6 @@ describe.skipIf(!isBunRuntime)("GateHistorySqlite (Bun runtime)", () => {
         holder.run("PRAGMA locking_mode = EXCLUSIVE");
         holder.run("BEGIN EXCLUSIVE");
         holder.run("CREATE TABLE lock_holder (x)");
-        // The retry schedule sleeps on the real clock.
         const error = yield* withStoreAt(
           sqliteLayer(file, HistoryConfig.make({ retryAttempts: 2, retryBaseMs: 5, deadlineMs: 20 })),
           Effect.flip(answerFor({ runId: "r2", at: 2000, items: [] }))

@@ -31,10 +31,8 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { encodeConfig, jsonReportParser, validateLinterProcess } from "./codec.ts";
 
-/** Absolute path to the package root (`.../lint-rules`). */
-const packageRoot = NodeURL.fileURLToPath(new URL("../", import.meta.url));
+const pluginModuleResolutionRoot = NodeURL.fileURLToPath(new URL("../", import.meta.url));
 
-/** Absolute path to the oxlint plugin entry (`src/rules/index.ts`). */
 const docsPluginEntry = NodeURL.fileURLToPath(new URL("../src/rules/docs.index.ts", import.meta.url));
 
 const pluginEntry = NodeURL.fileURLToPath(new URL("../src/rules/index.ts", import.meta.url));
@@ -59,7 +57,6 @@ export const OXLINT_RULES = [
  */
 export type OxlintRule = (typeof OXLINT_RULES)[number] | DocsRuleId;
 
-/** One normalized oxlint diagnostic: the rule slug it belongs to and its 1-based line. */
 type Finding = {
   readonly ruleId: string;
   readonly line: number;
@@ -67,8 +64,7 @@ type Finding = {
 
 const ReportLine = S.Int.check(S.isGreaterThanOrEqualTo(1));
 
-/** Build the single-rule oxlint config object (native categories off, plugin loaded). */
-const ruleConfig = (rule: OxlintRule) => ({
+const singleRuleOxlintConfig = (rule: OxlintRule) => ({
   plugins: [],
   categories: {
     correctness: "off",
@@ -112,7 +108,6 @@ export const OxlintReport = S.Struct({
   ).pipe(S.optionalKey),
 });
 
-/** Decode stdout and retain malformed-report failures. */
 const parseReport = jsonReportParser(OxlintReport);
 
 class OxlintFixture extends S.Opaque<OxlintFixture, { readonly brand: unique symbol }>()(
@@ -147,7 +142,7 @@ const makeOxlintFixture = Effect.fn("oxlintHarness.makeOxlintFixture")(function*
   const sourcePath = path.join(tempDir, filename);
 
   yield* fs.makeDirectory(path.dirname(sourcePath), { recursive: true });
-  yield* fs.writeFileString(configPath, `${encodeConfig(ruleConfig(rule))}\n`);
+  yield* fs.writeFileString(configPath, `${encodeConfig(singleRuleOxlintConfig(rule))}\n`);
   yield* fs.writeFileString(sourcePath, `${source}\n`);
   yield* Effect.forEach(supportingFiles, (supportingFile) => writeSupportingFile(tempDir, supportingFile), {
     concurrency: 1,
@@ -173,7 +168,6 @@ const withOxlintFixture = Effect.fn("oxlintHarness.withOxlintFixture")(function*
   );
 });
 
-/** Strip the `beep(<slug>)` wrapper oxlint puts around the rule id in `code`. */
 const ruleIdOf = (code: string | undefined): O.Option<string> =>
   O.map(O.fromUndefinedOr(code), (raw) => Str.replace(/\)$/u, "")(Str.replace(/^beep\(/u, "")(raw)));
 
@@ -206,13 +200,10 @@ export const runOxlintRule = Effect.fn("oxlintHarness.runOxlintRule")(function* 
     ({ configPath, sourcePath }) =>
       Effect.gen(function* () {
         const result = yield* Effect.sync(() => {
-          // Run from the package root so `bunx oxlint` and the plugin's `@oxlint/plugins` /
-          // `effect` imports resolve against the repo's node_modules; the config and fixture
-          // are passed by absolute path, so the working directory does not affect what is read.
           const result = Bun.spawnSync(
             ["bunx", "oxlint", "--threads=2", "--format=json", `--config=${configPath}`, sourcePath],
             {
-              cwd: packageRoot,
+              cwd: pluginModuleResolutionRoot,
               stdout: "pipe",
               stderr: "pipe",
             }
@@ -264,7 +255,7 @@ export const runOxlintRuleFix = Effect.fn("oxlintHarness.runOxlintRuleFix")(func
       Effect.gen(function* () {
         const result = yield* Effect.sync(() =>
           Bun.spawnSync(["bunx", "oxlint", "--threads=2", "--fix", `--config=${configPath}`, sourcePath], {
-            cwd: packageRoot,
+            cwd: pluginModuleResolutionRoot,
             stdout: "pipe",
             stderr: "pipe",
           })

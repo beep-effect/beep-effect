@@ -380,6 +380,20 @@ const EnvVarClass = Resource<EnvVar>("Vercel.EnvVar");
  * the stack is not detected; every update writes the declared value. A
  * secret belongs in `valueFrom`, which keeps the value out of state.
  *
+ * **Gotchas**
+ *
+ * Vercel's upsert replaces any variable with the same key and branch that
+ * shares a target, so existence and ownership are judged on overlapping
+ * targets, not only an identical target set. A stored type equal to or
+ * stronger than the declared one satisfies it (some teams store Production
+ * and Preview variables as `sensitive` whatever is requested); only a weaker
+ * one is removed and created again. A missing `valueFrom` config key, or a
+ * `value`/`valueFrom` mix-up, fails the plan before this variable or any
+ * sibling resource is written or deleted. A storage-type change on the same
+ * project and key deletes the old variable first, since the two would
+ * collide; a renamed key or another project creates the new one first. A
+ * delete-first replacement reads its own previous generation as owned.
+ *
  * **Example** (Sensitive production variable read at deploy time)
  *
  * ```ts
@@ -405,14 +419,6 @@ export const EnvVar: DeclaredResource<EnvVar> = EnvVarClass;
 
 const sortTargets = A.sort(Order.String);
 
-/**
- * Vercel's upsert replaces any variable with the same key and branch that shares a target, so
- * existence and ownership are judged on overlapping targets, not only an identical set.
- *
- * @param left - The targets of one variable.
- * @param right - The targets of the other.
- * @returns Whether the two target sets share a target.
- */
 const overlaps = (left: ReadonlyArray<string>, right: ReadonlyArray<string>): boolean =>
   A.some(left, (target) => A.contains(right, target));
 
@@ -443,9 +449,6 @@ const toAttributes =
 
 const hasId = (env: ListedEnv): env is ListedEnv & { readonly id: string } => P.isString(env.id);
 
-/**
- * Find the variable by id, or by key, target set and branch when no id is known.
- */
 const findEnv = Effect.fn("Vercel.EnvVar.find")(function* (
   project: string,
   teamId: string | undefined,
@@ -467,45 +470,15 @@ const findEnv = Effect.fn("Vercel.EnvVar.find")(function* (
   ).pipe(O.map(toAttributes(project)), O.getOrUndefined);
 });
 
-/**
- * How strongly each storage type protects a value: `plain`, then `encrypted`, then `sensitive`, weakest first.
- * A type Vercel reports outside this set ranks weakest.
- */
 const typeStrength: Record<string, number> = { plain: 1, encrypted: 2, sensitive: 3 };
 
 const strengthOf = (type: string): number => O.getOrElse(R.get(typeStrength, type), () => 0);
 
-/**
- * Whether a stored type is weaker than the declared one.
- *
- * **Details**
- *
- * A stored type that is equal or stronger satisfies the declaration: some teams store
- * Production and Preview variables as `sensitive` whatever type is requested, and such a
- * variable must not be replaced on every deploy.
- *
- * @param stored - The type Vercel reports for the variable.
- * @param declared - The declared type.
- * @returns `true` when the stored type protects the value less than declared.
- */
 const isWeaker = (stored: string, declared: EnvVarType): boolean => strengthOf(stored) < strengthOf(declared);
 
-/**
- * Whether the stored variable needs a type-driven replacement.
- *
- * @param news - The declared props.
- * @param output - The stored attributes, when the variable is deployed or adopted.
- * @returns `true` when the stored type is weaker than the declared one.
- */
 const storedTypeWeaker = (news: EnvVarProps, output: EnvVarAttributes | undefined): boolean =>
   output !== undefined && isWeaker(output.type, news.type ?? EnvVarType.Enum.encrypted);
 
-/**
- * The declared value: the literal `value`, or the config key `valueFrom` names, read now.
- *
- * @param news - The declared props.
- * @returns The value, still redacted.
- */
 const resolveValue = Effect.fn("Vercel.EnvVar.resolveValue")(function* (news: EnvVarProps) {
   if (news.value !== undefined && news.valueFrom === undefined) return news.value;
   if (news.value === undefined && news.valueFrom !== undefined) {
@@ -514,14 +487,6 @@ const resolveValue = Effect.fn("Vercel.EnvVar.resolveValue")(function* (news: En
   return yield* EnvVarValueMissing.make({ key: news.key });
 });
 
-/**
- * SHA-256 (lowercase hex) of a `valueFrom` value; `None` for a literal `value`, whose
- * change the engine already sees as a prop change.
- *
- * @param news - The declared props.
- * @param value - The resolved value.
- * @returns The digest to keep as the `valueDigest` attribute.
- */
 const valueDigestOf = Effect.fn("Vercel.EnvVar.valueDigest")(function* (
   news: EnvVarProps,
   value: Redacted.Redacted<string>
@@ -532,13 +497,6 @@ const valueDigestOf = Effect.fn("Vercel.EnvVar.valueDigest")(function* (
   return O.some(hex);
 });
 
-/**
- * The observed attributes, carrying the stored `valueDigest` forward: a read never sees the value.
- *
- * @param state - The variable as Vercel lists it.
- * @param digest - The digest to keep.
- * @returns The attributes with the digest.
- */
 const withDigest = (state: EnvVarAttributes, digest: O.Option<string>): EnvVarAttributes =>
   EnvVarAttributes.make({ ...state, ...O.getSomesStruct({ valueDigest: digest }) });
 
@@ -556,23 +514,7 @@ const requestBody = (news: EnvVarProps, value: Redacted.Redacted<string>) =>
     })
   );
 
-/**
- * The fields an in-place edit sends: the value always (it cannot be read back, so an edit is how a
- * rotation and an adoption reach Vercel), the targets and branch only when they differ from what
- * is stored, and a declared comment.
- *
- * **Gotchas**
- *
- * The edit never sends `key` or `type`. Vercel refuses any `key` on a sensitive variable, even the
- * identical one ("You cannot change the key of a Sensitive Environment Variable", first armed
- * OipWeb deploy, 2026-11-14), and does not convert a type in place. A key change is a create-first replacement
- * (see {@link replacesEnvVar}); a weaker stored type is removed and created again.
- *
- * @param news - The declared props.
- * @param body - The encoded request body.
- * @param existing - The variable already on Vercel.
- * @returns The edit fields after the path and scope.
- */
+// decision: edits-never-send-key-or-type
 const editFields = (news: EnvVarProps, body: typeof EnvVarRequestBody.Encoded, existing: EnvVarAttributes) => ({
   value: body.value,
   ...O.getSomesStruct({
@@ -585,21 +527,7 @@ const editFields = (news: EnvVarProps, body: typeof EnvVarRequestBody.Encoded, e
   }),
 });
 
-/**
- * Create, edit or type-replace the variable so Vercel holds the declared value.
- *
- * **Details**
- *
- * Vercel does not promise to change a stored type in place (a sensitive value can never be
- * read back), so a variable stored weaker than declared is removed and created again. An
- * existing variable of equal or stronger type is edited with {@link editFields}, so it keeps its
- * key and type.
- *
- * @param news - The declared props.
- * @param body - The encoded request body.
- * @param existing - The variable already on Vercel, if any.
- * @returns An effect that completes once the write is accepted.
- */
+// decision: edits-never-send-key-or-type
 const writeEnv = Effect.fn("Vercel.EnvVar.write")(function* (
   news: EnvVarProps,
   body: typeof EnvVarRequestBody.Encoded,
@@ -622,25 +550,8 @@ const writeEnv = Effect.fn("Vercel.EnvVar.write")(function* (
   });
 });
 
-/**
- * The declared or default storage type.
- *
- * @param props - Props of the variable.
- * @returns Its storage type, `encrypted` when omitted.
- */
 const storageTypeOf = (props: EnvVarProps): EnvVarType => props.type ?? EnvVarType.Enum.encrypted;
 
-/**
- * Read the `valueFrom` config key of declared props whose other inputs may not be resolved yet.
- *
- * **Details**
- *
- * `valueFrom` is always a literal, so it is decoded from the raw props; the read fails with the
- * config error when the key is missing, and does nothing for a literal `value`.
- *
- * @param news - The declared props, possibly holding unresolved outputs.
- * @returns An effect that fails when the `valueFrom` key cannot be read.
- */
 const readValueSourceWhilePlanning = Effect.fn("Vercel.EnvVar.readValueSourceWhilePlanning")(function* (news: unknown) {
   const source = pipe(
     O.liftPredicate(news, P.hasProperty("valueFrom")),
@@ -649,29 +560,12 @@ const readValueSourceWhilePlanning = Effect.fn("Vercel.EnvVar.readValueSourceWhi
   if (O.isSome(source)) yield* Config.Redacted(source.value.config);
 });
 
-/**
- * Whether a change replaces the variable: another project, team, key or storage type. An edit
- * never sends a key (Vercel refuses one on a sensitive variable), so a renamed key is a new variable.
- *
- * @param news - The declared props.
- * @param olds - The props of the deployed generation.
- * @returns `true` when the variable must be replaced.
- */
 const replacesEnvVar = (news: EnvVarProps, olds: EnvVarProps): boolean =>
   news.project !== olds.project ||
   news.teamId !== olds.teamId ||
   news.key !== olds.key ||
   storageTypeOf(news) !== storageTypeOf(olds);
 
-/**
- * Whether a `valueFrom` value changed since the last write. The value never reaches props,
- * so a rotation shows only as a digest change; an adopted variable has no digest yet.
- *
- * @param news - The declared props.
- * @param output - The stored attributes, when the variable is deployed or adopted.
- * @param value - The value resolved for this plan.
- * @returns `true` when the value must be written again.
- */
 const valueFromRotated = Effect.fn("Vercel.EnvVar.valueFromRotated")(function* (
   news: EnvVarProps,
   output: EnvVarAttributes | undefined,
@@ -711,29 +605,16 @@ export const EnvVarProvider = Provider.succeed(EnvVarClass, {
     });
     if (state === undefined) return undefined;
     const observed = withDigest(state, O.fromUndefinedOr(output?.valueDigest));
-    // Variables carry no ownership marker: without prior state the variable is foreign,
-    // unless it is this resource's own previous generation (a delete-first replacement).
     return output !== undefined || state.envId === previous?.envId ? observed : Unowned(observed);
   }),
   diff: Effect.fn("Vercel.EnvVar.provider.diff")(function* ({ news, olds, output }) {
-    // A `valueFrom` key is read while planning, before any other input resolves, so a missing key
-    // fails the plan before anything (this variable or a sibling resource) is written.
     yield* readValueSourceWhilePlanning(news);
     if (!isResolved(news)) return undefined;
-    // Resolve the declared value before any outcome: a type-change replacement deletes the old variable
-    // first and a weaker stored type is removed and recreated in reconcile, so a missing key or a
-    // value/valueFrom mix-up must fail the plan here, before anything is deleted. The value is only
-    // validated and digested, never kept.
-    const value = yield* resolveValue(news);
+    const resolvedBeforeAnyDelete = yield* resolveValue(news);
     if (replacesEnvVar(news, olds)) {
-      // Only a type change on the same project and key would collide with the old variable's key and
-      // targets, so only it deletes first; a renamed key or another project creates the new one first.
       return { action: "replace", deleteFirst: news.project === olds.project && news.key === olds.key } as const;
     }
-    // A stored type weaker than declared (an adopted variable) needs reconcile, which replaces it;
-    // a rotated `valueFrom` value needs a write. A literal value, like every other prop, falls
-    // through to the engine's prop comparison.
-    const rotated = yield* valueFromRotated(news, output, value);
+    const rotated = yield* valueFromRotated(news, output, resolvedBeforeAnyDelete);
     return storedTypeWeaker(news, output) || rotated ? ({ action: "update" } as const) : undefined;
   }),
   reconcile: Effect.fn("Vercel.EnvVar.provider.reconcile")(function* ({ news, output, session }) {

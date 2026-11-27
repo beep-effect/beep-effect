@@ -30,7 +30,6 @@ export interface RecordFiles {
   readonly writeText: (path: string, text: string) => Effect.Effect<void, PlatformError.PlatformError>;
 }
 
-// How many names a write draws before it reports the last collision.
 const TEMPORARY_ATTEMPTS = 8;
 
 const isTaken = (error: PlatformError.PlatformError): boolean => error.reason._tag === "AlreadyExists";
@@ -53,8 +52,6 @@ export const platformFiles = Effect.fnUntraced(function* (repoRoot: string) {
   const path = yield* Path.Path;
   const absolute = (relative: string): string => path.join(repoRoot, relative);
   const makeParent = (relative: string) => fs.makeDirectory(path.dirname(absolute(relative)), { recursive: true });
-  // A sibling temporary file of its own per write, reserved by exclusive creation: a name another
-  // write holds fails `AlreadyExists` and the write draws a new name, so writes never share a file.
   const reserveTemporary = Effect.fnUntraced(function* (relative: string) {
     const suffix = yield* Random.nextIntBetween(0, 0x7fffffff);
     const temporary = absolute(`${relative}.${suffix.toString(36)}.tmp`);
@@ -68,7 +65,6 @@ export const platformFiles = Effect.fnUntraced(function* (repoRoot: string) {
       const temporary = yield* reserveTemporary(relative).pipe(
         Effect.retry({ while: isTaken, times: TEMPORARY_ATTEMPTS - 1 })
       );
-      // The reserved file is this write's own: it is filled and renamed, or removed on failure.
       yield* fs.writeFileString(temporary, text).pipe(
         Effect.andThen(fs.rename(temporary, absolute(relative))),
         Effect.onError(() => Effect.ignore(fs.remove(temporary, { force: true })))
@@ -127,8 +123,7 @@ export const memoryFiles = (input: {
     );
   const guard = (method: string, write: Effect.Effect<void>) =>
     O.match(refuse(method), { onNone: () => write, onSome: Effect.fail });
-  // The sink resets the path before its first chunk, so the key is present.
-  const append = (path: string, chunk: Uint8Array) =>
+  const appendAfterSinkReset = (path: string, chunk: Uint8Array) =>
     Ref.update(files, (map) => HashMap.modify(map, path, A.append(chunk)));
   return {
     sink: (path) =>
@@ -138,7 +133,7 @@ export const memoryFiles = (input: {
           Sink.unwrap(
             Effect.as(
               put(path, A.empty()),
-              Sink.forEach((chunk: Uint8Array) => append(path, chunk))
+              Sink.forEach((chunk: Uint8Array) => appendAfterSinkReset(path, chunk))
             )
           ),
       }),

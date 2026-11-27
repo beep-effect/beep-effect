@@ -64,7 +64,9 @@ export class WrittenFile extends S.Opaque<WrittenFile, { readonly brand: unique 
  * {@link GateRecordWriteError}. `writeRecord` writes the record file whole
  * and, for a root run, then removes the gate's runs past the newest twenty;
  * that removal is best effort: when it fails, the record still counts as
- * written and the next root write removes what is left.
+ * written and the next root write removes what is left. A removal deletes
+ * a run's log before its record, since runs are found by their record, so
+ * `listRuns` can name a run whose log a failed removal already deleted.
  * `readRecord` returns the record as written, its run id included, so a
  * restored record is recognizable as a replay. `listRuns` names a gate's
  * root runs, newest first.
@@ -122,13 +124,9 @@ const makeStore = (files: RecordFiles): GateRecordStoreShape => {
 
   const removeRun = (gate: GateName) => (runId: RunId) => {
     const location = recordLocation(RecordTarget.cases.RootTarget.make({ gate, runId }));
-    // The log goes first: runs are found by their record, so a record left behind by a failed
-    // removal marks the run for the next prune to retry.
     return Effect.andThen(files.remove(location.log), files.remove(location.record));
   };
 
-  // Retention is housekeeping after the record is on disk: a failure to list or remove expired
-  // runs leaves them for the next root write to remove and never reports the record unwritten.
   const prune = (gate: GateName) =>
     files.listNames(rootGateDir(gate)).pipe(
       Effect.flatMap((names) =>

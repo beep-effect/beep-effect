@@ -29,8 +29,6 @@ import * as S from "effect/Schema";
 
 const $I = $AiSyncId.create("ModelCatalog.schemas");
 
-// ── Identifiers and shared literal domains ──────────────────────────────────
-
 /**
  * Upstream model identifier, as written in routing configuration.
  *
@@ -266,23 +264,7 @@ export type CatalogSource = typeof CatalogSource.Type;
  */
 export const CatalogSourceOptions = CatalogSourceKit.literals;
 
-/**
- * Optional key that also tolerates an explicit `null`.
- *
- * **Details**
- *
- * Every upstream source in this half spells "no value" both ways: the Codex
- * cache omits a field, while the Grok cache writes `"description": null` on
- * every live entry. A reader that accepted only the omission would fail a
- * whole cache read over a field it never consumes, so absence and `null` are
- * decoded to the same thing here.
- *
- * @param schema - The field schema to make optional.
- * @returns The schema as an optional key that also accepts `null`.
- */
-const looseOptional = <Schema extends S.Top>(schema: Schema) => schema.pipe(S.NullOr, S.optionalKey);
-// ── Upstream manifest (models.router-for.me) ────────────────────────────────
-
+const absentOrNullKey = <Schema extends S.Top>(schema: Schema) => schema.pipe(S.NullOr, S.optionalKey);
 /**
  * **Details**
  *
@@ -308,11 +290,11 @@ const looseOptional = <Schema extends S.Top>(schema: Schema) => schema.pipe(S.Nu
 export class UpstreamThinkingSupport extends S.Opaque<UpstreamThinkingSupport, { readonly brand: unique symbol }>()(
   S.StructWithRest(
     S.Struct({
-      min: looseOptional(S.Finite),
-      max: looseOptional(S.Finite),
-      zero_allowed: looseOptional(S.Boolean),
-      dynamic_allowed: looseOptional(S.Boolean),
-      levels: S.Array(S.String).pipe(looseOptional),
+      min: absentOrNullKey(S.Finite),
+      max: absentOrNullKey(S.Finite),
+      zero_allowed: absentOrNullKey(S.Boolean),
+      dynamic_allowed: absentOrNullKey(S.Boolean),
+      levels: S.Array(S.String).pipe(absentOrNullKey),
     }),
     [S.Record(S.String, S.Unknown)]
   ).pipe(
@@ -346,24 +328,24 @@ export class UpstreamModelEntry extends S.Opaque<UpstreamModelEntry, { readonly 
   S.StructWithRest(
     S.Struct({
       id: S.NonEmptyString,
-      object: looseOptional(S.String),
-      created: looseOptional(S.Finite),
-      owned_by: looseOptional(S.String),
-      type: looseOptional(S.String),
-      display_name: looseOptional(S.String),
-      name: looseOptional(S.String),
-      version: looseOptional(S.String),
-      description: looseOptional(S.String),
-      context_length: looseOptional(S.Finite),
-      max_completion_tokens: looseOptional(S.Finite),
-      inputTokenLimit: looseOptional(S.Finite),
-      outputTokenLimit: looseOptional(S.Finite),
-      supportedGenerationMethods: S.Array(S.String).pipe(looseOptional),
-      supportedInputModalities: S.Array(S.String).pipe(looseOptional),
-      supportedOutputModalities: S.Array(S.String).pipe(looseOptional),
-      supported_parameters: S.Array(S.String).pipe(looseOptional),
-      supports_web_search: looseOptional(S.Boolean),
-      thinking: looseOptional(UpstreamThinkingSupport),
+      object: absentOrNullKey(S.String),
+      created: absentOrNullKey(S.Finite),
+      owned_by: absentOrNullKey(S.String),
+      type: absentOrNullKey(S.String),
+      display_name: absentOrNullKey(S.String),
+      name: absentOrNullKey(S.String),
+      version: absentOrNullKey(S.String),
+      description: absentOrNullKey(S.String),
+      context_length: absentOrNullKey(S.Finite),
+      max_completion_tokens: absentOrNullKey(S.Finite),
+      inputTokenLimit: absentOrNullKey(S.Finite),
+      outputTokenLimit: absentOrNullKey(S.Finite),
+      supportedGenerationMethods: S.Array(S.String).pipe(absentOrNullKey),
+      supportedInputModalities: S.Array(S.String).pipe(absentOrNullKey),
+      supportedOutputModalities: S.Array(S.String).pipe(absentOrNullKey),
+      supported_parameters: S.Array(S.String).pipe(absentOrNullKey),
+      supports_web_search: absentOrNullKey(S.Boolean),
+      thinking: absentOrNullKey(UpstreamThinkingSupport),
     }),
     [S.Record(S.String, S.Unknown)]
   ).pipe(
@@ -404,8 +386,6 @@ export const UpstreamCatalog = S.Record(S.String, S.Array(UpstreamModelEntry)).p
  * @since 0.0.0
  */
 export type UpstreamCatalog = typeof UpstreamCatalog.Type;
-
-// ── Codex CLI model cache overlay ───────────────────────────────────────────
 
 const CodexVisibilityKit = LiteralKit(["list", "hide"]);
 
@@ -484,7 +464,7 @@ export class CodexReasoningLevel extends S.Opaque<CodexReasoningLevel, { readonl
   S.StructWithRest(
     S.Struct({
       effort: S.NonEmptyString,
-      description: looseOptional(S.String),
+      description: absentOrNullKey(S.String),
     }),
     [S.Record(S.String, S.Unknown)]
   ).pipe(
@@ -516,12 +496,12 @@ export class CodexCacheEntry extends S.Opaque<CodexCacheEntry, { readonly brand:
   S.StructWithRest(
     S.Struct({
       slug: S.NonEmptyString,
-      display_name: looseOptional(S.String),
-      description: looseOptional(S.String),
-      default_reasoning_level: looseOptional(S.String),
-      supported_reasoning_levels: S.Array(CodexReasoningLevel).pipe(looseOptional),
-      visibility: looseOptional(S.String),
-      context_window: looseOptional(S.Finite),
+      display_name: absentOrNullKey(S.String),
+      description: absentOrNullKey(S.String),
+      default_reasoning_level: absentOrNullKey(S.String),
+      supported_reasoning_levels: S.Array(CodexReasoningLevel).pipe(absentOrNullKey),
+      visibility: absentOrNullKey(S.String),
+      context_window: absentOrNullKey(S.Finite),
     }),
     [S.Record(S.String, S.Unknown)]
   ).pipe(
@@ -554,9 +534,9 @@ export class CodexModelsCache extends S.Opaque<CodexModelsCache, { readonly bran
   S.StructWithRest(
     S.Struct({
       models: S.Array(CodexCacheEntry),
-      client_version: looseOptional(S.String),
-      etag: looseOptional(S.String),
-      fetched_at: looseOptional(S.String),
+      client_version: absentOrNullKey(S.String),
+      etag: absentOrNullKey(S.String),
+      fetched_at: absentOrNullKey(S.String),
     }),
     [S.Record(S.String, S.Unknown)]
   ).pipe(
@@ -565,8 +545,6 @@ export class CodexModelsCache extends S.Opaque<CodexModelsCache, { readonly bran
     })
   )
 ) {}
-
-// ── Cursor seat overlay ─────────────────────────────────────────────────────
 
 /**
  * **Details**
@@ -630,8 +608,6 @@ export const CursorModelList = S.Array(CursorModelId).pipe(
  */
 export type CursorModelList = typeof CursorModelList.Type;
 
-// ── Grok CLI model cache overlay ────────────────────────────────────────────
-
 /**
  * **Details**
  *
@@ -655,10 +631,10 @@ export type CursorModelList = typeof CursorModelList.Type;
 export class GrokReasoningEffort extends S.Opaque<GrokReasoningEffort, { readonly brand: unique symbol }>()(
   S.Struct({
     value: S.NonEmptyString,
-    id: looseOptional(S.String),
-    label: looseOptional(S.String),
-    description: looseOptional(S.String),
-    default: looseOptional(S.Boolean),
+    id: absentOrNullKey(S.String),
+    label: absentOrNullKey(S.String),
+    description: absentOrNullKey(S.String),
+    default: absentOrNullKey(S.Boolean),
   }).pipe(
     $I.annoteSchema("GrokReasoningEffort", {
       description: "One reasoning-effort rung offered for a cached Grok model.",
@@ -667,6 +643,12 @@ export class GrokReasoningEffort extends S.Opaque<GrokReasoningEffort, { readonl
 ) {}
 
 /**
+ * **Gotchas**
+ *
+ * Every optional field also decodes an explicit `null`: the Grok cache writes
+ * `"description": null` on every live entry, where the Codex cache omits the
+ * field instead. Rejecting `null` would fail the whole cache read.
+ *
  * **Example** (Read a cached Grok model)
  *
  * ```ts
@@ -682,16 +664,16 @@ export class GrokReasoningEffort extends S.Opaque<GrokReasoningEffort, { readonl
 export class GrokModelInfo extends S.Opaque<GrokModelInfo, { readonly brand: unique symbol }>()(
   S.Struct({
     id: S.NonEmptyString,
-    model: looseOptional(S.String),
-    model_family: looseOptional(S.String),
-    name: looseOptional(S.String),
-    description: looseOptional(S.String),
-    context_window: looseOptional(S.Finite),
-    hidden: looseOptional(S.Boolean),
-    supported_in_api: looseOptional(S.Boolean),
-    reasoning_effort: looseOptional(S.String),
-    supports_reasoning_effort: looseOptional(S.Boolean),
-    reasoning_efforts: S.Array(GrokReasoningEffort).pipe(looseOptional),
+    model: absentOrNullKey(S.String),
+    model_family: absentOrNullKey(S.String),
+    name: absentOrNullKey(S.String),
+    description: absentOrNullKey(S.String),
+    context_window: absentOrNullKey(S.Finite),
+    hidden: absentOrNullKey(S.Boolean),
+    supported_in_api: absentOrNullKey(S.Boolean),
+    reasoning_effort: absentOrNullKey(S.String),
+    supports_reasoning_effort: absentOrNullKey(S.Boolean),
+    reasoning_efforts: S.Array(GrokReasoningEffort).pipe(absentOrNullKey),
   }).pipe(
     $I.annoteSchema("GrokModelInfo", {
       description: "The info block of one cached Grok model: identity, context window, and reasoning ladder.",
@@ -752,17 +734,15 @@ export class GrokCacheEntry extends S.Opaque<GrokCacheEntry, { readonly brand: u
 export class GrokModelsCache extends S.Opaque<GrokModelsCache, { readonly brand: unique symbol }>()(
   S.Struct({
     models: S.Record(S.String, GrokCacheEntry),
-    grok_version: looseOptional(S.String),
-    etag: looseOptional(S.String),
-    fetched_at: looseOptional(S.String),
+    grok_version: absentOrNullKey(S.String),
+    etag: absentOrNullKey(S.String),
+    fetched_at: absentOrNullKey(S.String),
   }).pipe(
     $I.annoteSchema("GrokModelsCache", {
       description: "Grok CLI model cache envelope read from $HOME/.grok/models_cache.json.",
     })
   )
 ) {}
-
-// ── Proxy overlay ───────────────────────────────────────────────────────────
 
 /**
  * One entry of a running proxy's `GET /v1/models` response.
@@ -782,9 +762,9 @@ export class GrokModelsCache extends S.Opaque<GrokModelsCache, { readonly brand:
 export class ProxyModelEntry extends S.Opaque<ProxyModelEntry, { readonly brand: unique symbol }>()(
   S.Struct({
     id: S.NonEmptyString,
-    object: looseOptional(S.String),
-    created: looseOptional(S.Finite),
-    owned_by: looseOptional(S.String),
+    object: absentOrNullKey(S.String),
+    created: absentOrNullKey(S.Finite),
+    owned_by: absentOrNullKey(S.String),
   }).pipe(
     $I.annoteSchema("ProxyModelEntry", {
       description: "One model entry from a running proxy's OpenAI-compatible model listing.",
@@ -818,15 +798,13 @@ export class ProxyModelEntry extends S.Opaque<ProxyModelEntry, { readonly brand:
 export class ProxyModelsResponse extends S.Opaque<ProxyModelsResponse, { readonly brand: unique symbol }>()(
   S.Struct({
     data: S.Array(ProxyModelEntry),
-    object: looseOptional(S.String),
+    object: absentOrNullKey(S.String),
   }).pipe(
     $I.annoteSchema("ProxyModelsResponse", {
       description: "OpenAI-compatible model listing returned by a running proxy.",
     })
   )
 ) {}
-
-// ── Normalized catalog ──────────────────────────────────────────────────────
 
 /**
  * Where a catalog model is actually routable on this box.

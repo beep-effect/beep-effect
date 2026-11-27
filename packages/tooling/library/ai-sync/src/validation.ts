@@ -24,9 +24,7 @@ const $I = $AiSyncId.create("validation");
 
 const decodeJsonTextAs = <Schema extends S.Top>(schema: Schema) => S.decodeUnknownEffect(S.fromJsonString(schema));
 
-// effect/encoding/Toml ships the parser but no schema codec; Codex config is only ever read,
-// and a parse failure surfaces as the same SchemaError a schema codec would raise.
-const parseTomlText = (text: string): Effect.Effect<unknown, S.SchemaError> =>
+const parseTomlWithoutSchemaCodec = (text: string): Effect.Effect<unknown, S.SchemaError> =>
   Effect.fromResult(Toml.parse(text)).pipe(
     Effect.mapError(
       (cause) => new S.SchemaError(new SchemaIssue.InvalidValue({ message: `Invalid TOML input (${cause.message}).` }))
@@ -35,7 +33,7 @@ const parseTomlText = (text: string): Effect.Effect<unknown, S.SchemaError> =>
 const decodeTomlTextWith =
   <A, E, R>(decode: (input: unknown) => Effect.Effect<A, E, R>) =>
   (text: string): Effect.Effect<A, E | S.SchemaError, R> =>
-    Effect.flatMap(parseTomlText(text), decode);
+    Effect.flatMap(parseTomlWithoutSchemaCodec(text), decode);
 
 const decodeCodexToml = decodeTomlTextWith(S.decodeUnknownEffect(CodexConfig));
 const decodeClaudeMcpJson = decodeJsonTextAs(ClaudeMcpJson);

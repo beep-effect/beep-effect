@@ -1,5 +1,3 @@
-// Locating a package against a throwaway repository on disk, and the input
-// fingerprint a run records.
 import { inputFingerprint, locatePackage, PackageLocation } from "@beep/repo-gate-record/PackageLocation";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, describe, it } from "@effect/vitest";

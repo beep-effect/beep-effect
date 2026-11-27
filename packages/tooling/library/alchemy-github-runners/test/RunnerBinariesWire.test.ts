@@ -19,14 +19,13 @@ const bucket = "binaries";
 const key = "actions-runner-linux.tar.gz";
 const assetName = "actions-runner-linux-x64-2.338.2.tar.gz";
 
-/** The Lambda's own transport (`FetchHttpClient`) and S3 pointed at the stub. */
-const lambdaLike = (origin: string) =>
+const lambdaTransportOnStubS3 = (origin: string) =>
   runnerBinariesLive.pipe(
     Layer.provide(Layer.mergeAll(FetchHttpClient.layer, AwsCredentials.mock, AwsEndpoint.of(origin)))
   );
 
 const mirrorFrom = Effect.fn("RunnerBinariesWire.mirrorFrom")(function* (origin: string) {
-  const context = yield* Layer.build(lambdaLike(origin));
+  const context = yield* Layer.build(lambdaTransportOnStubS3(origin));
   return yield* Context.get(context, RunnerBinaries).mirror({
     bucket,
     key,
@@ -39,8 +38,7 @@ const isS3 = (request: WireRequest) =>
 
 const header = (request: WireRequest, name: string) => O.getOrUndefined(R.get(request.headers, name));
 
-/** What the bar requires of every S3 request: a plain body of exactly its declared length. */
-const framing = (request: WireRequest) => ({
+const s3RequestFraming = (request: WireRequest) => ({
   method: request.method,
   rejected: request.rejected,
   contentLength: header(request, "content-length"),
@@ -74,7 +72,7 @@ describe("RunnerBinaries.mirror on the wire (FetchHttpClient, as in the Lambda)"
         const received = yield* stub.requests;
         const s3 = A.filter(received, isS3);
         for (const request of s3) {
-          const frame = framing(request);
+          const frame = s3RequestFraming(request);
           expect(frame, request.head).toStrictEqual({
             ...frame,
             rejected: false,

@@ -39,11 +39,9 @@ const expectedNamespaceAlias = (source: string): string => {
   });
 };
 
-// The `node:`-prefixed string source of an import, or `None` for any other module.
 const nodeBuiltinSource = (node: ESTree.ImportDeclaration): O.Option<string> =>
   O.filter(literalStringValue(node.source), Str.startsWith("node:"));
 
-// The sole specifier when the import is exactly one `* as <name>` namespace specifier.
 const soleNamespaceImport = (node: ESTree.ImportDeclaration): O.Option<ESTree.ImportNamespaceSpecifier> => {
   if (node.specifiers.length !== 1) return O.none();
   const [specifier] = node.specifiers;

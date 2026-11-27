@@ -1,6 +1,3 @@
-// AC-H12: `@beep/sqlite` is the library's only driver, the store module is the
-// only one that loads it (by dynamic import), and the Vitest adapter's static
-// import graph never reaches the store module or the driver.
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, describe, it } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -17,10 +14,8 @@ import * as Str from "effect/String";
 const Manifest = S.Struct({ dependencies: S.Record(S.String, S.String) });
 const decodeManifest = S.decodeUnknownEffect(S.fromJsonString(Manifest));
 
-// One declaration each: `import "x"`, `import … from "x"` and `export … from "x"`, with its own `type` keyword.
 const STATIC_IMPORT = /^\s*(?:import|export)\s+(?:(type)\s)?(?:[^;"]*?from\s+)?"([^"]+)";/gmu;
 
-// The specifiers of every declaration that loads a module at run time.
 const runtimeSpecifiers = (source: string): ReadonlyArray<string> =>
   pipe(
     A.fromIterable(Str.matchAll(STATIC_IMPORT)(source)),
@@ -30,7 +25,6 @@ const runtimeSpecifiers = (source: string): ReadonlyArray<string> =>
 
 const repoRoot = Effect.map(Path.Path, (path) => path.resolve(import.meta.dirname, "../../../../.."));
 
-// A module path resolves to itself, `<path>.ts` or `<path>/index.ts`, whichever exists.
 const existing = Effect.fnUntraced(function* (base: string) {
   const fs = yield* FileSystem.FileSystem;
   const candidates = [base, `${base}.ts`, `${base}/index.ts`];
@@ -43,7 +37,6 @@ const existing = Effect.fnUntraced(function* (base: string) {
   return A.head(found);
 });
 
-// `@beep/<pkg>[/<Module>]` resolves through the workspace link to `src/index.ts` or `src/<Module>`.
 const resolveBeep = Effect.fnUntraced(function* (specifier: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -60,7 +53,6 @@ const resolveImport = Effect.fnUntraced(function* (from: string, specifier: stri
   return O.none<string>();
 });
 
-// Every module and bare specifier the entry reaches through runtime (non-type) static imports.
 const staticGraph = Effect.fnUntraced(function* (entry: string) {
   const fs = yield* FileSystem.FileSystem;
   let seen = HashSet.empty<string>();

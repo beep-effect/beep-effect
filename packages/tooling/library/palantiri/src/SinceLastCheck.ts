@@ -160,17 +160,6 @@ export const sinceLastCheckItems = (input: SinceLastCheckInput): ReadonlyArray<S
   );
 };
 
-// The changes one read serves. When there are more than the budget, the
-// oldest `budget` are served (still newest first) and the newer rest wait for
-// the next read, so advancing the cursor never skips a change. The rest are
-// appended after the page so the envelope's take keeps the page and its
-// receipt still counts every change.
-//
-// A page never splits changes that share a timestamp: the cursor keeps only
-// changes strictly after it, so a split group would lose its unserved half.
-// When the boundary timestamp continues into the pending changes, the page
-// stops just before that timestamp; when the whole page shares it, the page
-// takes the whole group, past the budget.
 const sameAt =
   (at: DateTime.Utc) =>
   (change: SessionChange): boolean =>
@@ -189,8 +178,6 @@ const pageOf = (
         onNone: () => ({ page: candidate, pending: A.dropRight(items, candidate.length) }),
         onSome: (at) => {
           const before = A.filter(candidate, (change) => !sameAt(at)(change));
-          // Both shapes are a suffix of the newest-first list, so the rest is
-          // everything before it.
           const page = A.isReadonlyArrayNonEmpty(before) ? before : A.filter(items, sameAt(at));
           return { page, pending: A.dropRight(items, page.length) };
         },
@@ -230,6 +217,15 @@ const summarize = (input: SinceLastCheckInput, items: ReadonlyArray<SessionChang
  * {@link sinceLastCheckCursor}); the receipt still counts every change.
  * Advancing the cursor is the service's job, not the reducer's.
  *
+ * **Gotchas**
+ *
+ * A page never splits changes that share a timestamp: the cursor keeps only
+ * changes strictly after it, so a split group would lose its unserved half.
+ * When the boundary timestamp continues into the pending changes, the page
+ * stops just before it; when the whole page shares it, the page takes the
+ * whole group, past the budget. The envelope's budget is the page's size, and
+ * the pending changes follow the page in `items`.
+ *
  * **Example** (First check with nothing recorded)
  *
  * ```ts
@@ -268,8 +264,6 @@ export const reduceSinceLastCheck: {
           }),
       summary: summarize(input, page, pending.length),
       items: A.appendAll(page, pending),
-      // Exactly the page is shown: smaller than the budget when it stops before a
-      // shared timestamp, larger when it serves a whole same-timestamp group.
       budget: Num.max(1, page.length),
     })
   );

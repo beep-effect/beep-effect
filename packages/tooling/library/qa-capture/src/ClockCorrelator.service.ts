@@ -357,6 +357,8 @@ const assumedStartSync = (assumedStartEpochMs: number): ClockSync =>
     slope: 1,
   });
 
+const seekableClipCodec = "h264";
+
 const makeService = Effect.fnUntraced(function* () {
   const ffmpeg = yield* FFmpeg;
 
@@ -366,9 +368,6 @@ const makeService = Effect.fnUntraced(function* () {
     first: BeaconEvent,
     last: BeaconEvent
   ) {
-    // The probe window is derived from the beacon events themselves —
-    // never a fixed head window — so a slow first paint cannot push the
-    // flips outside the probed clip.
     const clipStartSeconds = Math.max(
       0,
       (first.tPaintEpochMs - request.assumedStartEpochMs) / 1000 - request.probePadSeconds
@@ -377,10 +376,9 @@ const makeService = Effect.fnUntraced(function* () {
       1,
       (last.tPaintEpochMs - first.tPaintEpochMs) / 1000 + 2 * request.probePadSeconds
     );
-    // Normalizing to h264/mp4 sidesteps keyframe-sparse webm seeking.
     const clip = yield* ffmpeg.extractClip(
       ExtractClipRequest.make({
-        codec: "h264",
+        codec: seekableClipCodec,
         durationSeconds: O.some(clipDurationSeconds),
         outPath: `${request.workDir}/beacon-probe.mp4`,
         overwrite: true,
@@ -434,6 +432,12 @@ const makeService = Effect.fnUntraced(function* () {
 
 /**
  * Effect service deriving a {@link ClockSync} for a recorded round.
+ *
+ * **Details**
+ *
+ * The probed clip spans the recorded beacon flips plus `probePadSeconds` on
+ * each side, never a fixed head window, so a slow first paint cannot push the
+ * flips outside it.
  *
  * **Example** (Access correlator service layer)
  *

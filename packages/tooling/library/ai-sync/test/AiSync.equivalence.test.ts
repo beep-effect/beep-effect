@@ -15,7 +15,6 @@ describe("AI Sync declared-field equivalence", () => {
 
     expect(sameAiSyncError(a, b)).toBe(true);
     expect(sameAiSyncError(a, c)).toBe(false);
-    // the defect cause is payload, never identity
-    expect(sameAiSyncError(a, d)).toBe(true);
+    expect(sameAiSyncError(a, d), "the defect cause is payload, never identity").toBe(true);
   });
 });
