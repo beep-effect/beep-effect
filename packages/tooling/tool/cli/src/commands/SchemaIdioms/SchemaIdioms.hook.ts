@@ -8,8 +8,10 @@
  *
  * The program never fails and prints nothing when there is no new hint, when
  * the input does not decode, or on any error: the hint is advisory. Only an
- * `Edit`, `MultiEdit` or `Write` payload with a non-empty `session_id`
- * decodes. Plain stdout from a `PostToolUse` hook reaches only the debug log,
+ * `Edit` or `Write` payload with a non-empty `session_id` decodes; a
+ * `MultiEdit` payload does not, because a new string found in the final file
+ * does not prove which occurrence an earlier edit of the same call wrote.
+ * Plain stdout from a `PostToolUse` hook reaches only the debug log,
  * which is why the message travels as `additionalContext` (see
  * `.claude/hooks/law-pulse.sh`). The state file holds only SHA-256 digests of
  * the `(session, file, field, kind)` keys and is written owner-only.
@@ -25,6 +27,7 @@ import * as Config from "effect/Config";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { constFalse } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -91,40 +94,6 @@ export class SchemaIdiomEditHookInput extends S.Opaque<SchemaIdiomEditHookInput,
 ) {}
 
 /**
- * **Example** (Decode a MultiEdit payload)
- *
- * ```ts
- * import { SchemaIdiomMultiEditHookInput } from "@beep/repo-cli/commands/SchemaIdioms"
- * import * as S from "effect/Schema"
- *
- * const input = S.decodeUnknownOption(SchemaIdiomMultiEditHookInput)({
- *   session_id: "s1",
- *   tool_name: "MultiEdit",
- *   tool_input: { file_path: "src/a.ts", edits: [{ old_string: "a", new_string: "b" }] },
- * })
- * console.log(input._tag) // "Some"
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class SchemaIdiomMultiEditHookInput extends S.Opaque<
-  SchemaIdiomMultiEditHookInput,
-  { readonly brand: unique symbol }
->()(
-  S.Struct({
-    session_id: S.NonEmptyString,
-    tool_name: S.tag("MultiEdit"),
-    tool_input: S.Struct({ file_path: S.String, edits: S.NonEmptyArray(S.Struct({ new_string: S.String })) }),
-  }).pipe(
-    $I.annoteSchema("SchemaIdiomMultiEditHookInput", {
-      description:
-        "A PostToolUse payload for a Claude Code MultiEdit call: the session, the edited file and each edit's new string.",
-    })
-  )
-) {}
-
-/**
  * **Example** (Decode a Write payload)
  *
  * ```ts
@@ -169,15 +138,10 @@ export class SchemaIdiomWriteHookInput extends S.Opaque<SchemaIdiomWriteHookInpu
  * @category models
  * @since 0.0.0
  */
-export const SchemaIdiomHookInput = S.Union([
-  SchemaIdiomEditHookInput,
-  SchemaIdiomMultiEditHookInput,
-  SchemaIdiomWriteHookInput,
-]).pipe(
+export const SchemaIdiomHookInput = S.Union([SchemaIdiomEditHookInput, SchemaIdiomWriteHookInput]).pipe(
   S.toTaggedUnion("tool_name"),
   $I.annoteSchema("SchemaIdiomHookInput", {
-    description:
-      "The Claude Code PostToolUse payloads the schema idiom hint reads, keyed by tool_name: Edit, MultiEdit or Write.",
+    description: "The Claude Code PostToolUse payloads the schema idiom hint reads, keyed by tool_name: Edit or Write.",
   })
 );
 
@@ -240,7 +204,6 @@ const isSeenDigest = S.is(Sha256Hex);
 const writtenFragments = (input: SchemaIdiomHookInput): O.Option<A.NonEmptyReadonlyArray<string>> =>
   SchemaIdiomHookInput.match(input, {
     Edit: (edit) => O.some(A.of(edit.tool_input.new_string)),
-    MultiEdit: (multiEdit) => O.some(A.map(multiEdit.tool_input.edits, (edit) => edit.new_string)),
     Write: () => O.none(),
   });
 
@@ -248,6 +211,18 @@ const hintKey = Effect.fn("SchemaIdioms.hintKey")(function* (session: string, fi
   const digest = yield* Digest.Digest;
   const key = yield* encodeHintKey([session, file, hint.field, hint.kind]);
   return yield* digest.digestHex(Digest.sha256, new TextEncoder().encode(key));
+});
+
+const isSymbolicLinkState = Effect.fn("SchemaIdioms.isSymbolicLinkState")(function* (statePath: O.Option<string>) {
+  const fs = yield* FileSystem.FileSystem;
+  return yield* O.match(statePath, {
+    onNone: () => Effect.succeed(false),
+    onSome: (file) =>
+      fs.lstat(file).pipe(
+        Effect.map((info) => info.type === "SymbolicLink"),
+        Effect.orElseSucceed(constFalse)
+      ),
+  });
 });
 
 const readSeen = Effect.fn("SchemaIdioms.readSeenHints")(function* (statePath: O.Option<string>) {
@@ -287,11 +262,12 @@ const writeSeen = Effect.fn("SchemaIdioms.writeSeenHints")(function* (
  * **Details**
  *
  * Hints the edited file only when {@link isSchemaIdiomHintPath} accepts it.
- * A `Write` hints the whole file; an `Edit` or `MultiEdit` hints only fields
- * lying inside a new string that occurs exactly once in the edited file.
- * With a state file, each hint is shown once per `(session, file, field,
- * kind)` key, remembered there as a SHA-256 digest; a hint that is not shown
- * consumes no key.
+ * A `Write` hints the whole file; an `Edit` hints only fields lying inside
+ * its new string when that string occurs exactly once in the edited file.
+ * With a state file, each hint is shown once per
+ * `(session, file, field, kind)` key, remembered there as a SHA-256 digest;
+ * a hint that is not shown consumes no key. A state path that is a symbolic
+ * link is refused: nothing is printed and its target is not written.
  *
  * **Example** (Ignore a payload that does not decode)
  *
@@ -315,7 +291,8 @@ export const schemaIdiomHookOutput = Effect.fn("SchemaIdioms.schemaIdiomHookOutp
     const fs = yield* FileSystem.FileSystem;
     const input = yield* decodeHookInput(stdin);
     const file = input.tool_input.file_path;
-    if (!isSchemaIdiomHintPath(file)) {
+    const refusedState = yield* isSymbolicLinkState(statePath);
+    if (refusedState || !isSchemaIdiomHintPath(file)) {
       return O.none<string>();
     }
     const text = yield* fs.readFileString(file);

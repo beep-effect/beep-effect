@@ -3549,6 +3549,7 @@
     {"name":"SchemaIdioms.hintSchemaIdiomsFile","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"SchemaIdioms.indexCommand","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"SchemaIdioms.indexDirectory","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"SchemaIdioms.isSymbolicLinkState","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"SchemaIdioms.lookupCommand","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"SchemaIdioms.moduleFileOf","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"SchemaIdioms.readEffectVersion","owner":"@beep/repo-cli","family":"tooling","conforms":true},

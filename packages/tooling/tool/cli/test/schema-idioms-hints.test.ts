@@ -341,6 +341,22 @@ describe("schema idiom hints", () => {
     expect(
       hintsOf(lines("export const Wire = S.Struct({ timeoutMs: S.Number });", "const [S2, ...S] = pair;"))
     ).toEqual([]);
+    expect(
+      hintsOf(
+        lines(
+          "export const make = (S: { Struct: (f: unknown) => unknown; Number: unknown }) => S.Struct({ timeoutMs: S.Number });"
+        )
+      )
+    ).toEqual([]);
+    expect(
+      hintsOf(
+        lines(
+          "const Timeout = S.Number;",
+          "export const f = (Timeout: number) => ({ timeoutMs: Timeout });",
+          "export const Wire = S.Struct({ timeoutMs: Timeout });"
+        )
+      )
+    ).toEqual([]);
   });
 
   it("hints an alias and const bound exactly once", () => {
@@ -424,10 +440,12 @@ describe("schema idiom hints", () => {
           "  retryMs: S.Number.pipe(S.Struct.fields),",
           '  graceMs: S.Number.pipe(helper.annoteSchema("x")),',
           "  idleMs: S.Number.pipe(S.mutable),",
+          "  fromMillisMs: S.Number.pipe(durations.fromMillis()),",
+          "  localDecodeMs: S.Number.pipe(local.decodeTo(S.Duration)),",
           "});"
         )
       )
-    ).toEqual(["L9 graceMs duration number"]);
+    ).toEqual([]);
     expect(
       hintsOf(
         lines(
@@ -445,6 +463,129 @@ describe("schema idiom hints", () => {
       "L5 delayMs duration number",
       "L6 ttl duration number",
       "L7 waitMs duration number",
+    ]);
+  });
+
+  it("an annotation helper keeps a primitive only on a $-prefixed identity composer bound once", () => {
+    expect(
+      hintsOf(
+        lines(
+          "const helper = {annoteSchema: (_: string) => (_: typeof S.Number) => S.DurationFromMillis};",
+          'export const Wire = S.Struct({timeoutMs: S.Number.pipe(helper.annoteSchema("Timeout"))});'
+        )
+      )
+    ).toEqual([]);
+    expect(
+      hintsOf(
+        lines(
+          "const helper = {annote: () => (_: typeof S.Number) => S.DurationFromMillis}; export const Wire=S.Struct({timeoutMs:S.Number.pipe(helper.annote())});"
+        )
+      )
+    ).toEqual([]);
+    expect(
+      hintsOf(
+        lines(
+          "const $I = { annoteSchema: (name: string) => name };",
+          'export const Wire = S.Struct({ timeoutMs: S.Number.pipe($I.annoteSchema("T")) });',
+          "export const make = ($I: unknown) => $I;"
+        )
+      )
+    ).toEqual([]);
+    expect(
+      hintsOf(lines('export const Wire = S.Struct({ timeoutMs: S.Number.pipe($Undeclared.annoteSchema("T")) });'))
+    ).toEqual([]);
+    expect(
+      hintsOf(
+        lines(
+          'const $I = $RepoCliId.create("demo");',
+          'export const Wire = S.Struct({ timeoutMs: S.Number.pipe($I.annoteSchema("T")) });'
+        )
+      )
+    ).toEqual(["L3 timeoutMs duration number"]);
+  });
+
+  it("a field overridden later in its object literal is not hinted", () => {
+    expect(
+      hintsOf(
+        lines(
+          "const fields = {timeoutMs: S.DurationFromMillis};",
+          "export const Wire = S.Struct({timeoutMs: S.Number, ...fields});"
+        )
+      )
+    ).toEqual([]);
+    expect(
+      hintsOf(
+        lines(
+          'const key = "timeoutMs";',
+          "export const Wire = S.Struct({timeoutMs: S.Number, [key]: S.DurationFromMillis});"
+        )
+      )
+    ).toEqual([]);
+    expect(
+      hintsOf(lines("export const Wire = S.Struct({timeoutMs: S.Number, timeoutMs: S.DurationFromMillis});"))
+    ).toEqual([]);
+    expect(
+      hintsOf(lines('export const Wire = S.Struct({ "timeoutMs": S.Number, timeoutMs: S.DurationFromMillis });'))
+    ).toEqual([]);
+    expect(
+      hintsOf(lines('export const Wire = S.Struct({ timeoutMs: S.Number, ["timeoutMs"]: S.DurationFromMillis });'))
+    ).toEqual([]);
+    expect(hintsOf(lines('export const Wire = S.Struct({ ["other"]: S.String, listenPort: S.Int });'))).toEqual([]);
+    expect(
+      hintsOf(
+        lines(
+          "const fields = {timeoutMs: S.DurationFromMillis}; export const Wire = S.Struct({...fields, timeoutMs:S.Number});"
+        )
+      )
+    ).toEqual(["L2 timeoutMs duration number"]);
+  });
+
+  it("a container whose fields are rewritten hints none of them", () => {
+    expect(
+      hintsOf(
+        lines(
+          "export const Wire = S.Struct({timeoutMs: S.Number}).mapFields(() => ({timeoutMs: S.DurationFromMillis}));"
+        )
+      )
+    ).toEqual([]);
+    expect(
+      hintsOf(
+        lines("export const Wire = S.Struct({ timeoutMs: S.Number }).pipe(S.fieldsAssign({ timeoutMs: S.Duration }));")
+      )
+    ).toEqual([]);
+    expect(
+      hintsOf(
+        lines(
+          'import { pipe } from "effect/Function";',
+          "export const Wire = pipe(S.Struct({ timeoutMs: S.Number }), S.fieldsAssign({ timeoutMs: S.Duration }));"
+        )
+      )
+    ).toEqual([]);
+    expect(
+      hintsOf(
+        lines(
+          'const $I = $RepoCliId.create("demo");',
+          'export const Wire = S.Struct({ timeoutMs: S.Number }).pipe($I.annoteSchema("Wire")).mapFields(rewrite);'
+        )
+      )
+    ).toEqual([]);
+    expect(
+      hintsOf(
+        lines(
+          'const $I = $RepoCliId.create("demo");',
+          "export class Wire extends S.Opaque<Wire, { readonly brand: unique symbol }>()(",
+          '  S.Struct({ timeoutMs: S.Number }).pipe($I.annoteSchema("Wire"), S.annotate({}))',
+          ") {}",
+          'export const Checked = pipe(S.Struct({ listenPort: S.Int }), S.brand("Checked"));',
+          "export const Annotated = S.Struct({ sizeBytes: S.Number }).annotate({}).check(S.makeFilter(isValid));",
+          'export class Klass extends S.Class<Klass>("Klass")({ retryDelay: S.Number }) {}'
+        )
+      )
+    ).toEqual([
+      "L4 timeoutMs duration number",
+      "L6 listenPort port number",
+      "L7 sizeBytes byte-size number",
+      "L8 retryDelay duration number",
     ]);
   });
 

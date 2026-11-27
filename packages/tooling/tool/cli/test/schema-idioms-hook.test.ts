@@ -6,7 +6,8 @@ import {
 } from "@beep/repo-cli/commands/SchemaIdioms";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
-import { assertNone } from "@effect/vitest/utils";
+import { assertNone, assertSome } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
@@ -49,6 +50,11 @@ const COMMENTED = A.join(
   "\n"
 );
 
+const MULTI_TRANSIENT = A.join(
+  ['import * as S from "effect/Schema";', "export const Wire = S.Struct({ timeoutMs: S.Number });", "/* final */", ""],
+  "\n"
+);
+
 const COMMENT_EDIT = "/* Added documentation:\ntimeoutMs: S.Number,\n*/";
 
 const SHA256_HEX = /^[0-9a-f]{64}$/;
@@ -56,6 +62,8 @@ const SHA256_HEX = /^[0-9a-f]{64}$/;
 const OWNER_ONLY = 0o600;
 
 const decodeHookOutput = S.decodeEffect(S.fromJsonString(SchemaIdiomHookOutput));
+
+const encodeHookOutput = S.encodeEffect(S.fromJsonString(SchemaIdiomHookOutput));
 
 const encodePayload = S.encodeEffect(S.fromJsonString(S.Unknown));
 
@@ -139,7 +147,7 @@ const runHookMain = Effect.fn(function* (stdin: string, env: Record<string, stri
 });
 
 it.layer(NodeTestLayer, { timeout: "30 seconds" })((it) => {
-  it.effect("hints the text a Write, Edit or MultiEdit call wrote", () =>
+  it.effect("hints the text a Write or Edit call wrote", () =>
     Effect.gen(function* () {
       const { file } = yield* sourceFile(SOURCE);
       const write = yield* hook("Write", file, { content: SOURCE }, O.none());
@@ -149,13 +157,32 @@ it.layer(NodeTestLayer, { timeout: "30 seconds" })((it) => {
       expect(O.getOrElse(writeContext, () => "")).toMatch(/^\[schema-idiom\] Advisory:/);
       const edit = yield* hookFields("Edit", file, { old_string: "x", new_string: "  listenPort: S.Int," }, O.none());
       expect(edit).toEqual(["listenPort"]);
-      const multiEdit = yield* hookFields(
+    })
+  );
+
+  it.effect("a MultiEdit payload does not decode, so a transient edit hints nothing and consumes no key", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const { root, file } = yield* sourceFile(MULTI_TRANSIENT);
+      const statePath = path.join(root, "fresh-multi.json");
+      const transient = yield* hook(
         "MultiEdit",
         file,
-        { edits: [{ new_string: "  timeoutMs: S.Number," }, { new_string: "});" }] },
-        O.none()
+        {
+          edits: [
+            { old_string: "old", new_string: "timeoutMs: S.Number" },
+            { old_string: "/* timeoutMs: S.Number */", new_string: "/* final */" },
+          ],
+        },
+        O.some(statePath),
+        O.some("r2-multi-transient")
       );
-      expect(multiEdit).toEqual(["timeoutMs"]);
+      assertNone(transient);
+      const stateWritten = yield* fs.exists(statePath);
+      expect(stateWritten).toBe(false);
+      const control = yield* hookFields("Write", file, { content: MULTI_TRANSIENT }, O.some(statePath));
+      expect(control).toEqual(["timeoutMs"]);
     })
   );
 
@@ -175,7 +202,7 @@ it.layer(NodeTestLayer, { timeout: "30 seconds" })((it) => {
     })
   );
 
-  it.effect("decodes only Edit, MultiEdit and Write payloads with a session", () =>
+  it.effect("decodes only Edit and Write payloads with a session", () =>
     Effect.gen(function* () {
       const { file } = yield* sourceFile(SOURCE);
       const refused = yield* Effect.all(
@@ -185,6 +212,7 @@ it.layer(NodeTestLayer, { timeout: "30 seconds" })((it) => {
           hook("Write", file, { new_string: "  listenPort: S.Int," }, O.none()),
           hook("Edit", file, { content: SOURCE }, O.none()),
           hook("MultiEdit", file, { edits: [] }, O.none()),
+          hook("MultiEdit", file, { edits: [{ old_string: "x", new_string: "  listenPort: S.Int," }] }, O.none()),
           hook("Write", file, { content: SOURCE }, O.none(), O.none()),
           hook("Write", file, { content: SOURCE }, O.none(), O.some("")),
         ],
@@ -206,7 +234,6 @@ it.layer(NodeTestLayer, { timeout: "30 seconds" })((it) => {
       const silent = yield* Effect.all(
         [
           hook("Edit", file, { old_string: "/* old note */", new_string: COMMENT_EDIT }, state),
-          hook("MultiEdit", file, { edits: [{ new_string: COMMENT_EDIT }] }, state),
           hook("Edit", file, { new_string: "timeoutMs: S.Number," }, state),
         ],
         { concurrency: 1 }
@@ -295,6 +322,35 @@ it.layer(NodeTestLayer, { timeout: "30 seconds" })((it) => {
         ["timeoutMs", "listenPort"],
         ["timeoutMs", "listenPort"],
       ]);
+    })
+  );
+
+  it.effect("refuses a state path that is a symbolic link and leaves its target untouched", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const { root, file } = yield* sourceFile(SOURCE);
+      const target = path.join(root, "sentinel.txt");
+      const link = path.join(root, "linked-state.json");
+      yield* fs.writeFileString(target, "preserve me");
+      yield* fs.symlink(target, link);
+      const output = yield* hook("Write", file, { content: SOURCE }, O.some(link));
+      assertNone(output);
+      const preserved = yield* fs.readFileString(target);
+      expect(preserved).toBe("preserve me");
+    })
+  );
+
+  it.effect.prop(
+    "a schema-derived hook output survives the JSON line round trip",
+    [Arbitrary.schema(SchemaIdiomHookOutput)],
+    Effect.fnUntraced(function* ([output]) {
+      const line = yield* encodeHookOutput(output);
+      const context = yield* contextOf(O.some(line));
+      assertSome(context, output.hookSpecificOutput.additionalContext);
+      const decoded = yield* decodeHookOutput(line);
+      const again = yield* encodeHookOutput(decoded);
+      expect(again).toBe(line);
     })
   );
 

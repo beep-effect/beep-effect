@@ -15,11 +15,19 @@
  * optional wrappers, `.check` / `.annotate` / `.annotateKey`, or a `.pipe`
  * whose every argument is a type-preserving combinator (`S.check`,
  * `S.brand`, `S.annotate`, `S.annotateKey`, the constructor and decoding
- * defaults, an optional wrapper, or an `annoteSchema` / `annote` call). It
- * may name a top-level `const` once (one hop; an imported identifier is not
- * followed). Anything else, a conversion or collection combinator included,
- * is not a primitive and is never hinted. A namespace alias or `const` name
+ * defaults, an optional wrapper, or an `annoteSchema` / `annote` call on a
+ * `$`-prefixed identity composer such as `$I`). It may name a top-level
+ * `const` once (one hop; an imported identifier is not followed). Anything
+ * else, a conversion or collection combinator included, is not a primitive
+ * and is never hinted. A namespace alias, identity composer or `const` name
  * bound more than once anywhere in the file is not trusted.
+ *
+ * A field is hinted only when it is the effective entry of its object: no
+ * later spread, no computed key anywhere in the object and no other entry
+ * with the same name. A container whose result is rewritten, through a
+ * method other than `.check` / `.annotate` / `.annotateKey` or a `.pipe` /
+ * `pipe(...)` with an argument outside the allow-list (`.mapFields`,
+ * `S.fieldsAssign`, `S.decodeTo`, ...), hints none of its fields.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -103,9 +111,17 @@ const PRIMITIVE_HEADS: HashMap.HashMap<string, SchemaPrimitiveHead> = HashMap.fr
 
 const byLine: Order.Order<SchemaIdiomHint> = Order.mapInput(Order.Number, (hint: SchemaIdiomHint) => hint.line);
 
+const IDENTITY_COMPOSER_PREFIX = "$";
+
 type ScanScope = {
   readonly aliases: HashSet.HashSet<string>;
   readonly definitions: HashMap.HashMap<string, Expression>;
+  readonly boundOnce: (name: string) => boolean;
+};
+
+type Carrier = {
+  readonly outer: string;
+  readonly preserving: boolean;
 };
 
 type Primitive = {
@@ -159,9 +175,18 @@ const argumentExpression = (argument: Argument): O.Option<Expression> =>
 const isObjectExpression = (expression: Expression): expression is ObjectExpression =>
   expression.type === "ObjectExpression";
 
+const isCallExpression = (expression: Expression): expression is CallExpression => expression.type === "CallExpression";
+
 const isAlias = (scope: ScanScope, expression: Expression): boolean => {
   const node = unwrap(expression);
   return node.type === "Identifier" && HashSet.has(scope.aliases, node.name);
+};
+
+const isIdentityComposer = (scope: ScanScope, expression: Expression): boolean => {
+  const node = unwrap(expression);
+  return (
+    node.type === "Identifier" && Str.startsWith(IDENTITY_COMPOSER_PREFIX)(node.name) && scope.boundOnce(node.name)
+  );
 };
 
 const calleeMember = (call: CallExpression): O.Option<readonly [object: Expression, name: string]> => {
@@ -193,7 +218,7 @@ const preservesType =
             O.exists(calleeMember(node), ([object, name]) =>
               isAlias(scope, object)
                 ? HashSet.has(PIPE_PRESERVING, name)
-                : unwrap(object).type === "Identifier" && HashSet.has(ANNOTATION_HELPERS, name)
+                : HashSet.has(ANNOTATION_HELPERS, name) && isIdentityComposer(scope, object)
             ),
         }),
         Match.orElse(constFalse)
@@ -275,7 +300,7 @@ const boundNames = (node: BindingNode | null): ReadonlyArray<string> =>
         Match.exhaustive
       )(node);
 
-const bindingCounts = (names: ReadonlyArray<string>): HashMap.HashMap<string, number> =>
+const occurrences = (names: ReadonlyArray<string>): HashMap.HashMap<string, number> =>
   A.reduce(names, HashMap.empty<string, number>(), (counts, name) =>
     HashMap.set(counts, name, O.getOrElse(HashMap.get(counts, name), () => 0) + 1)
   );
@@ -318,6 +343,73 @@ const propertyName = (property: ObjectProperty): O.Option<string> =>
     Match.when({ type: "Literal", value: P.isString }, (key) => O.some(key.value)),
     Match.orElse(() => O.none())
   )(property.key);
+
+const isComputedProperty = (property: ObjectExpression["properties"][number]): boolean =>
+  property.type === "Property" && property.computed;
+
+const isSpread = (property: ObjectExpression["properties"][number]): boolean => property.type === "SpreadElement";
+
+const effectiveFields = (fields: ObjectExpression): ReadonlyArray<ObjectProperty> => {
+  if (A.some(fields.properties, isComputedProperty)) {
+    return A.empty();
+  }
+  const lastSpread = O.getOrElse(A.findLastIndex(fields.properties, isSpread), () => -1);
+  const named = occurrences(
+    A.flatMap(fields.properties, (property) =>
+      property.type === "Property" ? A.fromOption(propertyName(property)) : A.empty<string>()
+    )
+  );
+  return A.filter(
+    A.filter(fields.properties, (_, index) => index > lastSpread),
+    (property): property is ObjectProperty =>
+      isFieldProperty(property) && O.exists(propertyName(property), boundOnce(named))
+  );
+};
+
+const spanKey = (node: CallExpression): string => `${node.start}:${node.end}`;
+
+const isPipeCall = (call: CallExpression): boolean => {
+  const callee = unwrap(call.callee);
+  return (
+    (callee.type === "Identifier" && callee.name === "pipe") ||
+    O.exists(calleeMember(call), ([, name]) => name === "pipe")
+  );
+};
+
+const carrierOf =
+  (scope: ScanScope) =>
+  (call: CallExpression): O.Option<readonly [inner: string, carrier: Carrier]> => {
+    const outer = spanKey(call);
+    const asReceiver = O.flatMap(calleeMember(call), ([object, name]) =>
+      pipe(
+        O.some(unwrap(object)),
+        O.filter(isCallExpression),
+        O.map((receiver): readonly [string, Carrier] => [
+          spanKey(receiver),
+          { outer, preserving: methodPreserves(scope, name, call.arguments) },
+        ])
+      )
+    );
+    return O.orElse(asReceiver, () =>
+      isPipeCall(call)
+        ? pipe(
+            A.head(call.arguments),
+            O.flatMap(argumentExpression),
+            O.map(unwrap),
+            O.filter(isCallExpression),
+            O.map((first): readonly [string, Carrier] => [
+              spanKey(first),
+              { outer, preserving: A.every(A.drop(call.arguments, 1), preservesType(scope)) },
+            ])
+          )
+        : O.none()
+    );
+  };
+
+const rewrittenBy =
+  (carriers: HashMap.HashMap<string, Carrier>) =>
+  (key: string): boolean =>
+    O.exists(HashMap.get(carriers, key), (carrier) => !carrier.preserving || rewrittenBy(carriers)(carrier.outer));
 
 const lineStartsOf = (text: string): ReadonlyArray<number> =>
   A.scan(Str.split(text, "\n"), 0, (start, line) => start + Str.length(line) + 1);
@@ -429,7 +521,7 @@ export const schemaIdiomHints = (input: SchemaIdiomHintInput): ReadonlyArray<Sch
       calls.push(node);
     },
   }).visit(parsed.program);
-  const once = boundOnce(bindingCounts(bound));
+  const once = boundOnce(occurrences(bound));
   const aliases = HashSet.fromIterable(A.filter(schemaAliases(parsed.program), once));
   if (HashSet.size(aliases) === 0) {
     return A.empty();
@@ -437,14 +529,17 @@ export const schemaIdiomHints = (input: SchemaIdiomHintInput): ReadonlyArray<Sch
   const scope: ScanScope = {
     aliases,
     definitions: HashMap.fromIterable(A.filter(A.flatMap(parsed.program.body, declaredConsts), ([name]) => once(name))),
+    boundOnce: once,
   };
+  const rewritten = rewrittenBy(HashMap.fromIterable(A.getSomes(A.map(calls, carrierOf(scope)))));
   const starts = lineStartsOf(input.text);
   const spans = O.map(input.written, A.flatMap(uniqueSpanOf(input.text)));
+  const containers = A.filter(calls, (call: CallExpression) => !rewritten(spanKey(call)));
   const properties = A.filter(
-    A.flatMap(calls, (call) =>
+    A.flatMap(containers, (call) =>
       O.match(fieldsOf(scope, call), {
         onNone: A.empty<ObjectProperty>,
-        onSome: (fields) => A.filter(fields.properties, isFieldProperty),
+        onSome: effectiveFields,
       })
     ),
     (property) => O.match(spans, { onNone: constTrue, onSome: A.some(covers(property)) })

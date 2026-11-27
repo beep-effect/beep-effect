@@ -119,8 +119,10 @@ makes the same comparison; no CI lane runs `--check` itself, so run
 `bun run beep schema-idioms index --write` after an Effect bump.
 
 A field's name is the strongest sign that a primitive is standing in for a
-richer value. Seven name shapes are checked on newly written schema fields, and
-`bun run beep schema-idioms hint <file>` prints them for a file:
+richer value. `bun run beep schema-idioms hint <file>` checks a file's schema
+fields against seven name shapes, and the PostToolUse hook
+`.claude/hooks/schema-idiom.sh` does the same for newly written fields when it
+is wired into the Claude Code settings (it is not wired by default):
 
 | The name reads as | Examples | Consider |
 | --- | --- | --- |

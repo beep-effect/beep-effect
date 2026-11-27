@@ -32,6 +32,8 @@ state_dir="${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}/beep-schema-idiom-$(id -u)"
 { [ -d "$state_dir" ] && [ ! -L "$state_dir" ] && [ -O "$state_dir" ]; } || exit 0
 chmod 700 "$state_dir" 2>/dev/null || exit 0
 export BEEP_SCHEMA_IDIOM_STATE="${BEEP_SCHEMA_IDIOM_STATE:-$state_dir/$(printf '%s' "$PWD" | cksum | cut -d' ' -f1).json}"
+# A symlinked state file is refused so its target is never overwritten.
+[ -L "$BEEP_SCHEMA_IDIOM_STATE" ] && exit 0
 
 printf '%s' "$payload" | bun "$entry" 2>/dev/null || true
 exit 0
