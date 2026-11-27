@@ -117,10 +117,12 @@ describe("detect — terminal allowlist", () => {
     assert.deepStrictEqual(r.terminal, O.none());
   });
   it("Alacritty (any version) is terminal-known-supported", () => {
-    // Regression: Alacritty's TERM=alacritty carries no version info,
-    // so a minVersion gate would always fire 'terminal-known-too-old'.
     const r = detect(snapshot(envFor.alacritty()));
-    assert.strictEqual(r.supported, true);
+    assert.strictEqual(
+      r.supported,
+      true,
+      "TERM=alacritty carries no version, so a minVersion gate would always report terminal-known-too-old"
+    );
     assert.strictEqual(r.reason, "terminal-known-supported");
     assert.deepStrictEqual(r.terminal, O.some("Alacritty"));
   });
@@ -148,17 +150,18 @@ describe("detect — capabilities", () => {
     assert.strictEqual(r.capabilities.params, false);
   });
   it("populates capabilities for known terminals even when stdout is not a TTY", () => {
-    // Capabilities are an intrinsic terminal property, decoupled from
-    // stream TTY state. A piped stdout doesn't change what the terminal
-    // can do — only whether we're emitting OSC8 right now.
     const r = detect(snapshot(envFor.iterm(), false, true));
     assert.strictEqual(r.supported, false);
     assert.strictEqual(r.reason, "not-a-tty");
-    assert.deepStrictEqual(r.capabilities, {
-      params: true,
-      fileUrls: true,
-      fileUrlsRemoteUnsafe: false,
-    });
+    assert.deepStrictEqual(
+      r.capabilities,
+      {
+        params: true,
+        fileUrls: true,
+        fileUrlsRemoteUnsafe: false,
+      },
+      "capabilities are intrinsic to the terminal; a piped stdout only stops OSC8 emission"
+    );
   });
   it("populates capabilities for known terminals even inside a wrapper", () => {
     const r = detect(snapshot({ ...envFor.iterm(), TMUX: "x" }));
@@ -169,13 +172,14 @@ describe("detect — capabilities", () => {
 });
 
 describe("detect — supportedForStderr divergence", () => {
-  // These exercise the bug class the stderrSupported IIFE was fragile to:
-  // stdout and stderr can disagree only on TTY state; everything else
-  // (overrides, wrapper, allowlist) agrees by construction.
   it("stdout-piped, stderr-TTY, known terminal: stderr supported, stdout not", () => {
     const r = detect(snapshot(envFor.iterm(), false, true));
     assert.strictEqual(r.supported, false);
-    assert.strictEqual(r.supportedForStderr, true);
+    assert.strictEqual(
+      r.supportedForStderr,
+      true,
+      "stdout and stderr disagree only on TTY state; overrides, wrapper and allowlist agree by construction"
+    );
   });
   it("FORCE_HYPERLINK lifts both streams regardless of TTY", () => {
     const r = detect(snapshot({ FORCE_HYPERLINK: "1" }, false, false));
@@ -202,8 +206,6 @@ describe("detect — explanation", () => {
   });
 });
 
-// Added by the port (not in std-osc8): detectOsc8 projects detect() onto the
-// Option-carrying shape the package surfaces.
 describe("detectOsc8 — projection", () => {
   it("maps supported/supportedForStderr to stdout/stderr and the terminal to an Option", () => {
     const r = detectOsc8(envFor.iterm({ version: "3.5.0" }), true, false);

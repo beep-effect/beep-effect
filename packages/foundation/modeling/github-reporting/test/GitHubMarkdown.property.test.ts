@@ -12,14 +12,13 @@ import * as S from "effect/Schema";
 
 const runs = { arbitrary: fcRuns(100) };
 const Word = S.String.check(S.isPattern(/^[a-z]{1,20}$/u));
-// Source coordinates describe the original spelling, not markdown semantics.
-const semantics = (value: unknown): unknown => {
-  if (A.isArray(value)) return A.map(value, semantics);
+const withoutSourcePositions = (value: unknown): unknown => {
+  if (A.isArray(value)) return A.map(value, withoutSourcePositions);
   if (P.isObject(value))
     return R.fromEntries(
       A.map(
         A.filter(R.toEntries(value), ([key]) => key !== "position"),
-        ([key, child]) => [key, semantics(child)]
+        ([key, child]) => [key, withoutSourcePositions(child)]
       )
     );
   return value;
@@ -29,9 +28,9 @@ const fidelity = Effect.fnUntraced(function* (text: string) {
   const formatted = yield* Markdown.stringify(parsed);
   const reparsed = yield* Markdown.parse(formatted);
   const value1 = yield* S.encodeEffect(Root)(reparsed);
-  const argument = semantics(value1);
+  const argument = withoutSourcePositions(value1);
   const value2 = yield* S.encodeEffect(Root)(parsed);
-  assert.deepStrictEqual(argument, semantics(value2));
+  assert.deepStrictEqual(argument, withoutSourcePositions(value2));
   const stringify2 = yield* Markdown.stringify(reparsed);
   assert.strictEqual(stringify2, formatted);
 });

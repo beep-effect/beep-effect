@@ -209,9 +209,6 @@ const ApiTransportDurationNumber = S.declare<number>(
   })
 );
 
-// Mirrors effect's `Duration.DurationObject`, whose members are declared
-// `weeks?: number | undefined`: a value typed against `Duration.Input` may hold
-// an explicit undefined, so these keys keep it (EF-40 exception).
 const ApiTransportDurationObject = S.Struct({
   weeks: ApiTransportDurationNumber.pipe(S.UndefinedOr, S.optionalKey),
   days: ApiTransportDurationNumber.pipe(S.UndefinedOr, S.optionalKey),
@@ -221,7 +218,12 @@ const ApiTransportDurationObject = S.Struct({
   milliseconds: ApiTransportDurationNumber.pipe(S.UndefinedOr, S.optionalKey),
   microseconds: ApiTransportDurationNumber.pipe(S.UndefinedOr, S.optionalKey),
   nanoseconds: ApiTransportDurationNumber.pipe(S.UndefinedOr, S.optionalKey),
-});
+}).pipe(
+  $I.annoteSchema("ApiTransportDurationObject", {
+    description:
+      "Mirrors effect's Duration.DurationObject, whose members are declared `weeks?: number | undefined`, so a Duration.Input value may hold an explicit undefined and every key accepts one.",
+  })
+);
 
 type ApiTransportDurationString = Extract<Duration.Input, string>;
 

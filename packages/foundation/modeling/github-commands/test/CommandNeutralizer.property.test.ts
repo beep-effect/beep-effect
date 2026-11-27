@@ -27,9 +27,12 @@ describe("CommandNeutralizer property floor", () => {
         assert.strictEqual(A.join(lines, "\n"), once);
         assert.deepStrictEqual(commandLines(once), []);
         assert.strictEqual(lines.length, Str.split(text, LINE_BREAK).length);
-        // Removing only introduced zero-width markers preserves the original data and line order.
         const withoutMarkers = Str.replaceAll("\u200b", "");
-        assert.strictEqual(withoutMarkers(once), withoutMarkers(A.join(Str.split(text, LINE_BREAK), "\n")));
+        assert.strictEqual(
+          withoutMarkers(once),
+          withoutMarkers(A.join(Str.split(text, LINE_BREAK), "\n")),
+          "removing only the introduced zero-width markers preserves the original data and line order"
+        );
       }),
     runs
   );

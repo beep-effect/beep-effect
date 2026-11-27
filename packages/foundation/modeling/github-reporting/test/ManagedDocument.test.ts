@@ -213,13 +213,14 @@ describe("ManagedDocument", () => {
     });
 
     it("the marker line is markerLine, not the engine-owned Error line property", () => {
-      // Conformance shift (W3-b): the field was `line`, which JavaScriptCore
-      // also defines on every Error, so Bun rendered an absent line as the
-      // construction site and hid a present one from Object.keys.
       const located = ManagedDocumentError.make({ kind: "orphanedEnd", markerLine: 2 });
       const fields: Readonly<Record<string, unknown>> = { ...located };
       assert.include(R.keys(fields), "markerLine");
-      assert.notInclude(R.keys(fields), "line");
+      assert.notInclude(
+        R.keys(fields),
+        "line",
+        "JavaScriptCore defines line on every Error, so Bun would render an absent line as the construction site and hide a present one from Object.keys"
+      );
       assert.strictEqual(located.message, "Region end marker closes no open region at line 2");
       const unlocated = ManagedDocumentError.make({ kind: "orphanedEnd" });
       assert.isUndefined(unlocated.markerLine);
@@ -237,20 +238,25 @@ describe("ManagedDocument", () => {
       );
       assert.deepStrictEqual(doc.entry("header"), O.some({ content: "the table", meta }));
       assert.deepStrictEqual(doc.entry("missing"), O.none());
-      // Addressability is untouched: content-only reads see the same region.
-      assert.deepStrictEqual(doc.region("header"), O.some("the table"));
-      // And a re-parse of the rendered text reads the same metadata back.
+      assert.deepStrictEqual(
+        doc.region("header"),
+        O.some("the table"),
+        "addressability is untouched: content-only reads see the same region"
+      );
       const reread = Result.getOrThrow(ManagedDocument.parseResult({ namespace: NS, key: KEY, text: doc.text }));
-      assert.deepStrictEqual(reread.entry("header"), O.some({ content: "the table", meta }));
+      assert.deepStrictEqual(
+        reread.entry("header"),
+        O.some({ content: "the table", meta }),
+        "a re-parse of the rendered text reads the same metadata back"
+      );
     });
 
     it("a two-tuple keeps today's behavior exactly, reporting empty meta", () => {
       const doc = apply(fresh(), [["header", "plain"]]);
       assert.include(doc.text, marker("BEGIN", "header"));
       assert.deepStrictEqual(doc.entry("header"), O.some({ content: "plain", meta: {} }));
-      // A triple with empty meta renders the identical document.
       const withEmpty = apply(fresh(), [["header", "plain", {}]]);
-      assert.strictEqual(withEmpty.text, doc.text);
+      assert.strictEqual(withEmpty.text, doc.text, "a triple with empty meta renders the identical document");
     });
 
     it("meta survives a write by a party that does not know about it", () => {
@@ -259,10 +265,9 @@ describe("ManagedDocument", () => {
         ["header", "the table", meta],
         ["footer", "the link"],
       ]);
-      // A later caller updates ONLY the footer, never mentioning metadata.
-      const updated = apply(seeded, [["footer", "the NEW link"]]);
-      assert.deepStrictEqual(updated.entry("header"), O.some({ content: "the table", meta }));
-      assert.deepStrictEqual(updated.region("footer"), O.some("the NEW link"));
+      const updatedFooterOnly = apply(seeded, [["footer", "the NEW link"]]);
+      assert.deepStrictEqual(updatedFooterOnly.entry("header"), O.some({ content: "the table", meta }));
+      assert.deepStrictEqual(updatedFooterOnly.region("footer"), O.some("the NEW link"));
     });
 
     it("applying identical triples is byte-identical — suppression holds with meta", () => {
@@ -313,10 +318,11 @@ describe("ManagedDocument", () => {
     });
 
     it("matches the CommentMarker rendering for the same namespace and key", () => {
-      // PullRequestComment.upsert appends `<!-- namespace:key -->`; the
-      // document primitive must agree on the spelling, or the comment the
-      // reconciler writes stops being findable by the marker that owns it.
-      assert.strictEqual(fresh().sentinel, `<!-- ${NS}:${KEY} -->`);
+      assert.strictEqual(
+        fresh().sentinel,
+        `<!-- ${NS}:${KEY} -->`,
+        "PullRequestComment.upsert appends this marker; a different spelling would make the written comment unfindable"
+      );
       const doc = apply(fresh(), [["header", "x"]]);
       assert.isTrue(doc.matches(doc.text));
       assert.isFalse(doc.matches("no marker here"));
