@@ -440,8 +440,8 @@ const PARTITION_PLAN_FLAGS = ["--plan-partitions", "--planned-partitions"] as co
  *
  * Build runs on pull requests affected-scoped with remote-cache read; trusted main pushes run it
  * unscoped and are its only cache writer. It dispatches from heavy.yml, because the heavy runner
- * group admits heavy.yml@main on pull requests and not check.yml jobs, so its context carries the
- * Heavy prefix.
+ * group admits `heavy.yml@main` on pull requests and not check.yml jobs, so its context carries
+ * the Heavy prefix.
  *
  * **Example** (Configure a CI lane)
  *
