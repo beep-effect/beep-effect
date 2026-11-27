@@ -2,11 +2,11 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/ontology",
   "review": {
-    "reviewer": "Claude Opus 5.5 (infra-alchemy-rebuild P6 retire lane)",
-    "reason": "Re-record the subjects whose Turbo inputs named the deleted infra/ workspace, and drop the @beep/infra subject; configuration review only, no qualification granted.",
+    "reviewer": "Claude Opus 5.5 (route-soundness-repair ROUT-03 slice 2 lane)",
+    "reason": "Re-record the root subject and three packages after their turbo.json files declared the goal-data and fixture inputs on the integration test tasks as well. Configuration review only; no qualification is granted.",
     "basis": {
-      "path": "docs/reports/infra-alchemy-p6-retire-cache-review-2026-11-25.md",
-      "sha256": "449a682ef1c70c6d316f5b30da98056bcfab1aad7ba0cd2f2987ed10acc9c466"
+      "path": "docs/reports/rout-03-slice-2-integration-cache-review-2026-11-26.md",
+      "sha256": "a2f3263d1a19ea8ec0a7fc85945c7d981a13dc039dd2a90a54fdcca2dd16b2ed"
     }
   },
   "nodes": [
@@ -602,6 +602,7 @@
           "!README.md",
           "../../../../.bun-version",
           "../../../../.nvmrc",
+          "../../../../explorations/legal-ontology-landscape/assets/manifest.jsonl",
           "../../../../standards/root-package.projection.generated.json",
           "../../../../tsconfig.base.json",
           "../../../../tsconfig.json",
@@ -660,6 +661,7 @@
           "!.fallow/**",
           "../../../../.bun-version",
           "../../../../.nvmrc",
+          "../../../../explorations/legal-ontology-landscape/assets/manifest.jsonl",
           "../../../../standards/root-package.projection.generated.json",
           "../../../../tsconfig.base.json",
           "../../../../tsconfig.json",
