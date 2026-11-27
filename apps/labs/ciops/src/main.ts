@@ -6,14 +6,11 @@ import * as HttpRouter from "effect/http/HttpRouter";
 import * as Layer from "effect/Layer";
 import { ApiLive } from "./runtime/Layer.ts";
 
-// Portless injects PORT for ciops.labs.beep.localhost; the 8787 fallback
-// keeps the PORTLESS=0 diagnostic bypass usable.
-// fallow-ignore-next-line code-duplication -- labs scaffold bootstrap is intentionally identical to apps/labs/api-docs. Owner: @beep/ciops. Exit: replace with a shared labs launcher when the lab graduates.
+const portlessBypassPort = 8787;
+
 const main = Effect.fnUntraced(function* () {
-  const port = yield* Config.Port("PORT").pipe(Config.withDefault(8787));
-  // `return yield*` keeps a definitive generator exit point: `Layer.launch`
-  // never succeeds, and the effect-LSP requires the explicit return for
-  // narrowing (TS377006 missingReturnYieldStar).
+  // fallow-ignore-next-line code-duplication -- labs scaffold bootstrap is intentionally identical to apps/labs/api-docs. Owner: @beep/ciops. Exit: replace with a shared labs launcher when the lab graduates.
+  const port = yield* Config.Port("PORT").pipe(Config.withDefault(portlessBypassPort));
   return yield* Layer.launch(
     ApiLive.pipe(HttpRouter.serve, Layer.provideMerge(BunHttpServer.layer({ hostname: "127.0.0.1", port })))
   );

@@ -21,8 +21,6 @@ import type { EvidenceBatch, EvidenceClaim } from "@/schema/Evidence";
 import type { LedgerSnapshot } from "@/schema/Ledger";
 import type { SparqlExpectation } from "@/schema/Projection";
 
-// IRI namespace for the semantica lab's RDF projection: the `@beep/semantica`
-// identity composer's IRI with a trailing slash.
 const BASE = `${$SemanticaId.iri}/` as const;
 
 /**

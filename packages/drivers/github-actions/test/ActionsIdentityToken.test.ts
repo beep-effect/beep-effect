@@ -32,14 +32,16 @@ describe("ActionsIdentityToken", () => {
       Effect.gen(function* () {
         const identity = yield* IdentityToken;
         const token = yield* identity.token("sigstore");
-        // `layerFor` answers with a real decodable JWT built from the claims,
-        // so the value crossing the seam is a token, not a placeholder. The
-        // value that crossed the seam stays OPAQUE: `Redacted` is
-        // Equal-by-value, so the comparison never declassifies `token` —
-        // only the locally built fixture is opened for the format check.
         const expected = OidcTokenIssuer.unsignedTokenFor(CLAIMS);
-        assert.include(Redacted.value(expected), ".");
-        assert.isTrue(Equal.equals(token, expected));
+        assert.include(
+          Redacted.value(expected),
+          ".",
+          "layerFor answers a real decodable JWT built from the claims; only this local fixture is opened"
+        );
+        assert.isTrue(
+          Equal.equals(token, expected),
+          "Redacted is Equal-by-value, so comparing never declassifies the token that crossed the seam"
+        );
       })
     );
   });
@@ -63,9 +65,11 @@ describe("ActionsIdentityToken", () => {
       it.effect("forwards the audience to the issuer verbatim", () =>
         Effect.gen(function* () {
           yield* Effect.flatMap(IdentityToken, (identity) => identity.token("sigstore"));
-          // The audience is the caller's (`SigstoreSigner` asks for `sigstore`
-          // itself); the adapter must pass it through rather than defaulting it.
-          assert.deepStrictEqual(audiences, ["sigstore"]);
+          assert.deepStrictEqual(
+            audiences,
+            ["sigstore"],
+            "the audience is the caller's (SigstoreSigner asks for sigstore); the adapter passes it, never defaults it"
+          );
         })
       );
     });
@@ -87,9 +91,11 @@ describe("ActionsIdentityToken", () => {
         const error = yield* Effect.flip(identity.token("sigstore"));
         assert.instanceOf(error, IdentityTokenError);
         assert.strictEqual(error.audience, "sigstore");
-        // The original OidcTokenError survives structurally, so "why did the
-        // runner decline" (missing `id-token: write`) is still readable.
-        assert.instanceOf(error.cause, OidcTokenError);
+        assert.instanceOf(
+          error.cause,
+          OidcTokenError,
+          "the OidcTokenError survives, so why the runner declined (missing id-token: write) stays readable"
+        );
         const cause = error.cause;
         if (!S.is(OidcTokenError)(cause)) {
           assert.fail("expected the original OidcTokenError");
@@ -104,9 +110,6 @@ describe("ActionsIdentityToken", () => {
         Effect.gen(function* () {
           const identity = yield* IdentityToken;
           const exit = yield* Effect.exit(identity.token("sigstore"));
-          // The die-loudly default survives the bridge AS A DEFECT: a bare
-          // Failure check would also pass for a typed fail, which is exactly
-          // what the double must not degrade to.
           assertExitFailure(
             exit,
             Cause.die(
@@ -115,7 +118,10 @@ describe("ActionsIdentityToken", () => {
               })
             )
           );
-          assert.isTrue(Cause.hasDies(exit.cause));
+          assert.isTrue(
+            Cause.hasDies(exit.cause),
+            "the die-loudly default crosses the bridge as a defect; a bare Failure check would pass a typed fail"
+          );
         })
       );
     }

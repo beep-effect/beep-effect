@@ -151,15 +151,16 @@ describe("ToolInstaller failure boundaries", () => {
     ],
     ["download sink", (fs: FileSystem.FileSystem) => ({ ...fs, sink: () => Sink.fail(refused) })],
   ] as const) {
-    // Each retry test owns a fresh clock; the shared layer clock is never advanced.
     it.layer(runtime(mutate), { timeout: "30 seconds" })((it) => {
       it.effect(name, () =>
         Effect.gen(function* () {
           const tool = yield* ToolInstaller;
-          const clock = yield* TestClock.make();
+          const freshRetryClock = yield* TestClock.make();
           const exit = yield* settle(
-            Effect.result(tool.download("https://example/tool")).pipe(Effect.provideService(Clock.Clock, clock)),
-            clock.adjust("10 seconds")
+            Effect.result(tool.download("https://example/tool")).pipe(
+              Effect.provideService(Clock.Clock, freshRetryClock)
+            ),
+            freshRetryClock.adjust("10 seconds")
           );
           const result = yield* exit;
           assertFailure(

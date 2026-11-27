@@ -313,6 +313,10 @@
       "file": "vitest.property-reporter.ts",
       "exports": ["default"]
     },
+    {
+      "file": "packages/tooling/tool/cli/vitest.repo-scans.config.ts",
+      "exports": ["default"]
+    },
     // @beep/canvas command bridge: documented request/schema values kept as
     // public bridge contracts for typed host integrations.
     {

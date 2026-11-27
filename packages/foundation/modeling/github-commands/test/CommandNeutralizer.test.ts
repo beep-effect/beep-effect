@@ -11,8 +11,12 @@ const UnknownJson = S.fromJsonString(S.Unknown);
 
 const ZWSP = String.fromCodePoint(0x200b);
 
-/** Every string up to `length` over `alphabet`, as a lazily built list. */
-const strings = (alphabet: ReadonlyArray<string>, length: number): ReadonlyArray<string> => {
+const COMMAND_TRIGGER_ALPHABET = [":", "#", "[", " ", "\t", "\u0085", "\r", "\n", "x"];
+
+// decision: exhaustive-command-strings-length-five
+const EXHAUSTIVE_STRING_LENGTH = 5;
+
+const stringsUpToLength = (alphabet: ReadonlyArray<string>, length: number): ReadonlyArray<string> => {
   let level: ReadonlyArray<string> = [""];
   const all: Array<string> = [""];
   for (let i = 0; i < length; i++) {
@@ -141,16 +145,7 @@ describe("CommandNeutralizer: the runner's two parsers", () => {
 });
 
 describe("CommandNeutralizer: exhaustive over a small alphabet, judged by the independent oracle", () => {
-  // Every string up to length 5 over the characters that make or break a command: the colon, the hash, the bracket,
-  // ordinary and .NET whitespace (a space, a tab, NEL), the three line break characters and a letter.
-  //
-  // Length 5 is enough. The longest trigger is three characters (`##[`, or whitespace then `::`), so five holds a
-  // one-character line break, a whole trigger and one character before it: every way a trigger meets a single break
-  // or what precedes it. A CRLF break with a character before it and a three-character trigger needs six; the CRLF
-  // cases in the tests above cover it.
-  // Length 6 was 597,871 strings walked by four tests and ran past the CI runner's 5 s test timeout; length 5 is
-  // 66,430.
-  const ALL = strings([":", "#", "[", " ", "\t", "\u0085", "\r", "\n", "x"], 5);
+  const ALL = stringsUpToLength(COMMAND_TRIGGER_ALPHABET, EXHAUSTIVE_STRING_LENGTH);
 
   it(`no output line is a command, for all ${ALL.length} strings`, () => {
     for (const text of ALL) {
@@ -200,7 +195,7 @@ describe("CommandNeutralizer: exhaustive over a small alphabet, judged by the in
   });
 
   it("a string that already carries zero-width spaces is still safe", () => {
-    for (const text of strings([":", "#", "[", ZWSP, "\n"], 6)) {
+    for (const text of stringsUpToLength([":", "#", "[", ZWSP, "\n"], 6)) {
       assert.deepStrictEqual(
         commandLines(CommandNeutralizer.text(text)),
         [],

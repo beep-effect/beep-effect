@@ -1,10 +1,3 @@
-// A GFM HTML differential: the writer's output rendered by micromark with the
-// GFM extension (the reference CommonMark + GFM implementation, independent of
-// the `@beep/markdown` engine the writer serializes through) must have the
-// structure the writer promises. A table keeps its column count whatever its
-// cells carry, a fence or backtick inside code never closes it early, and a
-// multi-line list item stays one item.
-
 import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
 import { GitHubMarkdown } from "@beep/github-reporting/GitHubMarkdown";
 import { assert, describe, it } from "@effect/vitest";
@@ -19,11 +12,9 @@ import { gfm, gfmHtml } from "micromark-extension-gfm";
 
 const runs = { arbitrary: fcRuns(100) };
 
-/** GitHub renders raw HTML (`<br>`, `<details>`), so the reference does too. */
-const html = (markdown: string): string =>
+const renderLikeGitHub = (markdown: string): string =>
   micromark(markdown, { allowDangerousHtml: true, extensions: [gfm()], htmlExtensions: [gfmHtml()] });
 
-/** The text micromark emits for literal content. */
 const escapeHtml = (text: string): string =>
   pipe(
     text,
@@ -33,13 +24,11 @@ const escapeHtml = (text: string): string =>
     Str.replaceAll('"', "&quot;")
   );
 
-/** Cell count of every rendered table row, header row first. */
-const rowShape = (rendered: string): ReadonlyArray<number> =>
+const cellCountsPerRow = (rendered: string): ReadonlyArray<number> =>
   A.map(A.drop(Str.split(rendered, "<tr>"), 1), (row) => Str.split(row, /<t[hd]>/).length - 1);
 
 const occurrences = (text: string, needle: string): number => Str.split(text, needle).length - 1;
 
-// Cell text drawn from the characters that threaten GFM table structure.
 const HostileCell = S.String.check(S.isPattern(/^[a-z|\\` \n\r*_<>]{0,16}$/u));
 const FenceContent = S.String.check(S.isPattern(/^[a-z`~ ]{1,8}(?:\n[a-z`~ ]{1,8}){0,3}$/u));
 const BacktickText = S.String.check(S.isPattern(/^[a-z`]{1,12}$/u));
@@ -53,10 +42,10 @@ describe("GitHubMarkdown under the micromark GFM reference", () => {
     [Arbitrary.schema(HostileRows)],
     ([rows]) =>
       Effect.sync(() => {
-        const rendered = html(GitHubMarkdown.table(["a", "b", "c"], rows));
+        const rendered = renderLikeGitHub(GitHubMarkdown.table(["a", "b", "c"], rows));
         assert.strictEqual(occurrences(rendered, "<table>"), 1);
         assert.deepStrictEqual(
-          rowShape(rendered),
+          cellCountsPerRow(rendered),
           A.makeBy(rows.length + 1, () => 3)
         );
       }),
@@ -64,13 +53,13 @@ describe("GitHubMarkdown under the micromark GFM reference", () => {
   );
 
   it("a short row is padded with empty cells instead of shifting", () => {
-    const rendered = html(GitHubMarkdown.table(["a", "b"], [["only"]]));
-    assert.deepStrictEqual(rowShape(rendered), [2, 2]);
+    const rendered = renderLikeGitHub(GitHubMarkdown.table(["a", "b"], [["only"]]));
+    assert.deepStrictEqual(cellCountsPerRow(rendered), [2, 2]);
     assert.include(rendered, "<td>only</td>\n<td></td>");
   });
 
   it("an escaped pipe renders as a literal pipe inside its cell", () => {
-    const rendered = html(GitHubMarkdown.table(["Range"], [[">=1 || <2"]]));
+    const rendered = renderLikeGitHub(GitHubMarkdown.table(["Range"], [[">=1 || <2"]]));
     assert.include(rendered, "<td>&gt;=1 || &lt;2</td>");
   });
 
@@ -80,7 +69,7 @@ describe("GitHubMarkdown under the micromark GFM reference", () => {
     ([content]) =>
       Effect.sync(() => {
         assert.strictEqual(
-          html(GitHubMarkdown.codeBlock(content, "text")),
+          renderLikeGitHub(GitHubMarkdown.codeBlock(content, "text")),
           `<pre><code class="language-text">${escapeHtml(content)}\n</code></pre>`
         );
       }),
@@ -92,7 +81,7 @@ describe("GitHubMarkdown under the micromark GFM reference", () => {
     [Arbitrary.schema(BacktickText)],
     ([text]) =>
       Effect.sync(() => {
-        assert.strictEqual(html(GitHubMarkdown.code(text)), `<p><code>${escapeHtml(text)}</code></p>`);
+        assert.strictEqual(renderLikeGitHub(GitHubMarkdown.code(text)), `<p><code>${escapeHtml(text)}</code></p>`);
       }),
     runs
   );
@@ -102,7 +91,7 @@ describe("GitHubMarkdown under the micromark GFM reference", () => {
     [Arbitrary.schema(Items), Arbitrary.schema(S.Boolean)],
     ([items, ordered]) =>
       Effect.sync(() => {
-        const rendered = html(GitHubMarkdown.list(items, { ordered }));
+        const rendered = renderLikeGitHub(GitHubMarkdown.list(items, { ordered }));
         assert.strictEqual(occurrences(rendered, "<li>"), items.length);
         assert.strictEqual(occurrences(rendered, ordered ? "<ol>" : "<ul>"), 1);
       }),
@@ -111,18 +100,18 @@ describe("GitHubMarkdown under the micromark GFM reference", () => {
 
   it("a link label with brackets and emphasis stays one link to the angle-bracketed URL", () => {
     assert.strictEqual(
-      html(GitHubMarkdown.link("see [x] *y*", "https://e.test/a b(c)")),
+      renderLikeGitHub(GitHubMarkdown.link("see [x] *y*", "https://e.test/a b(c)")),
       '<p><a href="https://e.test/a%20b(c)">see [x] <em>y</em></a></p>'
     );
   });
 
   it("a heading renders at its depth, line breaks inline", () => {
-    assert.strictEqual(html(GitHubMarkdown.heading("Hi\nthere", 3)), "<h3>Hi<br>there</h3>");
+    assert.strictEqual(renderLikeGitHub(GitHubMarkdown.heading("Hi\nthere", 3)), "<h3>Hi<br>there</h3>");
   });
 
   it("details renders its markdown body between blank lines", () => {
     assert.strictEqual(
-      html(GitHubMarkdown.details("Sum", "**body**")),
+      renderLikeGitHub(GitHubMarkdown.details("Sum", "**body**")),
       "<details>\n<summary>Sum</summary>\n<p><strong>body</strong></p>\n</details>"
     );
   });

@@ -42,8 +42,10 @@ describe("secret scrub proof and prompt admission", () => {
         const result = yield* SecretScrub.scrubSecretText(
           SecretScrub.SecretScrubInput.make({ text: fixture.text, coverage: fixture.inputCoverage })
         ).pipe(Effect.withLogger(logger), Effect.withTracer(tracer));
-        // Boolean comparisons keep assertion failures from serializing transient input.
-        expect(result.sanitizedText === fixture.expected.sanitizedText).toBe(true);
+        expect(
+          result.sanitizedText === fixture.expected.sanitizedText,
+          "boolean comparisons keep assertion failures from serializing transient input"
+        ).toBe(true);
         expect(
           (yield* encodeCounts(result.proof.counts)) ===
             (yield* encodeCounts(
@@ -83,9 +85,11 @@ describe("secret scrub proof and prompt admission", () => {
           }))
         );
         expect(countCanaries(encoded1, canaryBuilders)).toBe(0);
-        // The paired action policy is independent of the admission capability.
         if (fixture.id === "action-enabling-public-denied") {
-          expect(result.safeForPrompt && !fixture.expected.actionAuthorized).toBe(true);
+          expect(
+            result.safeForPrompt && !fixture.expected.actionAuthorized,
+            "the paired action policy is independent of the admission capability"
+          ).toBe(true);
         }
         if (fixture.id === "unknown-action-allowed") {
           expect(!result.safeForPrompt && fixture.expected.actionAuthorized).toBe(true);
@@ -148,16 +152,16 @@ describe("ratified secret retention decisions", () => {
   );
   it.effect("uses twelve calendar months across a leap year", () =>
     Effect.gen(function* () {
-      const start = 1_709_164_800_000; // 2024-02-29 UTC
-      const deadline = 1_740_700_800_000; // 2025-02-28 UTC
+      const leapDay2024Utc = 1_709_164_800_000;
+      const feb28In2025Utc = 1_740_700_800_000;
       const record = SecretScrub.SecretRetentionRecord.make({
         retentionClass: "audit",
-        createdAtEpochMillis: start,
+        createdAtEpochMillis: leapDay2024Utc,
         purposeResolved: false,
         pinned: true,
       });
-      yield* TestClock.setTime(deadline - 1);
-      expect(SecretScrub.secretRetentionDeadline(record)).toBe(deadline);
+      yield* TestClock.setTime(feb28In2025Utc - 1);
+      expect(SecretScrub.secretRetentionDeadline(record)).toBe(feb28In2025Utc);
       const currentTimeMillis2 = yield* Clock.currentTimeMillis;
       expect(SecretScrub.isSecretPurgeEligible(record, currentTimeMillis2)).toBe(false);
       yield* TestClock.adjust(1);

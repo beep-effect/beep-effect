@@ -49,7 +49,7 @@ const divergent: ReadonlyArray<readonly [string, Env, string | null, string | nu
   ],
   ["a relative HOME", { HOME: "relative" }, `relative/.local/state/${suffix}`, null],
   ["a trailing slash on HOME", { HOME: "/h/" }, `/h//.local/state/${suffix}`, `/h/.local/state/${suffix}`],
-  // Joined without a doubled slash, as the contacts root, the forwarder and BeepCacheRoot already were.
+
   ["a trailing slash on XDG_STATE_HOME", { XDG_STATE_HOME: "/x/" }, `/x//${suffix}`, `/x/${suffix}`],
   ["a root XDG_STATE_HOME", { XDG_STATE_HOME: "/" }, `//${suffix}`, `/${suffix}`],
 ];

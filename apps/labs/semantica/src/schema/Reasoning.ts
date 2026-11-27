@@ -39,7 +39,6 @@ export const reasoningVocabulary = {
   skosBroaderTransitive: "<http://www.w3.org/2004/02/skos/core#broaderTransitive>",
 };
 
-/** Rule identifiers for the six rho-df rules and explicit SKOS transitivity. */
 const RdfsRuleId = LiteralKit(["rdfs2", "rdfs3", "rdfs5", "rdfs7", "rdfs9", "rdfs11", "skos-broader-transitive"]).pipe(
   $I.annoteSchema("RdfsRuleId", {
     description: "Stable identifiers for the complete C2 rule program.",

@@ -1,6 +1,0 @@
-{
-  "schemaVersion": "comment-law-pending/v1",
-  "package": "@beep/practice-setup",
-  "root": "apps/practice-setup",
-  "scopes": ["."]
-}

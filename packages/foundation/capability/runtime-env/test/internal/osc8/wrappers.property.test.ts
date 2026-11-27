@@ -7,7 +7,6 @@ import { flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
-// The detector answers with an Option; these assertions read its value, or null when it is None.
 const detectWrapper = flow(detectWrapperOption, O.getOrNull);
 
 const runs = { arbitrary: fcRuns(100) };

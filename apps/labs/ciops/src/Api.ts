@@ -39,12 +39,14 @@ export class Health extends S.Opaque<Health, { readonly brand: unique symbol }>(
   )
 ) {}
 
-// Not exported: `Api` is the only consumer, and a lab-local export with no
-// importer trips fallow's unused-export gate the first time the lab lands.
 const ApiGroup = HttpApiGroup.make("ciops").add(HttpApiEndpoint.get("health", "/health", { success: Health }));
 
 /**
  * Top-level `HttpApi` contract for the CI-operations lab health endpoint.
+ *
+ * **Gotchas**
+ *
+ * Keep ApiGroup private: Api is its only consumer, and exporting an unimported lab group fails the unused-export gate.
  *
  * **Example** (Inspect the API identifier)
  *

@@ -61,17 +61,16 @@ describe("practice KG strict tier pins", () => {
 });
 
 describe("practice KG shape-only stderr", () => {
-  // The shape-only logger's context is provided inside the test effect, not
-  // through `it.layer`: under CI the test runner merges its own pretty trace
-  // logger around each test, and only the innermost loggers replace it the way
-  // the production host's do.
   it.effect("writes one shape-only stderr line per log, naming the tool and never the message", () =>
     Effect.gen(function* () {
       const message = A.join(["Message", "Qz", "Canary", "8301"], "");
       yield* Effect.logError(message).pipe(Effect.withSpan("PracticeKgTools.kg_find"));
       yield* Effect.logWarning(message);
       const lines = yield* TestConsole.errorLines;
-      expect(lines).toEqual([shapeOnlyLogLine("Error", O.some("kg_find")), shapeOnlyLogLine("Warn", O.none())]);
+      expect(
+        lines,
+        "Provide the shape-only logger inside the test effect: the runner wraps each test with its own pretty trace logger, so only the innermost logger replaces it as production does."
+      ).toEqual([shapeOnlyLogLine("Error", O.some("kg_find")), shapeOnlyLogLine("Warn", O.none())]);
       expect(A.some(A.filter(lines, P.isString), Str.includes(message))).toBe(false);
       const logLines1 = yield* TestConsole.logLines;
       expect(logLines1).toEqual([]);

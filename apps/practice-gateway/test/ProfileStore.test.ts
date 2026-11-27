@@ -36,7 +36,6 @@ const Platform = Layer.mergeAll(MemoryFileSystem.layer, BunPath.layer);
 const isString = S.is(S.String);
 const layerTimeout = "30 seconds";
 
-// Gateway services over a fresh temporary data directory and a bare fake Windows machine.
 const GatewayServices = Layer.unwrap(
   FileSystem.FileSystem.use((fs) => fs.makeTempDirectoryScoped({ prefix: "practice-gateway-" })).pipe(
     Effect.map((dataDir) => {

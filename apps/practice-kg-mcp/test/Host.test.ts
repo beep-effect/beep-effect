@@ -81,11 +81,7 @@ import type { GateRules } from "@beep/observability/strict";
 const TestServices = Layer.mergeAll(BunFileSystem.layer, BunPath.layer);
 const textDecoder = new TextDecoder();
 
-// Tests run concurrently, so a per-test smoke build (PGlite plus DuckDB, the
-// file's dominant CPU cost) multiplies across every test and each one's time
-// limit measures the others' builds. One template is built per file, on first
-// use, and every test copies it into its own directory; it is removed after
-// the file, and never built when no test asks for it.
+// decision: shared-smoke-template
 const makeSmokeTemplate = Effect.gen(function* () {
   const scope = yield* Effect.scope;
   return yield* Effect.gen(function* () {
@@ -101,8 +97,6 @@ class SmokeTemplate extends Context.Service<SmokeTemplate, Effect.Success<typeof
 ) {}
 const smokeTemplateLayer = Layer.effect(SmokeTemplate, makeSmokeTemplate);
 
-// A private copy of the smoke bundle (and its corpus) under `root`; returns
-// the bundle directory, as `makePracticeKgSmokeBundle(root)` would.
 const copySmokeBundle = Effect.fnUntraced(function* (root: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -114,9 +108,8 @@ const encodeManifest = S.encodeUnknownEffect(S.fromJsonString(PracticeKgBundleMa
 const decodeReportLine = S.decodeUnknownEffect(S.fromJsonString(PracticeKgSelfCheckReport));
 const decodeFailureLine = S.decodeUnknownEffect(S.fromJsonString(PracticeKgSelfCheckRefusal));
 const isString = S.is(S.String);
-// Tests in one `it.layer` block share a console and may overlap, so each
-// printing effect runs against a console of its own.
-const printed = <A, E, R>(self: Effect.Effect<A, E, R>) =>
+
+const printedOnOwnConsole = <A, E, R>(self: Effect.Effect<A, E, R>) =>
   Effect.all(
     {
       value: self,
@@ -125,12 +118,11 @@ const printed = <A, E, R>(self: Effect.Effect<A, E, R>) =>
     { concurrency: 1 }
   ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make));
 
-// Runs a failing self-check and returns the one refusal line it printed.
 const refusalLine = Effect.fnUntraced(function* (bundleDir: string) {
   const { lines, value: error } = yield* runPracticeKgMcpSelfCheck(bundleDir).pipe(
     printPracticeKgSelfCheck,
     Effect.flip,
-    printed
+    printedOnOwnConsole
   );
   expect(error).toBeInstanceOf(SelfCheckFailure);
   expect(lines).toHaveLength(1);
@@ -182,7 +174,10 @@ it.layer(smokeTemplateLayer, { timeout: "2 minutes" })("shared smoke bundle", (i
           const bundleDir = yield* copySmokeBundle(root);
           const context = yield* loadPracticeKgBundleContext(bundleDir);
 
-          const { lines } = yield* runPracticeKgMcpSelfCheck(bundleDir).pipe(printPracticeKgSelfCheck, printed);
+          const { lines } = yield* runPracticeKgMcpSelfCheck(bundleDir).pipe(
+            printPracticeKgSelfCheck,
+            printedOnOwnConsole
+          );
 
           expect(lines).toHaveLength(1);
           const line = lines[0] ?? "";
@@ -213,7 +208,7 @@ it.layer(smokeTemplateLayer, { timeout: "2 minutes" })("shared smoke bundle", (i
           const { lines, value: error } = yield* runPracticeKgMcpSelfCheck(bundleDir).pipe(
             printPracticeKgSelfCheck,
             Effect.flip,
-            printed
+            printedOnOwnConsole
           );
 
           expect(lines).toHaveLength(1);
@@ -340,7 +335,7 @@ it.layer(smokeTemplateLayer, { timeout: "2 minutes" })("shared smoke bundle", (i
           const path = yield* Path.Path;
           const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-practice-kg-self-check-" });
           const bundleDir = yield* copySmokeBundle(root);
-          // Store format 2 had no `matters.client_name`; the manifest still says format 3.
+
           const dropClientName = Effect.gen(function* () {
             const db = yield* DuckDb;
             yield* db.run("ALTER TABLE matters DROP COLUMN client_name");
@@ -356,7 +351,7 @@ it.layer(smokeTemplateLayer, { timeout: "2 minutes" })("shared smoke bundle", (i
           const { lines, value: error } = yield* runPracticeKgMcpSelfCheck(bundleDir).pipe(
             printPracticeKgSelfCheck,
             Effect.flip,
-            printed
+            printedOnOwnConsole
           );
 
           expect(lines).toHaveLength(1);
@@ -418,9 +413,11 @@ it.layer(smokeTemplateLayer, { timeout: "2 minutes" })("shared smoke bundle", (i
             );
             expect(startup.exitCode).not.toBe(0);
             expect(startup.stdout).toBe("");
-            // Claude Desktop keeps stderr: the startup refusal is one shape-only
-            // line, with no message, path or cause.
-            expect(startup.stderr).toBe(`${shapeOnlyLogLine("Error", O.none())}\n`);
+
+            expect(
+              startup.stderr,
+              "Desktop retains stderr: startup refusal is one shape-only line with no message, path or cause."
+            ).toBe(`${shapeOnlyLogLine("Error", O.none())}\n`);
             expect(startup.stderr).not.toContain(bundleDir);
           })
         );
@@ -454,15 +451,6 @@ it.layer(smokeTemplateLayer, { timeout: "2 minutes" })("shared smoke bundle", (i
     );
   });
 
-  // Acceptance #1 of the strict tier: canary tokens that reach every practice
-  // KG tool, through its successful and failing paths, never appear in any byte
-  // the strict tier exports or writes to stderr, in any common encoding. The
-  // host runs as `bin.ts` runs it (the production server layer over a stdio
-  // transport, under the strict telemetry layer), with a test-visible egress
-  // sink in place of the in-memory one. A match is only ever counted.
-
-  // Assembled at runtime so no literal canary sits in source; each starts with
-  // a different label, so the 8-character prefixes differ too.
   const canary = (label: string): string => A.join([label, "Qz", "Canary", "8301"], "");
   const canaries = {
     root: canary("Root"),
@@ -480,8 +468,6 @@ it.layer(smokeTemplateLayer, { timeout: "2 minutes" })("shared smoke bundle", (i
 
   const sha256Hex = (value: string): string => new Bun.CryptoHasher("sha256").update(value).digest("hex");
 
-  // Raw, lowercased, URL-encoded, base64, JSON-escaped, 8-character prefix and
-  // unsalted SHA-256 forms of every canary.
   const canaryForms = Effect.forEach(
     R.values(canaries),
     (token) =>
@@ -580,7 +566,6 @@ it.layer(smokeTemplateLayer, { timeout: "2 minutes" })("shared smoke bundle", (i
     ["kg_provenance", { digest: canaries.digest }],
   ];
 
-  // Run against a matter store that has none of the tables the tools read.
   const brokenStoreCalls: ReadonlyArray<ToolCall> = [
     ["corpus_search_text", { query: canaries.query }],
     ["corpus_get_document", { organized_path: canaries.path }],
@@ -606,17 +591,6 @@ it.layer(smokeTemplateLayer, { timeout: "2 minutes" })("shared smoke bundle", (i
     })
   );
   const decodeExportedSpans = S.decodeUnknownEffect(ExportedSpans);
-
-  // Test-only pre-gate leak path. Nothing in the production host puts a canary
-  // into telemetry before the gate (handler errors use canned messages, SQL
-  // spans carry no parameters, mcp-kit strips arguments), so with a content rule
-  // off the canary test would still pass. This probe runs beside the server,
-  // under the same telemetry layer, and writes the leak canary, or a linkage
-  // needle, into every channel a gate rule guards: a span name, span
-  // attributes, an event, a link, a status message, a log body, the resource
-  // (through `OTEL_RESOURCE_ATTRIBUTES`, which the OTLP exporters read), a
-  // metric name, a metric label and a raw metric value, under an external
-  // parent with a known trace id and a clock with an unaligned start time.
   const leakTraceId = "6c65616b6c65616b6c65616b6c65616b";
   const leakParentSpanId = "6c65616b6c65616b";
   const leakLinkTraceId = "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f";
@@ -669,10 +643,6 @@ it.layer(smokeTemplateLayer, { timeout: "2 minutes" })("shared smoke bundle", (i
   const leakResource = ConfigProvider.layer(
     ConfigProvider.fromEnv({ env: { OTEL_RESOURCE_ATTRIBUTES: `host.name=${canaries.leak}` } })
   );
-
-  // Acceptance #3 at the host: one needle per gate rule. With every rule on no
-  // needle reaches an exported byte; with exactly one rule off, its needle does.
-  // The mapped type makes a new rule without a needle a type error.
   const hostNeedles: { readonly [Rule in GateRule]: string } = {
     "span-name": canaries.leak,
     "span-attributes": canaries.leak,
@@ -687,11 +657,6 @@ it.layer(smokeTemplateLayer, { timeout: "2 minutes" })("shared smoke bundle", (i
     "metric-attributes": canaries.leak,
     "metric-values": `${leakMetricValue}`,
   };
-
-  // Runs the production server over one bundle under the strict telemetry with
-  // the given gate rules (production: all on) and the leak probe beside it,
-  // sends every call, and returns the encoded results. The server's scope closes
-  // before this returns, which runs the final export into the sink.
   const runStrictHost = Effect.fnUntraced(function* (
     bundleDir: string,
     calls: ReadonlyArray<ToolCall>,
@@ -723,7 +688,6 @@ it.layer(smokeTemplateLayer, { timeout: "2 minutes" })("shared smoke bundle", (i
     );
   });
 
-  // The encrypted spool both hosts export into, under a dev root key held in memory.
   const layerCanarySpool = (directory: string) =>
     layerStrictSpoolSink.pipe(
       Layer.provideMerge(
@@ -732,7 +696,6 @@ it.layer(smokeTemplateLayer, { timeout: "2 minutes" })("shared smoke bundle", (i
       Layer.provide(layerDevMemoryStrictSpoolKey)
     );
 
-  // Runs `effect` with the canary spool in `directory` as its egress sink.
   const withCanarySpool =
     (directory: string) =>
     <A, E, R>(effect: Effect.Effect<A, E, R>) =>
@@ -752,7 +715,7 @@ it.layer(smokeTemplateLayer, { timeout: "2 minutes" })("shared smoke bundle", (i
           yield* fs.makeDirectory(brokenRoot);
           const healthyBundle = yield* copySmokeBundle(healthyRoot);
           const brokenBundle = yield* copySmokeBundle(brokenRoot);
-          // The corpus catalog is a valid DuckDB file without the bundle's tables.
+
           yield* fs.remove(path.join(brokenBundle, "practice.duckdb"));
           yield* fs.copyFile(
             path.join(brokenRoot, "corpus", "catalog", "corpus.duckdb"),
@@ -777,8 +740,11 @@ it.layer(smokeTemplateLayer, { timeout: "2 minutes" })("shared smoke bundle", (i
           const records = replay.records;
 
           const forms = yield* canaryForms;
-          // Every body is held back into the spool, and every sealed segment replays.
-          expect(HashMap.size(replay.refused)).toBe(0);
+
+          expect(
+            HashMap.size(replay.refused),
+            "Every held-back body reaches the encrypted spool and every sealed segment replays."
+          ).toBe(0);
           const segments = yield* fs.readDirectory(spoolDir);
           expect(A.length(segments)).toBeGreaterThan(0);
           const atRest = yield* Effect.forEach(
@@ -792,13 +758,14 @@ it.layer(smokeTemplateLayer, { timeout: "2 minutes" })("shared smoke bundle", (i
             A.map(records, (record) => record.body),
             "\n"
           );
-          const printed = A.join(A.filter(stderr, P.isString), "\n");
+          const printedOnOwnConsole = A.join(A.filter(stderr, P.isString), "\n");
 
-          // Not vacuous: canaries reached the tools, which echo some of them back
-          // to the client, and every tool exported spans.
           const healthyResults = yield* Effect.fromOption(A.head(results));
           const claimReview = yield* Effect.fromOption(A.head(healthyResults));
-          expect(claimReview).toContain("claim-finding");
+          expect(
+            claimReview,
+            "Canaries reached successful tools and some returned to the client; every tool also exported spans, so leak checks are nonvacuous."
+          ).toContain("claim-finding");
           expect(claimReview).toContain(canaries.query);
           expect(countCanaries(A.join(A.flatten(results), "\n"), forms)).toBeGreaterThan(0);
           const spans = yield* Effect.forEach(
@@ -815,7 +782,7 @@ it.layer(smokeTemplateLayer, { timeout: "2 minutes" })("shared smoke bundle", (i
           expect(A.sort(A.dedupe(A.map(spans, (span) => span.name)), Order.String)).toEqual(
             A.sort(PracticeKgToolId.literals, Order.String)
           );
-          // Failed calls are visible only through the literal reason on the handler span.
+
           const reasons = A.dedupe(
             A.flatMap(spans, (span) =>
               A.flatMap(span.attributes, (attribute) =>
@@ -824,13 +791,21 @@ it.layer(smokeTemplateLayer, { timeout: "2 minutes" })("shared smoke bundle", (i
             )
           );
           assertTrue(A.every(reasons, S.is(PracticeKgToolFailureReason)));
-          expect(reasons).toEqual(expect.arrayContaining(["invalid-input", "store-query-failed"]));
+          expect(reasons, "Failed calls expose only the handler span literal failure reason.").toEqual(
+            expect.arrayContaining(["invalid-input", "store-query-failed"])
+          );
 
-          expect(countCanaries(exported, forms)).toBe(0);
-          expect(countCanaries(printed, forms)).toBe(0);
-          // The leak probe ran, and with every rule on none of its needles got out.
+          expect(
+            countCanaries(exported, forms),
+            "Runtime-assembled canaries have distinct labels and eight-character prefixes; check raw, lowercase, URL, base64, JSON-escaped, prefix and unsalted SHA-256 forms. Production stdio tool success/failure paths run under strict telemetry with a test-visible sink; inspect common canary encodings in exports and stderr. The server scope closes before results return, triggering the final export."
+          ).toBe(0);
+          expect(countCanaries(printedOnOwnConsole, forms)).toBe(0);
+
           expect(Str.includes(`"${PracticeKgProcessRss.name}"`)(exported)).toBe(true);
-          expect(A.filter(A.dedupe(R.values(hostNeedles)), (needle) => Str.includes(needle)(exported))).toEqual([]);
+          expect(
+            A.filter(A.dedupe(R.values(hostNeedles)), (needle) => Str.includes(needle)(exported)),
+            "The pre-gate probe ran, but with every gate rule enabled none of its needles escaped."
+          ).toEqual([]);
         })
       );
     });
@@ -843,7 +818,6 @@ it.layer(smokeTemplateLayer, { timeout: "2 minutes" })("shared smoke bundle", (i
       })
     );
 
-    // Each rule gets a fresh egress sink of its own, so no needle carries over.
     for (const rule of GateRule.literals) {
       it.layer(Layer.mergeAll(TestServices, layerInMemoryEgressSink(4096)), { timeout: "3 minutes" })((it) => {
         it.effect(
@@ -861,7 +835,10 @@ it.layer(smokeTemplateLayer, { timeout: "2 minutes" })("shared smoke bundle", (i
               A.map(records, (record) => record.body),
               "\n"
             );
-            expect(Str.includes(hostNeedles[rule])(exported)).toBe(true);
+            expect(
+              Str.includes(hostNeedles[rule])(exported),
+              "Ordinary host errors are canned, SQL spans omit parameters and MCP strips arguments, so tool-only canaries cannot expose a disabled content rule. The test injects a pre-gate canary/linkage needle into span names, attributes, events, links, status, logs, OTEL resource attributes, metric names, labels and raw values under an external known trace and unaligned clock. Each rule has its own fresh sink; one rule off must export its typed needle while all-on exports none."
+            ).toBe(true);
           })
         );
       });

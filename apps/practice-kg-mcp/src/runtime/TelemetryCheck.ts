@@ -114,7 +114,7 @@ export const printPracticeKgTelemetrySelfCheck = Effect.fn("PracticeKgTelemetryC
   check: Effect.Effect<PracticeKgTelemetrySelfCheckReport, E, R>
 ) {
   const report = yield* check;
-  // The report is schema-built, so an encode failure is a defect.
+
   const orDie1 = yield* Effect.orDie(encodeReport(report));
   yield* Console.log(orDie1);
   if (!report.ok) {

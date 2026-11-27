@@ -91,15 +91,14 @@ export const renderReadingJson = Effect.fn("KpiRender.renderReadingJson")(functi
 
 const iso = (instant: DateTime.Utc): string => DateTime.formatIso(instant);
 
-// Milliseconds with a human reading beside them: 3671966 -> "3671966 (61.2 min)".
-const formatMs = (ms: number): string =>
+const formatHumanMs = (ms: number): string =>
   ms < 60_000
     ? `${ms} (${(ms / 1_000).toFixed(1)} s)`
     : ms < 3_600_000
       ? `${ms} (${(ms / 60_000).toFixed(1)} min)`
       : `${ms} (${(ms / 3_600_000).toFixed(1)} h)`;
 
-const percentile = (value: O.Option<number>): string => O.match(value, { onNone: () => "—", onSome: formatMs });
+const percentile = (value: O.Option<number>): string => O.match(value, { onNone: () => "—", onSome: formatHumanMs });
 
 const setCells = (set: PercentileSet): ReadonlyArray<string> => [
   `${set.n}`,
@@ -148,7 +147,7 @@ const starvationTable = (rows: ReadonlyArray<StarvationRow>): string =>
     ["Slice", "Bound ms", "Normative", "Requests", "Beyond bound", "Open at capture", "Exceptions"],
     A.map(rows, (entry) => [
       entry.slice,
-      formatMs(entry.boundMs),
+      formatHumanMs(entry.boundMs),
       entry.normative ? "yes (declared)" : "no (sensitivity)",
       `${entry.requests}`,
       `${entry.beyondBound}`,

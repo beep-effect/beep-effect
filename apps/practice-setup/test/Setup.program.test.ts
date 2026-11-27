@@ -51,24 +51,21 @@ const BUNDLE = "/state/practice-gateway.mcpb";
 const BUNDLE_VERSION = "0.1.0";
 
 interface Script {
-  /** waitFor fails on the call with this index (0-based). */
   readonly cancelAt?: number;
   readonly clipboardFails?: boolean;
   readonly downloadFails?: boolean;
-  /** Enter pressed while the sign-in is watched; the watched sign-in probe then never answers. */
+
   readonly enterOverride?: boolean;
-  /** Gateway states the probe answers, in order; the last one repeats. */
+
   readonly gateway?: A.NonEmptyReadonlyArray<GatewayInstallState>;
-  /** Enter presses while the gateway is watched, each asking for a check. */
+
   readonly gatewayEnters?: number;
-  /** Install kinds `claudeInstall` answers, in order; the last one repeats. */
+
   readonly installs: A.NonEmptyReadonlyArray<ClaudeInstall>;
-  /** Sign-in states the probe answers, in order; the last one repeats. */
+
   readonly signIn?: A.NonEmptyReadonlyArray<SignInState>;
 }
 
-// Answers the scripted values in order, repeating the last one; with `hangAfterFirst`
-// only the first call answers, so a watch can only end by Enter.
 const scripted = <A>(values: A.NonEmptyReadonlyArray<A>, hangAfterFirst = false) =>
   Effect.map(Ref.make(0), (calls) =>
     Ref.getAndUpdate(calls, (n) => n + 1).pipe(
@@ -81,7 +78,6 @@ const scripted = <A>(values: A.NonEmptyReadonlyArray<A>, hangAfterFirst = false)
   );
 
 const harness = Effect.fnUntraced(function* (script: Script) {
-  // One ordered log of what the lawyer saw and what was opened or copied.
   const events = yield* Ref.make<ReadonlyArray<string>>([]);
   const installersRun = yield* Ref.make<ReadonlyArray<string>>([]);
   const downloads = yield* Ref.make<ReadonlyArray<string>>([]);
@@ -94,7 +90,7 @@ const harness = Effect.fnUntraced(function* (script: Script) {
   const installProbe = yield* scripted(script.installs);
   const hang = script.enterOverride === true;
   const signInProbe = yield* scripted<SignInState>(script.signIn ?? ["signed-in"], hang);
-  const gatewayProbe = yield* scripted<GatewayInstallState>(script.gateway ?? ["current"]);
+  const yieldingGatewayProbe = yield* scripted<GatewayInstallState>(script.gateway ?? ["current"]);
 
   const host = SetupHost.of({
     claudeInstall: installProbe,
@@ -121,9 +117,9 @@ const harness = Effect.fnUntraced(function* (script: Script) {
     signIn: signInProbe,
     gateway: Effect.fn("FakeClaude.gateway")(function* (expected) {
       yield* Ref.update(expectedVersions, A.append(expected));
-      // Yield like a real file read, so a watch and an Enter check interleave.
+
       yield* Effect.yieldNow;
-      return yield* gatewayProbe;
+      return yield* yieldingGatewayProbe;
     }),
   });
   const download = InstallerDownload.of({
@@ -144,7 +140,7 @@ const harness = Effect.fnUntraced(function* (script: Script) {
         return yield* SetupFailure.make({ message: "Setup was stopped before it finished." });
       }
     }),
-    // Enter arrives at the final hold, or during a watch while scripted presses remain; otherwise never.
+
     awaitEnter: Effect.gen(function* () {
       const pressed =
         (yield* Ref.get(handedOff)) || (yield* Ref.modify(enters, (n) => (n > 0 ? [true, n - 1] : [false, 0])));
@@ -230,13 +226,19 @@ it.layer(Platform, { timeout: "5 seconds" })("runSetup", (it) => {
       expect(result.report.complete).toBe(true);
       expect(result.opened).toEqual([`link:${OPEN_CLAUDE_LINK}`, `open:${BUNDLE}`, HANDOFF_LINK]);
       expect(result.asked).toEqual([]);
-      // The lawyer hears about Claude's per-tool permission requests before pressing Send.
-      expect(saidAny(result.said, 'Choosing "Always allow" is fine')).toBe(true);
+
+      expect(
+        saidAny(result.said, 'Choosing "Always allow" is fine'),
+        "The lawyer sees per-tool permission guidance before pressing Send."
+      ).toBe(true);
       expect(result.expectedVersions).toEqual(A.replicate(O.some(BUNDLE_VERSION), 3));
       expect(result.downloads).toEqual([]);
       expect(steps(result.written)).toEqual(steps(result.report));
-      // The console holds after the hand-off until the lawyer presses Enter.
-      expect(A.takeRight(result.events, 2)).toEqual(["said:\nPress Enter to close this window.", "enter"]);
+
+      expect(
+        A.takeRight(result.events, 2),
+        "After handoff the console remains open until the lawyer presses Enter."
+      ).toEqual(["said:\nPress Enter to close this window.", "enter"]);
     })
   );
 
@@ -318,8 +320,12 @@ it.layer(Platform, { timeout: "5 seconds" })("runSetup", (it) => {
       expect(details(result.report)[2]).toBe(
         `Claude still does not list the Beep Practice Gateway ${BUNDLE_VERSION}. Open Claude's Settings, choose Extensions, drag this file onto that page, then run this setup again: ${BUNDLE}`
       );
-      // A second hand-off follows the first watch, then the step fails.
-      expect(result.opened).toEqual([`link:${OPEN_CLAUDE_LINK}`, `open:${BUNDLE}`, `open:${BUNDLE}`]);
+
+      expect(result.opened, "The first watch is followed by a second handoff, then the step fails.").toEqual([
+        `link:${OPEN_CLAUDE_LINK}`,
+        `open:${BUNDLE}`,
+        `open:${BUNDLE}`,
+      ]);
       expect(result.asked).toEqual([`asked:Setup stopped: ${details(result.report)[2]}`]);
     })
   );
@@ -342,20 +348,24 @@ it.layer(Platform, { timeout: "5 seconds" })("runSetup", (it) => {
       expect(details(result.report)[2]).toBe(
         `Claude still does not list the Beep Practice Gateway ${BUNDLE_VERSION}. Open Claude's Settings, choose Extensions, drag this file onto that page, then run this setup again: ${BUNDLE}`
       );
-      // The bundle is handed over twice; the chat hand-off never opens on a stale gateway.
-      expect(result.opened).toEqual([`open:${BUNDLE}`, `open:${BUNDLE}`]);
+
+      expect(result.opened, "Two bundle handoffs never launch the chat handoff against a stale gateway.").toEqual([
+        `open:${BUNDLE}`,
+        `open:${BUNDLE}`,
+      ]);
     })
   );
 
   it.effect("hands the gateway over again when Claude takes it only after a late sign-in", () =>
     Effect.gen(function* () {
-      // One probe before the first hand-off, three polls in each watch: the gateway
-      // turns current only during the second watch, as after an expired session.
       const result = yield* run({
         installs: ["per-user"],
         gateway: ["outdated", "outdated", "outdated", "outdated", "current"],
       });
-      expect(steps(result.report)[2]).toBe("gateway-extension:done");
+      expect(
+        steps(result.report)[2],
+        "One probe precedes handoff, each watch polls three times, and only the second watch becomes current, as after an expired session."
+      ).toBe("gateway-extension:done");
       expect(details(result.report)[2]).toBe(
         "Claude lists the gateway at the bundled version after a second hand-off."
       );
@@ -454,7 +464,6 @@ const hostWith = (install: ClaudeInstall) =>
     })
   );
 
-// The live probes over a fresh in-memory disk, with the given files written first.
 const probe = Effect.fnUntraced(function* <A>(
   use: (claude: ClaudeState["Service"]) => Effect.Effect<A>,
   options: {
@@ -486,7 +495,7 @@ const probe = Effect.fnUntraced(function* <A>(
         .pipe(Effect.andThen(fs.writeFileString(file, text))),
     { concurrency: 1 }
   );
-  // Probes read Config when they run, so they run inside the built context.
+
   return yield* use(Context.get(context, ClaudeState)).pipe(Effect.provideContext(context));
 });
 
@@ -586,7 +595,6 @@ describe("ClaudeState probes", () => {
   );
 });
 
-// Serves the URL's last path segment as the body, so each test picks its bytes.
 const Serving = Layer.succeed(
   HttpClient.HttpClient,
   HttpClient.make((request, url) =>

@@ -141,6 +141,41 @@ Lane claude/stoic-torvalds-00017b
 
 Reverse: Revert the slice PR: receipts go back to yeet-final-check/v1 and lanes re-run yeet final-check once more
 
+### PERIH-10 classifies against base-ref CI patterns; the 170 root-anchored literals are counted, 2026-11-27
+
+`beep ci change-profile` and the heavy lane-skip read (`readHeavyLaneSkips`) now take `CiOperational.patterns.json` from the pull request's base commit (`git show <base>:<file>`), never from the head checkout. A base with no file uses the binary's compiled-in patterns. A base file that git cannot read, or that does not decode under the binary's schema, keeps every profile active. Neither case fails the job, so a pin bump whose binary expects a changed schema runs in full instead of failing its own Change Profile. A pattern edit therefore takes effect on the pull request after it merges.
+
+**Mutation evidence.** `ci-bootstrap-parity.test.ts` commits canonical patterns at the base. The head widens `docs` to `.` and `codeRoots` to `^$`, and adds a source file. Against the previous head-checkout read the profile came out `docs_only=true`, which was the red assertion. With the base read it comes out `docs_only=false`. The same test covers four more cases:
+
+- a base without the file classifies with the compiled-in patterns;
+- a narrowed base pattern applies to a docs-only head;
+- a base file that predates `lanes` keeps every lane relevant;
+- an undecodable base file yields the full profile with exit 0.
+
+A push already yields the full profile (golden `push` row).
+
+**Call sites.** None needed a workflow edit. These call the pinned `beep` binary:
+
+- `check.yml`: the Change Profile job, the Test Plan classification and the lane-gate evals in Coverage Regression, Professional Desktop IPC Stdio and JSDoc Ratchet;
+- `heavy-admit.yml`, the documentation-only admission;
+- `storybook.yml`, the lane gate.
+
+The admission lane skips (`readHeavyLaneSkips`) run from source instead: `bun run beep ci admission` in `check.yml` and `heavy-admit.yml`, both `pull_request` workflows that check out the merge ref.
+
+`heavy.yml` no longer calls change-profile, and `shard-overflow.yml` only consumes the `docs_only` output. One call site is excluded: the smoke run in `beep-ci-binary.yml` sets `GITHUB_EVENT_NAME=push`, which never reads patterns. `CiOperational.service.ts` is in the CI binary closure, so the change-profile half ships with the next closure-digest binary release and its reviewed pin bump (PERIH-11), and the pull request is an operator hand merge. The base read goes through `@beep/git/Git`, which grows the closure from 352 to 363 paths: the nine `@beep/git` sources plus its `package.json` and `tsconfig.json`, and nothing else. `ci-binary-closure.test.ts` pins `Git.ts` inside the closure. The admission half is live at merge. Until the pin bump merges, admission skips read the base patterns while change-profile still reads the head checkout.
+
+**Root-anchored literals (170 rows, origin/main).**
+
+- 143 are not reads: classifier rows, synthetic temp-tree paths, assertion messages and in-memory projects.
+- 5 are real reads already declared: the claim-element fixtures and `vitest.shards.json`.
+- 10 are real reads the task graph already reaches. Nine are sources in the reader's workspace dependency closure. A turbo `--affected` dry run selected `@beep/repo-cli#test` for a one-byte change to each of the nine. The tenth is repo-gate-vitest's source, which every `test` reaches through `@beep/repo-gate-vitest#transit`.
+- 2 are real reads that no input declared, now declared on repo-cli's `test`, `test:property` and `coverage`. Before the declaration a dry run did not select `@beep/repo-cli#test` for either file. After it, it does.
+- 10 are expected results of repository-wide scans in repo-cli tests (the property sweep, the goal-data census, the tracked `turbo.json` listing). Declaring the listed files does not make those scans sound. They move to a Repo Sanity task in the next PR of this lane.
+
+Lane fix/route-soundness-perih-10
+
+Reverse: Restore readCheckoutCiPatterns at the head checkout in CiOperational.service.ts and HeavyAdmission.ts, revert the parity fixture, and drop the two repo-cli inputs with a cache re-record
+
 ### ROUT-03 slice 2 declares goal-data consumers as per-package Turbo test inputs, 2026-11-27
 
 PLAN slice 4 lands ROUT-03 slice 2, the half #3245 left open. Every goal or exploration path a package's tests read is now a `test` input in that package's own `turbo.json`: repo-cli gains the runner-burst directory and `goals/*/ops/**/*.ts`; ciops, semantica and eyecite gain test overrides for their reads; `packages/law-practice/server` and `packages/foundation/modeling/ontology` get their first `turbo.json`. The server override lists citation `ops/**` minus `ops/manifest.json`, so a packet manifest edit still selects nothing, and `packages/law-practice/use-cases/test/fixtures/**`, the ROUT-09 read. CoverageScope maps that fixture prefix to `@beep/law-practice-server`. No root `turbo.json` task changed. The same inputs are declared on every integration test task a reader package runs (`test:integration` for eyecite and ontology; `test:integration` and `test:integration:parallel` for law-practice-server): the citation ops child is read only from law-practice-server's `test/integration/**`, which its `test` script excludes, and the integration lane runs `test:integration:parallel --affected`.
@@ -152,5 +187,22 @@ Readings at this lane's head (`turbo run test --affected --dry=json`, one-path c
 Lane fix/route-soundness-rout-03-slice-2
 
 Reverse: Revert this PR's squash commit; the six turbo.json overrides, the CoverageScope fixture prefix and the census turbo checks go, and the cache baseline returns to its previous digests.
+
+### The repo-wide test scans run as a Repo Sanity step, not inside repo-cli's test, 2026-11-27
+
+Four repo-cli test suites scan the whole checkout: the cross-package read census, the goal-data consumer census (ROUT-03), the live-checkout property sweep and the tracked `turbo.json` listing. A new read or property site in a package outside repo-cli's dependency closure never selected `@beep/repo-cli#test`, so the scans could not see the PR that broke them. Declaring the scanned files as repo-cli inputs would widen its cache key to the whole tree. The scans now run as the `ci:repo-sanity:repo-scans` step of Repo Sanity, uncached (`vitest run --config vitest.repo-scans.config.ts` in repo-cli). repo-cli's default `test` run excludes the same four files, so each assertion has one home.
+
+**Selection.** Repo Sanity is required and runs on every pull request. Its full path carries the step. So does its documentation-only path, because a docs-only PR can add a `goals/` file under a directory an existing reader consumes, and the census must see it. The scans take about 11 s.
+
+**Mutation evidence.** A property site capped with `fcRunsCapped(5)` and a test reading `goals/route-soundness-repair/README.md` were committed in `@beep/xstate`, which is outside repo-cli's dependency closure:
+- change-profile classified the commit `docs_only=false`;
+- a turbo `--affected` dry run selected `@beep/xstate#test` but not `@beep/repo-cli#test`;
+- the Repo Sanity step went red on four assertions: three goal-data census rows and the capped-site list.
+
+**Not moved.** Other repo-cli tests that read the checkout read files its `test` inputs already declare, such as the root `turbo.json`.
+
+Lane fix/route-soundness-repo-scans
+
+Reverse: Drop the ci:repo-sanity:repo-scans step from CiLane.ts and the repoScanSuites exclusion from repo-cli's vitest.config.ts, then delete vitest.repo-scans.config.ts; the four suites rejoin repo-cli's test
 
 <!-- beep:decisions:end -->
