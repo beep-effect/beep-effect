@@ -97,8 +97,10 @@ describe("AI metrics host stack", () => {
         name: "beep-ai-metrics",
         driver: "bridge",
       });
-      // The data volume is looked up, never reconciled.
-      expect(O.isNone(MutableHashMap.get(recording.props, "Docker.Volume/RehearsalData"))).toBe(true);
+      expect(
+        O.isNone(MutableHashMap.get(recording.props, "Docker.Volume/RehearsalData")),
+        "the data volume is looked up, never reconciled"
+      ).toBe(true);
 
       const phoenix = containerProps(recording);
       expect(phoenix.name).toBe("beep-ai-metrics-phoenix");

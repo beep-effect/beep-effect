@@ -47,15 +47,14 @@ describe("CiRunners configuration", () => {
     Effect.gen(function* () {
       const config = yield* decodeCiRunnersConfig(productionConfig);
       expect(config.phase).toBe("primary");
-      // r7a.2xlarge (2026-11-19) and m6i.4xlarge (2026-11-20) left for their eviction rates; the overflow pool keeps the 8-vCPU r7i and r6i.
-      expect(config.heavy.instanceTypes).toEqual([
+      expect(
+        config.heavy.instanceTypes,
+        "r7a.2xlarge and m6i.4xlarge left the heavy pool for their eviction rates"
+      ).toEqual(["r7i.2xlarge", "r6i.2xlarge", "m7a.4xlarge", "m7i.4xlarge", "m6a.4xlarge"]);
+      expect(config.overflow.instanceTypes, "the overflow pool keeps the 8-vCPU r7i and r6i").toEqual([
         "r7i.2xlarge",
         "r6i.2xlarge",
-        "m7a.4xlarge",
-        "m7i.4xlarge",
-        "m6a.4xlarge",
       ]);
-      expect(config.overflow.instanceTypes).toEqual(["r7i.2xlarge", "r6i.2xlarge"]);
       expect(config.heavy.maximumCount).toBe(2);
       expect(config.overflow.maximumCount).toBe(48);
       expect(config.image.amiId).toBe("ami-07af50c345b5ba065");
@@ -186,8 +185,6 @@ describe("CiRunners physical names", () => {
 
   it.effect("keeps both production pool environments outside the live watchers' prefix tag filters", () =>
     Effect.sync(() => {
-      // The live fleet's `ghr:environment` values are its two module prefixes; its termination watchers select by
-      // `{ "ghr:environment": <prefix> }` with startsWith semantics.
       const liveEnvironments = A.filter(liveFleetPrefixes, (prefix) => !Str.includes("/")(prefix));
       expect(liveEnvironments).toStrictEqual(["beep-ci", "beep-ovf"]);
       const prodEnvironments = A.map(PoolName.literals, (pool) => poolEnvironment(productionStage, pool));
@@ -195,12 +192,17 @@ describe("CiRunners physical names", () => {
         A.map(liveEnvironments, (prefix) =>
           upstreamTagFilter({ "ghr:environment": environment }, { "ghr:environment": prefix })
         );
-      expect(A.map(prodEnvironments, selects)).toStrictEqual([
+      expect(
+        A.map(prodEnvironments, selects),
+        'the live termination watchers select { "ghr:environment": <prefix> } by startsWith; no prod pool may match'
+      ).toStrictEqual([
         [false, false],
         [false, false],
       ]);
-      // Positive control: each live watcher selects its own pool's instances.
-      expect(A.map(liveEnvironments, selects)).toStrictEqual([
+      expect(
+        A.map(liveEnvironments, selects),
+        "positive control: each live watcher selects its own pool's instances"
+      ).toStrictEqual([
         [true, false],
         [false, true],
       ]);
@@ -281,14 +283,14 @@ describe("CiRunners configuration validation", () => {
     Effect.gen(function* () {
       const primary = yield* decodeCiRunnersConfig({ ...productionConfig, phase: "primary" });
       const allowList = ["beep-effect/beep-effect", "beep-effect/other", "alice/sandbox"];
-      // Org runners: one owner per organization (beep-effect, alice), compared exactly as scale-up's ownerOf does.
-      expect(spotVcpuCommitted({ ...primary, runnerType: "Org", repositoryAllowList: allowList })).toBe(
-        spotVcpuCommitted(primary) * 2
-      );
-      // Repo runners: one owner per repository.
-      expect(spotVcpuCommitted({ ...primary, runnerType: "Repo", repositoryAllowList: allowList })).toBe(
-        spotVcpuCommitted(primary) * 3
-      );
+      expect(
+        spotVcpuCommitted({ ...primary, runnerType: "Org", repositoryAllowList: allowList }),
+        "org runners: one owner per organization (beep-effect, alice), compared exactly as scale-up's ownerOf does"
+      ).toBe(spotVcpuCommitted(primary) * 2);
+      expect(
+        spotVcpuCommitted({ ...primary, runnerType: "Repo", repositoryAllowList: allowList }),
+        "repo runners: one owner per repository"
+      ).toBe(spotVcpuCommitted(primary) * 3);
       expect(spotVcpuCommitted({ ...primary, repositoryAllowList: [] })).toBe(spotVcpuCommitted(primary));
     })
   );
@@ -310,7 +312,6 @@ describe("CiRunners production credentials", () => {
           `-----BEGIN ${A.join(["RSA", "PRIVATE", "KEY"], " ")}-----\n${Str.repeat(length)("A")}\n-----END ${A.join(["RSA", "PRIVATE", "KEY"], " ")}-----\n`
         );
       const refusals: ReadonlyArray<readonly [string, string, string]> = [
-        // An empty value fails on the type itself, so its message names the schema, still without value or length.
         ["CI_RUNNERS_GITHUB_WEBHOOK_SECRET", "", "Credentials/WebhookSecret"],
         ["CI_RUNNERS_GITHUB_WEBHOOK_SECRET", "unset", "webhook secret is a placeholder"],
         ["CI_RUNNERS_GITHUB_WEBHOOK_SECRET", Str.repeat(7)("unset"), "webhook secret is a placeholder"],
@@ -331,7 +332,9 @@ describe("CiRunners production credentials", () => {
       for (const [variable, bad, message] of refusals) {
         const error = yield* Effect.flip(credentialsOf({ ...productionCredentialEnv, [variable]: bad }));
         expect(error._tag).toBe("ConfigError");
-        expect(error.message).toContain(message);
+        expect(error.message, "names the refusal, or for an empty value the schema type it fails on").toContain(
+          message
+        );
         expect(error.message).toContain(variable);
         if (Str.isNonEmpty(bad)) assertFalse(Str.includes(bad)(error.message));
         assertFalse(Str.includes(` ${bad.length} `)(error.message));
@@ -340,7 +343,6 @@ describe("CiRunners production credentials", () => {
   );
 });
 
-// A real RSA key, generated per run: the signing check needs one that signs, and none is committed.
 const generatedAppKeyBase64 = Effect.promise(() =>
   crypto.subtle.generateKey(
     { name: "RSASSA-PKCS1-v1_5", modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: "SHA-256" },

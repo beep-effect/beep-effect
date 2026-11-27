@@ -10,22 +10,14 @@ import type * as Core from "@alchemy.run/test/Core";
 import type { Input } from "alchemy/Input";
 import type { StackServices } from "alchemy/Stack";
 
-/** The failures Alchemy declares for a stack deployment. */
 type DeployError = Effect.Error<Core.DeployResult<unknown>>;
 
-/**
- * `ScratchStack.deploy` erases its error channel to `any`; this restates the
- * deployment failures plus the program's own, so no erased channel reaches
- * the test.
- */
-type ScratchDeploy = <A, E, R>(
+type ScratchDeployKeepingErrors = <A, E, R>(
   definition: Effect.Effect<A, E, R>
 ) => Effect.Effect<Input.Resolve<A>, DeployError | E, Exclude<R, StackServices>>;
 
-const deployerOf = (stack: Test.ScratchStack): ScratchDeploy => stack.deploy;
+const deployerOf = (stack: Test.ScratchStack): ScratchDeployKeepingErrors => stack.deploy;
 
-// The real stack, deployed through local providers (workerd and a local R2
-// bucket) into in-memory state: no credentials, no cloud account.
 const { test } = Test.make({
   dev: true,
   providers: Cloudflare.providers(),
@@ -35,7 +27,7 @@ const { test } = Test.make({
 });
 
 test.provider(
-  "the TurboCache stack deploys the cache Worker for the beep and inventory teams and refuses anonymous requests",
+  "the TurboCache stack deploys to local workerd and R2 for the beep and inventory teams and refuses anonymous requests",
   (stack) =>
     Effect.gen(function* () {
       const output = yield* deployerOf(stack)(program);

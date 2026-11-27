@@ -93,17 +93,19 @@ describe("CiRunners deploy role managed policies", () => {
           concurrency: 1,
         });
         assertTrue(A.every(lengths, (length) => length <= managedPolicyLimit));
-        // The role holds exactly two managed policies (ci-runners-deploy-1 and -2). A third document needs a new
-        // policy created and attached by hand before the role can use it, so growing past two must fail here first.
-        expect(documents.length).toBe(2);
-        // The union is the source: every statement once, whole, with its Sid, in the source order.
-        expect(A.flatMap(documents, (document) => document.Statement)).toStrictEqual(policy.Statement);
+        expect(
+          documents.length,
+          "the role holds exactly two managed policies; a third needs a policy created and attached by hand first"
+        ).toBe(2);
+        expect(
+          A.flatMap(documents, (document) => document.Statement),
+          "the union is the source: every statement once, whole, with its Sid, in the source order"
+        ).toStrictEqual(policy.Statement);
         expect(A.dedupe(A.map(documents, (document) => document.Version))).toStrictEqual([policy.Version]);
         assertTrue(A.every(documents, (document) => A.isReadonlyArrayNonEmpty(document.Statement)));
         assertTrue(A.every(policy.Statement, (statement) => P.isString(statement.Sid)));
-        // Deterministic: the same source splits the same way.
         const again = yield* managedPolicyDocuments(policy);
-        expect(again).toStrictEqual(documents);
+        expect(again, "the same source splits the same way").toStrictEqual(documents);
       }
     })
   );
@@ -122,14 +124,17 @@ describe("CiRunners deploy role policy", () => {
         }
         const [tagged] = A.filter(policy.Statement, (statement) => statement.Sid === "Ec2CreatesTagged");
         const [inVpc] = A.filter(policy.Statement, (statement) => statement.Sid === "Ec2CreatesInOwnedVpc");
-        // The child-resource side is unchanged: every create still needs the request tags there.
-        expect(tagged?.Condition).toStrictEqual({
-          StringEquals: { "aws:RequestTag/alchemy::stack": "CiRunners", "aws:RequestTag/alchemy::stage": "prod" },
-        });
+        expect(tagged?.Condition, "the child-resource side still needs the request tags on every create").toStrictEqual(
+          {
+            StringEquals: { "aws:RequestTag/alchemy::stack": "CiRunners", "aws:RequestTag/alchemy::stage": "prod" },
+          }
+        );
         expect(actionsOf(tagged ?? { Effect: "Allow" })).toStrictEqual(ec2CreateActions);
-        // The VPC side names the VPC resource type only, never a literal VPC id, and needs the tags on that VPC.
-        expect(resourcesOf(inVpc ?? { Effect: "Allow" })).toStrictEqual(["arn:aws:ec2:us-east-1:832907639880:vpc/*"]);
-        expect(inVpc?.Condition).toStrictEqual({
+        expect(
+          resourcesOf(inVpc ?? { Effect: "Allow" }),
+          "the VPC side names the VPC resource type only, never a literal VPC id"
+        ).toStrictEqual(["arn:aws:ec2:us-east-1:832907639880:vpc/*"]);
+        expect(inVpc?.Condition, "the VPC side needs the ownership tags on that VPC").toStrictEqual({
           StringEquals: { "aws:ResourceTag/alchemy::stack": "CiRunners", "aws:ResourceTag/alchemy::stage": "prod" },
         });
         expect(actionsOf(inVpc ?? { Effect: "Allow" })).toStrictEqual(ec2CreatesInVpc);
@@ -148,8 +153,10 @@ describe("CiRunners deploy role policy", () => {
       expect(scope("lambda:GetFunctionEventInvokeConfig")).toStrictEqual([["LambdaFleetFunctions", fleetFunctions]]);
       const fleetPolicies = ["arn:aws:iam::832907639880:policy/beep-fleet/prod/*"];
       expect(scope("iam:ListPolicyTags")).toStrictEqual([["IamFleetPolicies", fleetPolicies]]);
-      // The default-version write reaches the fleet's policies only: never the deploy role's own managed policies.
-      expect(scope("iam:SetDefaultPolicyVersion")).toStrictEqual([["IamFleetPolicies", fleetPolicies]]);
+      expect(
+        scope("iam:SetDefaultPolicyVersion"),
+        "the default-version write reaches the fleet's policies only, never the deploy role's own managed policies"
+      ).toStrictEqual([["IamFleetPolicies", fleetPolicies]]);
       expect(scope("iam:UntagInstanceProfile")).toStrictEqual([
         ["IamFleetProfiles", ["arn:aws:iam::832907639880:instance-profile/beep-fleet-prod-*"]],
       ]);
@@ -177,8 +184,10 @@ describe("CiRunners deploy role policy", () => {
           ],
         ],
       ]);
-      // SQS gives ListQueues no resource type; it is the only SQS grant on "*", and it reads.
-      expect(scope("sqs:ListQueues")).toStrictEqual([["SqsList", ["*"]]]);
+      expect(
+        scope("sqs:ListQueues"),
+        'SQS gives ListQueues no resource type; it is the only SQS grant on "*", and it reads'
+      ).toStrictEqual([["SqsList", ["*"]]]);
       expect(A.flatMap(only("sqs:ListQueues"), actionsOf)).toStrictEqual(["sqs:ListQueues"]);
     })
   );
@@ -189,8 +198,10 @@ describe("CiRunners deploy role policy", () => {
       const text = yield* encodeJson(allows);
       assertFalse(Str.includes("beep-alchemy-deploy")(text));
       assertFalse(Str.includes("iam:DeleteRolePermissionsBoundary")(text));
-      // A fleet role's trust policy stays as created: no grant rewrites it.
-      assertFalse(Str.includes("iam:UpdateAssumeRolePolicy")(text));
+      assertFalse(
+        Str.includes("iam:UpdateAssumeRolePolicy")(text),
+        "a fleet role's trust policy stays as created: no grant rewrites it"
+      );
     })
   );
 
@@ -221,8 +232,10 @@ describe("CiRunners deploy role policy", () => {
       for (const statement of direct) {
         expect(statement.Condition?.StringEquals?.["aws:ResourceTag/alchemy::stack"]).toBe("CiRunners");
         expect(statement.Condition?.StringEquals?.["aws:ResourceTag/alchemy::stage"]).toBe("prod");
-        // A request tag alone never grants it: the target's own tags must match first.
-        assertTrue(A.every(conditionKeys(statement), Str.startsWith("aws:ResourceTag/")));
+        assertTrue(
+          A.every(conditionKeys(statement), Str.startsWith("aws:ResourceTag/")),
+          "a request tag alone never grants it: the target's own tags must match first"
+        );
       }
     })
   );
@@ -360,12 +373,12 @@ describe("CiRunners deploy role policy", () => {
           },
         ]);
       }
-      // Tag on create for the stack's own mappings is untouched.
       expect(
         A.map(
           A.filter(v2.Statement, (statement) => statement.Sid === "LambdaMappingsTagOnCreate"),
           (statement) => [statement.Effect, statement.Action, statement.Resource]
-        )
+        ),
+        "tag on create for the stack's own mappings is untouched"
       ).toStrictEqual([["Allow", ["lambda:TagResource"], [mappingArn]]]);
     })
   );
@@ -607,10 +620,12 @@ describe("CiRunners fleet boundary", () => {
       expect(A.map(fromStack, (statement) => statement.Condition)).toStrictEqual([
         { StringEquals: { "aws:ResourceTag/alchemy::stack": "CiRunners", "aws:ResourceTag/alchemy::stage": "prod" } },
       ]);
-      // Unconditioned launch inputs are only those a launch reads or creates untagged: never an instance or a volume.
       const unconditioned = A.filter(ec2Writes, (statement) => P.isUndefined(statement.Condition));
       for (const resource of A.flatMap(unconditioned, resourcesOf)) {
-        assertTrue(/:(?:image|snapshot|network-interface|spot-instances-request)\/\*$/u.test(resource));
+        assertTrue(
+          /:(?:image|snapshot|network-interface|spot-instances-request)\/\*$/u.test(resource),
+          "unconditioned launch inputs are only those a launch reads or creates untagged, never an instance or a volume"
+        );
       }
     })
   );
@@ -711,9 +726,7 @@ const stringsOf = (value: unknown): ReadonlyArray<string> =>
 
 describe("CiRunners fleet boundary per stage", () => {
   const prodBoundary = fleetBoundary("prod");
-  // Every ARN and tag value a stage would own, from the same name helpers the stack uses, plus Alchemy's generated
-  // names for the resources it leaves unpinned there.
-  const stageArns = (stage: string): ReadonlyArray<string> => {
+  const stageOwnedArnsAndTagValues = (stage: string): ReadonlyArray<string> => {
     const stageNames = physicalNames(stage);
     const pools = A.map(["heavy", "overflow"] as const, (pool) => poolResourceNames(stageNames.fleet, pool));
     const fleetNames = fleetResourceNames(stageNames.fleet);
@@ -752,7 +765,9 @@ describe("CiRunners fleet boundary per stage", () => {
   );
   const matchesOf = (stage: string) =>
     A.filter(
-      A.flatMap(namePatterns, (pattern) => A.map(stageArns(stage), (value) => [pattern, value] as const)),
+      A.flatMap(namePatterns, (pattern) =>
+        A.map(stageOwnedArnsAndTagValues(stage), (value) => [pattern, value] as const)
+      ),
       ([pattern, value]) => globMatches(pattern, value)
     );
 
@@ -768,8 +783,7 @@ describe("CiRunners fleet boundary per stage", () => {
 
   it.effect("matches nothing of any stage the stage guard accepts", () =>
     Effect.sync(() => {
-      // A sample around prod: segments, prefixes, suffixes and near misses; the guard decides which are stages.
-      const sample = [
+      const stageNamesAroundProd = [
         "dev-alice",
         "staging",
         "dev-product",
@@ -784,7 +798,7 @@ describe("CiRunners fleet boundary per stage", () => {
         "product-x",
         "p-r-o-d",
       ];
-      const accepted = A.filter(sample, (stage) =>
+      const accepted = A.filter(stageNamesAroundProd, (stage) =>
         Exit.isSuccess(requireDistinctStage(stage).pipe(Effect.runSyncExit))
       );
       expect(accepted).toStrictEqual([
@@ -800,8 +814,10 @@ describe("CiRunners fleet boundary per stage", () => {
       for (const stage of accepted) {
         expect([stage, matchesOf(stage)]).toStrictEqual([stage, []]);
       }
-      // The refused `alice-prod` is the case the guard exists for: the prod patterns do match its generated names.
-      assertTrue(A.isReadonlyArrayNonEmpty(matchesOf("alice-prod")));
+      assertTrue(
+        A.isReadonlyArrayNonEmpty(matchesOf("alice-prod")),
+        "the refused alice-prod is the case the guard exists for: the prod patterns match its generated names"
+      );
     })
   );
 
@@ -817,12 +833,14 @@ describe("CiRunners fleet boundary per stage", () => {
         )
       );
       expect(boundaryValues).toStrictEqual([fleetBoundaryPolicyArn]);
-      // No grant of the deploy role reaches any boundary policy object.
       const anyBoundary = "arn:aws:iam::832907639880:policy/beep-fleet-boundary/fleet-boundary-prod";
       for (const statement of A.filter(v2.Statement, (allow) => allow.Effect === "Allow")) {
         const iamActions = A.filter(actionsOf(statement), Str.startsWith("iam:"));
         if (A.isReadonlyArrayNonEmpty(iamActions)) {
-          assertFalse(A.some(resourcesOf(statement), (pattern) => globMatches(pattern, anyBoundary)));
+          assertFalse(
+            A.some(resourcesOf(statement), (pattern) => globMatches(pattern, anyBoundary)),
+            "no grant of the deploy role reaches any boundary policy object"
+          );
         }
       }
     })

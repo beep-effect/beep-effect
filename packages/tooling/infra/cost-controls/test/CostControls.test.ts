@@ -188,9 +188,6 @@ describe("CostControls prod is live", () => {
     })
   );
 
-  // The first live deploy runs on the state the silent deploy (#3310) left: the
-  // gate must accept a budget update plus an AnomalyAlerts create while the
-  // nine singletons stay no-op.
   const transition = FakeAws.harness({ seed: FakeAws.liveAccount, stage: "prod" });
   transition.provider("the first live plan updates the budget, creates AnomalyAlerts and passes the gate", (stack) =>
     Effect.gen(function* () {
@@ -201,7 +198,9 @@ describe("CostControls prod is live", () => {
       const actions = R.map(plan.resources, (item) => item?.action);
       expect(actions.MonthlyBudget).toBe("update");
       expect(actions.AnomalyAlerts).toBe("create");
-      for (const id of SingletonIds) expect(actions[id]).toBe("noop");
+      for (const id of SingletonIds) {
+        expect(actions[id], "the nine singletons stay no-op on the state the silent deploy left").toBe("noop");
+      }
 
       const planned = A.flatMap(R.toEntries(plan.resources), ([fqn, item]) =>
         item === undefined ? [] : [{ fqn, action: item.action, changedProperties: [] }]
@@ -256,8 +255,6 @@ describe("CostControls guards", () => {
 });
 
 describe("CostControls personal-stage graph", () => {
-  // Account-wide settings are adopted and written only by prod from CI,
-  // behind the pre-deploy gate; a workstation stage plans its budget alone.
   const graph = FakeAws.harness({ seed: FakeAws.liveAccount, stage: "dev_test" });
   graph.provider("plans no account singleton type, only the stage budget", (stack) =>
     Effect.gen(function* () {
@@ -270,7 +267,10 @@ describe("CostControls personal-stage graph", () => {
         "BeepAWS.CostOptimizationHub.Enrollment",
       ];
 
-      expect(A.map(planned, (item) => item?.resource.Type)).toEqual(["AWS.Budgets.Budget"]);
+      expect(
+        A.map(planned, (item) => item?.resource.Type),
+        "only prod, from CI behind the pre-deploy gate, adopts and writes account-wide settings"
+      ).toEqual(["AWS.Budgets.Budget"]);
       for (const item of planned) expect(singletonTypes).not.toContain(item?.resource.Type);
       for (const id of SingletonIds) expect(R.keys(plan.resources)).not.toContain(id);
     })
@@ -278,9 +278,6 @@ describe("CostControls personal-stage graph", () => {
 });
 
 describe("CostControls never enforces", () => {
-  // A budget action, an SCP, a quota change or an anomaly response could stop,
-  // throttle or deny EC2 or Spot launches for the runner pools. The stack
-  // declares none; adding one needs a new ruling from the CI window owner.
   const launchControls = ["BudgetAction", "Organizations", "ServiceQuotas", "EC2", "AutoScaling", "Lambda", "IAM"];
   const enforcement = FakeAws.harness({ seed: FakeAws.liveAccount, stage: "prod" });
   enforcement.provider("declares only the six cost types, and the budget carries no action", (stack) =>
@@ -293,7 +290,12 @@ describe("CostControls never enforces", () => {
       expect(A.length(types)).toBe(11);
       for (const type of types) {
         expect(DeclaredResourceTypes).toContain(type);
-        for (const control of launchControls) expect(type).not.toContain(control);
+        for (const control of launchControls) {
+          expect(
+            type,
+            "a budget action, SCP, quota change or anomaly response could stop, throttle or deny runner EC2 or Spot launches"
+          ).not.toContain(control);
+        }
       }
       const budgetProps = plan.resources.MonthlyBudget?.props;
       const budgetKeys = budgetProps !== null && typeof budgetProps === "object" ? R.keys(budgetProps) : [];

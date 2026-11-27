@@ -22,12 +22,6 @@ export const state = AWS.state({
   encryption: { sseAlgorithm: "aws:kms", bucketKeyEnabled: true, blockedEncryptionTypes: ["SSE-C"] },
 });
 
-/**
- * Recipients of the Worker error alert, comma separated. Unset means no
- * notification policy, the same opt-in the AWS cache's throttle alarm had.
- * In CI it is the `turbo-cache-prod` environment secret
- * `TURBO_CACHE_ALERT_EMAIL`.
- */
 const alertRecipients = Config.String("TURBO_CACHE_ALERT_EMAIL").pipe(
   Config.option,
   Config.map((value) =>
@@ -40,21 +34,26 @@ const alertRecipients = Config.String("TURBO_CACHE_ALERT_EMAIL").pipe(
 
 /**
  * The stack's program, exported so tests deploy it into in-memory state.
+ *
+ * **Details**
+ *
+ * Every `prod` deploy runs in CI under the `alchemy-turbo-cache-prod`
+ * concurrency group, with the S3 store's stage lease as the second guard; a
+ * local `prod` plan or deploy fails with a ConfigError on `CI`.
+ * `TURBO_CACHE_ALERT_EMAIL` (comma separated; in CI the `turbo-cache-prod`
+ * environment secret) adds a notification policy that mails Cloudflare's
+ * Workers Observability real-time issue when the Worker errors. It succeeds
+ * the AWS cache's Lambda throttle alarm (D7): a Worker has no reserved
+ * concurrency to exhaust, so an erroring Worker is the failure that turns into
+ * silent cache misses. Unset, the stack declares no notification policy.
  */
 export const program = Effect.gen(function* () {
   const stack = yield* Alchemy.Stack;
-  // Every `prod` deploy runs in CI under the `alchemy-turbo-cache-prod`
-  // concurrency group; the S3 store's stage lease is the second guard. A
-  // local `prod` plan/deploy fails here with a ConfigError on `CI`.
   if (stack.stage === productionStage) {
     yield* Config.Literal("true", "CI");
   }
   const worker = yield* CacheWorker;
 
-  // The successor of the AWS cache's Lambda throttle alarm (D7): Workers have
-  // no reserved concurrency to exhaust, so the failure that turns into silent
-  // cache misses is the Worker erroring. Cloudflare's Workers Observability
-  // raises a real-time issue for that; this policy mails it.
   const recipients = yield* alertRecipients;
   if (A.isReadonlyArrayNonEmpty(recipients)) {
     yield* Cloudflare.Alerting.NotificationPolicy("TurboCacheErrors", {

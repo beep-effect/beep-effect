@@ -6,16 +6,6 @@ import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import census from "./fixtures/census.json" with { type: "json" };
 
-/**
- * `fixtures/census.json` is the live state of beep-effect/beep-effect read on
- * 2026-11-13 (names and non-secret settings only). The eight labels without a
- * description were re-read on 2026-11-18 after the first armed deploy: the stack
- * writes `""` for a `None` description, and GitHub has returned `""` since, not
- * `null`. These tests fail when the
- * declared configuration drifts from that capture, and when the capture holds
- * an object the configuration neither owns nor lists as unmanaged. A deliberate
- * change edits both the configuration and the snapshot in the same commit.
- */
 const config = productionConfig;
 const unmanagedNames = (objectClass: string) =>
   HashSet.fromIterable(
@@ -27,7 +17,6 @@ const unmanagedNames = (objectClass: string) =>
 
 const mainRuleset = O.getOrThrow(A.findFirst(census.rulesets, (ruleset) => ruleset.name === "main"));
 
-/** The main ruleset as GitHub stores it, built from the declared configuration. */
 const storedRuleset = (ruleset: MainRuleset) => {
   const pullRequest = ruleset.pullRequest;
   return {
@@ -41,7 +30,6 @@ const storedRuleset = (ruleset: MainRuleset) => {
       bypass_mode: bypassMode,
     })),
     rules: [
-      // Built from the flags, as plannedRuleTypes does, so a flag turned off shows as drift.
       ...(ruleset.deletion ? [{ type: "deletion" }] : []),
       ...(ruleset.nonFastForward ? [{ type: "non_fast_forward" }] : []),
       {
@@ -73,7 +61,7 @@ const storedRuleset = (ruleset: MainRuleset) => {
   };
 };
 
-describe("the declared configuration matches the census", () => {
+describe("the declared configuration matches the live census fixture, and a deliberate change edits both", () => {
   it("repository settings", () => {
     const { settings } = config;
     expect({
@@ -121,10 +109,12 @@ describe("the declared configuration matches the census", () => {
   });
 
   it("labels", () => {
-    expect(census.labels).toEqual(
+    expect(
+      census.labels,
+      'the stack writes "" for a None description (declareLabel), and GitHub has returned "" since, not null'
+    ).toEqual(
       A.map(config.labels, ({ name, color, description }) => ({
         color,
-        // What the stack writes (`declareLabel`), so the capture shows the converged state.
         description: O.getOrElse(description, () => ""),
         name,
       }))

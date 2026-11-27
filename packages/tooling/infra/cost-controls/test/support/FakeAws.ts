@@ -29,7 +29,6 @@ import * as Str from "effect/String";
 import type { Input } from "alchemy/Input";
 import type * as HttpClientRequest from "effect/http/HttpClientRequest";
 
-/** The account `prod` expects; already public in the repository. */
 const productionAccountId = "832907639880";
 const region = "us-east-1";
 
@@ -173,10 +172,6 @@ const subscriptionByName = (account: FakeAccount, name: string) =>
     O.getOrUndefined
   );
 
-// ---------------------------------------------------------------------------
-// Responses
-// ---------------------------------------------------------------------------
-
 interface FakeResponse {
   readonly json: unknown;
   readonly status: number;
@@ -184,10 +179,6 @@ interface FakeResponse {
 
 const ok = (json: unknown): FakeResponse => ({ status: 200, json });
 const fail = (type: string, message: string): FakeResponse => ({ status: 400, json: { __type: type, message } });
-
-// ---------------------------------------------------------------------------
-// Input decoding
-// ---------------------------------------------------------------------------
 
 const Loose = S.Record(S.String, S.Unknown);
 type Loose = typeof Loose.Type;
@@ -216,10 +207,6 @@ const subscriber = (value: Loose): Subscriber => ({
 const notificationKey = (notification: Loose) =>
   `${str(notification, "NotificationType")}|${str(notification, "ComparisonOperator")}|${String(notification.Threshold)}|${str(notification, "ThresholdType") ?? "PERCENTAGE"}`;
 
-// ---------------------------------------------------------------------------
-// Budgets
-// ---------------------------------------------------------------------------
-
 type Handler = (account: FakeAccount, input: Loose) => FakeResponse;
 
 const budgetNotFound = (name: string | undefined) => fail("NotFoundException", `Budget ${name} not found`);
@@ -238,7 +225,6 @@ const findNotification = (found: BudgetRecord, input: Loose) =>
     (entry) => notificationKey(entry.notification) === notificationKey(record(input.Notification))
   );
 
-/** A Budgets tag operation on the budget its `ResourceARN` names. */
 const withTaggedBudget =
   (handle: (record: BudgetRecord, input: Loose) => FakeResponse): Handler =>
   (account, input) => {
@@ -338,10 +324,6 @@ const budgetsOperations: Readonly<Record<string, Handler>> = {
     return ok({});
   }),
 };
-
-// ---------------------------------------------------------------------------
-// Cost Explorer
-// ---------------------------------------------------------------------------
 
 const monitorJson = (monitor: MonitorRecord) => ({
   MonitorArn: monitor.arn,
@@ -503,8 +485,7 @@ const hubOperations: Readonly<Record<string, Handler>> = {
   },
 };
 
-/** awsJson services by endpoint host prefix. */
-const services: ReadonlyArray<{
+const awsJsonServicesByHostPrefix: ReadonlyArray<{
   readonly prefix: string;
   readonly service: string;
   readonly operations: Readonly<Record<string, Handler>>;
@@ -514,10 +495,6 @@ const services: ReadonlyArray<{
   { prefix: "compute-optimizer.", service: "compute-optimizer", operations: computeOptimizerOperations },
   { prefix: "cost-optimization-hub.", service: "cost-optimization-hub", operations: hubOperations },
 ];
-
-// ---------------------------------------------------------------------------
-// HTTP routing
-// ---------------------------------------------------------------------------
 
 const decoder = new TextDecoder();
 
@@ -537,7 +514,9 @@ const route = Effect.fn("FakeAws.route")(function* (
   );
   const text = bodyText(request);
   const input = yield* decodeInput(text === "" ? "{}" : text);
-  const service = A.findFirst(services, (candidate) => Str.startsWith(candidate.prefix)(url.hostname));
+  const service = A.findFirst(awsJsonServicesByHostPrefix, (candidate) =>
+    Str.startsWith(candidate.prefix)(url.hostname)
+  );
   if (O.isNone(service)) return fail("UnknownServiceException", url.hostname);
   account.calls.push(operation);
   const handler = service.value.operations[operation];
@@ -546,7 +525,6 @@ const route = Effect.fn("FakeAws.route")(function* (
 
 const jsonHeaders = { "content-type": "application/x-amz-json-1.1" };
 
-/** Every request is answered by {@link route} as an awsJson 1.1 response. */
 const httpClient = (account: FakeAccount): HttpClient.HttpClient =>
   HttpClient.make((request, url) =>
     route(account, request, url).pipe(

@@ -347,15 +347,6 @@ const resourceLine = /^\[([^\]]+)\] ([a-z]+)\b(?! \[action\])/u;
 const changeLine = /^ {2}([+-]) ([^:]+)/u;
 const propertyName = /^[A-Za-z_$][\w$.-]*$/u;
 
-/**
- * The name a change line contributes, never its value: the text before the
- * first colon with any YAML list marker removed, kept only when it is
- * identifier-shaped. A bare scalar (an array element such as an address) is
- * reported as `(value)`, so no declared value reaches the job log.
- *
- * @param raw - The text a change line carries after its marker.
- * @returns The property name, `(value)` for a bare scalar, or `""` for an empty line.
- */
 const safePropertyName = (raw: string): string => {
   const name = pipe(raw, Str.trim, Str.replace(/^-\s*/u, ""), Str.trim);
   if (Str.isEmpty(name)) return "";
@@ -365,7 +356,6 @@ const safePropertyName = (raw: string): string => {
 const clean = (line: string) => pipe(line, Str.replace(ansi, ""), Str.replace(logPrefix, ""));
 const isPlanAction = S.is(PlanAction);
 
-// Add a change line's property name (never its value) to the last entry.
 const withChangedProperty = (entries: ReadonlyArray<PlanEntry>, line: string): ReadonlyArray<PlanEntry> => {
   const property = safePropertyName(changeLine.exec(line)?.[2] ?? "");
   return pipe(
@@ -384,7 +374,6 @@ const withChangedProperty = (entries: ReadonlyArray<PlanEntry>, line: string): R
 
 interface ParseState {
   readonly entries: ReadonlyArray<PlanEntry>;
-  // False after an unreadable resource line: its change lines belong to no readable entry.
   readonly latestReadable: boolean;
   readonly unreadable: ReadonlyArray<UnreadableResourceLine>;
 }
@@ -403,6 +392,11 @@ const emptyParse: ParseState = { entries: [], unreadable: [], latestReadable: tr
  * {@link checkPlan} refuses the plan on it. Its change lines are attributed to no
  * entry, so they never land on the readable resource before it. Lines that are not resource
  * lines (the summary, `Done:` and other log output) never match.
+ *
+ * A change line contributes its property name, never its value: the text
+ * before the first colon, minus any YAML list marker, kept only when it is
+ * identifier-shaped. A bare scalar (an array element such as an address) is
+ * reported as `(value)`, so no declared value reaches the job log.
  *
  * **Example** (Parse one adopted resource)
  *
@@ -445,14 +439,6 @@ export const parsePlanLog = (log: string): PlanLog => {
   return PlanLog.make({ entries: parsed.entries, unreadable: parsed.unreadable });
 };
 
-/**
- * The one resource the gate lets a plan delete: the stack's own anomaly email
- * subscription, so a return from `live` to `silent` (the cutover rollback)
- * can pass the workflow. It is not an account singleton and touches nothing
- * that can affect EC2, Spot or Lambda; every other delete, every replace and
- * every orphan is still refused, and the nine adopted settings still may not
- * change (packet gate ruling, 2026-11-14).
- */
 const rollbackDeletable = "AnomalyAlerts";
 const allowedResources = HashSet.fromIterable([...SingletonIds, "MonthlyBudget", "AnomalyAlerts"]);
 const singletonSet = HashSet.fromIterable(SingletonIds);
@@ -533,7 +519,6 @@ const liveViolations = (live: LiveSettings): ReadonlyArray<PlanViolation> => [
   ...monitorViolations(live),
 ];
 
-// Every reason the plan may not deploy; empty when it may.
 const unreadableViolations = (unreadable: ReadonlyArray<UnreadableResourceLine>): ReadonlyArray<PlanViolation> =>
   A.map(unreadable, (line) => violation(line.fqn, "unreadable-action", line.action));
 
@@ -547,6 +532,14 @@ const planCheckViolations = (log: PlanLog, live: LiveSettings): ReadonlyArray<Pl
 /**
  * Succeed when the plan may deploy; otherwise fail with
  * {@link PlanCheckFailed}.
+ *
+ * **Details**
+ *
+ * The one delete the gate admits is the stack's own `AnomalyAlerts` email
+ * subscription, so a return from `live` to `silent` (the cutover rollback)
+ * can pass. It is not an account singleton and touches nothing that can
+ * affect EC2, Spot or Lambda. Every other delete, every replace and every
+ * orphan is refused, and the nine adopted settings may not change.
  *
  * **Example** (Gate a plan)
  *

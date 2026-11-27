@@ -31,8 +31,7 @@ const singletons = [
 
 const adoptedClean = (fqn: string) => [colored(fqn, "adopted"), line("  no declared property changes"), line("")];
 
-/** The first prod plan as the workflow sees it: one budget create, nine adopts. */
-const cleanPlan = A.join(
+const cleanFirstProdPlan = A.join(
   [
     line("Plan: 1 to create, 9 to adopted"),
     line(""),
@@ -103,7 +102,7 @@ describe("parsePlanLog", () => {
 describe("checkPlan", () => {
   it.effect("passes a clean first plan: one create, nine adopts, live settings as declared", () =>
     Effect.gen(function* () {
-      const entries = yield* checkPlan(parsePlanLog(cleanPlan), live);
+      const entries = yield* checkPlan(parsePlanLog(cleanFirstProdPlan), live);
       expect(entries).toHaveLength(10);
     })
   );
@@ -120,7 +119,7 @@ describe("checkPlan", () => {
 
   it.effect("refuses a singleton update", () =>
     Effect.gen(function* () {
-      const plan = replaceIn(cleanPlan, colored("AppTag", "adopted"), colored("AppTag", "update"));
+      const plan = replaceIn(cleanFirstProdPlan, colored("AppTag", "adopted"), colored("AppTag", "update"));
       const failure = yield* refusal(plan);
       expect(A.map(failure.violations, (v) => [v.subject, v.reason])).toEqual([
         ["AppTag", "singleton-not-adopt-or-noop"],
@@ -132,7 +131,7 @@ describe("checkPlan", () => {
   it.effect("refuses an adopted singleton whose declared properties change", () =>
     Effect.gen(function* () {
       const plan = replaceIn(
-        cleanPlan,
+        cleanFirstProdPlan,
         `${colored("ComputeOptimizer", "adopted")}\n${line("  no declared property changes")}`,
         A.join([colored("ComputeOptimizer", "adopted"), line("  - status: Active"), line("  + status: Inactive")], "\n")
       );
@@ -145,7 +144,10 @@ describe("checkPlan", () => {
 
   it.effect("refuses a delete and a replace anywhere in the plan", () =>
     Effect.gen(function* () {
-      const plan = A.join([cleanPlan, colored("MonthlyBudget", "delete"), colored("AnomalyAlerts", "replace")], "\n");
+      const plan = A.join(
+        [cleanFirstProdPlan, colored("MonthlyBudget", "delete"), colored("AnomalyAlerts", "replace")],
+        "\n"
+      );
       const failure = yield* refusal(plan);
       expect(A.map(failure.violations, (v) => [v.subject, v.reason])).toEqual([
         ["MonthlyBudget", "delete-or-replace"],
@@ -156,7 +158,7 @@ describe("checkPlan", () => {
 
   it.effect("refuses a missing singleton", () =>
     Effect.gen(function* () {
-      const plan = replaceIn(cleanPlan, colored("ProjectTag", "adopted"), "");
+      const plan = replaceIn(cleanFirstProdPlan, colored("ProjectTag", "adopted"), "");
       const failure = yield* refusal(plan);
       expect(A.map(failure.violations, (v) => [v.subject, v.reason])).toEqual([["ProjectTag", "singleton-missing"]]);
     })
@@ -171,7 +173,7 @@ describe("checkPlan", () => {
         ),
         computeOptimizer: { status: "Active", memberAccountsEnrolled: true },
       });
-      const failure = yield* refusal(cleanPlan, drifted);
+      const failure = yield* refusal(cleanFirstProdPlan, drifted);
       expect(A.map(failure.violations, (v) => [v.subject, v.reason])).toEqual([
         ["tag beep-ci", "live-setting-differs"],
         ["ComputeOptimizer", "live-setting-differs"],
@@ -181,7 +183,7 @@ describe("checkPlan", () => {
 
   it.effect("stops and escalates on any resource outside the stack, such as a launch-throttling one", () =>
     Effect.gen(function* () {
-      const failure = yield* refusal(A.join([cleanPlan, colored("SpotQuota", "create")], "\n"));
+      const failure = yield* refusal(A.join([cleanFirstProdPlan, colored("SpotQuota", "create")], "\n"));
       expect(A.map(failure.violations, (v) => [v.subject, v.reason])).toEqual([["SpotQuota", "unexpected-resource"]]);
       expect(failure.escalate).toBe(true);
     })
@@ -211,7 +213,7 @@ describe("liveSettingsFromAws", () => {
       const settings = liveSettingsFromAws(raw);
       expect(settings.computeOptimizer).toEqual({ status: "Active" });
       expect(settings.costOptimizationHub).toEqual({ items: [{ status: "Active" }] });
-      yield* checkPlan(parsePlanLog(cleanPlan), settings);
+      yield* checkPlan(parsePlanLog(cleanFirstProdPlan), settings);
     })
   );
 
@@ -223,7 +225,7 @@ describe("liveSettingsFromAws", () => {
         costOptimizationHub: { includeMemberAccounts: false, items: [{ status: "Active" }] },
         anomalyMonitors: { AnomalyMonitors: live.anomalyMonitors },
       });
-      const failure = yield* refusal(cleanPlan, liveSettingsFromAws(raw));
+      const failure = yield* refusal(cleanFirstProdPlan, liveSettingsFromAws(raw));
       expect(A.map(failure.violations, (v) => [v.subject, v.reason])).toEqual([
         ["ComputeOptimizer", "live-setting-differs"],
       ]);
@@ -262,36 +264,34 @@ describe("checkPlan rollback exception", () => {
 
   it.effect.each(["replace", "orphaned"])("still refuses a %s of AnomalyAlerts", (action) =>
     Effect.gen(function* () {
-      const failure = yield* refusal(A.join([cleanPlan, colored("AnomalyAlerts", action)], "\n"));
+      const failure = yield* refusal(A.join([cleanFirstProdPlan, colored("AnomalyAlerts", action)], "\n"));
       expect(A.map(failure.violations, (v) => [v.subject, v.reason])).toEqual([["AnomalyAlerts", "delete-or-replace"]]);
     })
   );
 });
 
-// Plan lines exactly as `Deploy cost controls` run 43560670140 logged them
-// (the first live deploy, 2026-11-14): timestamped INFO prefix, no ANSI.
-const runLine = (text: string) => `[05:18:13.716] INFO: ${text}`;
+const timestampedInfoLine = (text: string) => `[05:18:13.716] INFO: ${text}`;
 const livePlanFromRun = A.join(
   [
     "[05:18:11.204] WARN: alchemy 2.0.0-beta.87 is available (you're on 2.0.0-beta.86).",
-    runLine("Plan · prod"),
-    runLine("Plan: 1 to create, 1 to update"),
-    runLine("[AccountServicesMonitor] noop"),
-    runLine("[AnomalyAlerts] create"),
-    runLine("  properties:"),
-    runLine("    frequency: DAILY"),
-    runLine("[AppTag] noop"),
-    runLine("[BeepCiTag] noop"),
-    runLine("[ComputeOptimizer] noop"),
-    runLine("[CostOptimizationHub] noop"),
-    runLine("[DataClassTag] noop"),
-    runLine("[GhrEnvironmentTag] noop"),
-    runLine("[ManagedByTag] noop"),
-    runLine("[MonthlyBudget] update"),
-    runLine("  properties:"),
-    runLine("  - notifications: []"),
-    runLine("  + notifications:"),
-    runLine("[ProjectTag] noop"),
+    timestampedInfoLine("Plan · prod"),
+    timestampedInfoLine("Plan: 1 to create, 1 to update"),
+    timestampedInfoLine("[AccountServicesMonitor] noop"),
+    timestampedInfoLine("[AnomalyAlerts] create"),
+    timestampedInfoLine("  properties:"),
+    timestampedInfoLine("    frequency: DAILY"),
+    timestampedInfoLine("[AppTag] noop"),
+    timestampedInfoLine("[BeepCiTag] noop"),
+    timestampedInfoLine("[ComputeOptimizer] noop"),
+    timestampedInfoLine("[CostOptimizationHub] noop"),
+    timestampedInfoLine("[DataClassTag] noop"),
+    timestampedInfoLine("[GhrEnvironmentTag] noop"),
+    timestampedInfoLine("[ManagedByTag] noop"),
+    timestampedInfoLine("[MonthlyBudget] update"),
+    timestampedInfoLine("  properties:"),
+    timestampedInfoLine("  - notifications: []"),
+    timestampedInfoLine("  + notifications:"),
+    timestampedInfoLine("[ProjectTag] noop"),
     "[05:18:15.689] INFO: Done: 2 succeeded (2.0s)",
     "[18:56:21.770] ERROR (#1): @beep/infra-cost-controls/PlanCheck/PlanCheckFailed: ",
   ],
@@ -299,8 +299,8 @@ const livePlanFromRun = A.join(
 );
 const noopPlan = A.join(
   [
-    runLine("Plan: no changes"),
-    ...A.map([...singletons, "MonthlyBudget", "AnomalyAlerts"], (fqn) => runLine(`[${fqn}] noop`)),
+    timestampedInfoLine("Plan: no changes"),
+    ...A.map([...singletons, "MonthlyBudget", "AnomalyAlerts"], (fqn) => timestampedInfoLine(`[${fqn}] noop`)),
   ],
   "\n"
 );
@@ -317,7 +317,7 @@ describe("parsePlanLog fails closed on unreadable actions", () => {
 
   it.effect("passes the silent first deploy and an all no-op plan unchanged", () =>
     Effect.gen(function* () {
-      for (const plan of [cleanPlan, noopPlan]) {
+      for (const plan of [cleanFirstProdPlan, noopPlan]) {
         const log = parsePlanLog(plan);
         expect(log.unreadable).toEqual([]);
         yield* checkPlan(log, live);
@@ -327,7 +327,9 @@ describe("parsePlanLog fails closed on unreadable actions", () => {
 
   it.effect("refuses an unknown action on a singleton", () =>
     Effect.gen(function* () {
-      const failure = yield* refusal(Str.replace(runLine("[AppTag] noop"), runLine("[AppTag] migrate"))(noopPlan));
+      const failure = yield* refusal(
+        Str.replace(timestampedInfoLine("[AppTag] noop"), timestampedInfoLine("[AppTag] migrate"))(noopPlan)
+      );
       expect(A.map(failure.violations, (v) => [v.subject, v.reason, v.detail])).toContainEqual([
         "AppTag",
         "unreadable-action",
@@ -339,8 +341,8 @@ describe("parsePlanLog fails closed on unreadable actions", () => {
   it.effect("refuses an unknown action on a resource that is not a singleton, naming only the word", () =>
     Effect.gen(function* () {
       const plan = Str.replace(
-        runLine("[MonthlyBudget] noop"),
-        runLine("[MonthlyBudget] migrate to ops@example.com")
+        timestampedInfoLine("[MonthlyBudget] noop"),
+        timestampedInfoLine("[MonthlyBudget] migrate to ops@example.com")
       )(noopPlan);
       const failure = yield* refusal(plan);
       expect(A.map(failure.violations, (v) => [v.subject, v.reason, v.detail])).toEqual([

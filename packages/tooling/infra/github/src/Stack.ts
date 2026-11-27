@@ -41,7 +41,6 @@ const $I = $InfraGithubId.create("Stack");
  */
 export const idFragment = Str.replace(/[^A-Za-z0-9-]/gu, "-");
 
-// The one derivation of every logical id the stack declares; the duplicate check and the declarations share it.
 const environmentId = (name: string) => `Environment-${idFragment(name)}`;
 const environmentVariableId = (environment: string, variable: string) =>
   `EnvironmentVariable-${idFragment(environment)}-${variable}`;
@@ -278,14 +277,15 @@ const declareEnvironment = Effect.fnUntraced(function* (config: StackConfig, spe
   return environment;
 });
 
+const descriptionThatClearsOnPatch = "";
+
 const declareLabel = (config: StackConfig, spec: LabelSpec) =>
   GitHub.Label(labelId(spec.name), {
     owner: config.owner,
     repository: config.repository,
     name: spec.name,
     color: spec.color,
-    // `None` sends GitHub's clearing value: an omitted description is dropped from the PATCH and keeps the old text.
-    description: O.getOrElse(spec.description, () => ""),
+    description: O.getOrElse(spec.description, () => descriptionThatClearsOnPatch),
   });
 
 /**
@@ -295,6 +295,12 @@ const declareLabel = (config: StackConfig, spec: LabelSpec) =>
  * ruleset carries `liveReviewer`, the live `beep-reviewer` check, through
  * unchanged (see `RulesetGuard`). Dies with {@link DuplicateLogicalId},
  * declaring nothing, when two config names derive the same logical id.
+ *
+ * **Gotchas**
+ *
+ * The duplicate check dies rather than fails: a silent collision would drop a
+ * declaration, and `retain()` wraps an effect that cannot fail, so the refusal
+ * is a defect that stops the plan or deploy.
  *
  * **Example** (Declare the production configuration inside a stack)
  *
@@ -315,8 +321,6 @@ export const declareStack = Effect.fn("InfraGithub.declareStack")(function* (
   config: StackConfig,
   liveReviewer: O.Option<RequiredCheck>
 ) {
-  // A silent collision would drop a declaration; refuse before anything is declared. `retain()` wraps an
-  // effect that cannot fail, so the refusal is a defect: the plan or deploy stops with it.
   const duplicate = findDuplicateLogicalId(config);
   if (O.isSome(duplicate)) return yield* Effect.die(duplicate.value);
   const repository = yield* declareRepository(config);

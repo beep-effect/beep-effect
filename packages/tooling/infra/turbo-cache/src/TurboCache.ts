@@ -170,8 +170,11 @@ export const workerId = (options: Pick<TurboCacheOptions, "resourceNamePrefix">)
  * The module that calls this must default-export the result and pass its own
  * `import.meta.url` as `main`: Alchemy bundles that module as the Worker and
  * runs the implementation there. Stage-dependent choices (pinned names,
- * `retain`) are made only at deploy time; the bundled runtime never reads the
- * stage.
+ * `retain`) are made only at deploy time; the bundled runtime has no `Stage`
+ * service, so the stage is read optionally and never at run time. The Worker
+ * turns on observability: its Workers Logs feed the
+ * `workers_observability_real_time_issue` alert a stack can route to a
+ * notification policy.
  *
  * **Example** (Declare a cache Worker module)
  *
@@ -194,8 +197,6 @@ export const workerId = (options: Pick<TurboCacheOptions, "resourceNamePrefix">)
  */
 export const turboCache = Effect.fn("TurboCache.turboCache")(function* (options: TurboCacheOptions) {
   const deployTime = globalThis.__ALCHEMY_RUNTIME__ !== true;
-  // The bundled runtime has no `Stage` service; reading it optionally keeps
-  // every stage-dependent choice a deploy-time one.
   const isProduction = Effect.serviceOption(Stage).pipe(Effect.map(O.exists((stage) => stage === productionStage)));
   const retainInProduction = deployTime ? retain(isProduction) : identity;
 
@@ -226,7 +227,6 @@ export const turboCache = Effect.fn("TurboCache.turboCache")(function* (options:
           retainInProduction,
           Namespace.set(foundationId(options))
         );
-        // `text` resolves to the runtime accessor of the bound Worker secret.
         const token = yield* secret.text;
         return Credential.make({ team, principal: principal.name, access: principal.access, token });
       }),
@@ -247,8 +247,6 @@ export const turboCache = Effect.fn("TurboCache.turboCache")(function* (options:
     compatibility: { date: "2026-05-28", flags: ["nodejs_compat"] },
     dev: { port: 0 },
     main: options.main,
-    // Workers Logs feed the `workers_observability_real_time_issue` alert the
-    // stack wires to a notification policy (the throttle alarm's successor).
     observability: { enabled: true },
     workersDev: true,
   };

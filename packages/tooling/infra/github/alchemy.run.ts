@@ -12,35 +12,14 @@ import { readOnlyGitHubProviders } from "./src/ReadOnlyProviders.ts";
 import { decodeLiveRulesetJson, liveReviewerCheck } from "./src/RulesetGuard.ts";
 import { declareStack } from "./src/Stack.ts";
 
-/**
- * The live default-branch ruleset, captured by the caller right before the
- * plan (`gh api repos/beep-effect/beep-effect/rulesets/10240248 > <file>`) and
- * named by `INFRA_GITHUB_LIVE_RULESET`. The stack carries its `beep-reviewer`
- * check through unchanged; the deploy workflow's guard step compares every
- * other guarded field against the same capture before anything is written,
- * and the guarded ruleset provider re-reads the live ruleset inside its update
- * path and refuses the PUT if it no longer equals this capture.
- */
 const capture = Effect.gen(function* () {
   const path = yield* Config.String("INFRA_GITHUB_LIVE_RULESET");
   const fs = yield* FileSystem.FileSystem;
-  // A missing capture, or one the strict decoder cannot read (an unknown key, rule type or value),
-  // stops the plan: the stack never writes a ruleset it could not fully read.
   return yield* fs.readFileString(path).pipe(Effect.flatMap(decodeLiveRulesetJson));
 }).pipe(Effect.orDie);
 
 const liveReviewer = Effect.map(capture, liveReviewerCheck);
 
-/**
- * The GitHub providers for the stage. `prod` gets the shipped providers behind
- * the create guard (`prodGitHubProviders`: only allow-listed logical ids may
- * take the create path, and no replace or delete) with the guarded ruleset
- * provider (re-read before the PUT). Every other stage gets
- * read-only providers: plan works, while create, update and delete fail with
- * `PreviewStageIsReadOnly` before any request, so a preview stage cannot
- * write to the live repository whatever token is in the environment. Both are
- * layered over the `GitHub.providers()` collection, whose credentials they use.
- */
 const providers = Layer.unwrap(
   Effect.gen(function* () {
     const stage = yield* Stage;
@@ -73,6 +52,22 @@ export const state = AWS.state({
  * (`readOnlyGitHubProviders`), and it also refuses to start unless
  * `INFRA_GITHUB_LIVE_PREVIEW=plan-only` acknowledges that it reads the live
  * repository. Every resource is retained, so destroying a stage deletes nothing.
+ *
+ * **Gotchas**
+ *
+ * `INFRA_GITHUB_LIVE_RULESET` names a capture of the live default-branch
+ * ruleset taken right before the plan
+ * (`gh api repos/beep-effect/beep-effect/rulesets/10240248 > <file>`). A
+ * missing capture, or one the strict decoder cannot fully read (an unknown
+ * key, rule type or value), stops the plan. The stack carries the capture's
+ * `beep-reviewer` check through unchanged; the deploy workflow's guard step
+ * compares every other guarded field against the same capture before any
+ * write, and in `prod` the guarded ruleset provider re-reads the live ruleset
+ * in its update path and refuses the PUT once it no longer equals the
+ * capture. `prod` providers also take the create path only for allow-listed
+ * logical ids and never replace or delete; a preview stage's create, update
+ * and delete fail with `PreviewStageIsReadOnly` before any request, whatever
+ * token is in the environment.
  */
 export const program = Effect.gen(function* () {
   const stack = yield* Alchemy.Stack;

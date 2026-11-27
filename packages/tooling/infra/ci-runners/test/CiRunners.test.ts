@@ -35,8 +35,7 @@ const productionSecrets = {
   CI_RUNNERS_GITHUB_WEBHOOK_SECRET: fakeWebhookSecret,
 };
 
-// IAM ARN globbing: `*` matches any run of characters, `/` included. Role patterns hold no other regex syntax.
-const globMatches = (pattern: string, arn: string) =>
+const iamArnGlobMatches = (pattern: string, arn: string) =>
   /^[A-Za-z0-9:/*-]+$/u.test(pattern) && new RegExp(`^${Str.replaceAll("*", ".*")(pattern)}$`, "u").test(arn);
 
 const resourceList = (value: string | ReadonlyArray<string> | undefined): ReadonlyArray<string> =>
@@ -66,8 +65,7 @@ const declaredNames = (recorder: Recorder) =>
     })
   );
 
-// The prop each resource type pins its physical name with; types absent here get AWS-assigned ids.
-const nameKey: Readonly<Record<string, string>> = {
+const physicalNamePropOfType: Readonly<Record<string, string>> = {
   "Lambda.Function": "functionName",
   "SQS.Queue": "queueName",
   "IAM.Role": "roleName",
@@ -82,11 +80,10 @@ const nameKey: Readonly<Record<string, string>> = {
 
 const physicalNamesOf = (recorder: Recorder) =>
   A.map(
-    A.filter(recorder.reconciled, (entry) => R.has(nameKey, entry.type)),
-    (entry) => [entry.fqn, entry.news[nameKey[entry.type] ?? ""]] as const
+    A.filter(recorder.reconciled, (entry) => R.has(physicalNamePropOfType, entry.type)),
+    (entry) => [entry.fqn, entry.news[physicalNamePropOfType[entry.type] ?? ""]] as const
   );
 
-// Every physical name the prod stage chooses; the remaining resources take AWS-assigned ids.
 const productionPhysicalNames: Readonly<Record<string, string>> = {
   FlowLogGroup: "/beep-fleet/prod/vpc-flow-logs",
   FlowLogsRole: "beep-fleet-prod-flow-logs",
@@ -253,7 +250,6 @@ describe("CiRunners production stage", () => {
         O.isSome(overflow.buildDlqUrl),
       ]).toStrictEqual([true, true, true, true]);
       expect(A.filter(declaredNames(recorder), touchesLiveFleet)).toEqual([]);
-      // A job waiting for the cap stays on the build queue a day: it must never reach the DLQ for waiting alone.
       const queues = A.filter(
         recorder.reconciled,
         (entry) =>
@@ -269,15 +265,14 @@ describe("CiRunners production stage", () => {
             news.messageRetentionPeriod,
             P.isNotUndefined(news.redrivePolicy),
           ]
-        )
+        ),
+        "a job waiting for the cap stays on the build queue a day and never reaches a DLQ for waiting alone"
       ).toStrictEqual([
         ["Runners/Poolheavy/BuildQueue", "1 minute", "1 day", false],
         ["Runners/Poolheavy/JobRetryQueue", "2 minutes", undefined, true],
         ["Runners/Pooloverflow/BuildQueue", "1 minute", "1 day", false],
         ["Runners/Pooloverflow/JobRetryQueue", "2 minutes", undefined, true],
       ]);
-      // All five production mappings name their function by ARN: scale-up and job-retry of both pools, and the
-      // deregister retry. The deploy role conditions every mapping call on lambda:FunctionArn.
       const mappings = A.filter(recorder.reconciled, (entry) => entry.type === "Lambda.EventSourceMapping");
       expect(
         A.sort(
@@ -296,7 +291,10 @@ describe("CiRunners production stage", () => {
         (entry) =>
           !(P.isString(entry.news.functionName) && Str.startsWith("arn:aws:lambda:us-east-1:")(entry.news.functionName))
       );
-      expect(A.map(notByArn, (entry) => entry.fqn)).toStrictEqual([]);
+      expect(
+        A.map(notByArn, (entry) => entry.fqn),
+        "the deploy role conditions every mapping call on lambda:FunctionArn, so each names its function by ARN"
+      ).toStrictEqual([]);
     })
   );
 
@@ -304,7 +302,10 @@ describe("CiRunners production stage", () => {
   pinnedNames.provider("pins every production physical name under beep-fleet-prod", (stack) =>
     Effect.gen(function* () {
       yield* stack.deploy(program.pipe(environmentOf(productionSecrets)));
-      expect(R.fromEntries(physicalNamesOf(pinnedNames.recorder))).toStrictEqual(productionPhysicalNames);
+      expect(
+        R.fromEntries(physicalNamesOf(pinnedNames.recorder)),
+        "every physical name the prod stage chooses; the remaining resources take AWS-assigned ids"
+      ).toStrictEqual(productionPhysicalNames);
     })
   );
 
@@ -315,9 +316,7 @@ describe("CiRunners production stage", () => {
       const { reconciled } = roleArns.recorder;
       const roles = A.filter(reconciled, (entry) => entry.type === "IAM.Role");
       const functions = A.filter(reconciled, (entry) => entry.type === "Lambda.Function");
-      // Declared roles keep the default path; each Lambda execution role is Alchemy's generated
-      // CiRunners-<id>-<stage>-<suffix> name, also at the default path.
-      const planned = [
+      const plannedRoleArnsAtDefaultPath = [
         ...A.map(
           roles,
           (entry) => `arn:aws:iam::832907639880:role${String(entry.news.path ?? "/")}${String(entry.news.roleName)}`
@@ -340,9 +339,12 @@ describe("CiRunners production stage", () => {
       );
       expect(A.length(grantPatterns)).toBe(2);
       expect(A.length(boundaryPatterns)).toBe(2);
-      for (const arn of planned) {
-        expect([arn, A.some(grantPatterns, (pattern) => globMatches(pattern, arn))]).toStrictEqual([arn, true]);
-        expect([arn, A.some(boundaryPatterns, (pattern) => globMatches(pattern, arn))]).toStrictEqual([arn, true]);
+      for (const arn of plannedRoleArnsAtDefaultPath) {
+        expect([arn, A.some(grantPatterns, (pattern) => iamArnGlobMatches(pattern, arn))]).toStrictEqual([arn, true]);
+        expect([arn, A.some(boundaryPatterns, (pattern) => iamArnGlobMatches(pattern, arn))]).toStrictEqual([
+          arn,
+          true,
+        ]);
       }
       for (const entry of [...roles, ...functions]) {
         expect([entry.fqn, entry.news.permissionsBoundary]).toStrictEqual([entry.fqn, fleetBoundaryPolicyArn]);
@@ -350,8 +352,6 @@ describe("CiRunners production stage", () => {
     })
   );
 
-  // The boundary caps every function role: an action a role grants but the boundary does not allow is denied at
-  // run time, whatever the role says (the binaries syncer's multipart abort was such a gap until 2026-11-20).
   const boundedGrants = Fakes.harness({ stage: "prod" });
   boundedGrants.provider("allows every action a function role grants under the fleet boundary", (stack) =>
     Effect.gen(function* () {
@@ -371,10 +371,13 @@ describe("CiRunners production stage", () => {
       );
       const covered = (grant: string) =>
         A.some(allows, (allow) =>
-          A.some(resourceList(allow.Action), (pattern) => globMatches(pattern, Str.split(" ")(grant)[1] ?? ""))
+          A.some(resourceList(allow.Action), (pattern) => iamArnGlobMatches(pattern, Str.split(" ")(grant)[1] ?? ""))
         );
       expect(A.length(granted)).toBeGreaterThan(0);
-      expect(A.filter(granted, (grant) => !covered(grant))).toStrictEqual([]);
+      expect(
+        A.filter(granted, (grant) => !covered(grant)),
+        "the boundary caps every function role: a granted action it does not allow is denied at run time"
+      ).toStrictEqual([]);
     })
   );
 
