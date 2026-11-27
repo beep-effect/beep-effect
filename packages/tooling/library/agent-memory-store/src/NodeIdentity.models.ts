@@ -194,8 +194,6 @@ export declare namespace RevisionId {
   export type Encoded = typeof RevisionId.Encoded;
 }
 
-// One or more `/`-separated segments, none empty and none starting with `.`,
-// the last ending in `.md`.
 const MEMORY_FILE_PATH_PATTERN = /^(?:[^/.][^/]*\/)*[^/.][^/]*\.md$/;
 
 /**
