@@ -28,7 +28,7 @@ const probe =
 const generation =
   "local generator, never a CI check: run in a clone with full history, with GIT_ALTERNATE_OBJECT_DIRECTORIES " +
   "naming the sibling clones' object stores so unpushed lane heads resolve; a head found in no store is " +
-  "head-missing; a shallow or treeless clone is refused before any probe (git rev-parse " +
+  "head-missing; a shallow clone is refused before any probe (git rev-parse " +
   "--is-shallow-repository must print false); regenerate with `bun run evidence:kpi-adoption:write` in " +
   "apps/labs/ciops";
 
