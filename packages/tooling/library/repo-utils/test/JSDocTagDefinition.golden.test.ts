@@ -86,10 +86,7 @@ describe("JSDocTagDefinition.make golden compatibility", () => {
     "matches every pre-migration JSDoc tag fingerprint",
     Effect.fnUntraced(function* () {
       const fingerprints1 = yield* fingerprints(make, JSDocTag);
-      expect(
-        fingerprints1,
-        "samples are captured wire values: native Arbitrary seeds do not reproduce the fast-check samples the golden recorded"
-      ).toEqual(golden);
+      expect(fingerprints1).toEqual(golden);
     })
   );
 });

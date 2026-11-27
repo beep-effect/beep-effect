@@ -174,10 +174,7 @@ const retireSeededImplementations = (kind: PackageKind, impls: ScriptsBlock["imp
       ? HashMap.set(current, row.name, row.replacement)
       : current
   );
-const serveCheckFromRetiredBuild = (
-  impls: ScriptsBlock["impls"],
-  keepsOwnSourceCheck: boolean
-): ScriptsBlock["impls"] =>
+const serveCheckAfterRetire = (impls: ScriptsBlock["impls"], keepsOwnSourceCheck: boolean): ScriptsBlock["impls"] =>
   keepsOwnSourceCheck
     ? impls
     : pipe(
@@ -220,7 +217,7 @@ const expectedBlock: PackageScriptsPolicyShape["expected"] = (kind, actual, evid
   const codegen = HashMap.get(tasks, "codegen");
   if (O.exists(codegen, isPlaceholder)) tasks = HashMap.remove(tasks, "codegen");
   impls = retireSeededImplementations(kind, impls, HashSet.size(evidence.javaScriptBuilds) > 0);
-  impls = serveCheckFromRetiredBuild(impls, HashSet.size(evidence.ownSourceChecks) > 0);
+  impls = serveCheckAfterRetire(impls, HashSet.size(evidence.ownSourceChecks) > 0);
   const extras = HashMap.filter(actual.extras, (_, name) => !isRetiredScriptName(name));
   return ScriptsBlock.make({ kind, tasks, impls, extras });
 };

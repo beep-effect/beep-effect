@@ -12,7 +12,7 @@ const $I = $RepoUtilsId.create("JSDoc/models/ApplicableTo.model");
 /**
  * **Details**
  *
- * `parameter` is a parameter nested within `@callback` or `@typedef`. `module`
+ * `parameter` is a parameter nested within a callback or typedef tag. `module`
  * is an ES or CommonJS module, `file` a file-level comment, and `any` a tag that
  * can attach to anything.
  *

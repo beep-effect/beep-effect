@@ -58,10 +58,10 @@ export const resolveOperatorPath: {
  * installed on a mise-managed workstation runs whichever Bun the repo's
  * `mise.toml` pins on the night it fires. A candidate that is missing,
  * unreadable, a directory, or a leftover without execute permission is
- * skipped rather than pinned, so the probe never fails. The installer's own `process.execPath` is the
- * fallback only when no candidate qualifies: it is one version's binary, and
- * a unit pinned to it keeps running that version after a bump, or fails
- * outright once the version is pruned.
+ * skipped rather than pinned, so the probe never fails. The installer's own
+ * `process.execPath` is the fallback only when no candidate qualifies: it is
+ * one version's binary, and a unit pinned to it keeps running that version
+ * after a bump, or fails outright once the version is pruned.
  *
  * **Example** (Prepare a resolution under an operator home)
  *

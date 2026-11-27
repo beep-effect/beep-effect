@@ -35,10 +35,9 @@ const StructuralArbitrary = Arbitrary.schema(StructuralJSDoc);
 describe("StructuralJSDoc", () => {
   it("covers exactly the structural tag family", () => {
     const sortTags = A.sort(Order.String);
-    expect(
-      sortTags(structuralTags),
-      "the union covers exactly the structural tag family as JSDoc names it, and the matcher dispatches each"
-    ).toEqual(sortTags(STRUCTURAL_TAGS));
+    expect(sortTags(structuralTags), "the union covers exactly the structural tag family as JSDoc names it").toEqual(
+      sortTags(STRUCTURAL_TAGS)
+    );
   });
 
   for (const tag of structuralTags) {
@@ -48,10 +47,7 @@ describe("StructuralJSDoc", () => {
       ([value]) =>
         Effect.gen(function* () {
           expect(value._tag).toBe(tag);
-          expect(
-            matchStructuralJSDoc(value),
-            "one property per member exercises every matcher branch, whatever the whole-union arbitrary samples"
-          ).toBeUndefined();
+          expect(matchStructuralJSDoc(value)).toBeUndefined();
 
           return true;
         }),

@@ -556,7 +556,8 @@ const turboEnvironmentHealthVerdicts = MutableHashMap.empty<string, ReadonlyArra
  * without carrying its value. The isolated probes are short, network-bound
  * child processes and run 16 at a time: a 50-reference `.env` replays in
  * about 1.5 s, against 5.2 s at width 4, with the same failing names. Results
- * are cached by repository root for the life of the CLI process. A checkout without `.env` has no warnings.
+ * are cached by repository root for the life of the CLI process. A checkout
+ * without `.env` has no warnings.
  *
  * This diagnostic is independent of cache readiness. A warning for an
  * unrelated variable never changes the Turbo cache plan.

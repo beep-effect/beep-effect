@@ -233,7 +233,7 @@ const recordToSortedHashMap = {
   ),
 };
 
-const hashMapFieldWithRecordChecks = <
+const recordCheckedMap = <
   Record extends S.Codec<{ readonly [key: string]: string }>,
   Key extends S.Codec<string>,
   Value extends S.Codec<string>,
@@ -247,11 +247,7 @@ const hashMapFieldWithRecordChecks = <
     S.withConstructorDefault(Effect.succeed(HashMap.empty<string, string>()))
   );
 
-const RepoDependencyMapField = hashMapFieldWithRecordChecks(
-  RepoDependencyRecord,
-  RepoPackageName,
-  NonEmptyStringValue
-).pipe(
+const RepoDependencyMapField = recordCheckedMap(RepoDependencyRecord, RepoPackageName, NonEmptyStringValue).pipe(
   $I.annoteSchema("RepoDependencyMapField", {
     title: "Repo Dependency Map Field",
     description:
@@ -259,11 +255,7 @@ const RepoDependencyMapField = hashMapFieldWithRecordChecks(
   })
 );
 
-const NonEmptyStringMapField = hashMapFieldWithRecordChecks(
-  NonEmptyStringRecord,
-  NonEmptyStringValue,
-  NonEmptyStringValue
-).pipe(
+const NonEmptyStringMapField = recordCheckedMap(NonEmptyStringRecord, NonEmptyStringValue, NonEmptyStringValue).pipe(
   $I.annoteSchema("NonEmptyStringMapField", {
     title: "Non Empty String Map Field",
     description:
