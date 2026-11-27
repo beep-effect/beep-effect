@@ -42,6 +42,18 @@ streak can be audited.
 | UTC day | Run id | Attempt | Event | Re-run | Conclusion | Certified | GitHub requests | Job minutes | Code heads n / misses / superseded | SLO p50 / p95 | Main verdict rate |
 | --- | --- | ---: | --- | --- | --- | --- | ---: | ---: | --- | --- | --- |
 | 2026-11-12 | 43433123124 | 1 | workflow_dispatch | no | success | yes | 84 | 3 | 32 / 14 / 4 | 23.3 min / not-attained | 47.1% (8 of 17) |
+| 2026-11-14 | 43713100782 | 1 | schedule | no | success | yes | 271 | 5 | 124 / 31 / 56 | 32.2 min / not-attained | 58.8% (30 of 51) |
+| 2026-11-15 | 43873109188 | 1 | schedule | no | success | yes | 9 | 2 | 3 / 1 / 0 | 28.8 min / not-attained | 100.0% (4 of 4) |
+| 2026-11-16 | 44096962205 | 1 | schedule | no | success | yes | 5 | 2 | 1 / 0 / 0 | 16.0 min / 16.0 min | 100.0% (1 of 1) |
+| 2026-11-17 | 44314030099 | 1 | schedule | no | success | yes | 23 | 2 | 8 / 2 / 3 | 12.5 min / not-attained | 100.0% (3 of 3) |
+| 2026-11-18 | 44538188130 | 1 | schedule | no | success | yes | 212 | 5 | 82 / 9 / 57 | 18.4 min / not-attained | 80.0% (24 of 30) |
+| 2026-11-19 | 44745976023 | 1 | schedule | no | success | yes | 96 | 3 | 47 / 5 / 19 | 24.6 min / not-attained | 64.0% (16 of 25) |
+| 2026-11-20 | 44906777806 | 1 | schedule | no | success | yes | 85 | 4 | 34 / 1 / 10 | 19.6 min / 85.7 min | 78.9% (15 of 19) |
 
 2026-11-12 is the workflow's first run (dispatched by hand after #3266 merged) and is recorded for its cost and
 shape. It does not count toward P2's seven: the first countable day is 2026-11-14.
+
+2026-11-14 through 2026-11-20 are P2's seven consecutive certified nights: each is the scheduled run's first
+attempt, concluded `success` with `"certified": true` and no refusals, so no re-run was needed. The SLO p95 is
+`not-attained` on five of the seven nights; P2 counts certification, and the SLO itself is this goal's
+reported number, not its gate.
