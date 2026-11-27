@@ -242,6 +242,7 @@ export const fitTokenFilter: {
  * A USPTO record contributes only when the document cites its number. Only the separators that appear
  * inside a number (`/`, `,`, `.`, `-`) are stripped before that match; whitespace stays a boundary, so a
  * number followed by a date, as on a USPTO cover sheet, still counts as cited.
+ *
  * **Example** (Resolve an empty document)
  *
  * ```ts

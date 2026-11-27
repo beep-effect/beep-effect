@@ -1128,7 +1128,7 @@ export const practiceKgCorrespondentFieldTiers = defineFieldTiers({
   }),
 });
 
-const closedWorldReadOnlyHints = FourHintAnnotations.make({
+const offlineBundleReadOnlyHints = FourHintAnnotations.make({
   destructive: false,
   idempotent: true,
   openWorld: false,
@@ -1149,7 +1149,7 @@ const readTool = <Name extends string, Parameters extends S.Top, Success extends
       parameters,
       success,
     }),
-    closedWorldReadOnlyHints
+    offlineBundleReadOnlyHints
   );
 
 /**
