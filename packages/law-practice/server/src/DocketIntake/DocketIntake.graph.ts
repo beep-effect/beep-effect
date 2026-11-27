@@ -104,23 +104,27 @@ export class DocketGraphConfig extends S.Opaque<DocketGraphConfig, { readonly br
     mailbox: S.NonEmptyString.annotateKey({ description: "Mailbox user id or address; never logged." }),
     maxDocumentBytes: S.Natural.pipe(
       S.withConstructorDefault(Effect.succeed(docketGraphConfigMaxDocumentBytesDefault)),
+      S.annotateKey({ description: "Largest source document, in bytes, handed to the reviewer." }),
       S.withDecodingDefaultTypeKey(Effect.succeed(docketGraphConfigMaxDocumentBytesDefault))
-    ).annotateKey({ description: "Largest source document, in bytes, handed to the reviewer." }),
+    ),
     maxDocuments: S.Natural.pipe(
       S.withConstructorDefault(Effect.succeed(docketGraphConfigMaxDocumentsDefault)),
+      S.annotateKey({ description: "Most source documents handed to the reviewer for one message." }),
       S.withDecodingDefaultTypeKey(Effect.succeed(docketGraphConfigMaxDocumentsDefault))
-    ).annotateKey({ description: "Most source documents handed to the reviewer for one message." }),
+    ),
     maxTotalDocumentBytes: S.Natural.pipe(
       S.withConstructorDefault(Effect.succeed(docketGraphConfigMaxTotalDocumentBytesDefault)),
+      S.annotateKey({
+        description:
+          "Most raw bytes of source documents handed to the reviewer for one message. The default of 20,000,000 stays under a 32 MB request once base64 encoding inflates the bytes by four thirds.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(docketGraphConfigMaxTotalDocumentBytesDefault))
-    ).annotateKey({
-      description:
-        "Most raw bytes of source documents handed to the reviewer for one message. The default of 20,000,000 stays under a 32 MB request once base64 encoding inflates the bytes by four thirds.",
-    }),
+    ),
     pageSize: PositiveCount.pipe(
       S.withConstructorDefault(Effect.succeed(docketGraphConfigPageSizeDefault)),
+      S.annotateKey({ description: "Messages requested per Graph page." }),
       S.withDecodingDefaultTypeKey(Effect.succeed(docketGraphConfigPageSizeDefault))
-    ).annotateKey({ description: "Messages requested per Graph page." }),
+    ),
     timeZone: S.TimeZoneNamedFromString.annotateKey({ description: "IANA time zone of the practice; required." }),
   }).pipe($I.annoteSchema("DocketGraphConfig", { description: "Settings of the docket intake Graph adapters." }))
 ) {}

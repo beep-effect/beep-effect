@@ -175,10 +175,11 @@ export class DiscordConfigInput extends S.Opaque<DiscordConfigInput, { readonly 
   S.Struct({
     baseUrl: DiscordBaseUrl.pipe(
       S.withConstructorDefault(Effect.succeed(DISCORD_API_URL)),
+      S.annotateKey({
+        description: "Discord REST base URL; defaults to Discord's public v10 API.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(DISCORD_API_URL))
-    ).annotateKey({
-      description: "Discord REST base URL; defaults to Discord's public v10 API.",
-    }),
+    ),
   }).pipe(
     $I.annoteSchema("DiscordConfigInput", {
       description: "Runtime configuration accepted by the Discord REST driver layer.",

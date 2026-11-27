@@ -51,16 +51,18 @@ export class TikaAppEngineConfig extends S.Opaque<TikaAppEngineConfig, { readonl
     }),
     javaPath: S.NonEmptyString.pipe(
       S.withConstructorDefault(Effect.succeed(defaultJavaPath)),
+      S.annotateKey({
+        description: "Java executable command or path used to run tika-app.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(defaultJavaPath))
-    ).annotateKey({
-      description: "Java executable command or path used to run tika-app.",
-    }),
+    ),
     timeoutMillis: PosInt.pipe(
       S.withConstructorDefault(Effect.succeed(tikaAppEngineConfigTimeoutMillisDefault)),
+      S.annotateKey({
+        description: "Per-file tika-app extraction timeout in milliseconds.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(tikaAppEngineConfigTimeoutMillisDefault))
-    ).annotateKey({
-      description: "Per-file tika-app extraction timeout in milliseconds.",
-    }),
+    ),
   }).pipe(
     $I.annoteSchema("TikaAppEngineConfig", {
       description:

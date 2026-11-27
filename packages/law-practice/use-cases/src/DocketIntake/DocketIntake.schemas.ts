@@ -30,13 +30,19 @@ const opt = <Sch extends S.Top>(schema: Sch, description: string) =>
 
 const emptyStrings: ReadonlyArray<string> = [];
 
+const extractorFieldResponses = (description: string) =>
+  S.Array(ExtractorFieldResponse).pipe(
+    S.withConstructorDefault(Effect.succeed([])),
+    S.annotateKey({ description }),
+    S.withDecodingDefaultTypeKey(Effect.succeed([]))
+  );
+
 const stringList = (description: string) =>
-  S.Array(S.String)
-    .pipe(
-      S.withConstructorDefault(Effect.succeed(emptyStrings)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(emptyStrings))
-    )
-    .annotateKey({ description });
+  S.Array(S.String).pipe(
+    S.withConstructorDefault(Effect.succeed(emptyStrings)),
+    S.annotateKey({ description }),
+    S.withDecodingDefaultTypeKey(Effect.succeed(emptyStrings))
+  );
 
 /**
  * Reference to one attachment of a mailbox message (metadata only).
@@ -122,9 +128,11 @@ const docketMessageSourceFolderDefault: DocketSourceFolder = "mailbox";
  */
 export class DocketMessage extends S.Opaque<DocketMessage, { readonly brand: unique symbol }>()(
   S.Struct({
-    attachments: S.Array(DocketAttachmentRef)
-      .pipe(S.withConstructorDefault(Effect.succeed([])), S.withDecodingDefaultTypeKey(Effect.succeed([])))
-      .annotateKey({ description: "Attachment references, without bytes." }),
+    attachments: S.Array(DocketAttachmentRef).pipe(
+      S.withConstructorDefault(Effect.succeed([])),
+      S.annotateKey({ description: "Attachment references, without bytes." }),
+      S.withDecodingDefaultTypeKey(Effect.succeed([]))
+    ),
     bodyText: S.String.annotateKey({ description: "Plain-text body (never logged)." }),
     conversationId: opt(S.NonEmptyString, "Provider thread id; dated entries share one identity per thread and date."),
     internetMessageId: opt(S.NonEmptyString, "RFC 5322 message id; stable across folders."),
@@ -136,8 +144,9 @@ export class DocketMessage extends S.Opaque<DocketMessage, { readonly brand: uni
     sender: opt(S.String, "Sender address (never logged)."),
     sourceFolder: DocketSourceFolder.pipe(
       S.withConstructorDefault(Effect.succeed(docketMessageSourceFolderDefault)),
+      S.annotateKey({ description: "Where in the mailbox the message was found; `mailbox` unless stated." }),
       S.withDecodingDefaultTypeKey(Effect.succeed(docketMessageSourceFolderDefault))
-    ).annotateKey({ description: "Where in the mailbox the message was found; `mailbox` unless stated." }),
+    ),
     subject: opt(S.String, "Subject line (never logged)."),
     webLink: opt(S.String, "Link that opens the message in Outlook."),
   }).pipe($I.annoteSchema("DocketMessage", { description: "A mailbox message as the docket intake pipeline sees it." }))
@@ -290,8 +299,9 @@ export class SecretaryReview extends S.Opaque<SecretaryReview, { readonly brand:
     notes: S.String.annotateKey({ description: "One or two sentences on what the reviewer checked." }),
     readFromSourceDocument: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(false)),
+      S.annotateKey({ description: "Whether the date and period came from an attached document." }),
       S.withDecodingDefaultTypeKey(Effect.succeed(false))
-    ).annotateKey({ description: "Whether the date and period came from an attached document." }),
+    ),
     responsePeriod: opt(DocketResponsePeriod, "Response period the reviewer read for itself."),
     statedDueDate: opt(LocalDateFromString, "Due date the source states outright, read by the reviewer for itself."),
   }).pipe($I.annoteSchema("SecretaryReview", { description: "Agent 2 review of one entry." }))
@@ -321,9 +331,7 @@ export class SecretaryReview extends S.Opaque<SecretaryReview, { readonly brand:
 export class ParalegalRevision extends S.Opaque<ParalegalRevision, { readonly brand: unique symbol }>()(
   S.Struct({
     entry: ParalegalEntry.annotateKey({ description: "The entry after the revision." }),
-    responses: S.Array(ExtractorFieldResponse)
-      .pipe(S.withConstructorDefault(Effect.succeed([])), S.withDecodingDefaultTypeKey(Effect.succeed([])))
-      .annotateKey({ description: "What the extractor did with each disputed field." }),
+    responses: extractorFieldResponses("What the extractor did with each disputed field."),
     selfReportedConfidence: opt(UnitInterval, "The model's own confidence; recorded, never scored."),
   }).pipe($I.annoteSchema("ParalegalRevision", { description: "Agent 1 answer to a set of disputed fields." }))
 ) {}
@@ -355,9 +363,9 @@ export class ReviewRound extends S.Opaque<ReviewRound, { readonly brand: unique 
     }),
     entry: ParalegalEntry.annotateKey({ description: "The extractor's entry for this round." }),
     extractorConfidence: opt(UnitInterval, "The extractor's own confidence; recorded, never scored."),
-    extractorResponse: S.Array(ExtractorFieldResponse)
-      .pipe(S.withConstructorDefault(Effect.succeed([])), S.withDecodingDefaultTypeKey(Effect.succeed([])))
-      .annotateKey({ description: "What the extractor did with each field disputed after the previous round." }),
+    extractorResponse: extractorFieldResponses(
+      "What the extractor did with each field disputed after the previous round."
+    ),
     findings: S.Array(ReviewFinding).annotateKey({ description: "The critic's findings on the entry." }),
     index: S.Int.check(S.isGreaterThan(0)).annotateKey({ description: "1-based number of the round." }),
     reading: SecretaryReview.annotateKey({ description: "The critic's own reading for this round." }),
@@ -932,9 +940,11 @@ export class DocketEntered extends S.Opaque<DocketEntered, { readonly brand: uni
  */
 export class DocketNeedsReview extends S.Opaque<DocketNeedsReview, { readonly brand: unique symbol }>()(
   S.TaggedStruct("DocketNeedsReview", {
-    candidateDates: S.Array(DocketCandidateDate)
-      .pipe(S.withConstructorDefault(Effect.succeed([])), S.withDecodingDefaultTypeKey(Effect.succeed([])))
-      .annotateKey({ description: "Dates the deadline could be, from either reader or the docket sheet." }),
+    candidateDates: S.Array(DocketCandidateDate).pipe(
+      S.withConstructorDefault(Effect.succeed([])),
+      S.annotateKey({ description: "Dates the deadline could be, from either reader or the docket sheet." }),
+      S.withDecodingDefaultTypeKey(Effect.succeed([]))
+    ),
     conversationId: opt(S.NonEmptyString, "Mail thread (Graph conversationId) of the message."),
     docket: opt(S.NonEmptyString, "Docket number of the matched matter, when exactly one is known."),
     entry: DocketWrittenEntry.annotateKey({ description: "The needs-review entry." }),
@@ -1073,8 +1083,10 @@ export class DocketIntakeState extends S.Opaque<DocketIntakeState, { readonly br
   S.Struct({
     cursor: opt(S.NonEmptyString, "UTC receipt timestamp up to which every message is settled."),
     digestedThrough: opt(LocalDateFromString, "Last day a digest was written for."),
-    ledger: S.Record(S.String, DocketLedgerRecord)
-      .pipe(S.withConstructorDefault(Effect.succeed({})), S.withDecodingDefaultTypeKey(Effect.succeed({})))
-      .annotateKey({ description: "Ledger records keyed by message id." }),
+    ledger: S.Record(S.String, DocketLedgerRecord).pipe(
+      S.withConstructorDefault(Effect.succeed({})),
+      S.annotateKey({ description: "Ledger records keyed by message id." }),
+      S.withDecodingDefaultTypeKey(Effect.succeed({}))
+    ),
   }).pipe($I.annoteSchema("DocketIntakeState", { description: "Durable state of the docket intake service." }))
 ) {}

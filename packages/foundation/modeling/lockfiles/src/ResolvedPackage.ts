@@ -153,44 +153,44 @@ export class ResolvedPackage extends S.Class<ResolvedPackage, { readonly brand: 
       })
     ),
     dependencies: S.Record(S.String, S.String).pipe(
-      S.withDecodingDefaultKey(Effect.succeed(EMPTY_DEPENDENCIES)),
-      S.withConstructorDefault(Effect.succeed(EMPTY_DEPENDENCIES)),
       $I.annoteKey("ResolvedPackage.dependencies", {
         description:
           "Package dependency entries recorded by the lockfile, keyed by dependency name and defaulting to an empty map",
-      })
+      }),
+      S.withDecodingDefaultKey(Effect.succeed(EMPTY_DEPENDENCIES)),
+      S.withConstructorDefault(Effect.succeed(EMPTY_DEPENDENCIES))
     ),
     peerDependencies: S.Record(S.String, S.String).pipe(
-      S.withDecodingDefaultKey(Effect.succeed(EMPTY_DEPENDENCIES)),
-      S.withConstructorDefault(Effect.succeed(EMPTY_DEPENDENCIES)),
       $I.annoteKey("ResolvedPackage.peerDependencies", {
         description:
           "Declared peer dependency ranges keyed by package name, independently of which instances actually resolved",
-      })
+      }),
+      S.withDecodingDefaultKey(Effect.succeed(EMPTY_DEPENDENCIES)),
+      S.withConstructorDefault(Effect.succeed(EMPTY_DEPENDENCIES))
     ),
     peerDependenciesMeta: S.Record(S.String, S.Struct({ optional: S.Boolean })).pipe(
-      S.withDecodingDefaultKey(Effect.succeed(EMPTY_PEER_META)),
-      S.withConstructorDefault(Effect.succeed(EMPTY_PEER_META)),
       $I.annoteKey("ResolvedPackage.peerDependenciesMeta", {
         description:
           "Per-peer optionality flags normalized across lockfile formats; peers without metadata are required",
-      })
+      }),
+      S.withDecodingDefaultKey(Effect.succeed(EMPTY_PEER_META)),
+      S.withConstructorDefault(Effect.succeed(EMPTY_PEER_META))
     ),
     resolved: S.Record(S.String, S.String).pipe(
-      S.withDecodingDefaultKey(Effect.succeed(EMPTY_DEPENDENCIES)),
-      S.withConstructorDefault(Effect.succeed(EMPTY_DEPENDENCIES)),
       $I.annoteKey("ResolvedPackage.resolved", {
         description:
           "Dependency and recorded peer names mapped to verified target instance identities in this package's resolution context",
-      })
+      }),
+      S.withDecodingDefaultKey(Effect.succeed(EMPTY_DEPENDENCIES)),
+      S.withConstructorDefault(Effect.succeed(EMPTY_DEPENDENCIES))
     ),
     unresolvedEdges: S.Array(S.String).pipe(
-      S.withDecodingDefaultKey(Effect.succeed(EMPTY_EDGE_NAMES)),
-      S.withConstructorDefault(Effect.succeed(EMPTY_EDGE_NAMES)),
       $I.annoteKey("ResolvedPackage.unresolvedEdges", {
         description:
           "Dependency names with recorded lockfile edges whose target instances could not be identified, excluding genuinely absent edges",
-      })
+      }),
+      S.withDecodingDefaultKey(Effect.succeed(EMPTY_EDGE_NAMES)),
+      S.withConstructorDefault(Effect.succeed(EMPTY_EDGE_NAMES))
     ),
   },
   $I.annote("ResolvedPackage", { description: "A package resolved from a lockfile." })

@@ -88,30 +88,31 @@ export class SanityConfigInput extends S.Opaque<SanityConfigInput, { readonly br
   S.Struct({
     apiHost: SanityApiHost.pipe(
       S.withConstructorDefault(Effect.succeed(SANITY_API_HOST)),
+      S.annotateKey({
+        description: "Sanity API base URL; defaults to the first-party API host.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(SANITY_API_HOST))
-    ).annotateKey({
-      description: "Sanity API base URL; defaults to the first-party API host.",
-    }),
+    ),
     apiToken: S.optionalKey(S.String.pipe(S.RedactedFromValue)).annotateKey({
       description: "Optional Sanity API bearer token used for authenticated requests.",
     }),
     apiVersion: SanityApiVersion.pipe(
       S.withConstructorDefault(Effect.succeed(SANITY_API_VERSION)),
+      S.annotateKey({
+        description: "Sanity API version date used in content API paths.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(SANITY_API_VERSION))
-    ).annotateKey({
-      description: "Sanity API version date used in content API paths.",
-    }),
+    ),
     dataset: S.optionalKey(SanityDataset).annotateKey({
       description: "Sanity dataset name used in content API paths.",
     }),
-    headers: S.Record(S.String, S.String)
-      .pipe(
-        S.withConstructorDefault(Effect.succeed(sanityConfigInputHeadersDefault)),
-        S.withDecodingDefaultTypeKey(Effect.succeed(sanityConfigInputHeadersDefault))
-      )
-      .annotateKey({
+    headers: S.Record(S.String, S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(sanityConfigInputHeadersDefault)),
+      S.annotateKey({
         description: "Additional HTTP headers included on Sanity content API requests.",
       }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(sanityConfigInputHeadersDefault))
+    ),
     projectId: S.optionalKey(SanityProjectId).annotateKey({
       description: "Sanity project id used to scope first-party API hosts.",
     }),

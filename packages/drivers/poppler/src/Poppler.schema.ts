@@ -35,20 +35,24 @@ export class PopplerConfig extends S.Opaque<PopplerConfig, { readonly brand: uni
   S.Struct({
     dpi: PosInt.pipe(
       S.withConstructorDefault(Effect.succeed(defaultDpi)),
+      S.annotateKey({ description: "Render resolution in dots per inch." }),
       S.withDecodingDefaultTypeKey(Effect.succeed(defaultDpi))
-    ).annotateKey({ description: "Render resolution in dots per inch." }),
+    ),
     pdfinfoPath: S.NonEmptyString.pipe(
       S.withConstructorDefault(Effect.succeed("pdfinfo")),
+      S.annotateKey({ description: "Executable path or command name of pdfinfo." }),
       S.withDecodingDefaultTypeKey(Effect.succeed("pdfinfo"))
-    ).annotateKey({ description: "Executable path or command name of pdfinfo." }),
+    ),
     pdftoppmPath: S.NonEmptyString.pipe(
       S.withConstructorDefault(Effect.succeed("pdftoppm")),
+      S.annotateKey({ description: "Executable path or command name of pdftoppm." }),
       S.withDecodingDefaultTypeKey(Effect.succeed("pdftoppm"))
-    ).annotateKey({ description: "Executable path or command name of pdftoppm." }),
+    ),
     timeoutMillis: PosInt.pipe(
       S.withConstructorDefault(Effect.succeed(defaultTimeoutMillis)),
+      S.annotateKey({ description: "Timeout in milliseconds for one pdfinfo or pdftoppm call." }),
       S.withDecodingDefaultTypeKey(Effect.succeed(defaultTimeoutMillis))
-    ).annotateKey({ description: "Timeout in milliseconds for one pdfinfo or pdftoppm call." }),
+    ),
   }).pipe(
     $I.annoteSchema("PopplerConfig", {
       description: "Paths, render resolution and per-call timeout for the Poppler command-line tools.",

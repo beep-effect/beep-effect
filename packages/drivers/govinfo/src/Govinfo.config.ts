@@ -135,10 +135,11 @@ export class GovinfoConfigInput extends S.Opaque<GovinfoConfigInput, { readonly 
     ),
     apiUrl: URLStr.pipe(
       S.withConstructorDefault(Effect.succeed(govinfoConfigInputApiUrlDefault)),
+      S.annotateKey({
+        description: "Base URL for GovInfo REST API requests.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(govinfoConfigInputApiUrlDefault))
-    ).annotateKey({
-      description: "Base URL for GovInfo REST API requests.",
-    }),
+    ),
   }).pipe(
     $I.annoteSchema("GovinfoConfigInput", {
       description: "Runtime configuration accepted by the GovInfo REST API driver layer.",

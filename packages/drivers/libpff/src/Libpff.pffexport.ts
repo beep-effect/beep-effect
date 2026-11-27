@@ -266,23 +266,26 @@ export class PffexportEngineConfig extends S.Opaque<PffexportEngineConfig, { rea
     ),
     existingExportPolicy: PffexportExistingExportPolicy.pipe(
       S.withConstructorDefault(Effect.succeed("fail" as const)),
+      S.annotateKey({
+        description:
+          "Behavior when any prior export tree (.export/.orphans/.recovered) or messages JSONL already exists for this source.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed("fail" as const))
-    ).annotateKey({
-      description:
-        "Behavior when any prior export tree (.export/.orphans/.recovered) or messages JSONL already exists for this source.",
-    }),
+    ),
     exportFormat: PffexportFormat.pipe(
       S.withConstructorDefault(Effect.succeed("text" as const)),
+      S.annotateKey({
+        description: "pffexport message body format passed to the `-f` flag.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed("text" as const))
-    ).annotateKey({
-      description: "pffexport message body format passed to the `-f` flag.",
-    }),
+    ),
     exportMode: PffexportMode.pipe(
       S.withConstructorDefault(Effect.succeed("items" as const)),
+      S.annotateKey({
+        description: "pffexport item selection mode passed to the `-m` flag.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed("items" as const))
-    ).annotateKey({
-      description: "pffexport item selection mode passed to the `-m` flag.",
-    }),
+    ),
     exportRoot: S.String.annotateKey({
       description: "Host filesystem directory where pffexport materializes archive children.",
     }),
@@ -294,16 +297,18 @@ export class PffexportEngineConfig extends S.Opaque<PffexportEngineConfig, { rea
     ),
     pffexportPath: S.String.pipe(
       S.withConstructorDefault(Effect.succeed(defaultPffexportPath)),
+      S.annotateKey({
+        description: "Executable path or command name used to spawn pffexport.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(defaultPffexportPath))
-    ).annotateKey({
-      description: "Executable path or command name used to spawn pffexport.",
-    }),
+    ),
     systemdRunPath: S.String.pipe(
       S.withConstructorDefault(Effect.succeed(defaultSystemdRunPath)),
+      S.annotateKey({
+        description: "systemd-run executable used to apply a hard memory cgroup around quota-limited sandbox exports.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(defaultSystemdRunPath))
-    ).annotateKey({
-      description: "systemd-run executable used to apply a hard memory cgroup around quota-limited sandbox exports.",
-    }),
+    ),
     timeoutMillis: S.OptionFromOptionalKey(PosInt).pipe(
       S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({

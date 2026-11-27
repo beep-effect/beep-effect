@@ -202,6 +202,16 @@ export const DatasetResult = <Data extends S.Top>(data: Data) =>
     })
   );
 
+const remoteLoadTimeoutFields = {
+  timeout: PositiveInteger.pipe(
+    S.withConstructorDefault(Effect.succeed(DEFAULT_TIMEOUT_MS)),
+    S.annotateKey({
+      description: "Remote URL load timeout in milliseconds.",
+    }),
+    S.withDecodingDefaultTypeKey(Effect.succeed(DEFAULT_TIMEOUT_MS))
+  ),
+};
+
 /**
  * **Example** (Configuring a text load)
  *
@@ -219,16 +229,12 @@ export class DatasetLoadTextOptions extends S.Opaque<DatasetLoadTextOptions, { r
   S.Struct({
     encoding: TextEncoding.pipe(
       S.withConstructorDefault(Effect.succeed("utf-8" as const)),
+      S.annotateKey({
+        description: 'Text decoding label applied to local file bytes (default: "utf-8").',
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed("utf-8" as const))
-    ).annotateKey({
-      description: 'Text decoding label applied to local file bytes (default: "utf-8").',
-    }),
-    timeout: PositiveInteger.pipe(
-      S.withConstructorDefault(Effect.succeed(DEFAULT_TIMEOUT_MS)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(DEFAULT_TIMEOUT_MS))
-    ).annotateKey({
-      description: "Remote URL load timeout in milliseconds.",
-    }),
+    ),
+    ...remoteLoadTimeoutFields,
   }).pipe(
     $I.annoteSchema("DatasetLoadTextOptions", {
       description: "Options for loading a dataset as raw text.",
@@ -254,12 +260,7 @@ export class DatasetLoadLinesOptions extends S.Opaque<DatasetLoadLinesOptions, {
     skipEmpty: SchemaUtils.BoolKeyDefaultFalse.annotateKey({
       description: "Drop empty lines after optional trimming.",
     }),
-    timeout: PositiveInteger.pipe(
-      S.withConstructorDefault(Effect.succeed(DEFAULT_TIMEOUT_MS)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(DEFAULT_TIMEOUT_MS))
-    ).annotateKey({
-      description: "Remote URL load timeout in milliseconds.",
-    }),
+    ...remoteLoadTimeoutFields,
     trim: SchemaUtils.BoolKeyDefaultFalse.annotateKey({
       description: "Trim surrounding whitespace from loaded lines.",
     }),
@@ -288,12 +289,7 @@ export class DatasetLoadJsonlOptions extends S.Opaque<DatasetLoadJsonlOptions, {
     skipInvalid: SchemaUtils.BoolKeyDefaultFalse.annotateKey({
       description: "Drop malformed JSONL records instead of failing the load.",
     }),
-    timeout: PositiveInteger.pipe(
-      S.withConstructorDefault(Effect.succeed(DEFAULT_TIMEOUT_MS)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(DEFAULT_TIMEOUT_MS))
-    ).annotateKey({
-      description: "Remote URL load timeout in milliseconds.",
-    }),
+    ...remoteLoadTimeoutFields,
   }).pipe(
     $I.annoteSchema("DatasetLoadJsonlOptions", {
       description: "Options for loading a dataset as JSONL records.",
@@ -316,12 +312,7 @@ export class DatasetLoadJsonlOptions extends S.Opaque<DatasetLoadJsonlOptions, {
  */
 export class DatasetLoadJsonOptions extends S.Opaque<DatasetLoadJsonOptions, { readonly brand: unique symbol }>()(
   S.Struct({
-    timeout: PositiveInteger.pipe(
-      S.withConstructorDefault(Effect.succeed(DEFAULT_TIMEOUT_MS)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(DEFAULT_TIMEOUT_MS))
-    ).annotateKey({
-      description: "Remote URL load timeout in milliseconds.",
-    }),
+    ...remoteLoadTimeoutFields,
   }).pipe(
     $I.annoteSchema("DatasetLoadJsonOptions", {
       description: "Options for loading a dataset as a single JSON document.",

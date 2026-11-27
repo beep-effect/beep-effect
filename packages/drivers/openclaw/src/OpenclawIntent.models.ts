@@ -252,10 +252,11 @@ export class OpenclawGatewayIntent extends S.Opaque<OpenclawGatewayIntent, { rea
     }),
     bind: OpenclawGatewayBind.pipe(
       S.withConstructorDefault(Effect.succeed("loopback" as const)),
+      S.annotateKey({
+        description: "Gateway network bind policy; managed deployments stay on loopback.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed("loopback" as const))
-    ).annotateKey({
-      description: "Gateway network bind policy; managed deployments stay on loopback.",
-    }),
+    ),
     port: OpenclawGatewayPort.annotateKey({
       description: "Loopback TCP port the gateway listens on.",
     }),
@@ -936,14 +937,13 @@ export class OpenclawTelegramIntent extends S.Opaque<OpenclawTelegramIntent, { r
     groupPolicy: OpenclawTelegramGroupPolicy.annotateKey({
       description: "Default group participation policy.",
     }),
-    groups: S.Record(S.String, OpenclawTelegramGroupIntent)
-      .pipe(
-        S.withConstructorDefault(Effect.succeed(openclawTelegramIntentGroupsDefault)),
-        S.withDecodingDefaultTypeKey(Effect.succeed(openclawTelegramIntentGroupsDefault))
-      )
-      .annotateKey({
+    groups: S.Record(S.String, OpenclawTelegramGroupIntent).pipe(
+      S.withConstructorDefault(Effect.succeed(openclawTelegramIntentGroupsDefault)),
+      S.annotateKey({
         description: "Per-group behavior keyed by Telegram group id.",
       }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(openclawTelegramIntentGroupsDefault))
+    ),
   }).pipe(
     $I.annoteSchema("OpenclawTelegramIntent", {
       description: "Desired Telegram channel configuration with a secret-referenced bot token.",
@@ -979,14 +979,13 @@ export class OpenclawSecretsResolverIntent extends S.Opaque<
     opBinaryPath: OpenclawAbsolutePath.annotateKey({
       description: "Absolute path of the pinned 1Password CLI binary.",
     }),
-    passEnv: S.Array(S.NonEmptyString)
-      .pipe(
-        S.withConstructorDefault(Effect.succeed(openclawSecretsResolverIntentPassEnvDefault)),
-        S.withDecodingDefaultTypeKey(Effect.succeed(openclawSecretsResolverIntentPassEnvDefault))
-      )
-      .annotateKey({
+    passEnv: S.Array(S.NonEmptyString).pipe(
+      S.withConstructorDefault(Effect.succeed(openclawSecretsResolverIntentPassEnvDefault)),
+      S.annotateKey({
         description: "Environment variable names forwarded to the resolver process.",
       }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(openclawSecretsResolverIntentPassEnvDefault))
+    ),
     trustedDir: OpenclawAbsolutePath.annotateKey({
       description: "Directory OpenClaw trusts to contain the resolver command.",
     }),
@@ -1014,14 +1013,13 @@ const openclawGuardrailsIntentToolsDenyDefault = ["*"];
  */
 export class OpenclawGuardrailsIntent extends S.Opaque<OpenclawGuardrailsIntent, { readonly brand: unique symbol }>()(
   S.Struct({
-    toolsDeny: S.Array(S.String)
-      .pipe(
-        S.withConstructorDefault(Effect.succeed(openclawGuardrailsIntentToolsDenyDefault)),
-        S.withDecodingDefaultTypeKey(Effect.succeed(openclawGuardrailsIntentToolsDenyDefault))
-      )
-      .annotateKey({
+    toolsDeny: S.Array(S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(openclawGuardrailsIntentToolsDenyDefault)),
+      S.annotateKey({
         description: "Tool deny-list rendered into tools.deny; defaults to deny-all.",
       }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(openclawGuardrailsIntentToolsDenyDefault))
+    ),
   }).pipe(
     $I.annoteSchema("OpenclawGuardrailsIntent", {
       description: "Deployment guardrails; tools are denied by default.",
@@ -1161,14 +1159,13 @@ export class OpenclawDeploymentIntent extends S.Opaque<OpenclawDeploymentIntent,
     agent: OpenclawAgentIntent.annotateKey({
       description: "Agent registered with the deployment.",
     }),
-    authProfiles: S.Array(OpenclawAuthProfileIntent)
-      .pipe(
-        S.withConstructorDefault(Effect.succeed(openclawDeploymentIntentAuthProfilesDefault)),
-        S.withDecodingDefaultTypeKey(Effect.succeed(openclawDeploymentIntentAuthProfilesDefault))
-      )
-      .annotateKey({
+    authProfiles: S.Array(OpenclawAuthProfileIntent).pipe(
+      S.withConstructorDefault(Effect.succeed(openclawDeploymentIntentAuthProfilesDefault)),
+      S.annotateKey({
         description: "Non-secret auth.profiles metadata entries.",
       }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(openclawDeploymentIntentAuthProfilesDefault))
+    ),
     controlUi: OpenclawControlUiIntent.annotateKey({
       description: "Loopback Control UI configuration.",
     }),
@@ -1177,10 +1174,11 @@ export class OpenclawDeploymentIntent extends S.Opaque<OpenclawDeploymentIntent,
     }),
     guardrails: OpenclawGuardrailsIntent.pipe(
       S.withConstructorDefault(Effect.succeed(openclawDeploymentIntentGuardrailsDefault)),
+      S.annotateKey({
+        description: "Deployment guardrails; defaults to deny-all tools.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(openclawDeploymentIntentGuardrailsDefault))
-    ).annotateKey({
-      description: "Deployment guardrails; defaults to deny-all tools.",
-    }),
+    ),
     logging: OpenclawLoggingIntent.annotateKey({
       description: "Gateway log file location.",
     }),
@@ -1196,14 +1194,13 @@ export class OpenclawDeploymentIntent extends S.Opaque<OpenclawDeploymentIntent,
     secretsResolver: OpenclawSecretsResolverIntent.annotateKey({
       description: "Exec-provider secret resolver wiring for op:// references.",
     }),
-    skills: S.Array(OpenclawSkillPin)
-      .pipe(
-        S.withConstructorDefault(Effect.succeed(openclawDeploymentIntentSkillsDefault)),
-        S.withDecodingDefaultTypeKey(Effect.succeed(openclawDeploymentIntentSkillsDefault))
-      )
-      .annotateKey({
+    skills: S.Array(OpenclawSkillPin).pipe(
+      S.withConstructorDefault(Effect.succeed(openclawDeploymentIntentSkillsDefault)),
+      S.annotateKey({
         description: "Pinned skill artifacts consumed by the generation engine, never by the render adapter.",
       }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(openclawDeploymentIntentSkillsDefault))
+    ),
     telegram: S.OptionFromOptionalKey(OpenclawTelegramIntent)
       .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({

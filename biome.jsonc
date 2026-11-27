@@ -16,7 +16,8 @@
     "./packages/tooling/policy-pack/lint-rules/rules/prefer-array-flat-map.grit",
     "./packages/tooling/policy-pack/lint-rules/rules/prefer-identity-annote-pipe.grit",
     "./packages/tooling/policy-pack/lint-rules/rules/no-hand-built-identity-annotation.grit",
-    "./packages/tooling/policy-pack/lint-rules/rules/prefer-exact-optional-key.grit"
+    "./packages/tooling/policy-pack/lint-rules/rules/prefer-exact-optional-key.grit",
+    "./packages/tooling/policy-pack/lint-rules/rules/no-annotation-after-decoding-default.grit"
   ],
   "files": {
     "includes": [

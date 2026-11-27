@@ -2734,3 +2734,15 @@ describe("@beep/law-practice-use-cases DocketIntake needs-review identity", () =
     );
   });
 });
+
+describe("DocketMessage JSON Schema key annotations", () => {
+  it("emits the attachments key annotation in toJsonSchemaDocument because annotateKey runs before withDecodingDefaultTypeKey", () => {
+    expect(S.toJsonSchemaDocument(DocketMessage).definitions).toMatchObject({
+      "@beep/law-practice-use-cases/DocketIntake/DocketIntake.schemas/DocketMessage": {
+        properties: {
+          attachments: { allOf: expect.arrayContaining([{ description: "Attachment references, without bytes." }]) },
+        },
+      },
+    });
+  });
+});

@@ -36,8 +36,9 @@ const stringListWithEmptyDefault = (description: string) =>
     S.Array,
     S.mutable,
     S.withConstructorDefault(Effect.succeed(emptyStringList)),
+    S.annotateKey({ description }),
     S.withDecodingDefaultTypeKey(Effect.succeed(emptyStringList))
-  ).annotateKey({ description });
+  );
 
 const DEFAULT_PAGE_EXTENSIONS: ReadonlyArray<string> = ["ts", "tsx", "md", "mdx"];
 const DEFAULT_TRANSPILE_PACKAGES: ReadonlyArray<string> = ["@beep/ui", "@beep/identity", "@beep/schema", "@beep/utils"];
@@ -192,10 +193,11 @@ export class BeepNextMdxConfigOptions extends S.Opaque<BeepNextMdxConfigOptions,
   S.Struct({
     extension: S.RegExp.pipe(
       S.withConstructorDefault(Effect.succeed(DEFAULT_MDX_EXTENSION)),
+      S.annotateKey({
+        description: "Webpack rule condition for MDX file extensions.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(DEFAULT_MDX_EXTENSION))
-    ).annotateKey({
-      description: "Webpack rule condition for MDX file extensions.",
-    }),
+    ),
   }).pipe(
     $I.annoteSchema("BeepNextMdxConfigOptions", {
       description: "MDX object configuration for the shared Next.js preset.",
@@ -267,16 +269,18 @@ export class BeepNextPwaConfigOptions extends S.Opaque<BeepNextPwaConfigOptions,
     enabled: optional(S.Boolean, "Overrides the decoded NEXT_DISABLE_PWA env toggle."),
     swSrc: S.String.pipe(
       S.withConstructorDefault(Effect.succeed("src/app/sw.ts")),
+      S.annotateKey({
+        description: "Service worker source file passed to serwist (swSrc).",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed("src/app/sw.ts"))
-    ).annotateKey({
-      description: "Service worker source file passed to serwist (swSrc).",
-    }),
+    ),
     swDest: S.String.pipe(
       S.withConstructorDefault(Effect.succeed("public/sw.js")),
+      S.annotateKey({
+        description: "Compiled service worker output path passed to serwist (swDest).",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed("public/sw.js"))
-    ).annotateKey({
-      description: "Compiled service worker output path passed to serwist (swDest).",
-    }),
+    ),
     register: optional(S.Boolean, "Whether serwist auto-registers the generated service worker."),
     cacheOnNavigation: optional(S.Boolean, "Cache additional routes on next/link navigation (serwist)."),
     reloadOnOnline: optional(S.Boolean, "Reload the app when the browser comes back online (serwist)."),

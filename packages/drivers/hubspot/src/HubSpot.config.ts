@@ -167,24 +167,25 @@ export class HubSpotConfigInput extends S.Opaque<HubSpotConfigInput, { readonly 
     }),
     crmApiUrl: HubSpotBaseUrl.pipe(
       S.withConstructorDefault(Effect.succeed(HUBSPOT_CRM_API_URL)),
+      S.annotateKey({
+        description: "Base URL for HubSpot CRM API requests.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(HUBSPOT_CRM_API_URL))
-    ).annotateKey({
-      description: "Base URL for HubSpot CRM API requests.",
-    }),
+    ),
     formsApiUrl: HubSpotBaseUrl.pipe(
       S.withConstructorDefault(Effect.succeed(HUBSPOT_FORMS_API_URL)),
+      S.annotateKey({
+        description: "Base URL for HubSpot secure Forms API submissions.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(HUBSPOT_FORMS_API_URL))
-    ).annotateKey({
-      description: "Base URL for HubSpot secure Forms API submissions.",
-    }),
-    headers: S.Record(S.String, S.String)
-      .pipe(
-        S.withConstructorDefault(Effect.succeed(hubSpotConfigInputHeadersDefault)),
-        S.withDecodingDefaultTypeKey(Effect.succeed(hubSpotConfigInputHeadersDefault))
-      )
-      .annotateKey({
+    ),
+    headers: S.Record(S.String, S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(hubSpotConfigInputHeadersDefault)),
+      S.annotateKey({
         description: "Additional HTTP headers merged into HubSpot API requests.",
       }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(hubSpotConfigInputHeadersDefault))
+    ),
   }).pipe(
     $I.annoteSchema("HubSpotConfigInput", {
       description: "Runtime configuration accepted by the HubSpot API driver layer.",

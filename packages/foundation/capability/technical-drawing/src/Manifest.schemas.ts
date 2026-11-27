@@ -111,19 +111,19 @@ export class OutlineSeparation extends S.Opaque<OutlineSeparation, { readonly br
     }),
     trimmedStrokes: S.Natural.pipe(
       S.withConstructorDefault(Effect.succeed(0)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(0)),
       S.annotateKey({
         description:
           "Graded shading strokes cut back to keep their clearance from a moved outline. Defaults to 0, and on manifests rendered before strokes were clipped again.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0))
     ),
     droppedStrokes: S.Natural.pipe(
       S.withConstructorDefault(Effect.succeed(0)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(0)),
       S.annotateKey({
         description:
           "Graded shading strokes the re-clip removed: strokes shorter than the minimum stroke once cut back from a moved outline, and every stroke of a band the re-clip left with fewer than two strokes. Defaults to 0, and on manifests rendered before strokes were clipped again.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0))
     ),
   }).pipe(
     $I.annoteSchema("OutlineSeparation", {
@@ -161,15 +161,15 @@ export class FigureRecord extends S.Opaque<FigureRecord, { readonly brand: uniqu
     visibleSegments: S.Natural.annotateKey({ description: "Visible segments drawn." }),
     shadingSegments: S.Natural.pipe(
       S.withConstructorDefault(Effect.succeed(0)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(0)),
-      S.annotateKey({ description: "Surface-shading segments drawn. Defaults to 0." })
+      S.annotateKey({ description: "Surface-shading segments drawn. Defaults to 0." }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0))
     ),
     brokenSegments: S.Natural.pipe(
       S.withConstructorDefault(Effect.succeed(0)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(0)),
       S.annotateKey({
         description: "Broken-line (unclaimed part and broken overlay) segments drawn. Defaults to 0.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0))
     ),
     emphasisSegments: S.OptionFromOptionalKey(S.Natural).pipe(
       S.withConstructorDefault(Effect.succeedNone),
@@ -325,8 +325,8 @@ export class RenderManifest extends S.Opaque<RenderManifest, { readonly brand: u
     scale: S.Finite.annotateKey({ description: "Points per model unit used on every sheet." }),
     shaded: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(false)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(false)),
-      S.annotateKey({ description: "Whether the figures carry procedural surface shading. Defaults to false." })
+      S.annotateKey({ description: "Whether the figures carry procedural surface shading. Defaults to false." }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
     ),
     figures: S.Array(FigureRecord).annotateKey({ description: "Rendered figures in FIG. order." }),
     omissions: S.Array(OmissionProof).annotateKey({ description: "Omission claims and their proofs." }),
@@ -351,18 +351,18 @@ export class RenderManifest extends S.Opaque<RenderManifest, { readonly brand: u
     ),
     labelFonts: S.Array(LabelFontRecord).pipe(
       S.withConstructorDefault(Effect.succeed([])),
-      S.withDecodingDefaultTypeKey(Effect.succeed([])),
       S.annotateKey({
         description: "Operator font files the labels were outlined from, with their hashes. Empty for vendored faces.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed([]))
     ),
     fonts: S.Array(FontPin).pipe(
       S.withConstructorDefault(Effect.succeed([])),
-      S.withDecodingDefaultTypeKey(Effect.succeed([])),
       S.annotateKey({
         description:
           "Fonts resolved and embedded for text labels, with their files and hashes. Empty when every label is outlined.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed([]))
     ),
   }).pipe(
     $I.annoteSchema("RenderManifest", {

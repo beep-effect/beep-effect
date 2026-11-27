@@ -251,55 +251,55 @@ export class PacerMockOptions extends S.Opaque<PacerMockOptions, { readonly bran
      */
     auth: PacerAuthOption.pipe(
       S.withConstructorDefault(Effect.succeed(PacerAuthOption.Enum.success)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(PacerAuthOption.Enum.success)),
       S.annotateKey({
         description: "cso-auth behavior. Defaults to `'success'`.",
         default: "success",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(PacerAuthOption.Enum.success))
     ),
     /**
      * /cases/find behavior. Defaults to `'success'`.
      */
     cases: PacerCasesOption.pipe(
       S.withConstructorDefault(Effect.succeed(PacerCasesOption.Enum.success)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(PacerCasesOption.Enum.success)),
       S.annotateKey({
         description: "/cases/find behavior. Defaults to `'success'`.",
         default: "success",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(PacerCasesOption.Enum.success))
     ),
     /**
      * Batch job terminal status. Defaults to `"complete"`.
      */
     batch: PacerBatchOption.pipe(
       S.withConstructorDefault(Effect.succeed(PacerBatchOption.Enum.complete)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(PacerBatchOption.Enum.complete)),
       S.annotateKey({
         description: "Batch job terminal status. Defaults to `'complete'`.",
         default: "complete",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(PacerBatchOption.Enum.complete))
     ),
     /**
      * /cases/reports/:reportId delete behavior. Defaults to `"success"`.
      */
     deleteReport: PacerDeleteReportOption.pipe(
       S.withConstructorDefault(Effect.succeed(PacerDeleteReportOption.Enum.success)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(PacerDeleteReportOption.Enum.success)),
       S.annotateKey({
         description: "/cases/reports/:reportId delete behavior. Defaults to `'success'`.",
         default: "success",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(PacerDeleteReportOption.Enum.success))
     ),
     /**
      * cso-logout behavior. Defaults to `"success"`.
      */
     logout: PacerLogoutOption.pipe(
       S.withConstructorDefault(Effect.succeed(PacerLogoutOption.Enum.success)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(PacerLogoutOption.Enum.success)),
       S.annotateKey({
         description: "cso-logout behavior. Defaults to `'success'`.",
         default: "success",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(PacerLogoutOption.Enum.success))
     ),
   }).pipe(
     $I.annoteSchema("PacerMockOptions", {

@@ -199,11 +199,12 @@ export class TikaServerEngineConfig extends S.Opaque<TikaServerEngineConfig, { r
   S.Struct({
     baseUrl: TikaServerBaseUrl.pipe(
       S.withConstructorDefault(Effect.succeed(tikaServerEngineConfigBaseUrlDefault)),
+      S.annotateKey({
+        description:
+          "Base URL of the Tika Server instance serving /version and /rmeta/text; trailing slashes are stripped and query strings or fragments are rejected.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(tikaServerEngineConfigBaseUrlDefault))
-    ).annotateKey({
-      description:
-        "Base URL of the Tika Server instance serving /version and /rmeta/text; trailing slashes are stripped and query strings or fragments are rejected.",
-    }),
+    ),
     maxOutputBytes: S.OptionFromOptionalKey(PosInt).pipe(
       S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
@@ -213,10 +214,11 @@ export class TikaServerEngineConfig extends S.Opaque<TikaServerEngineConfig, { r
     ),
     timeoutMillis: PosInt.pipe(
       S.withConstructorDefault(Effect.succeed(tikaServerEngineConfigTimeoutMillisDefault)),
+      S.annotateKey({
+        description: "Per-file Tika Server extraction timeout in milliseconds.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(tikaServerEngineConfigTimeoutMillisDefault))
-    ).annotateKey({
-      description: "Per-file Tika Server extraction timeout in milliseconds.",
-    }),
+    ),
   }).pipe(
     $I.annoteSchema("TikaServerEngineConfig", {
       description: "Configuration for the Tika Server HTTP engine: base URL, per-file timeout, and output budget.",

@@ -57,9 +57,9 @@ export class ChangeDetectionOptions extends S.Opaque<ChangeDetectionOptions, { r
      * @defaultValue `"HEAD~1"`
      */
     base: S.String.pipe(
+      $I.annoteKey("ChangeDetectionOptions.base", { description: "The ref to compare against." }),
       S.withDecodingDefaultKey(Effect.succeed("HEAD~1")),
-      S.withConstructorDefault(Effect.succeed("HEAD~1")),
-      $I.annoteKey("ChangeDetectionOptions.base", { description: "The ref to compare against." })
+      S.withConstructorDefault(Effect.succeed("HEAD~1"))
     ),
     /**
      * The ref to compare to.
@@ -67,9 +67,9 @@ export class ChangeDetectionOptions extends S.Opaque<ChangeDetectionOptions, { r
      * @defaultValue `"HEAD"`
      */
     head: S.String.pipe(
+      $I.annoteKey("ChangeDetectionOptions.head", { description: "The ref to compare to." }),
       S.withDecodingDefaultKey(Effect.succeed("HEAD")),
-      S.withConstructorDefault(Effect.succeed("HEAD")),
-      $I.annoteKey("ChangeDetectionOptions.head", { description: "The ref to compare to." })
+      S.withConstructorDefault(Effect.succeed("HEAD"))
     ),
     /**
      * Whether to include staged, unstaged and untracked working-tree changes on
@@ -78,12 +78,12 @@ export class ChangeDetectionOptions extends S.Opaque<ChangeDetectionOptions, { r
      * @defaultValue `false`
      */
     includeUncommitted: S.Boolean.pipe(
-      S.withDecodingDefaultKey(Effect.succeed(false)),
-      S.withConstructorDefault(Effect.succeed(false)),
       $I.annoteKey("ChangeDetectionOptions.includeUncommitted", {
         description:
           "Whether to include staged, unstaged and untracked working-tree changes on top of the committed range.",
-      })
+      }),
+      S.withDecodingDefaultKey(Effect.succeed(false)),
+      S.withConstructorDefault(Effect.succeed(false))
     ),
   }).pipe(
     $I.annoteSchema("ChangeDetectionOptions", {

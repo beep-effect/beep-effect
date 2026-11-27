@@ -344,8 +344,8 @@ export class ShadingCut extends S.Opaque<ShadingCut, { readonly brand: unique sy
     offset: S.Finite.annotateKey({ description: "Plane position along `step`, in model units." }),
     extent: StrokeExtent.pipe(
       S.withConstructorDefault(Effect.succeed(1)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(1)),
-      S.annotateKey({ description: "Fraction of the chord drawn, centred on it. Defaults to 1 (the full chord)." })
+      S.annotateKey({ description: "Fraction of the chord drawn, centred on it. Defaults to 1 (the full chord)." }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(1))
     ),
   }).pipe(
     $I.annoteSchema("ShadingCut", {

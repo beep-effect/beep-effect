@@ -42,10 +42,11 @@ export class ConsoleErrorReporterOptions extends S.Opaque<
   S.Struct({
     includeCause: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(true)),
+      S.annotateKey({
+        description: "Whether to render the pretty Effect cause after the error line.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(true))
-    ).annotateKey({
-      description: "Whether to render the pretty Effect cause after the error line.",
-    }),
+    ),
   }).pipe(
     $I.annoteSchema("ConsoleErrorReporterOptions", {
       description: "Options for the console-backed error reporter.",
@@ -71,16 +72,18 @@ export class ErrorReporterLayerOptions extends S.Opaque<ErrorReporterLayerOption
   S.Struct({
     includeCause: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(true)),
+      S.annotateKey({
+        description: "Whether the registered reporter should render the pretty Effect cause.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(true))
-    ).annotateKey({
-      description: "Whether the registered reporter should render the pretty Effect cause.",
-    }),
+    ),
     mergeWithExisting: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(true)),
+      S.annotateKey({
+        description: "Whether to merge this reporter with already registered reporters.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(true))
-    ).annotateKey({
-      description: "Whether to merge this reporter with already registered reporters.",
-    }),
+    ),
   }).pipe(
     $I.annoteSchema("ErrorReporterLayerOptions", {
       description: "Options for registering the console-backed error reporter layer.",

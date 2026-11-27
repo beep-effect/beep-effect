@@ -252,10 +252,11 @@ export class UsptoGetDocumentsParams extends S.Opaque<UsptoGetDocumentsParams, {
     }),
     budgetBytes: PosInt.pipe(
       S.withConstructorDefault(Effect.succeed(DEFAULT_DOCUMENT_BUDGET_BYTES)),
+      S.annotateKey({
+        description: "Maximum serialized size, in bytes, the reshaped response must fit within. Defaults to 8000.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(DEFAULT_DOCUMENT_BUDGET_BYTES))
-    ).annotateKey({
-      description: "Maximum serialized size, in bytes, the reshaped response must fit within. Defaults to 8000.",
-    }),
+    ),
   }).pipe(
     $I.annoteSchema("UsptoGetDocumentsParams", {
       description: "Inputs required to list and field-tier-project an application's file-wrapper documents.",
