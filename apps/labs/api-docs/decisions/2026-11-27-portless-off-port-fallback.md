@@ -8,5 +8,5 @@ enforcedBy: []
 ---
 
 Portless injects `PORT` for `api-docs.labs.beep.localhost`; without it, the server listens on 8787.
-Reason: the `PORTLESS=0` diagnostic bypass runs the server with no injected `PORT`, and it must still start on a known port.
-Rejected: requiring `PORT`, which breaks the diagnostic bypass.
+Reason: a run without `PORT` (a bare `bun src/main.ts`, or `PORTLESS=0` without the `PORT=<port>` that `DESIGN.md` documents for the diagnostic bypass) still starts on a known port instead of failing at startup.
+Rejected: requiring `PORT`, which turns such a run into a startup configuration error; the documented bypass sets `PORT` and works either way.
