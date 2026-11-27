@@ -102,7 +102,7 @@ scenario("deploying over the live objects converges by name: no POST, no DELETE,
 );
 
 scenario(
-  "a main ruleset the plan cannot find live (renamed after the capture) fails the plan and the deploy, and nothing is written",
+  "a main ruleset renamed live after the capture fails the plan and the deploy, and nothing is written",
   (stack, fake) =>
     Effect.gen(function* () {
       const planned = yield* Effect.exit(stack.plan(production));

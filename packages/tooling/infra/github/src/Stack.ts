@@ -298,9 +298,7 @@ const declareLabel = (config: StackConfig, spec: LabelSpec) =>
  *
  * **Gotchas**
  *
- * The duplicate check dies rather than fails: a silent collision would drop a
- * declaration, and `retain()` wraps an effect that cannot fail, so the refusal
- * is a defect that stops the plan or deploy.
+ * A collision is a defect, not a typed failure, so `catchTag` cannot catch it.
  *
  * **Example** (Declare the production configuration inside a stack)
  *

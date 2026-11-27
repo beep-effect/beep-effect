@@ -59,15 +59,7 @@ export const state = AWS.state({
  * ruleset taken right before the plan
  * (`gh api repos/beep-effect/beep-effect/rulesets/10240248 > <file>`). A
  * missing capture, or one the strict decoder cannot fully read (an unknown
- * key, rule type or value), stops the plan. The stack carries the capture's
- * `beep-reviewer` check through unchanged; the deploy workflow's guard step
- * compares every other guarded field against the same capture before any
- * write, and in `prod` the guarded ruleset provider re-reads the live ruleset
- * in its update path and refuses the PUT once it no longer equals the
- * capture. `prod` providers also take the create path only for allow-listed
- * logical ids and never replace or delete; a preview stage's create, update
- * and delete fail with `PreviewStageIsReadOnly` before any request, whatever
- * token is in the environment.
+ * key, rule type or value), stops the plan.
  */
 export const program = Effect.gen(function* () {
   const stack = yield* Alchemy.Stack;

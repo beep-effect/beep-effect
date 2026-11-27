@@ -109,10 +109,7 @@ describe("the declared configuration matches the live census fixture, and a deli
   });
 
   it("labels", () => {
-    expect(
-      census.labels,
-      'the stack writes "" for a None description (declareLabel), and GitHub has returned "" since, not null'
-    ).toEqual(
+    expect(census.labels, 'the stack writes "" for a None description (declareLabel)').toEqual(
       A.map(config.labels, ({ name, color, description }) => ({
         color,
         description: O.getOrElse(description, () => ""),

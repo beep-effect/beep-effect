@@ -42,10 +42,9 @@ const alertRecipients = Config.String("TURBO_CACHE_ALERT_EMAIL").pipe(
  * local `prod` plan or deploy fails with a ConfigError on `CI`.
  * `TURBO_CACHE_ALERT_EMAIL` (comma separated; in CI the `turbo-cache-prod`
  * environment secret) adds a notification policy that mails Cloudflare's
- * Workers Observability real-time issue when the Worker errors. It succeeds
- * the AWS cache's Lambda throttle alarm (D7): a Worker has no reserved
- * concurrency to exhaust, so an erroring Worker is the failure that turns into
- * silent cache misses. Unset, the stack declares no notification policy.
+ * Workers Observability real-time issue when the Worker errors: an erroring
+ * Worker turns into silent cache misses. Unset, the stack declares no
+ * notification policy.
  */
 export const program = Effect.gen(function* () {
   const stack = yield* Alchemy.Stack;

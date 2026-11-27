@@ -86,7 +86,7 @@ const hashNoFilesMemo = { include: [], exclude: ["**"] };
 
 const shParsingOneBashInvocation = "/bin/sh";
 
-const stepTimeoutForSudoNpmInstall = "20 minutes";
+const longStepTimeout = "20 minutes";
 
 const generationFailure = (cause: unknown) =>
   new Config.ConfigError(new SourceError({ message: "Cannot render the OpenClaw generation.", cause }));
@@ -105,21 +105,21 @@ const applyGeneration = Effect.fn("OpenClawStack.applyGeneration")(function* (
     command: renderOpenClawStageScript(generation),
     shell: shParsingOneBashInvocation,
     memo: hashNoFilesMemo,
-    timeout: stepTimeoutForSudoNpmInstall,
+    timeout: longStepTimeout,
     env: { BEEP_HOSTS_AFTER: preflight.hash.input },
   });
   const apply = yield* Command.Exec("Apply", {
     command: renderOpenClawApplyScript(generation),
     shell: shParsingOneBashInvocation,
     memo: hashNoFilesMemo,
-    timeout: stepTimeoutForSudoNpmInstall,
+    timeout: longStepTimeout,
     env: { BEEP_HOSTS_AFTER: stage.hash.input },
   });
   const probe = yield* Command.Exec("Probe", {
     command: renderOpenClawProbeScript(identityInput),
     shell: shParsingOneBashInvocation,
     memo: hashNoFilesMemo,
-    timeout: stepTimeoutForSudoNpmInstall,
+    timeout: longStepTimeout,
     env: { BEEP_HOSTS_AFTER: apply.hash.input },
   });
   yield* O.match(args.backup, {
@@ -129,7 +129,7 @@ const applyGeneration = Effect.fn("OpenClawStack.applyGeneration")(function* (
         command: renderOpenClawBackupShipScript(OpenClawBackupShipScriptInput.make({ backup, generation })),
         shell: shParsingOneBashInvocation,
         memo: hashNoFilesMemo,
-        timeout: stepTimeoutForSudoNpmInstall,
+        timeout: longStepTimeout,
         env: { BEEP_HOSTS_AFTER: probe.hash.input },
       }),
   });

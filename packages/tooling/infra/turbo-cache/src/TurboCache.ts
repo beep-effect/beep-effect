@@ -170,9 +170,8 @@ export const workerId = (options: Pick<TurboCacheOptions, "resourceNamePrefix">)
  * The module that calls this must default-export the result and pass its own
  * `import.meta.url` as `main`: Alchemy bundles that module as the Worker and
  * runs the implementation there. Stage-dependent choices (pinned names,
- * `retain`) are made only at deploy time; the bundled runtime has no `Stage`
- * service, so the stage is read optionally and never at run time. The Worker
- * turns on observability: its Workers Logs feed the
+ * `retain`) are made only at deploy time; the bundled runtime never reads the
+ * stage. The Worker turns on observability: its Workers Logs feed the
  * `workers_observability_real_time_issue` alert a stack can route to a
  * notification policy.
  *
