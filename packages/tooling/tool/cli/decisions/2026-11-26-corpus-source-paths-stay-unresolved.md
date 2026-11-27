@@ -8,6 +8,8 @@ governs:
 enforcedBy: []
 ---
 
-Source files from an external drive are recorded under `path.resolve` of their walked path. Bun's realpath rejects valid POSIX names, such as names containing literal backslashes, so canonicalizing them would fail the walk on files the corpus must keep.
+Source files from an external drive are recorded under `path.resolve` of their walked path. Bun's
+realpath rejects valid POSIX names, such as names containing literal backslashes, so canonicalizing
+them would fail the walk on files the corpus must keep.
 
 Rejected: `fs.realPath` on every source file (fails on those names under Bun).

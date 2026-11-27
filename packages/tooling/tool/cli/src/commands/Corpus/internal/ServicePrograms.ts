@@ -1050,6 +1050,7 @@ const rejectExtractOutputLinks = Effect.fn("CorpusCommandService.rejectExtractOu
   }
 });
 
+// decision: extract-artifacts-stage-then-rename
 const prepareExtractOutputDir = Effect.fn("CorpusCommandService.prepareExtractOutputDir")(function* (
   outDir: string,
   childrenRoot: string,
@@ -1073,6 +1074,7 @@ const prepareExtractOutputDir = Effect.fn("CorpusCommandService.prepareExtractOu
     );
 });
 
+// decision: extract-artifacts-stage-then-rename
 const makeExtractArtifactWriter = Effect.fn("CorpusCommandService.makeExtractArtifactWriter")(function* (
   stagingDir: string
 ) {
@@ -1101,9 +1103,11 @@ const makeExtractArtifactWriter = Effect.fn("CorpusCommandService.makeExtractArt
 
 const artifactPrefixedSha256Length = 73;
 
+// decision: extract-resumes-from-settled-outcome-markers
 const isSettledExtractOutcome = (outcome: CorpusExtractOutcome): boolean =>
   outcome.sourceRecord.status !== "failed" || O.isSome(outcome.routingKey);
 
+// decision: extract-resumes-from-settled-outcome-markers
 const extractRoutingBase = (engines: ReadonlyArray<FileProcessingEngineShape>): string =>
   A.join(
     A.map(
@@ -1117,9 +1121,6 @@ const extractRoutingBase = (engines: ReadonlyArray<FileProcessingEngineShape>): 
 const extractRoutingKey = (routingBase: string, format: FileFormatFamily): Sha256Hex =>
   Sha256Hex.make(bytesToHex(sha256(utf8ToBytes(`${routingBase}#${format}`))));
 
-// One extract per output label: the lock file sits beside the output tree so
-// `--overwrite` cannot delete it, and names the holder's pid. A holder that is
-// no longer running (a killed run) is taken over.
 const acquireExtractRunLock = Effect.fn("CorpusCommandService.acquireExtractRunLock")(function* (
   lockPath: string
 ): Effect.fn.Return<void, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
@@ -1167,6 +1168,7 @@ const ocrImageMediaType: (extension: string | undefined) => O.Option<PageImageMe
   Match.orElse(O.none<PageImageMediaType>)
 );
 
+// decision: extract-ocr-rereads-only-unusable-first-readings
 const usableTextBytesPerPage = 50;
 
 const firstReadingPath = (first: CorpusExtractOutcome): O.Option<string> =>
@@ -1194,7 +1196,8 @@ interface ExtractOcr {
   ) => Effect.Effect<void, CorpusCommandError>;
 }
 
-// decision: extract-ocr-reads-beside-the-first-reading
+// decision: extract-ocr-rereads-only-unusable-first-readings
+// decision: extract-ocr-records-beside-the-first-reading
 const makeExtractOcr = Effect.fn("CorpusCommandService.makeExtractOcr")(function* (
   options: CorpusExtractOptions,
   outDir: string,
@@ -1232,9 +1235,6 @@ const makeExtractOcr = Effect.fn("CorpusCommandService.makeExtractOcr")(function
       }),
     })
   );
-  // Both Poppler tools are probed once, like the Tesseract binary: a missing
-  // pdfinfo would otherwise leave every PDF on its first reading with no row,
-  // count or line saying why.
   const popplerProbe = yield* Effect.result(rasterizer.probe);
   if (Result.isFailure(popplerProbe)) {
     yield* Console.log(`corpus extract: OCR disabled: ${popplerProbe.failure.message}`);
@@ -1258,9 +1258,6 @@ const makeExtractOcr = Effect.fn("CorpusCommandService.makeExtractOcr")(function
   }>;
   const OcrPlan = Data.taggedEnum<OcrPlan>();
 
-  // A single-frame TIFF is one page. A multi-frame TIFF would be read whole by
-  // Tesseract under one page timeout and one digest, so it keeps its first
-  // reading until frames are rendered one by one.
   const imagePages = (extension: string | undefined, sourceBytes: Uint8Array) =>
     pipe(
       ocrImageMediaType(extension),
@@ -1485,10 +1482,6 @@ const makeExtractOcr = Effect.fn("CorpusCommandService.makeExtractOcr")(function
     };
   });
 
-  // Language comes from script detection on the first page; a source with no
-  // installed model for it (not even English) keeps its first outcome with
-  // ocr.completed false and ocr.missingLanguages recorded, so its marker has
-  // ocrEnabled false just as when a missing tool turns the OCR pass off.
   const readPages = Effect.fn("CorpusCommandService.ocrReadPages")(function* (
     input: ExtractOcrSourceInput,
     pages: OcrPages
@@ -1634,7 +1627,20 @@ const buildExtractCoverage = (
   }).pipe(CorpusCommandError.mapError("Coverage summary failed schema validation."));
 };
 
-// decision: extract-resumes-from-settled-outcome-markers
+/**
+ * Run one corpus extract into `staging/<outLabel>`, resuming an existing output tree.
+ *
+ * **Gotchas**
+ *
+ * - One extract runs per output label. A second run fails while the first holds
+ *   `staging/.<outLabel>.extract.lock`; a lock whose holder pid is no longer running is taken over.
+ *   The lock sits outside the output tree, so `--overwrite` never deletes it.
+ * - Under OCR, a missing `pdfinfo` or `pdftoppm` turns the whole pass off with one logged line,
+ *   so no PDF is left on its first reading without a stated reason.
+ * - Under OCR, a multi-frame TIFF keeps its first reading: frames are not yet rendered one by one.
+ * - A source whose detected script has no installed language model, English included, keeps its
+ *   first outcome with `ocr.completed` false, and its marker records `ocrEnabled` false.
+ */
 const extractCorpusImpl = Effect.fn("CorpusCommandService.extractCorpus")(function* (
   options: CorpusExtractOptions
 ): Effect.fn.Return<CorpusExtractSummary, CorpusCommandError, CorpusCommandServiceRequirements> {
@@ -1650,6 +1656,7 @@ const extractCorpusImpl = Effect.fn("CorpusCommandService.extractCorpus")(functi
   );
 });
 
+// decision: extract-resumes-from-settled-outcome-markers
 const extractCorpusLocked = Effect.fn("CorpusCommandService.extractCorpusLocked")(function* (
   options: CorpusExtractOptions
 ): Effect.fn.Return<CorpusExtractSummary, CorpusCommandError, CorpusCommandServiceRequirements> {
@@ -1803,8 +1810,11 @@ const extractCorpusLocked = Effect.fn("CorpusCommandService.extractCorpusLocked"
   const childEntries = yield* fs
     .readDirectory(childrenRoot)
     .pipe(CorpusCommandError.mapError(`Failed reading extract children "${childrenRoot}".`));
+  const childEntriesLibpffWouldRefuse = A.filter(childEntries, (name) =>
+    HashSet.has(pendingArtifactIds, Str.slice(0, artifactPrefixedSha256Length)(name))
+  );
   yield* Effect.forEach(
-    A.filter(childEntries, (name) => HashSet.has(pendingArtifactIds, Str.slice(0, artifactPrefixedSha256Length)(name))),
+    childEntriesLibpffWouldRefuse,
     (name) =>
       fs
         .remove(path.join(childrenRoot, name), { force: true, recursive: true })
@@ -2584,6 +2594,7 @@ const referencedRawPathForArchive = (record: CorpusProvenanceRecord): string =>
     ? O.getOrElse(O.fromUndefinedOr(record.dedupeOfPath), () => record.destPath)
     : record.destPath;
 
+// decision: corpus-source-paths-stay-unresolved
 const collectArchiveSourceFiles = Effect.fn("CorpusCommandService.collectArchiveSourceFiles")(function* (
   sourcePath: string
 ): Effect.fn.Return<ReadonlyArray<string>, CorpusArchiveMoveError, FileSystem.FileSystem | Path.Path> {

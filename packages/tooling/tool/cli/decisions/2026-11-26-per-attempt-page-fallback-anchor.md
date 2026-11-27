@@ -1,10 +1,11 @@
 ---
-title: The route corpus runner retries a job listing once in 30-job pages after a transport failure
+title: The route corpus runner retries a failed job listing once in smaller pages
 date: 2026-11-26
-reversal: Drop the ROUTE_CORPUS_JOB_FALLBACK_PAGE retry so a transport failure on 100-job pages fails the call.
+reversal: Drop the ROUTE_CORPUS_JOB_FALLBACK_PAGE retry so a transport failure on full pages fails the call.
 governs:
   - src/commands/Ci/RouteCorpus.ts#makeRouteGithubRunner
+  - src/commands/Ci/CiRerunRunnerLoss.ts#JOBS_PER_PAGE
 enforcedBy: []
 ---
 
-Anchor for `goals/certainty-scorecard/decisions/2026-11-10-per-attempt-page-fallback.md`, which records the runs that answer 502 on every 100-job page yet read cleanly at 30.
+Anchor for `goals/certainty-scorecard/decisions/2026-11-10-per-attempt-page-fallback.md`.

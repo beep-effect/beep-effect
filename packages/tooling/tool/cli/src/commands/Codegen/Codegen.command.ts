@@ -33,8 +33,12 @@ const $I = $RepoCliId.create("commands/Codegen/Codegen.command");
 const TYPE_SCRIPT_SOURCE_FILE_PATTERN = /^.+\.(ts|tsx)$/;
 const TYPE_SCRIPT_TEST_FILE_PATTERN = /^.+\.(test|spec)\.(ts|tsx)$/;
 const TYPESCRIPT_IMPORT_PATH_PATTERN = /^\.\/.+\.ts$/;
-const BARREL_DOC_BLOCK_PATTERN = /\/\*\*(?:(?!\*\/)[\s\S])*\*\//;
-const BARREL_DOCUMENTED_EXPORT_PATTERN = /(\/\*\*(?:(?!\*\/)[\s\S])*\*\/)\r?\nexport \* from "([^"]+)";/g;
+const SINGLE_JSDOC_BLOCK_BODY = String.raw`(?:(?!\*\/)[\s\S])*`;
+const BARREL_DOC_BLOCK_PATTERN = new RegExp(String.raw`\/\*\*${SINGLE_JSDOC_BLOCK_BODY}\*\/`);
+const BARREL_DOCUMENTED_EXPORT_PATTERN = new RegExp(
+  String.raw`(\/\*\*${SINGLE_JSDOC_BLOCK_BODY}\*\/)\r?\nexport \* from "([^"]+)";`,
+  "g"
+);
 const BARREL_EXPORT_FOLLOWS_PATTERN = /^\r?\nexport \* from "/;
 
 const TypeScriptSourceFileName = S.String.check(S.isPattern(TYPE_SCRIPT_SOURCE_FILE_PATTERN)).pipe(

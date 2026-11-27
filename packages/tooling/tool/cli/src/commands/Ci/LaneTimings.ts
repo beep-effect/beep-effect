@@ -1587,6 +1587,8 @@ class CiLaneTimingDurationRow extends S.Opaque<CiLaneTimingDurationRow, { readon
     jobName: S.NonEmptyString,
     pickupSeconds: S.Option(NonNegativeTimingSeconds),
     runAttempt: S.tag(1),
+    // Workflow-run `created_at` to the reporting job's `completed_at` (the last shard's, for an aggregator
+    // skipped on success); an optional key so rows encoded before the column existed decode to `None`.
     verdictWaitSeconds: NonNegativeTimingSeconds.pipe(
       S.OptionFromOptionalKey,
       S.withConstructorDefault(Effect.succeedNone)
@@ -1939,6 +1941,8 @@ class CiLaneTimingQueueTripwireChange extends S.Opaque<
   )
 ) {}
 
+// Every change to the tripwire, oldest first. A window is judged against the newest change effective at or before
+// its `--since`, so an earlier admission document re-renders with the limit it was written under.
 // decision: shard-pickup-tripwire-anchor
 const CI_LANE_TIMING_QUEUE_TRIPWIRE_CHANGES: ReadonlyArray<CiLaneTimingQueueTripwireChange> = [
   CiLaneTimingQueueTripwireChange.make({

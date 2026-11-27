@@ -104,6 +104,7 @@ export const securityRuntime = Effect.gen(function* () {
  * @category processes
  * @since 0.0.0
  */
+// decision: security-runtime-owns-discovery-and-execution
 export const runSecurityCli = Effect.fn("CodexSecurity.runCli")(function* (options: {
   readonly args: ReadonlyArray<string>;
   readonly cwd?: string | undefined;

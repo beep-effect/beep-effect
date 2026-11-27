@@ -284,7 +284,6 @@ const captureCommand = Command.make(
       const lines = json ? [yield* encodeJson(RouteCorpusReceiptSchema, receipt)] : renderReceipt(receipt);
       yield* printLines(lines);
     });
-    // On stderr, so `--json` stays one document; printed on failure too, so a held capture reports its spend.
     const reportSpend = Effect.serviceOption(RouteReadBudget).pipe(
       Effect.flatMap(
         O.match({
@@ -315,6 +314,7 @@ const runCorpusReport = <A, Sch extends S.Top & { readonly Type: A; readonly Enc
     yield* routeFailure(program);
   });
 
+// decision: route-command-surface-stays-literal
 const corpusFlag = Flag.String("corpus").pipe(
   Flag.withDefault(`${ROUTE_CORPUS_DEFAULT_DIR}/${ROUTE_CORPUS_RECEIPT_FILE}`),
   Flag.withDescription("Corpus receipt path, relative to the repository root")
@@ -353,6 +353,11 @@ const ciRouteCommandDefinition = Command.make("route", {}, () =>
 
 /**
  * `beep ci route`: plan, capture, census and replay.
+ *
+ * **Details**
+ *
+ * `capture` prints its read spend on stderr, also when the capture fails, so `--json` stdout stays
+ * one document and a held capture still reports what it spent.
  *
  * **Example** (Mount the route command)
  *

@@ -8,6 +8,11 @@ governs:
 enforcedBy: []
 ---
 
-The knowledge doctor derives the documented command surface statically from the CLI source: it reads bound string names in `Command.make` calls and resolves a flag identifier to its `Flag` initializer. `census` and `replay` differ only in the reader method they run and how the report prints, so only the handler body (`runCorpusReport`) is shared; each `Command.make` stays literal, and both commands bind the one `corpusFlag` identifier.
+The knowledge doctor derives the documented command surface statically from the CLI source: it
+reads bound string names in `Command.make` calls and resolves a flag identifier to its `Flag`
+initializer. `census` and `replay` differ only in the reader method they run and how the report
+prints, so only the handler body (`runCorpusReport`) is shared; each `Command.make` stays literal,
+and both commands bind the one `corpusFlag` identifier.
 
-Rejected: a factory that builds both commands from a name argument, which leaves the doctor nothing static to read and reports their options as unchecked.
+Rejected: a factory that builds both commands from a name argument, which leaves the doctor nothing
+static to read and reports their options as unchecked.

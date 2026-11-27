@@ -7,6 +7,13 @@ governs:
 enforcedBy: []
 ---
 
-The provenance manifest is untrusted input. Every `destPath`, salvage run root and organize target goes through `resolveWithinRoot` first: it follows symlinks, rejects absolute escapes and `..` traversal, and returns the in-root canonical path that the filesystem operation then uses. Metadata reads, extraction and salvage verification use `<corpusRoot>/raw` as the root; organize checks its source against `raw` and its taxonomy-derived target against the organized root. Salvage verification resolves before `exists` or hashing, so an escaping path cannot become an existence or hash oracle for other readable files.
+The provenance manifest is untrusted input. Every `destPath`, salvage run root and organize target
+goes through `resolveWithinRoot` first, which follows symlinks, rejects absolute escapes and `..`
+traversal, and returns the in-root canonical path the filesystem operation then uses. Metadata
+reads, extraction and salvage verification resolve against `<corpusRoot>/raw`; organize checks its
+source against `raw` and its taxonomy-derived target against the organized root. Salvage
+verification resolves before `exists` or hashing, so an escaping path cannot become an existence
+or hash oracle for other readable files.
 
-Rejected: trusting manifest paths written by the CLI's own provenance step (a hand-edited or hostile manifest then reads or overwrites files outside the corpus).
+Rejected: trusting manifest paths written by the CLI's own provenance step (a hand-edited or
+hostile manifest then reads or overwrites files outside the corpus).

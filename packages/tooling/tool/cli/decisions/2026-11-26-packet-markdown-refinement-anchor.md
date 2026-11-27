@@ -7,4 +7,4 @@ governs:
 enforcedBy: []
 ---
 
-Anchor for `goals/verification-route/decisions/2026-11-07-first-enforced-refinement-packet-markdown-and-commits-out-of-build-and-check.md`, which records why the `packet-markdown-out-of-build-check` refinement is sound.
+Anchor for `goals/verification-route/decisions/2026-11-07-first-enforced-refinement-packet-markdown-and-commits-out-of-build-and-check.md`.
