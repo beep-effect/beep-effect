@@ -135,9 +135,11 @@ describe("cli-kit import boundary, read from its own source text with no file sy
       [],
       "a clean tree, a module that merely starts with ui and a JSDoc import are not flagged"
     );
-    assert.deepStrictEqual(offences(["index.ts"], tree({ ...base, "Cli.ts": 'import type { Box } from "ink";\n' })), [
-      "index.ts reaches ink",
-    ]);
+    assert.deepStrictEqual(
+      offences(["index.ts"], tree({ ...base, "Cli.ts": 'import type { Box } from "ink";\n' })),
+      ["index.ts reaches ink"],
+      "a type-only import of ink still makes the root's declarations need it"
+    );
     assert.deepStrictEqual(
       offences(["index.ts"], tree({ ...base, "Cli.ts": 'export const lazy = () => import("@beep/cli-kit/ui");\n' })),
       ["index.ts imports its own package as @beep/cli-kit/ui", "index.ts reaches @beep/cli-kit/ui"]

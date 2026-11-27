@@ -94,6 +94,10 @@ describe("Glyphs.select", () => {
     assert.strictEqual(Glyphs.select({ term: "dumb" }), Glyphs.ascii);
     assert.strictEqual(Glyphs.select({ ascii: "auto", term: "xterm" }), Glyphs.unicode);
     assert.strictEqual(Glyphs.select({ ascii: "auto", term: "DUMB" }), Glyphs.unicode, "TERM is case-sensitive");
-    assert.strictEqual(Glyphs.select({ ascii: "auto" }), Glyphs.unicode, "no term is not dumb");
+    assert.strictEqual(
+      Glyphs.select({ ascii: "auto" }),
+      Glyphs.unicode,
+      "no term is not dumb: select never reads TERM from process.env"
+    );
   });
 });

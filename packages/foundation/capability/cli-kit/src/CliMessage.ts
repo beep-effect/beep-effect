@@ -108,6 +108,9 @@ export abstract class CliMessage {
    * otherwise, so a custom status follows its own rank: a `timeout` ranked 85 goes to stderr. The line is painted
    * with the chosen stream's own colour, so a redirected stderr is not coloured because stdout is a terminal.
    *
+   * It is dual, and a vocabulary in first position marks the data-first call: `options` is optional, so the
+   * arity cannot tell `status(vocab, name, text)` from the data-last `status(name, text, options)`.
+   *
    * **Example** (Construct a vocabulary status message)
    *
    * ```ts

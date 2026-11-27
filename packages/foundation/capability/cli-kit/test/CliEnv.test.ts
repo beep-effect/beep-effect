@@ -151,11 +151,7 @@ describe("CliRuntime.main with the env option", () => {
       });
       const { exit } = yield* observe(program);
       assertExitSuccess(exit, undefined);
-      assert.deepStrictEqual(
-        seen,
-        ["human", "true", "none"],
-        "observe's R is never, so a leaked requirement would not compile"
-      );
+      assert.deepStrictEqual(seen, ["human", "true", "none"]);
     })
   );
 

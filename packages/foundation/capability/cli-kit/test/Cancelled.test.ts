@@ -97,7 +97,11 @@ describe("a library that rewrites error.message cannot make these errors throw",
       assert.doesNotThrow(() => {
         error.message = "rewritten by a library";
       });
-      assert.strictEqual(error.message, line, "a strict-mode write to a getter-only property would throw a TypeError");
+      assert.strictEqual(
+        error.message,
+        line,
+        "the write is a no-op: a strict-mode write to a getter-only property would throw a TypeError"
+      );
       assert.strictEqual(Str.includes("rewritten")(String(error)), false);
     }
   });

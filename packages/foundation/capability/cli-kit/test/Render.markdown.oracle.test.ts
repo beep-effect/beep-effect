@@ -384,7 +384,7 @@ describe("Render.markdown: headings and paragraphs", () => {
 });
 
 describe("Render.markdown: tables", () => {
-  it.effect("is a GFM pipe table: ParsedNode rows by M cells whose text is the input, with the alignment", () =>
+  it.effect("is a GFM pipe table: N rows by M cells whose text is the input, with the alignment", () =>
     Effect.gen(function* () {
       const root = yield* treeOf([
         Doc.table(

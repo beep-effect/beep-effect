@@ -197,11 +197,11 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
         const plain8 = yield* plain(
           CliFailure.toDoc(Cause.fail(Boom.make({ message: "y" })), { render: { Other: () => [] } })
         );
-        assert.include(plain8, "y", "a tag with no entry renders the generic line; an inherited name is not an entry");
+        assert.include(plain8, "y", "a tag with no entry renders the generic line");
         const plain9 = yield* plain(
           CliFailure.toDoc(Cause.fail({ _tag: "constructor", message: "z" }), { render: {} })
         );
-        assert.include(plain9, "z");
+        assert.include(plain9, "z", "an inherited name is not an entry");
       })
     );
   });
@@ -662,7 +662,11 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
 
     it.effect("exit codes are unchanged: the exitCode option, a marked error's own code, and Cancelled's 130", () =>
       Effect.gen(function* () {
-        assert.strictEqual((yield* runMain(failsWithAFreshError, {}, true, { exitCode: 7 })).code, 7);
+        assert.strictEqual(
+          (yield* runMain(failsWithAFreshError, {}, true, { exitCode: 7 })).code,
+          7,
+          "reportFailures marks the error it reports with its code, so a shared instance would carry it over"
+        );
         const marked = CliRuntime.reported(Boom.make({ message: "m" }), 4);
         assert.strictEqual((yield* runMain(Effect.fail(marked), {}, true, { exitCode: 7 })).code, 4);
         const cancelled = yield* runMain(
