@@ -10,6 +10,7 @@ import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
@@ -29,7 +30,7 @@ const $I = $RepoCliId.create("commands/Accounts/Accounts.schemas");
  * @category models
  * @since 0.0.0
  */
-export const AccountProvider = LiteralKit(["claude", "codex", "muse", "grok", "junie", "kimi"]).pipe(
+export const AccountProvider = LiteralKit(["claude", "codex", "muse", "grok", "junie", "kimi", "antigravity"]).pipe(
   $I.annoteSchema("AccountProvider", { description: "Subscription provider whose plan limits are polled." })
 );
 
@@ -297,9 +298,16 @@ export type AccountUsageOutcome = typeof AccountUsageOutcome.Type;
  * @since 0.0.0
  */
 export class AccountUsage extends S.Opaque<AccountUsage, { readonly brand: unique symbol }>()(
-  S.Struct({ account: AccountRef, outcome: AccountUsageOutcome }).pipe(
-    $I.annoteSchema("AccountUsage", { description: "One account and the outcome of polling its plan limits." })
-  )
+  S.Struct({
+    account: AccountRef,
+    outcome: AccountUsageOutcome,
+    polledAt: S.OptionFromOptionalKey(S.DateTimeUtcFromString)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description:
+          "When the provider was last asked for this account, even if it refused; none for snapshot rows and readings from before the field existed.",
+      }),
+  }).pipe($I.annoteSchema("AccountUsage", { description: "One account and the outcome of polling its plan limits." }))
 ) {}
 
 /**
@@ -311,7 +319,8 @@ export class AccountUsage extends S.Opaque<AccountUsage, { readonly brand: uniqu
  * never competes with a Codex one. Grok Build, Cursor, and Grok Bot share the
  * SuperGrok Heavy panel because one subscription pays for all three, though
  * each keeps its own limit. Kimi Code has its own panel: the CLI, the desktop
- * app, and the proxy login all draw on one membership quota.
+ * app, and the proxy login all draw on one membership quota. Antigravity is
+ * the `agy` login of a Google AI plan.
  *
  * **Example** (Narrow a section)
  *
@@ -324,7 +333,16 @@ export class AccountUsage extends S.Opaque<AccountUsage, { readonly brand: uniqu
  * @category models
  * @since 0.0.0
  */
-export const AccountSection = LiteralKit(["claude", "codex", "supergrok", "muse", "junie", "kimi", "other"]).pipe(
+export const AccountSection = LiteralKit([
+  "claude",
+  "codex",
+  "supergrok",
+  "muse",
+  "junie",
+  "kimi",
+  "antigravity",
+  "other",
+]).pipe(
   $I.annoteSchema("AccountSection", {
     description: "The provider panel an account is ranked in.",
   })
@@ -345,6 +363,7 @@ const sectionOfProvider: Readonly<Record<string, AccountSection>> = {
   muse: "muse",
   junie: "junie",
   kimi: "kimi",
+  antigravity: "antigravity",
 };
 
 /**
@@ -746,7 +765,16 @@ export const rankAccounts: {
     A.sort(A.map(usages, rankAccount(now)), mostUrgentFirst)
 );
 
-const sectionOrder: ReadonlyArray<AccountSection> = ["claude", "codex", "supergrok", "muse", "junie", "kimi", "other"];
+const sectionOrder: ReadonlyArray<AccountSection> = [
+  "claude",
+  "codex",
+  "supergrok",
+  "muse",
+  "junie",
+  "kimi",
+  "antigravity",
+  "other",
+];
 
 const isSignedIn =
   (signedIn: ReadonlyArray<SignedInLogin>) =>
@@ -762,7 +790,7 @@ const isSignedIn =
  * **Details**
  *
  * Panels come in a fixed order (Claude, Codex, SuperGrok Heavy, Muse,
- * JetBrains AI, Kimi Code, then anything else) and keep the input order inside each panel, so pass rows from
+ * JetBrains AI, Kimi Code, Antigravity, then anything else) and keep the input order inside each panel, so pass rows from
  * {@link rankAccounts}. A panel with no accounts is left out.
  *
  * **Example** (Group nothing)

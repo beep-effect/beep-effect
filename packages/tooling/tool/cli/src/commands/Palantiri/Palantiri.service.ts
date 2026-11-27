@@ -135,6 +135,34 @@ const readAccountSnapshot = Effect.fnUntraced(function* (file: string) {
 });
 
 /**
+ * Read the staged accounts report, if one decodes.
+ *
+ * **Details**
+ *
+ * A fresh accounts screen or `accounts status` starts from this report, so an
+ * account whose poll fails at once still shows its last good reading, and an
+ * account inside its provider's poll floor is not asked again. An unreadable
+ * snapshot or state directory is `None`.
+ *
+ * **Example** (Build the read effect)
+ *
+ * ```ts
+ * import { readAccountHeadroomSnapshot } from "@beep/repo-cli/test/Palantiri"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(readAccountHeadroomSnapshot)) // true
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const readAccountHeadroomSnapshot = Effect.gen(function* () {
+  const path = yield* Path.Path;
+  const dir = yield* palantiriStateDir;
+  return yield* readAccountSnapshot(path.join(dir, SNAPSHOT_FILE));
+}).pipe(Effect.orElseSucceed(O.none<AccountsStatusReport>));
+
+/**
  * Stage a completed accounts report without changing its displayed result.
  * Failed rows retain their previous successful reading and original timestamp;
  * rejected logins remain definitive. Publication is private, atomic and best-effort.

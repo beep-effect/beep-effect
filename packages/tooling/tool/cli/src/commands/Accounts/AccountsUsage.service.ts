@@ -62,6 +62,7 @@ import {
   UsageWindow,
 } from "./Accounts.schemas.ts";
 import {
+  AntigravityLoginFileJson,
   ClaudeCliConfigJson,
   ClaudeUsageBodyJson,
   CodexCliAuthJson,
@@ -93,6 +94,7 @@ import {
 import type * as PlatformError from "effect/PlatformError";
 import type { AccountSnapshot } from "./Accounts.schemas.ts";
 import type {
+  AntigravityLoginFile,
   JunieAccessOptionsBody,
   JunieQuotaBody,
   JunieRefillBody,
@@ -231,6 +233,14 @@ const loginRejected = AccountUsageOutcome.cases.NeedsLogin.make({
 
 const failed = (detail: string) => AccountUsageOutcome.cases.Failed.make({ detail });
 
+const antigravitySignedOut = AccountUsageOutcome.cases.NeedsLogin.make({
+  detail: "the Antigravity CLI holds no login; run `agy` and sign in",
+});
+
+const claudeRateLimited = failed(
+  "Anthropic rate-limited the usage read; every Claude Code session on this account shares that limit"
+);
+
 const isRejectedStatus = (status: number): boolean => status === 401 || status === 403;
 
 // JetBrains' ingrazzio gateway answers an expired or revoked bearer token with
@@ -300,11 +310,13 @@ const decodedOutcome =
  */
 export const claudeUsageOutcome = (response: UsageTextResponse): AccountUsageOutcome => {
   if (isRejectedStatus(response.status)) return loginRejected;
+  if (response.status === 429) return claudeRateLimited;
   return O.match(ClaudeUsageBodyJson.decodeOption(response.body), {
     onNone: () => failed(`Claude usage answered HTTP ${response.status} with a body this version cannot read`),
     onSome: (body) => {
       // Claude answers an expired token with HTTP 200 and an error body.
       if (body.error !== undefined) {
+        if (body.error.type === "rate_limit_error") return claudeRateLimited;
         return body.error.type === "authentication_error" ? loginRejected : failed(body.error.message);
       }
       return AccountUsageOutcome.cases.Ok.make({
@@ -838,6 +850,46 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
     )
   );
 
+  const antigravityHome = yield* Config.String("BEEP_ANTIGRAVITY_HOME").pipe(
+    Config.withDefault(path.join(String1, ".gemini", "antigravity-cli"))
+  );
+  const antigravityLoginFile = path.join(antigravityHome, "antigravity-oauth-token");
+  const readAntigravityLogin = fs
+    .readFileString(antigravityLoginFile)
+    .pipe(Effect.map(AntigravityLoginFileJson.decodeOption), Effect.orElseSucceed(O.none<AntigravityLoginFile>));
+
+  const antigravityAccount = readAntigravityLogin.pipe(
+    Effect.map(
+      O.map((login) =>
+        AccountRef.make({
+          provider: "antigravity",
+          label: O.getOrElse(O.fromNullishOr(login.id_token_email), () => "Antigravity"),
+          source: antigravityLoginFile,
+        })
+      )
+    )
+  );
+
+  const pollAntigravity = readAntigravityLogin.pipe(
+    Effect.map(
+      O.match({
+        onNone: () => antigravitySignedOut,
+        onSome: (login) =>
+          login.token.refresh_token === undefined
+            ? antigravitySignedOut
+            : AccountUsageOutcome.cases.Ok.make({
+                identity: O.fromNullishOr(login.id_token_email),
+                plan: O.none(),
+                windows: [],
+                credits: [],
+                limitResets: O.none(),
+                asOf: O.none(),
+              }),
+      })
+    ),
+    Effect.withSpan("AccountsUsage.pollAntigravity")
+  );
+
   const pollJunie = Effect.fn("AccountsUsage.pollJunie")(function* () {
     const lastBalance = yield* Ref.make(O.none<AccountUsageOutcome>());
     const attempt = Effect.fnUntraced(function* () {
@@ -1149,6 +1201,7 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
             ),
         }),
       junie: () => pollJunie(),
+      antigravity: () => pollAntigravity,
       // The proxy refreshes the fifteen-minute Kimi access token ahead of
       // expiry, so the stored one is read as it is. The profile is read beside
       // the usages for the identity and tier; a failed or slow profile read
@@ -1218,11 +1271,8 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
     Effect.map(A.filter(Str.endsWith(".json"))),
     Effect.flatMap(Effect.forEach((name) => accountAt(path.join(directory, name)), { concurrency: POLL_CONCURRENCY })),
     Effect.map(A.getSomes),
-    Effect.zipWith(junieAccount, (proxyAccounts, account) =>
-      O.match(account, {
-        onNone: () => proxyAccounts,
-        onSome: (value) => A.append(proxyAccounts, value),
-      })
+    Effect.zipWith(Effect.all([junieAccount, antigravityAccount], { concurrency: 2 }), (proxyAccounts, localAccounts) =>
+      A.appendAll(proxyAccounts, A.getSomes(localAccounts))
     ),
     Effect.map(A.sort(byProviderThenLabel)),
     Effect.withSpan("AccountsUsage.accounts")
@@ -1231,6 +1281,9 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
   const poll = Effect.fn("AccountsUsage.poll")(function* (account: AccountRef) {
     if (account.provider === "junie") {
       return AccountUsage.make({ account, outcome: yield* pollJunie() });
+    }
+    if (account.provider === "antigravity") {
+      return AccountUsage.make({ account, outcome: yield* pollAntigravity });
     }
     const login = yield* readLogin(account.source);
     if (O.isNone(login)) {
@@ -1336,8 +1389,94 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
  */
 export const layerAccountsUsageLive = Layer.effect(AccountsUsage, makeAccountsUsageLive());
 
+// decision: claude-usage-poll-floor
+const CLAUDE_POLL_FLOOR = Duration.minutes(5);
+
+const pollFloorOf = (provider: string): O.Option<Duration.Duration> =>
+  provider === "claude" ? O.some(CLAUDE_POLL_FLOOR) : O.none();
+
+const readingTimeOf = (usage: AccountUsage): O.Option<DateTime.Utc> =>
+  O.orElse(usage.polledAt, () =>
+    AccountUsageOutcome.match(usage.outcome, {
+      Ok: (ok) => ok.asOf,
+      NeedsLogin: O.none<DateTime.Utc>,
+      Failed: O.none<DateTime.Utc>,
+    })
+  );
+
+/**
+ * The reading that stands in for a poll of an account whose provider limits
+ * how often its usage may be read.
+ *
+ * **Details**
+ *
+ * Anthropic's usage endpoint rate-limits each account, and every Claude Code
+ * session signed in to that account reads the same endpoint. A Claude account
+ * is therefore asked at most once per five minutes: a row polled (or a
+ * collector snapshot captured) within that floor is reused, whatever its
+ * outcome. Other providers have no floor and are always polled.
+ *
+ * **Example** (A Codex account is always polled)
+ *
+ * ```ts
+ * import { AccountRef, recentReading } from "@beep/repo-cli/test/Accounts"
+ * import * as DateTime from "effect/DateTime"
+ * import * as O from "effect/Option"
+ *
+ * const account = AccountRef.make({ provider: "codex", label: "work", source: "/auth/codex-work.json" })
+ * console.log(O.isNone(recentReading([], account, DateTime.makeUnsafe(0)))) // true
+ * ```
+ *
+ * @param known - The previous report's rows and the collector snapshots.
+ * @param account - The account about to be polled.
+ * @param now - The poll's instant.
+ * @returns The recent row to reuse, or none when the account is due.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const recentReading: {
+  (account: AccountRef, now: DateTime.Utc): (known: ReadonlyArray<AccountUsage>) => O.Option<AccountUsage>;
+  (known: ReadonlyArray<AccountUsage>, account: AccountRef, now: DateTime.Utc): O.Option<AccountUsage>;
+} = dual(
+  3,
+  (known: ReadonlyArray<AccountUsage>, account: AccountRef, now: DateTime.Utc): O.Option<AccountUsage> =>
+    O.flatMap(pollFloorOf(account.provider), (floor) =>
+      A.findFirst(
+        known,
+        (row) =>
+          row.account.provider === account.provider &&
+          row.account.label === account.label &&
+          O.exists(readingTimeOf(row), (at) => Duration.isLessThan(DateTime.distance(at, now), floor))
+      )
+    )
+);
+
+const pollDue = Effect.fn("AccountsUsage.pollAll")(function* (previous: ReadonlyArray<AccountUsage>) {
+  const usage = yield* AccountsUsage;
+  const now = yield* DateTime.now;
+  const snapshots = yield* usage.snapshots;
+  const known = A.appendAll(previous, snapshots);
+  const accounts = yield* usage.accounts;
+  const polled = yield* Effect.forEach(
+    accounts,
+    (account) =>
+      O.match(recentReading(known, account, now), {
+        onSome: Effect.succeed,
+        onNone: () =>
+          usage.poll(account).pipe(Effect.map((row) => AccountUsage.make({ ...row, polledAt: O.some(now) }))),
+      }),
+    { concurrency: POLL_CONCURRENCY }
+  );
+  return dedupeAccountUsages(A.appendAll(polled, snapshots));
+});
+
 /**
  * Poll every account the proxy holds a login for.
+ *
+ * **Details**
+ *
+ * With no previous report there is nothing to reuse, so every account is
+ * asked; {@link loadAccountsReport} applies the per-provider poll floor.
  *
  * **Example** (Build the poll effect)
  *
@@ -1351,13 +1490,7 @@ export const layerAccountsUsageLive = Layer.effect(AccountsUsage, makeAccountsUs
  * @category commands
  * @since 0.0.0
  */
-export const pollAccounts = Effect.gen(function* () {
-  const usage = yield* AccountsUsage;
-  const accounts12 = yield* usage.accounts;
-  const polled = yield* Effect.forEach(accounts12, usage.poll, { concurrency: POLL_CONCURRENCY });
-  const snapshots13 = yield* usage.snapshots;
-  return dedupeAccountUsages(A.appendAll(polled, snapshots13));
-}).pipe(Effect.withSpan("AccountsUsage.pollAll"));
+export const pollAccounts = pollDue([]);
 
 /**
  * Keep the last good reading of an account whose newest poll failed.
@@ -1419,6 +1552,7 @@ export const retainLastGood: {
                   Ok: (ok) =>
                     AccountUsage.make({
                       account: usage.account,
+                      polledAt: usage.polledAt,
                       outcome: AccountUsageOutcome.cases.Ok.make({
                         ...ok,
                         asOf: O.orElse(ok.asOf, () => O.some(previousAt)),
@@ -1439,7 +1573,10 @@ export const retainLastGood: {
  * **Details**
  *
  * `previous` carries the last report's readings so a failed poll keeps the
- * account's last good figures; see {@link retainLastGood}.
+ * account's last good figures; see {@link retainLastGood}. Its rows also stand
+ * in for accounts still inside their provider's poll floor; see
+ * {@link recentReading}. Pass the staged headroom snapshot on a fresh start so
+ * the floor holds across processes.
  *
  * **Example** (Build the report effect)
  *
@@ -1460,17 +1597,16 @@ export const loadAccountsReport = Effect.fn("AccountsUsage.loadReport")(function
   previous: O.Option<AccountsStatusReport>
 ) {
   const usage = yield* AccountsUsage;
-  const polled = yield* pollAccounts;
+  const previousRows = O.match(previous, {
+    onNone: A.empty<AccountUsage>,
+    onSome: (report) => A.flatMap(report.groups, (group) => A.map(group.rows, (row) => row.usage)),
+  });
+  const polled = yield* pollDue(previousRows);
   const signedIn = yield* usage.signedIn;
   const now = yield* DateTime.now;
   const usages = O.match(previous, {
     onNone: () => polled,
-    onSome: (report) =>
-      retainLastGood(
-        polled,
-        A.flatMap(report.groups, (group) => A.map(group.rows, (row) => row.usage)),
-        report.generatedAt
-      ),
+    onSome: (report) => retainLastGood(polled, previousRows, report.generatedAt),
   });
   return AccountsStatusReport.make({
     schemaVersion: "accounts-status/v2",

@@ -99,6 +99,7 @@ const sectionTitle: Readonly<Record<AccountSection, string>> = {
   muse: "Muse",
   junie: "JetBrains AI",
   kimi: "Kimi Code",
+  antigravity: "Antigravity",
   other: "Other",
 };
 
@@ -196,6 +197,8 @@ const labelOf = (section: AccountSection, row: AccountRanking): string =>
 
 type Status = readonly [label: string, tone: (text: string) => string];
 
+const isLoginOnly = (row: AccountRanking): boolean => row.usage.account.provider === "antigravity";
+
 const statusOf = (row: AccountRanking, palette: Palette): Status =>
   AccountUsageOutcome.match(row.usage.outcome, {
     NeedsLogin: (): Status => ["needs login", palette.bad],
@@ -204,7 +207,12 @@ const statusOf = (row: AccountRanking, palette: Palette): Status =>
       AccountAvailability.match(row.availability, {
         "weekly-exhausted": (): Status => ["week used up", palette.bad],
         "session-capped": (): Status => ["session full", palette.warn],
-        ready: (): Status => (row.estimated ? ["ready (est.)", palette.dim] : ["ready", palette.good]),
+        ready: (): Status =>
+          isLoginOnly(row)
+            ? ["signed in", palette.good]
+            : row.estimated
+              ? ["ready (est.)", palette.dim]
+              : ["ready", palette.good],
         unavailable: (): Status => ["unreadable", palette.bad],
       }),
   });
@@ -288,7 +296,13 @@ const detailsOf = (row: AccountRanking, now: DateTime.Utc, palette: Palette): Re
       ...O.toArray(sessionDetail(row, now, palette)),
       ...A.map(
         [
-          ...(A.isReadonlyArrayEmpty(windows) ? ["no usage reported (idle)"] : A.empty<string>()),
+          ...(A.isReadonlyArrayEmpty(windows)
+            ? [
+                isLoginOnly(row)
+                  ? "quota not readable: Google serves it only to its own clients"
+                  : "no usage reported (idle)",
+              ]
+            : A.empty<string>()),
           ...otherWindowDetails(row),
           ...A.map(credits, creditOf),
           ...O.toArray(

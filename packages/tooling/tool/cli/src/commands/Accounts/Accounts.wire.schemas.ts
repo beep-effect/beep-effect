@@ -82,6 +82,59 @@ export class ProxyAuthFile extends S.Opaque<ProxyAuthFile, { readonly brand: uni
  */
 export const ProxyAuthFileJson = JsonStringCodec(ProxyAuthFile);
 
+/**
+ * The Antigravity CLI's stored Google login (`antigravity-oauth-token`).
+ *
+ * **Details**
+ *
+ * Only the account and whether a refresh token is present are read; the
+ * tokens are never sent anywhere. Google serves Antigravity quota only to its
+ * own clients, so the login is all the report can show.
+ *
+ * **Example** (Decode a login without tokens)
+ *
+ * ```ts
+ * import { AntigravityLoginFileJson } from "@beep/repo-cli/test/Accounts"
+ * import * as O from "effect/Option"
+ *
+ * const login = AntigravityLoginFileJson.decodeOption('{"token":{},"auth_method":"consumer","id_token_email":"me@example.com"}')
+ * console.log(O.isSome(login)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AntigravityLoginFile extends S.Opaque<AntigravityLoginFile, { readonly brand: unique symbol }>()(
+  S.Struct({
+    token: S.Struct({
+      refresh_token: S.RedactedFromValue(S.String, { label: "refresh_token" }).pipe(S.optionalKey),
+    }),
+    auth_method: S.optionalKey(S.String),
+    id_token_email: S.optionalKey(AccountLabel),
+  }).pipe(
+    $I.annoteSchema("AntigravityLoginFile", {
+      description: "Account and refresh-token presence of the Antigravity CLI's stored Google login.",
+    })
+  )
+) {}
+
+/**
+ * JSON-string codec for {@link AntigravityLoginFile}.
+ *
+ * **Example** (Reject malformed text)
+ *
+ * ```ts
+ * import { AntigravityLoginFileJson } from "@beep/repo-cli/test/Accounts"
+ * import * as O from "effect/Option"
+ *
+ * console.log(O.isNone(AntigravityLoginFileJson.decodeOption("not-json"))) // true
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const AntigravityLoginFileJson = JsonStringCodec(AntigravityLoginFile);
+
 const ClaudeLimit = S.Struct({
   kind: S.String,
   percent: S.Finite,

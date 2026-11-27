@@ -15,6 +15,8 @@ import {
   SourceFailed,
 } from "@beep/palantiri";
 import {
+  AccountGroup,
+  AccountRanking,
   AccountRef,
   AccountsError,
   AccountsStatusReport,
@@ -430,9 +432,21 @@ describe("beep palantiri parcel account-headroom", () => {
         assertSome(first.expectedProviders, ["claude", "codex"]);
         // Age the snapshot past the five-minute bound.
         const written = yield* fs.readFileString(file).pipe(Effect.flatMap(AccountsStatusReportJson.decode));
+        const sixMinutesEarlier = (at: DateTime.Utc) => DateTime.subtract(at, { minutes: 6 });
         const aged = AccountsStatusReport.make({
           ...written,
-          generatedAt: DateTime.subtract(written.generatedAt, { minutes: 6 }),
+          generatedAt: sixMinutesEarlier(written.generatedAt),
+          groups: A.map(written.groups, (group) =>
+            AccountGroup.make({
+              ...group,
+              rows: A.map(group.rows, (row) =>
+                AccountRanking.make({
+                  ...row,
+                  usage: AccountUsage.make({ ...row.usage, polledAt: O.map(row.usage.polledAt, sixMinutesEarlier) }),
+                })
+              ),
+            })
+          ),
         });
         yield* AccountsStatusReportJson.encode(aged).pipe(Effect.flatMap((text) => fs.writeFileString(file, text)));
         yield* read;

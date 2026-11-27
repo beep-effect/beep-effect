@@ -3,6 +3,8 @@ import { TestTerminal } from "@beep/cli-kit/testing";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { accountsCommand } from "@beep/repo-cli";
 import {
+  AccountGroup,
+  AccountRanking,
   AccountRef,
   AccountsBoardLayout,
   AccountsError,
@@ -12,6 +14,7 @@ import {
   AccountUsage,
   AccountUsageOutcome,
   accountSection,
+  accountsViewport,
   ClaudeUsageBodyJson,
   CodexCliAuth,
   CodexUsageBodyJson,
@@ -57,6 +60,7 @@ import {
   pollAccounts,
   rankAccount,
   rankAccounts,
+  recentReading,
   renderAccountsBoard,
   renderHours,
   retainLastGood,
@@ -219,10 +223,20 @@ describe("account usage wire mapping", () => {
     expect(codexUsageOutcome({ identity, status: 401, body: "" })._tag).toBe("NeedsLogin");
   });
 
+  it("names a Claude rate limit as the shared per-account limit, whether by status or by body", () => {
+    const identity = O.none<string>();
+    const limited = `{"error":{"type":"rate_limit_error","message":"Rate limited. Please try again later."}}`;
+    const byStatus = claudeUsageOutcome({ identity, status: 429, body: limited });
+    const byBody = claudeUsageOutcome({ identity, status: 200, body: limited });
+    expect(byStatus).toEqual(byBody);
+    expect(byStatus._tag).toBe("Failed");
+    if (byStatus._tag === "Failed") expect(byStatus.detail).toContain("every Claude Code session on this account");
+  });
+
   it("reports other errors and unreadable bodies as failures", () => {
     const identity = O.none<string>();
     expect(
-      claudeUsageOutcome({ identity, status: 200, body: `{"error":{"type":"rate_limit_error","message":"slow down"}}` })
+      claudeUsageOutcome({ identity, status: 200, body: `{"error":{"type":"overloaded_error","message":"slow down"}}` })
     ).toEqual(AccountUsageOutcome.cases.Failed.make({ detail: "slow down" }));
     expect(claudeUsageOutcome({ identity, status: 502, body: "<html>" })._tag).toBe("Failed");
     expect(codexUsageOutcome({ identity, status: 500, body: "{}" })._tag).toBe("Failed");
@@ -2218,5 +2232,151 @@ describe("Junie detailed cycle quota", () => {
         })
       );
     }
+  );
+});
+
+const sixMinutesEarlier = (at: DateTime.Utc) => DateTime.subtract(at, { minutes: 6 });
+
+const ageReport = (report: AccountsStatusReport): AccountsStatusReport =>
+  AccountsStatusReport.make({
+    ...report,
+    generatedAt: sixMinutesEarlier(report.generatedAt),
+    groups: A.map(report.groups, (group) =>
+      AccountGroup.make({
+        ...group,
+        rows: A.map(group.rows, (row) =>
+          AccountRanking.make({
+            ...row,
+            usage: AccountUsage.make({ ...row.usage, polledAt: O.map(row.usage.polledAt, sixMinutesEarlier) }),
+          })
+        ),
+      })
+    ),
+  });
+
+const claudeRowOf = (report: AccountsStatusReport): O.Option<AccountUsage> =>
+  A.findFirst(
+    A.flatMap(report.groups, (group) => A.map(group.rows, (row) => row.usage)),
+    (usage) => usage.account.provider === "claude"
+  );
+
+describe("Claude poll floor", () => {
+  const account = AccountRef.make({ provider: "claude", label: "me@example.com", source: "/auth/claude-me.json" });
+  const now = DateTime.makeUnsafe("2026-11-26T12:00:00Z");
+  const polledAt = (minutesAgo: number) =>
+    AccountUsage.make({
+      account,
+      outcome: AccountUsageOutcome.cases.Failed.make({ detail: "rate limited" }),
+      polledAt: O.some(DateTime.subtract(now, { minutes: minutesAgo })),
+    });
+
+  it("reuses any Claude row polled inside five minutes, and nothing older", () => {
+    assertSome(recentReading([polledAt(2)], account, now), polledAt(2));
+    assertNone(recentReading([polledAt(6)], account, now));
+    assertNone(recentReading([AccountUsage.make({ account, outcome: polledAt(2).outcome })], account, now));
+  });
+
+  it("never holds back a provider without a floor", () => {
+    const codex = AccountRef.make({ provider: "codex", label: "me@example.com", source: "/auth/codex-me.json" });
+    assertNone(recentReading([AccountUsage.make({ ...polledAt(1), account: codex })], codex, now));
+  });
+});
+
+describe("accounts screen viewport", () => {
+  it("shows a board that fits whole, with nothing to scroll", () => {
+    expect(accountsViewport("title\na\nb", 10, 5)).toEqual([["title", "a", "b"], 0]);
+  });
+
+  it("pins the title, clamps the offset, and names the lines shown", () => {
+    const [lines, maxScroll] = accountsViewport(6, 99)("title\na\nb\nc\nd\ne\nf\ng");
+    expect(maxScroll).toBe(3);
+    expect(A.take(lines, 5)).toEqual(["title", "d", "e", "f", "g"]);
+    expect(lines[5]).toContain("lines 4-7 of 7");
+    const [top] = accountsViewport("title\na\nb\nc\nd\ne\nf\ng", 6, -4);
+    expect(A.take(top, 2)).toEqual(["title", "a"]);
+  });
+});
+
+it.layer(inheritedPlatform, { timeout: "30 seconds" })("Claude rate limits and Antigravity logins", (it) => {
+  it.effect("asks Anthropic once per five minutes, and a rate limit keeps the last reading", () =>
+    Effect.gen(function* () {
+      const calls = yield* Ref.make(0);
+      const client = HttpClient.make((request) =>
+        Ref.updateAndGet(calls, (count) => count + 1).pipe(
+          Effect.map((count) =>
+            count === 1
+              ? respond(request, claudeBody)
+              : respond(
+                  request,
+                  `{"error":{"type":"rate_limit_error","message":"Rate limited. Please try again later."}}`,
+                  429
+                )
+          )
+        )
+      );
+      const [first, reused, limited, heldBack, callCounts] = yield* runLive(
+        { "claude-me.json": authFiles["claude-me.json"] },
+        client,
+        Effect.gen(function* () {
+          const first = yield* loadAccountsReport(O.none());
+          const afterFirst = yield* Ref.get(calls);
+          const reused = yield* loadAccountsReport(O.some(first));
+          const afterReuse = yield* Ref.get(calls);
+          const limited = yield* loadAccountsReport(O.some(ageReport(first)));
+          const afterLimit = yield* Ref.get(calls);
+          const heldBack = yield* loadAccountsReport(O.some(limited));
+          return [
+            first,
+            reused,
+            limited,
+            heldBack,
+            [afterFirst, afterReuse, afterLimit, yield* Ref.get(calls)],
+          ] as const;
+        })
+      );
+      expect(callCounts).toEqual([1, 1, 2, 2]);
+      assertSome(
+        O.map(claudeRowOf(reused), (usage) => usage.outcome._tag),
+        "Ok"
+      );
+      const kept = O.getOrThrow(claudeRowOf(limited));
+      expect(kept.outcome._tag).toBe("Ok");
+      if (kept.outcome._tag === "Ok") assertSome(kept.outcome.asOf, ageReport(first).generatedAt);
+      assertTrue(kept.polledAt.pipe(O.isSome));
+      assertSome(
+        O.map(claudeRowOf(heldBack), (usage) => usage.outcome._tag),
+        "Ok"
+      );
+    })
+  );
+
+  it.effect("lists the Antigravity CLI login without calling Google", () =>
+    Effect.gen(function* () {
+      const calls = yield* Ref.make(0);
+      const client = HttpClient.make((request) =>
+        Ref.update(calls, (count) => count + 1).pipe(Effect.as(respond(request, "{}", 500)))
+      );
+      const signedIn = yield* runLive(
+        {
+          ".gemini/antigravity-cli/antigravity-oauth-token": `{"token":{"access_token":"a","refresh_token":"r"},"auth_method":"consumer","id_token_email":"g@example.com"}`,
+        },
+        client,
+        pollAccounts
+      );
+      const signedOut = yield* runLive(
+        {
+          ".gemini/antigravity-cli/antigravity-oauth-token": `{"token":{"access_token":"a"},"id_token_email":"g@example.com"}`,
+        },
+        client,
+        pollAccounts
+      );
+      expect(A.map(signedIn, (usage) => [usage.account.provider, usage.account.label, usage.outcome._tag])).toEqual([
+        ["antigravity", "g@example.com", "Ok"],
+      ]);
+      expect(A.map(signedOut, (usage) => usage.outcome._tag)).toEqual(["NeedsLogin"]);
+      const googleCalls = yield* Ref.get(calls);
+      expect(googleCalls).toBe(0);
+      expect(accountSection("antigravity")).toBe("antigravity");
+    })
   );
 });
