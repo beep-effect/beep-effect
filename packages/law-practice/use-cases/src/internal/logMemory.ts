@@ -22,7 +22,6 @@ import {
 import { VerdictLog } from "../ReviewQueue/ReviewQueue.ports.ts";
 import type { AnswerRow, ReviewItem, StoredReviewItem, VerdictRow } from "@beep/law-practice-domain";
 
-// An append-only chunk of rows in a `Ref`: atomic appends, reads in append order.
 const appendOnlyRows = <Row>() =>
   Effect.map(Ref.make(Chunk.empty<Row>()), (ref) => ({
     append: (row: Row) => Ref.update(ref, Chunk.append(row)),

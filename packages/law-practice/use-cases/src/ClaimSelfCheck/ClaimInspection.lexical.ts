@@ -121,10 +121,9 @@ const intrinsicSourceFacts = Effect.fn("ClaimInspection.intrinsicSourceFacts")(f
   membership: O.Option<ClaimLexicalMembershipShape>
 ) {
   if (O.isNone(membership)) return LexicalSourceFacts.cases.ready.make({ tokens: facts, lexicalWorkConsumed: 0 });
-  // Reserve the added scan, immutable token/result copies, and source-local builder before allocation.
-  const scanWork = facts.length * 16 + 9;
-  if (262_144 < scanWork) return LexicalSourceFacts.cases.unavailable.make({ reason: "source-work-limit" });
-  return yield* new IntrinsicSourceFactsBuilder(facts, identity, membership.value, 262_144 - scanWork).run;
+  const scanCopyBuildWork = facts.length * 16 + 9;
+  if (262_144 < scanCopyBuildWork) return LexicalSourceFacts.cases.unavailable.make({ reason: "source-work-limit" });
+  return yield* new IntrinsicSourceFactsBuilder(facts, identity, membership.value, 262_144 - scanCopyBuildWork).run;
 });
 
 /**

@@ -120,7 +120,6 @@ export interface IdentityTokenShape {
   readonly token: (audience: string) => Effect.Effect<Redacted.Redacted<string>, IdentityTokenError>;
 }
 
-/** The token every double answers with unless a test says otherwise. */
 const TEST_TOKEN = "test-identity-token";
 
 /**

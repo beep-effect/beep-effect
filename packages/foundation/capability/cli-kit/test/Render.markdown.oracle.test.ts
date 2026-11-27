@@ -14,11 +14,11 @@ import { contextOf } from "./helpers/renderContext.ts";
 import type { Block, LinkTargetInput, RenderContext, Style, TokenName } from "@beep/cli-kit";
 
 const Json = S.fromJsonString(S.Unknown);
+const ROWS_PER_PARSE = 400;
 
-/** The parts of a parsed node these tests read; the parser is the oracle, so nothing here renders. */
-interface N {
+interface ParsedNode {
   readonly align?: ReadonlyArray<string | null>;
-  readonly children?: ReadonlyArray<N>;
+  readonly children?: ReadonlyArray<ParsedNode>;
   readonly depth?: number;
   readonly lang?: string | null;
   readonly ordered?: boolean;
@@ -32,28 +32,26 @@ const render = (doc: ReadonlyArray<Block>, overrides: Partial<RenderContext.Enco
 
 const parse = (markdown: string) => Effect.map(Markdown.parse(markdown), (root) => root);
 
-/** Render then parse: the tree of what a GFM reader sees. */
 const treeOf = (doc: ReadonlyArray<Block>, overrides: Partial<RenderContext.Encoded> = {}) =>
   Effect.flatMap(render(doc, overrides), parse);
 
-const kids = (n: N | undefined): ReadonlyArray<N> => n?.children ?? [];
+const kids = (n: ParsedNode | undefined): ReadonlyArray<ParsedNode> => n?.children ?? [];
 
-/** The text a reader sees: text and code values, a hard break or a `<br>` as a line feed. */
-const textOf = (n: N): string => {
+const textOf = (n: ParsedNode): string => {
   if (n.type === "text" || n.type === "inlineCode") return n.value ?? "";
   if (n.type === "break" || (n.type === "html" && n.value === "<br>")) return "\n";
   return pipe(kids(n), A.map(textOf), A.join(""));
 };
 
-const descendantTypes = (n: N): ReadonlyArray<string> => [n.type, ...A.flatMap(kids(n), descendantTypes)];
+const descendantTypes = (n: ParsedNode): ReadonlyArray<string> => [n.type, ...A.flatMap(kids(n), descendantTypes)];
 
-const tableOf = (root: N): N => {
+const tableOf = (root: ParsedNode): ParsedNode => {
   const table = O.getOrUndefined(A.findFirst(kids(root), (c) => c.type === "table"));
   assert.isDefined(table, "the output has a table");
   return table;
 };
 
-const cellTexts = (table: N): ReadonlyArray<ReadonlyArray<string>> =>
+const cellTexts = (table: ParsedNode): ReadonlyArray<ReadonlyArray<string>> =>
   A.map(kids(table), (row) => A.map(kids(row), (cell) => textOf(cell)));
 
 const ALPHABET = ["|", "`", "<", ">", "\\", "\n", "*", "_", "[", "]", "&", "x", "#", "~", " ", "!", "(", ")"];
@@ -287,17 +285,16 @@ describe("Render.markdown: headings and paragraphs", () => {
             );
         };
         for (const text of upTo(alphabet, 6)) check(text);
-        // A fixed-seed generator: the same multi-line texts every run.
         let seed = 0x2f6e2b1;
-        const next = (n: number): number => {
+        const fixedSeedLcg = (n: number): number => {
           seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
           return seed % n;
         };
         for (let i = 0; i < 4000; i++) {
-          const lineCount = 1 + next(3);
+          const lineCount = 1 + fixedSeedLcg(3);
           const lines = Array.from({ length: lineCount }, () =>
             A.join(
-              Array.from({ length: 1 + next(8) }, () => alphabet[next(alphabet.length)] ?? ""),
+              Array.from({ length: 1 + fixedSeedLcg(8) }, () => alphabet[fixedSeedLcg(alphabet.length)] ?? ""),
               ""
             )
           );
@@ -488,20 +485,19 @@ describe("Render.markdown: tables", () => {
         ),
       ]);
       const values = A.map(kids(tableOf(root)).slice(1), (row) => A.map(kids(kids(row)[0]), (n) => [n.type, n.value]));
-      // A `|` after an odd run of backslashes cannot be held by a code span in a cell (GFM's scanner pairs a backslash
-      // with the next character, and the unescape then leaves an even run), so that code is `<code>` around text.
-      const html = HashSet.make("a\\|b", "\\|", "`\\|`");
+      const pipeAfterOddBackslashes = HashSet.make("a\\|b", "\\|", "`\\|`");
       assert.deepStrictEqual(
         values,
         A.map(codes, (c) =>
-          HashSet.has(html, c)
+          HashSet.has(pipeAfterOddBackslashes, c)
             ? [
                 ["html", "<code>"],
                 ["text", c],
                 ["html", "</code>"],
               ]
             : [["inlineCode", c]]
-        )
+        ),
+        "GFM pairs a backslash with the next character, so a | after an odd run cannot sit in a code span: <code> is used"
       );
     })
   );
@@ -542,9 +538,8 @@ describe("Render.markdown: tables", () => {
         const ctx = yield* contextOf();
         const cells = upTo(ALPHABET, 3);
         const failures: Array<string> = [];
-        // One table of many rows per batch keeps the parse count low while every cell is still checked by position.
-        for (let start = 0; start < cells.length; start += 400) {
-          const batch = cells.slice(start, start + 400);
+        for (let start = 0; start < cells.length; start += ROWS_PER_PARSE) {
+          const batch = cells.slice(start, start + ROWS_PER_PARSE);
           const markdown = Render.markdown(
             [
               Doc.table(
@@ -616,7 +611,7 @@ describe("Render.markdown: tables", () => {
 });
 
 describe("Render.markdown: code, diff, collapsible and callout", () => {
-  const fenceValue = (n: N | undefined): string => Str.replace(/\n$/, "")(n?.value ?? "");
+  const fenceValue = (n: ParsedNode | undefined): string => Str.replace(/\n$/, "")(n?.value ?? "");
 
   it.effect("a code block is a fence with its language and exactly its text, however many backticks it holds", () =>
     Effect.gen(function* () {
@@ -776,8 +771,6 @@ describe("Render.markdown: links", () => {
 
   it.effect("a URL holding a pipe or a backtick stays one link in a table cell: both are percent-encoded", () =>
     Effect.gen(function* () {
-      // GFM splits a row into cells before it reads inlines, so a raw `|` in a destination splits the row, and a
-      // backtick can open a code span that swallows the link. Percent-encoding either is the same URL.
       const urls = [
         "https://x.test/a|b",
         "https://x.test/a`b",
@@ -795,11 +788,15 @@ describe("Render.markdown: links", () => {
       assert.strictEqual(rows.length, urls.length);
       A.forEach(urls, (url, index) => {
         const cells = kids(rows[index]);
-        assert.strictEqual(cells.length, 2, `${url}: the row keeps its two cells`);
+        assert.strictEqual(
+          cells.length,
+          2,
+          `${url}: the row keeps its two cells, though GFM splits cells before inlines`
+        );
         assert.deepStrictEqual(
           A.map(kids(cells[0]), (n) => [n.type, n.url, textOf(n)]),
           [["link", pipe(url, Str.replaceAll("|", "%7C"), Str.replaceAll("`", "%60")), "l"]],
-          url
+          `${url}: a raw backtick could open a code span that swallows the link`
         );
         assert.strictEqual(textOf(A.getUnsafe(cells, 1)), "z", url);
       });
@@ -844,11 +841,10 @@ describe("Render.markdown: links", () => {
           const root = yield* treeOf([Doc.paragraph("x ", Doc.link({ url }, "click"))]);
           const links = A.filter([...descendants(root)], (n) => n.type === "link");
           for (const link of links) {
-            // A link that is emitted decodes to exactly the URL text that was given, so the check saw what a reader sees.
             assert.strictEqual(
               link.url,
               pipe(url, Str.replace(/[\r\n]/g, ""), Str.trim),
-              Result.getOrThrow(S.encodeUnknownResult(Json)(url))
+              `an emitted link decodes to exactly the URL given: ${Result.getOrThrow(S.encodeUnknownResult(Json)(url))}`
             );
             assert.notMatch(
               link.url ?? "",
@@ -857,7 +853,6 @@ describe("Render.markdown: links", () => {
             );
           }
         }
-        // The ones that spell a dangerous scheme once whitespace, a control character or a line break is gone are not links.
         for (const url of [
           "java\nscript:alert(1)",
           "java\tscript:alert(1)",
@@ -868,7 +863,7 @@ describe("Render.markdown: links", () => {
           assert.notInclude(
             descendantTypes(A.getUnsafe(kids(root), 0)),
             "link",
-            Result.getOrThrow(S.encodeUnknownResult(Json)(url))
+            `a dangerous scheme once whitespace or a control is gone: ${Result.getOrThrow(S.encodeUnknownResult(Json)(url))}`
           );
           assert.include(
             descendantTypes(A.getUnsafe(kids(root), 0)),
@@ -1050,10 +1045,14 @@ describe("Render.markdown: lists, trees and counts", () => {
     Effect.gen(function* () {
       const treeOf6 = yield* treeOf([Doc.counts({ label: "Widgets", counters, durationMs: 61000, layout: "row" })]);
       const table = tableOf(treeOf6);
-      assert.deepStrictEqual(cellTexts(table), [
-        ["passed", "failed", "duration"], // every column named; the label goes above the table
-        ["3/4", "1", "1m 1s"],
-      ]);
+      assert.deepStrictEqual(
+        cellTexts(table),
+        [
+          ["passed", "failed", "duration"],
+          ["3/4", "1", "1m 1s"],
+        ],
+        "every column named; the label goes above the table"
+      );
     })
   );
 
@@ -1206,7 +1205,7 @@ describe("Render.markdown: no ANSI, and a hostile document stays inside its own 
   );
 });
 
-function* descendants(n: N): Generator<N> {
+function* descendants(n: ParsedNode): Generator<ParsedNode> {
   for (const child of kids(n)) {
     yield child;
     yield* descendants(child);
@@ -1220,8 +1219,11 @@ describe("Render.markdown: okfit's trial (verbatim, link suffix, counts share, a
       const code = kids(root);
       assert.lengthOf(code, 1);
       assert.strictEqual(code[0]?.type, "code");
-      // The parser keeps the fence's final line break in the value, as the code-block tests above note.
-      assert.strictEqual(Str.replace(/\n$/, "")(code[0]?.value ?? ""), "  verified:\n    - by: x ```\n    at: y");
+      assert.strictEqual(
+        Str.replace(/\n$/, "")(code[0]?.value ?? ""),
+        "  verified:\n    - by: x ```\n    at: y",
+        "the parser keeps the fence's final line break in the value"
+      );
     })
   );
 
