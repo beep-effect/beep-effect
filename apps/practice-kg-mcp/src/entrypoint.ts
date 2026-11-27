@@ -31,6 +31,10 @@ const scopedMain = <A, E>(
  * failure is logged through it instead of through the runtime's default
  * report, which writes to stdout.
  *
+ * **Gotchas**
+ *
+ * The runtime’s default failure reporter runs outside program-provided logger layers; scopedMain reports inside the program logger before handing control back.
+ *
  * **Example** (Run a program when the module is the entrypoint)
  *
  * ```ts
@@ -38,10 +42,6 @@ const scopedMain = <A, E>(
  * import * as Effect from "effect/Effect";
  * runEntrypoint({ isMain: false, program: Effect.void })
  * ```
- *
- * **Gotchas**
- *
- * The runtime’s default failure reporter runs outside program-provided logger layers; scopedMain reports inside the program logger before handing control back.
  *
  * @param input - Entrypoint status, Effect program and optional logger layer.
  * @category utilities

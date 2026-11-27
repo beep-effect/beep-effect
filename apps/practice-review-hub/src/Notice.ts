@@ -48,6 +48,10 @@ const REVIEW_QUESTIONS_PROMPT = "Walk me through my waiting review questions.";
  * Send today's notice if one is due: count the questions the digest selects
  * for today in the given time zone, then send at most one notice for the day.
  *
+ * **Gotchas**
+ *
+ * The Claude Code link types the review request into the review folder; the attorney presses Enter to send. The MCP server is registered at user scope, so that folder’s CLAUDE.md supplies the walkthrough rules while the queue remains reachable.
+ *
  * **Example** (Reference the notice program)
  *
  * ```ts
@@ -57,10 +61,6 @@ const REVIEW_QUESTIONS_PROMPT = "Walk me through my waiting review questions.";
  *
  * console.log(Effect.isEffect(sendDailyNotice(DateTime.zoneMakeNamedUnsafe("America/Chicago")))) // true
  * ```
- *
- * **Gotchas**
- *
- * The Claude Code link types the review request into the review folder; the attorney presses Enter to send. The MCP server is registered at user scope, so that folder’s CLAUDE.md supplies the walkthrough rules while the queue remains reachable.
  *
  * @category workflows
  * @since 0.0.0

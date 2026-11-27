@@ -200,6 +200,10 @@ const batchLocked = (rows: ReadonlyArray<VerdictRow>, batchId: string): boolean 
 /**
  * Builds the verdict log over the mod host's store.
  *
+ * **Gotchas**
+ *
+ * An item’s current verdict has the greatest recordedAt, with append order breaking ties. Lock rows never count as verdicts; revisions restart per batch and cannot break ties.
+ *
  * **Example** (Reference the constructor)
  *
  * ```ts
@@ -208,10 +212,6 @@ const batchLocked = (rows: ReadonlyArray<VerdictRow>, batchId: string): boolean 
  *
  * console.log(Effect.isEffect(makeVerdictLog)) // true
  * ```
- *
- * **Gotchas**
- *
- * An item’s current verdict has the greatest recordedAt, with append order breaking ties. Lock rows never count as verdicts; revisions restart per batch and cannot break ties.
  *
  * @category constructors
  * @since 0.0.0

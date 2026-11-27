@@ -129,6 +129,11 @@ export class SetupHost extends Context.Service<SetupHost, SetupHostShape>()($I`S
   /**
    * Live Windows host.
    *
+   * **Gotchas**
+   *
+   * A missing per-user uninstall key does not fail the layer: reg.exe exits 1
+   * for absence, and installation detection continues to the MSIX probe.
+   *
    * **Example** (Compose the live host)
    *
    * ```ts
@@ -136,11 +141,6 @@ export class SetupHost extends Context.Service<SetupHost, SetupHostShape>()($I`S
    *
    * console.log(typeof SetupHost.layer)
    * ```
-   *
-   * **Gotchas**
-   *
-   * A missing per-user uninstall key does not fail the layer: reg.exe exits 1
-   * for absence, and installation detection continues to the MSIX probe.
    *
    * @category layers
    * @since 0.0.0

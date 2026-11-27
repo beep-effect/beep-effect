@@ -121,6 +121,10 @@ const readOnly = (probe: Effect.Effect<ProbeResult, SetupProbeUnavailable>): Gat
  * download-free placeholder that fails with a plain reason until the
  * installer route is decided.
  *
+ * **Gotchas**
+ *
+ * Claude Desktop’s undocumented nonempty lastKnownAccountUuid marker indicates an earlier sign-in; read only its presence and never log its value. Admin and MDM installations may use the MSIX package instead of the per-user installer. Without an app id, report not configured rather than fail; consent depends on it so repair is offered only when sign-in can work.
+ *
  * **Example** (Build the registry)
  *
  * ```ts
@@ -129,10 +133,6 @@ const readOnly = (probe: Effect.Effect<ProbeResult, SetupProbeUnavailable>): Gat
  *
  * console.log(Effect.isEffect(makeGatewayProbes))
  * ```
- *
- * **Gotchas**
- *
- * Claude Desktop’s undocumented nonempty lastKnownAccountUuid marker indicates an earlier sign-in; read only its presence and never log its value. Admin and MDM installations may use the MSIX package instead of the per-user installer. Without an app id, report not configured rather than fail; consent depends on it so repair is offered only when sign-in can work.
  *
  * @category constructors
  * @since 0.0.0

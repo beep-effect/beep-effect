@@ -59,6 +59,10 @@ const scrollToTopAtom = Atom.writable(thunkUndefined, () => {
  * a gold glyph that reads on both the light paper and dark soil sections it
  * floats over.
  *
+ * **Gotchas**
+ *
+ * Coverage teardown may finalize the atom registry after jsdom removes window methods; guard removeEventListener before removing the scroll listener.
+ *
  * **Example** (Rendering BackToTop button)
  *
  * ```tsx
@@ -67,10 +71,6 @@ const scrollToTopAtom = Atom.writable(thunkUndefined, () => {
  * const control = <BackToTop />
  * console.log(control.type)
  * ```
- *
- * **Gotchas**
- *
- * Coverage teardown may finalize the atom registry after jsdom removes window methods; guard removeEventListener before removing the scroll listener.
  *
  * @category components
  * @since 0.0.0

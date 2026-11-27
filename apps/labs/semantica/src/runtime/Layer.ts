@@ -109,6 +109,10 @@ const C2CanaryLive = CanaryC2Live.pipe(
  * Bun runtime services, environment-decoded lab configuration, C0 input
  * services, and stderr logging.
  *
+ * **Gotchas**
+ *
+ * Bun fetch otherwise aborts near 300 seconds even with a longer AbortSignal. Full-paper model generation needs longer, so the RequestInit timeout extension disables that ceiling.
+ *
  * **Example** (Check the runtime layer)
  *
  * ```ts
@@ -116,10 +120,6 @@ const C2CanaryLive = CanaryC2Live.pipe(
  * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(RuntimeLayer)) // true
  * ```
- *
- * **Gotchas**
- *
- * Bun fetch otherwise aborts near 300 seconds even with a longer AbortSignal. Full-paper model generation needs longer, so the RequestInit timeout extension disables that ceiling.
  *
  * @category layers
  * @since 0.0.0

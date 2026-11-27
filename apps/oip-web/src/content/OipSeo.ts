@@ -20,6 +20,10 @@ const profileUrls = (content: OipSiteContent): ReadonlyArray<string> =>
 /**
  * Builds conservative JSON-LD graph data for the OIP website.
  *
+ * **Gotchas**
+ *
+ * Discord links are server invites rather than identity profiles and stay out of sameAs while remaining footer links. Inactive socials are omitted from both visible footer and public SEO output.
+ *
  * **Example** (Building JSON-LD graph)
  *
  * ```ts
@@ -28,10 +32,6 @@ const profileUrls = (content: OipSiteContent): ReadonlyArray<string> =>
  * const graph = makeJsonLdGraph(oipSiteContent)
  * console.log(graph["@context"])
  * ```
- *
- * **Gotchas**
- *
- * Discord links are server invites rather than identity profiles and stay out of sameAs while remaining footer links. Inactive socials are omitted from both visible footer and public SEO output.
  *
  * @category utilities
  * @since 0.0.0

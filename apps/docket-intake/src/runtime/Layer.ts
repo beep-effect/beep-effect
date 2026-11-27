@@ -124,6 +124,10 @@ const makeDocketDryRunAppLayer = (options: IntakeOptions & { readonly directory:
 /**
  * The live wiring of the service's commands.
  *
+ * **Gotchas**
+ *
+ * Live and dry-run pipelines use the same Anthropic agents at temperature 0 so they interpret messages consistently, with review rounds and threshold from configuration. Live wiring journals every calendar create and message mark, exposes the store and journal for cursor seeding and cycle runs, and exposes the question publisher when a review hub is configured.
+ *
  * **Example** (List the live wiring members)
  *
  * ```ts
@@ -131,10 +135,6 @@ const makeDocketDryRunAppLayer = (options: IntakeOptions & { readonly directory:
  *
  * console.log(Object.keys(liveWiring))
  * ```
- *
- * **Gotchas**
- *
- * Live and dry-run pipelines use the same Anthropic agents at temperature 0 so they interpret messages consistently, with review rounds and threshold from configuration. Live wiring journals every calendar create and message mark, exposes the store and journal for cursor seeding and cycle runs, and exposes the question publisher when a review hub is configured.
  *
  * @category layers
  * @since 0.0.0

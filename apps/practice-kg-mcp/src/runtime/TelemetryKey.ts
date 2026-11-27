@@ -355,6 +355,10 @@ const layerDpapiProduction: Layer.Layer<DpapiPort, TelemetryKeyFailure, ChildPro
  * The DPAPI port for a platform: production DPAPI on Windows, the dev
  * plaintext port elsewhere.
  *
+ * **Gotchas**
+ *
+ * DPAPI wrapping and unwrapping require identical optional entropy. The FFI and PowerShell paths therefore share beep/practice-kg/telemetry/v1.
+ *
  * **Example** (Pick the Linux port)
  *
  * ```ts
@@ -363,10 +367,6 @@ const layerDpapiProduction: Layer.Layer<DpapiPort, TelemetryKeyFailure, ChildPro
  *
  * console.log(Layer.isLayer(layerPracticeKgDpapi("linux"))) // true
  * ```
- *
- * **Gotchas**
- *
- * DPAPI wrapping and unwrapping require identical optional entropy. The FFI and PowerShell paths therefore share beep/practice-kg/telemetry/v1.
  *
  * @param platform - `process.platform` of the host.
  * @category layers

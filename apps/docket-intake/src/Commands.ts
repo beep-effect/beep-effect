@@ -169,6 +169,10 @@ const startOf = Effect.fnUntraced(function* (config: DocketIntakeAppConfig, flag
 /**
  * The handler of each command.
  *
+ * **Gotchas**
+ *
+ * Pipeline and adapter failures preserve their own exit codes, including 3 for Graph throttling. Reports use one JSON line on stdout and logs use stderr.
+ *
  * **Example** (Build the handlers over the live wiring)
  *
  * ```ts
@@ -177,10 +181,6 @@ const startOf = Effect.fnUntraced(function* (config: DocketIntakeAppConfig, flag
  *
  * console.log(Object.keys(makeHandlers(liveWiring)))
  * ```
- *
- * **Gotchas**
- *
- * Pipeline and adapter failures preserve their own exit codes, including 3 for Graph throttling. Reports use one JSON line on stdout and logs use stderr.
  *
  * @category utilities
  * @since 0.0.0

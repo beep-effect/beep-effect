@@ -116,6 +116,10 @@ const declareDomain = (config: OipWebStackConfig, project: Input<string>) =>
  * no reader. Vercel deployments stay with `.github/workflows/vercel-deploy.yml`;
  * this stack owns configuration, not builds.
  *
+ * **Gotchas**
+ *
+ * Live objects are individually adopted and protected against replacement or deletion; personal stages do neither. Read the secret config key before declaring resources so a missing key fails before sibling writes; the provider reads the value again at write time without storing it here. Declare project identity only, omitting git link, framework, commands, root directory, Node version, system variables and deployment protection. git.deploymentEnabled remains in vercel.json. Public variables are literal live values because Redacted props retain their text in state; secrets use valueFrom and never reach state.
+ *
  * **Example** (Declare a personal stage)
  *
  * ```ts
@@ -126,10 +130,6 @@ const declareDomain = (config: OipWebStackConfig, project: Input<string>) =>
  * const program = Effect.flatMap(configForStage("dev_alice"), oipWebResources)
  * console.log(Effect.isEffect(program)) // true
  * ```
- *
- * **Gotchas**
- *
- * Live objects are individually adopted and protected against replacement or deletion; personal stages do neither. Read the secret config key before declaring resources so a missing key fails before sibling writes; the provider reads the value again at write time without storing it here. Declare project identity only, omitting git link, framework, commands, root directory, Node version, system variables and deployment protection. git.deploymentEnabled remains in vercel.json. Public variables are literal live values because Redacted props retain their text in state; secrets use valueFrom and never reach state.
  *
  * @param config - The decoded configuration of the stage.
  * @returns The stack outputs: project id, served domains and bucket name.
@@ -226,6 +226,10 @@ const awsBucketProviders = Layer.effect(AWS.Providers, Provider.collection([AWS.
 /**
  * Every provider the stack needs: Vercel, Cloudflare and the AWS bucket collection.
  *
+ * **Gotchas**
+ *
+ * Register only the S3 bucket provider over the normal environment, credential and region chain. AWS.providers() requires the Lambda bootstrap assets bucket even though this stack declares no Lambda resource.
+ *
  * **Example** (Inspect the layer)
  *
  * ```ts
@@ -234,10 +238,6 @@ const awsBucketProviders = Layer.effect(AWS.Providers, Provider.collection([AWS.
  *
  * console.log(Layer.isLayer(oipWebProviders)) // true
  * ```
- *
- * **Gotchas**
- *
- * Register only the S3 bucket provider over the normal environment, credential and region chain. AWS.providers() requires the Lambda bootstrap assets bucket even though this stack declares no Lambda resource.
  *
  * @category providers
  * @since 0.0.0

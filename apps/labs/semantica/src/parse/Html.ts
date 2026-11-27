@@ -256,6 +256,10 @@ const appendTagBoundary = (output: string, tag: ParsedTag): string =>
  * not collapse source whitespace. EOF inside a tag, quoted attribute, or HTML
  * comment returns `truncated`.
  *
+ * **Gotchas**
+ *
+ * HTML5 script and style are raw-text elements: their first case-insensitive closing tag ends them, even when their content contains same-name opening tokens. Only markup-bearing hidden containers such as head track same-name nesting.
+ *
  * **Example** (Drop script text)
  *
  * ```ts
@@ -265,10 +269,6 @@ const appendTagBoundary = (output: string, tag: ParsedTag): string =>
  * const extracted = extractHtmlText("<script>if (a < b) {}</script><p>visible</p>")
  * console.log(Result.getOrElse(extracted, () => "failed")) // "\nvisible\n"
  * ```
- *
- * **Gotchas**
- *
- * HTML5 script and style are raw-text elements: their first case-insensitive closing tag ends them, even when their content contains same-name opening tokens. Only markup-bearing hidden containers such as head track same-name nesting.
  *
  * @category encoding
  * @since 0.0.0

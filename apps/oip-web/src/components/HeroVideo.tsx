@@ -297,6 +297,10 @@ function HeroClipLayer({
  * than one clip is supplied the clips crossfade on a fixed interval
  * ({@link HERO_ROTATE_MS}); a single clip renders exactly as before and never rotates.
  *
+ * **Gotchas**
+ *
+ * Coverage teardown may dispose the atom registry after jsdom tears down window; clear the rotation timer through globalThis.
+ *
  * **Example** (Rendering HeroVideo with clip)
  *
  * ```tsx
@@ -311,10 +315,6 @@ function HeroClipLayer({
  * )
  * console.log(hero.type)
  * ```
- *
- * **Gotchas**
- *
- * Coverage teardown may dispose the atom registry after jsdom tears down window; clear the rotation timer through globalThis.
  *
  * @category components
  * @since 0.0.0

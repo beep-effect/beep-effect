@@ -175,6 +175,10 @@ export class YesNoQuestion extends S.Opaque<YesNoQuestion, { readonly brand: uni
 ) {}
 
 /**
+ * **Gotchas**
+ *
+ * Appx package names come only from gateway constants, never caller input. The Yes/No dialog receives BEEP_ASK_TITLE and BEEP_ASK_MESSAGE and prints yes only for Yes; No is the default so a stray Enter or Space declines. reg.exe exits 1 when a key or value is absent.
+ *
  * **Example** (Build a host shape)
  *
  * ```ts
@@ -195,10 +199,6 @@ export class YesNoQuestion extends S.Opaque<YesNoQuestion, { readonly brand: uni
  * })
  * console.log(shape.isWindows) // false
  * ```
- *
- * **Gotchas**
- *
- * Appx package names come only from gateway constants, never caller input. The Yes/No dialog receives BEEP_ASK_TITLE and BEEP_ASK_MESSAGE and prints yes only for Yes; No is the default so a stray Enter or Space declines. reg.exe exits 1 when a key or value is absent.
  *
  * @category models
  * @since 0.0.0

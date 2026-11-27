@@ -283,6 +283,10 @@ export class SetupProfileSaveInput extends S.Opaque<SetupProfileSaveInput, { rea
 /**
  * `setup_profile_save`: replace the saved practice profile.
  *
+ * **Gotchas**
+ *
+ * Some MCP clients JSON-encode nested object or number arguments as strings. Decode the plain schema shape first, then its JSON-string form.
+ *
  * **Example** (Read the tool name)
  *
  * ```ts
@@ -290,10 +294,6 @@ export class SetupProfileSaveInput extends S.Opaque<SetupProfileSaveInput, { rea
  *
  * console.log(SetupProfileSaveTool.name) // "setup_profile_save"
  * ```
- *
- * **Gotchas**
- *
- * Some MCP clients JSON-encode nested object or number arguments as strings. Decode the plain schema shape first, then its JSON-string form.
  *
  * @category tools
  * @since 0.0.0

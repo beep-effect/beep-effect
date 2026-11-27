@@ -425,6 +425,10 @@ const personalStageConfig = (stage: string) => ({
  * Decode the configuration of a stage: the recorded live configuration for
  * `prod` and `staging`, a stage-named personal configuration otherwise.
  *
+ * **Gotchas**
+ *
+ * The HubSpot token is resolved by op run locally or the deploy environment in CI and sent only to Vercel; Alchemy state retains its config key name and digest.
+ *
  * **Example** (Decode the production stage)
  *
  * ```ts
@@ -434,10 +438,6 @@ const personalStageConfig = (stage: string) => ({
  * const program = Effect.map(configForStage("prod"), (config) => config.projectName)
  * console.log(Effect.isEffect(program)) // true
  * ```
- *
- * **Gotchas**
- *
- * The HubSpot token is resolved by op run locally or the deploy environment in CI and sent only to Vercel; Alchemy state retains its config key name and digest.
  *
  * @param stage - The Alchemy stage.
  * @returns The decoded configuration, or a schema error naming the broken rule.

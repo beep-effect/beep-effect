@@ -322,6 +322,10 @@ export const layerPracticeKgTelemetrySpooled = (
  * opened, the host keeps serving with `layerPracticeKgTelemetryInMemory`:
  * exports are still gated and nothing is written to disk.
  *
+ * **Gotchas**
+ *
+ * When the telemetry directory is absent or its root key cannot be loaded, use in-memory salt and egress sink. Exports remain gated; held-back bodies stay only in memory and die with the process.
+ *
  * **Example** (Reference the production telemetry)
  *
  * ```ts
@@ -330,10 +334,6 @@ export const layerPracticeKgTelemetrySpooled = (
  *
  * console.log(Layer.isLayer(layerPracticeKgTelemetryProduction)) // true
  * ```
- *
- * **Gotchas**
- *
- * When the telemetry directory is absent or its root key cannot be loaded, use in-memory salt and egress sink. Exports remain gated; held-back bodies stay only in memory and die with the process.
  *
  * @category layers
  * @since 0.0.0

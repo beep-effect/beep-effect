@@ -154,6 +154,10 @@ const writeOwedDigests: (
  * missed days are digested one by one, earliest first. One cycle writes at
  * most 62 digests; a longer gap is closed by the cycles after it.
  *
+ * **Gotchas**
+ *
+ * Record every run, including runs without writes, so run listing and undo can find it.
+ *
  * **Example** (Reference one poll cycle)
  *
  * ```ts
@@ -161,10 +165,6 @@ const writeOwedDigests: (
  *
  * console.log(pollCycle)
  * ```
- *
- * **Gotchas**
- *
- * Record every run, including runs without writes, so run listing and undo can find it.
  *
  * @category utilities
  * @since 0.0.0

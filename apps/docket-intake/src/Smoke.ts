@@ -138,6 +138,10 @@ const writeSteps = Effect.fnUntraced(function* (m365: M365Shape, config: DocketI
 /**
  * Run the smoke check and fail when any step failed.
  *
+ * **Gotchas**
+ *
+ * Find the event by its idempotency key even if creation reported failure: the remote write may already have landed.
+ *
  * **Example** (Reference the smoke check)
  *
  * ```ts
@@ -145,10 +149,6 @@ const writeSteps = Effect.fnUntraced(function* (m365: M365Shape, config: DocketI
  *
  * console.log(smoke)
  * ```
- *
- * **Gotchas**
- *
- * Find the event by its idempotency key even if creation reported failure: the remote write may already have landed.
  *
  * @category utilities
  * @since 0.0.0
