@@ -24,7 +24,6 @@ type Rule = { readonly type: string; readonly parameters?: Record<string, unknow
 const MAIN = 10_240_248;
 const reviewer = { context: "beep-reviewer", integration_id: 5_321_138 };
 
-/** Sets the live reviewer check the way `beep reviewer ruleset require|release --apply` would. */
 const setReviewerLive = (fake: FakeRepository, present: boolean) => {
   const live = fake.ruleset(MAIN);
   MutableHashMap.set(fake.rulesets, MAIN, {
@@ -46,31 +45,26 @@ const setReviewerLive = (fake: FakeRepository, present: boolean) => {
 const writesToMain = (fake: FakeRepository) =>
   A.filter(fake.writes(), (call) => Str.endsWith(`/rulesets/${MAIN}`)(call.path));
 
-/**
- * One scenario against its own fake, with the write guard built from a capture
- * taken after `before` ran; `between` then runs before the deploy writes.
- */
 const scenario = (
   name: string,
-  before: (fake: FakeRepository) => void,
-  between: (fake: FakeRepository) => void,
+  beforeCapture: (fake: FakeRepository) => void,
+  afterCapture: (fake: FakeRepository) => void,
   body: (stack: TypedScratch, fake: FakeRepository, carried: O.Option<RequiredCheck>) => Effect.Effect<void>
 ) => {
   const fake = FakeRepository.fromCensus();
-  before(fake);
+  beforeCapture(fake);
   const capture = atRegistration(decodeLiveRuleset(fake.ruleset(MAIN)));
   const providers = guardedRulesetProvider(capture).pipe(Layer.provideMerge(fakeProviders(fake)));
   const { test } = Test.make({ providers, stage: "test" });
   test.provider(name, (stack) =>
     Effect.gen(function* () {
-      between(fake);
+      afterCapture(fake);
       yield* body(typed(stack), fake, liveReviewerCheck(capture));
     })
   );
   return capture;
 };
 
-/** The deploy as the workflow runs it: the body carries the reviewer read from the capture. */
 const deploy = (stack: TypedScratch, carried: O.Option<RequiredCheck>) =>
   Effect.exit(stack.deploy(declareStack(productionConfig, carried)));
 
@@ -118,14 +112,13 @@ scenario(
     })
 );
 
-// A capture without an id cannot be re-read: the deploy fails closed before any write.
 {
   const fake = FakeRepository.fromCensus();
   const { id: _id, ...withoutId } = fake.ruleset(MAIN);
   const capture = atRegistration(decodeLiveRuleset(withoutId));
   const providers = guardedRulesetProvider(capture).pipe(Layer.provideMerge(fakeProviders(fake)));
   const { test } = Test.make({ providers, stage: "test" });
-  test.provider("a capture without an id refuses the write", (scratch) =>
+  test.provider("a capture without an id cannot be re-read, so the deploy fails closed before any write", (scratch) =>
     Effect.gen(function* () {
       const exit = yield* deploy(typed(scratch), liveReviewerCheck(capture));
       const message = Exit.match(exit, { onSuccess: () => "deployed", onFailure: Cause.pretty });
@@ -135,46 +128,48 @@ scenario(
   );
 }
 
-// Any other ruleset goes straight to the shipped provider, with no re-read of 10240248.
 {
   const fake = FakeRepository.fromCensus();
   const capture = atRegistration(decodeLiveRuleset(fake.ruleset(MAIN)));
   const providers = guardedRulesetProvider(capture).pipe(Layer.provideMerge(fakeProviders(fake)));
   const { test } = Test.make({ providers, stage: "test" });
-  test.provider("a ruleset with another name is written without the re-read", (scratch) =>
-    Effect.gen(function* () {
-      const exit = yield* Effect.exit(
-        typed(scratch).deploy(
-          GitHub.Ruleset("Other", {
-            owner: "beep-effect",
-            repository: "beep-effect",
-            name: "other",
-            conditions: { include: ["refs/heads/other"] },
-          })
-        )
-      );
-      expect(exit._tag).toBe("Success");
-      expect(
-        A.filter(fake.calls, (call) => call.method === "GET" && Str.endsWith(`/rulesets/${MAIN}`)(call.path))
-      ).toEqual([]);
-    })
+  test.provider(
+    "a ruleset with another name goes straight to the shipped provider, with no re-read of 10240248",
+    (scratch) =>
+      Effect.gen(function* () {
+        const exit = yield* Effect.exit(
+          typed(scratch).deploy(
+            GitHub.Ruleset("Other", {
+              owner: "beep-effect",
+              repository: "beep-effect",
+              name: "other",
+              conditions: { include: ["refs/heads/other"] },
+            })
+          )
+        );
+        expect(exit._tag).toBe("Success");
+        expect(
+          A.filter(fake.calls, (call) => call.method === "GET" && Str.endsWith(`/rulesets/${MAIN}`)(call.path))
+        ).toEqual([]);
+      })
   );
 }
 
-// A name-based read that misses plans a create, whose shipped path POSTs a second ruleset: refused, nothing sent.
 {
   const fake = FakeRepository.fromCensus();
   const capture = atRegistration(decodeLiveRuleset(fake.ruleset(MAIN)));
   const providers = guardedRulesetProvider(capture).pipe(Layer.provideMerge(fakeProviders(fake)));
   const { test } = Test.make({ providers, stage: "test" });
-  test.provider("a write on the create path, not aimed at the captured id, is refused", (scratch) =>
-    Effect.gen(function* () {
-      MutableHashMap.set(fake.rulesets, MAIN, { ...fake.ruleset(MAIN), name: "main-renamed" });
-      fake.calls.length = 0;
-      const exit = yield* deploy(typed(scratch), liveReviewerCheck(capture));
-      const message = Exit.match(exit, { onSuccess: () => "deployed", onFailure: Cause.pretty });
-      expect(Str.includes("RulesetTargetIsNotTheCapture")(message)).toBe(true);
-      expect(A.filter(fake.writes(), (call) => Str.includes("/rulesets")(call.path))).toEqual([]);
-    })
+  test.provider(
+    "a missed name-based read plans a create that would POST a second ruleset; it is refused and nothing is sent",
+    (scratch) =>
+      Effect.gen(function* () {
+        MutableHashMap.set(fake.rulesets, MAIN, { ...fake.ruleset(MAIN), name: "main-renamed" });
+        fake.calls.length = 0;
+        const exit = yield* deploy(typed(scratch), liveReviewerCheck(capture));
+        const message = Exit.match(exit, { onSuccess: () => "deployed", onFailure: Cause.pretty });
+        expect(Str.includes("RulesetTargetIsNotTheCapture")(message)).toBe(true);
+        expect(A.filter(fake.writes(), (call) => Str.includes("/rulesets")(call.path))).toEqual([]);
+      })
   );
 }

@@ -19,8 +19,7 @@ const readOnlyStore = (context: AlchemyContextShape): AlchemyContextShape => ({
   updateStateStore: false,
 });
 
-// `CI=true` makes Alchemy's provisioning prompts fail instead of asking.
-const nonInteractive = (fallback: ConfigProvider.ConfigProvider) =>
+const promptsFailUnderCi = (fallback: ConfigProvider.ConfigProvider) =>
   ConfigProvider.fromUnknown({ CI: true }).pipe(ConfigProvider.orElse(fallback));
 
 /**
@@ -33,7 +32,7 @@ const nonInteractive = (fallback: ConfigProvider.ConfigProvider) =>
 export const withoutStateProvisioning = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
   effect.pipe(
     Effect.updateService(AlchemyContext, readOnlyStore),
-    Effect.updateService(ConfigProvider.ConfigProvider, nonInteractive)
+    Effect.updateService(ConfigProvider.ConfigProvider, promptsFailUnderCi)
   );
 
 /**
@@ -47,11 +46,17 @@ export const readOnlyStateLayer = <E, R>(state: Layer.Layer<State.State, E, R>) 
   state.pipe(
     Layer.provide(AuthProvidersLive),
     Layer.updateService(AlchemyContext, readOnlyStore),
-    Layer.updateService(ConfigProvider.ConfigProvider, nonInteractive)
+    Layer.updateService(ConfigProvider.ConfigProvider, promptsFailUnderCi)
   );
 
 /**
  * Build the store once in the caller's scope and return its `State` service.
+ *
+ * **Gotchas**
+ *
+ * The store lives only as long as the caller's scope: build the Alchemist
+ * services and run every read inside that one scope, or the store closes
+ * before the reads.
  *
  * @internal
  * @since 0.0.0

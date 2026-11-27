@@ -68,11 +68,7 @@ export const PhysicalNames = {
 export const budgetName = (stage: string): string =>
   stage === productionStage ? PhysicalNames.budget : `${PhysicalNames.budget}-${stage}`;
 
-/**
- * Cost types of the Pulumi budget, read from the live budget on 2026-11-13:
- * invoice semantics, credits and refunds not offsetting spend.
- */
-const costTypes = {
+const pulumiBudgetCostTypes = {
   includeTax: true,
   includeSubscription: true,
   useBlended: false,
@@ -166,12 +162,6 @@ export const DeclaredResourceTypes: ReadonlyArray<string> = [
   "BeepAWS.CostOptimizationHub.Enrollment",
 ];
 
-/**
- * The account singletons: six cost allocation tags and two enrollments.
- * Their `read` reports plain attributes, so each live setting adopts without
- * `--adopt`, and their default removal policy is `retain`, so removing one
- * from the stack, or destroying the stack, leaves the account setting alone.
- */
 const accountSingletons = Effect.fn("CostControls.accountSingletons")(function* () {
   const tags = yield* Effect.forEach(
     CostAllocationTagKey.literals,
@@ -189,11 +179,6 @@ const accountSingletons = Effect.fn("CostControls.accountSingletons")(function* 
   return { tags, computeOptimizer, costOptimizationHub };
 });
 
-/**
- * The account's AWS services anomaly monitor. AWS allows one `DIMENSIONAL`
- * `SERVICE` monitor per account, so it cannot be recreated beside the
- * Pulumi-owned one: `prod` adopts it by its live name and retains it.
- */
 const servicesMonitor = AWS.CostExplorer.AnomalyMonitor("AccountServicesMonitor", {
   monitorName: PhysicalNames.servicesMonitor,
   monitorType: "DIMENSIONAL",
@@ -213,6 +198,15 @@ const servicesMonitor = AWS.CostExplorer.AnomalyMonitor("AccountServicesMonitor"
  * phase the budget carries no notifications and the recipient variable is
  * not read. The budget is retained in `prod`, so a stack destroy cannot
  * remove the account budget.
+ *
+ * **Gotchas**
+ *
+ * The tags and enrollments adopt without `--adopt` (their `read` reports
+ * plain attributes) and default to `retain`, so dropping one from the stack,
+ * or destroying the stack, leaves the account setting alone. AWS allows one
+ * `DIMENSIONAL` `SERVICE` anomaly monitor per account, so the stack cannot
+ * create its own beside the existing one: `prod` adopts it by its live name
+ * and retains it.
  *
  * **Example** (Declare a personal stage)
  *
@@ -243,16 +237,20 @@ export const declareCostControls = Effect.fn("CostControls.declare")(function* (
     budgetType: "COST",
     timeUnit: "MONTHLY",
     budgetLimit: { amount: `${config.monthlyBudgetUsd}`, unit: "USD" },
-    costTypes,
+    costTypes: pulumiBudgetCostTypes,
     notifications: A.isReadonlyArrayNonEmpty(recipients) ? budgetNotifications(recipients) : [],
   }).pipe(RemovalPolicy.retain(isProduction));
 
-  // Account-wide settings are adopted and reconciled only by `prod`, which
-  // deploys from CI behind the pre-deploy gate; a personal stage declares
-  // the budget alone and never claims or writes an account singleton.
   const singletons = isProduction ? yield* accountSingletons() : undefined;
 
   const monitor = isProduction ? yield* servicesMonitor : undefined;
+  const thresholdExpressionInApiKeyOrder = {
+    Dimensions: {
+      Key: "ANOMALY_TOTAL_IMPACT_ABSOLUTE",
+      Values: [`${config.anomalyImpactUsd}`],
+      MatchOptions: ["GREATER_THAN_OR_EQUAL"],
+    },
+  };
   const subscription =
     monitor !== undefined && A.isReadonlyArrayNonEmpty(recipients)
       ? yield* AWS.CostExplorer.AnomalySubscription("AnomalyAlerts", {
@@ -260,15 +258,7 @@ export const declareCostControls = Effect.fn("CostControls.declare")(function* (
           monitorArnList: [monitor.monitorArn],
           subscribers: A.map(recipients, (address) => ({ type: "EMAIL", address })),
           frequency: "DAILY",
-          // Key order matches what GetAnomalySubscriptions returns; the
-          // provider compares the expression as JSON.
-          thresholdExpression: {
-            Dimensions: {
-              Key: "ANOMALY_TOTAL_IMPACT_ABSOLUTE",
-              Values: [`${config.anomalyImpactUsd}`],
-              MatchOptions: ["GREATER_THAN_OR_EQUAL"],
-            },
-          },
+          thresholdExpression: thresholdExpressionInApiKeyOrder,
         })
       : undefined;
 

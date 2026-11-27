@@ -1,8 +1,3 @@
-// Runs the AI metrics host steps exactly as rendered, through a local bash in
-// which `ssh` evaluates the remote program in place and `docker`, `ss`,
-// `curl`, `tailscale` and `systemctl` are exported shell functions answering
-// from FAKE_* variables. Nothing reaches a host or a Docker engine.
-
 import { AiMetricsHostConfig } from "@beep/infra-hosts/AiMetricsConfig";
 import {
   renderHealthCommand,
@@ -74,7 +69,7 @@ const runStep = Effect.fn("AiMetricsScriptsTest.runStep")(function* (command: st
   return { exitCode, stderr };
 });
 
-describe("AI metrics host step scripts", () => {
+describe("AI metrics host step scripts run as rendered in local bash, with ssh, docker, ss, curl, tailscale and systemctl faked", () => {
   it.layer(Platform, { timeout: "30 seconds" })((it) => {
     it.effect("RetireCompose passes when no Compose container is left", () =>
       Effect.gen(function* () {

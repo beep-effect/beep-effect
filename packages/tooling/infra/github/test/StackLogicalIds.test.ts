@@ -22,7 +22,6 @@ const environment = (name: string, variables: ReadonlyArray<string> = []) =>
 const config = (overrides: Partial<Pick<StackConfig, "labels" | "environments" | "variables">>) =>
   StackConfig.make({ ...productionConfig, labels: [], environments: [], variables: [], ...overrides });
 
-/** The collision `findDuplicateLogicalId` reports, as plain fields. */
 const collision = (stack: StackConfig) =>
   O.map(findDuplicateLogicalId(stack), ({ kind, logicalId, first, second }) => ({ kind, logicalId, first, second }));
 

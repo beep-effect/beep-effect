@@ -111,7 +111,6 @@ export class ProdChangeRefused extends S.TaggedError<ProdChangeRefused, { readon
   }
 }
 
-/** How a guarded provider checks that its create path converges on a live object. */
 type MustExist = "none" | "lookup";
 
 const guarded = <R extends ResourceLike, E, RIn>(
@@ -128,11 +127,10 @@ const guarded = <R extends ResourceLike, E, RIn>(
         Effect.fail(ProdChangeRefused.make({ logicalId, resourceType: resource.Type, change, reason }));
       const offList = (logicalId: string) => !isCreateAllowed(allow, logicalId);
       const notOnList = "the create path is not on the prod allow-list";
-      // The create path of an allow-listed id must still converge on something: the repository's would POST one.
       const guardCreate = Effect.fn("InfraGithub.prodGuardCreate")(function* (logicalId: string, props: unknown) {
         if (offList(logicalId)) return yield* refuse(logicalId, "create", notOnList);
         if (mustExist === "lookup") {
-          // Every provider given "lookup" ships one; a missing one dies, which fails the plan closed.
+          // decision: guarded-provider-keeps-shipped-surface
           const found = yield* base.lookup!(props as Parameters<NonNullable<typeof base.lookup>>[0]);
           if (found === undefined) {
             return yield* refuse(logicalId, "create", "no live object to converge on; the create path would make one");
@@ -141,7 +139,7 @@ const guarded = <R extends ResourceLike, E, RIn>(
       });
       return {
         ...base,
-        // `read` stays absent where the shipped provider has none: its presence changes how the plan adopts.
+        // decision: guarded-provider-keeps-shipped-surface
         ...(base.read === undefined
           ? {}
           : {
@@ -152,14 +150,13 @@ const guarded = <R extends ResourceLike, E, RIn>(
               }),
             }),
         diff: Effect.fn("InfraGithub.prodGuardedDiff")(function* (input: Parameters<NonNullable<typeof base.diff>>[0]) {
-          // Every shipped GitHub provider has a diff; a missing one dies, which fails the plan closed.
+          // decision: guarded-provider-keeps-shipped-surface
           const diff = yield* base.diff!(input);
           if (diff?.action === "replace") {
             return yield* refuse(input.id, "replace", "a replace deletes and recreates a live object");
           }
           return diff;
         }),
-        // Apply calls precreate only inside a dependency cycle, to write a placeholder; the stack has none.
         precreate: (input: Parameters<NonNullable<typeof base.precreate>>[0]) =>
           refuse(input.id, "create", "precreate writes a placeholder; the prod stack has no dependency cycle"),
         reconcile: Effect.fn("InfraGithub.prodGuardedReconcile")(function* (
