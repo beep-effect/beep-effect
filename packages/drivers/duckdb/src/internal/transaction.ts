@@ -78,12 +78,6 @@ const CONTROL_RULES: ReadonlyArray<readonly [TransactionControl, RegExp]> = [
   ["catalogContext", /^\s*(?:USE\s|(?:SET|RESET)\s+(?:(?:SESSION|LOCAL|GLOBAL)\s+)?(?:schema|search_path)\b)/i],
 ];
 
-// One lexeme of DuckDB SQL text: a line comment, the opening of a (nestable)
-// block comment, an escape string, a quoted string or identifier, a
-// dollar-quote tag, a statement separator, a run of ordinary text, or any
-// single character. Unterminated quotes run to the end of the text. A `$`
-// that continues an identifier (`a$b$c`) never opens a dollar quote, so it
-// cannot hide a trailing statement from the multi-statement refusal.
 const LEXEME_SOURCE =
   /--[^\n]*|\/\*|(?<![\w$\u{80}-\u{10FFFF}])[Ee]'(?:[^'\\]|\\[\s\S]|'')*'?|'(?:[^']|'')*'?|"(?:[^"]|"")*"?|(?<![\w$\u{80}-\u{10FFFF}])\$(?:[A-Za-z_\u{80}-\u{10FFFF}][\w\u{80}-\u{10FFFF}]*)?\$|;|[^-'"$/;Ee]+|[\s\S]/u
     .source;
@@ -103,8 +97,6 @@ const REFUSED_ABORTED_MESSAGE =
 const REFUSED_MULTI_STATEMENT_MESSAGE =
   "DuckDB transaction control (BEGIN, COMMIT, ROLLBACK, SAVEPOINT) must be sent as its own statement; multi-statement text containing it was refused without running";
 
-// End offset of a block comment whose opening `/*` ends at `start`. DuckDB
-// nests block comments; an unterminated comment runs to the end of the text.
 const blockCommentEnd = (sql: string, start: number): number => {
   const edge = new RegExp(BLOCK_COMMENT_EDGE_SOURCE, "g");
   edge.lastIndex = start;
@@ -118,7 +110,6 @@ const blockCommentEnd = (sql: string, start: number): number => {
   return sql.length;
 };
 
-// End offset of a dollar-quoted string whose opening `tag` ends at `start`.
 const dollarQuoteEnd = (sql: string, tag: string, start: number): number =>
   pipe(
     sql,
@@ -138,7 +129,17 @@ const dollarQuoteEnd = (sql: string, tag: string, start: number): number =>
  * Line comments and (nested) block comments become a single space; quoted
  * strings, quoted identifiers and dollar-quoted strings are kept verbatim and
  * never split. Statements are trimmed and empty ones (blank text, a lone or
- * trailing `;`, a comment-only statement) are dropped.
+ * trailing `;`, a comment-only statement) are dropped. Escape strings
+ * (`E'...'`) are lexed with their backslash escapes.
+ *
+ * **Gotchas**
+ *
+ * Unterminated quotes, dollar quotes and block comments run to the end of the
+ * text. A `$` that continues an identifier (`a$b$c`) never opens a dollar
+ * quote, so it cannot hide a trailing statement from the multi-statement
+ * refusal. The lexer's final `[\s\S]` alternative matches any character, so
+ * its sticky match never fails inside the text; the fallback after `??` only
+ * satisfies the type.
  *
  * **Example** (Split a comment-prefixed script)
  *
@@ -159,8 +160,6 @@ export const splitStatements = (sql: string): ReadonlyArray<string> => {
   let index = 0;
   while (index < sql.length) {
     lexeme.lastIndex = index;
-    // The final `[\s\S]` alternative matches any character, so the sticky match
-    // never fails while `index` is inside the text; the fallback only types it.
     const token = lexeme.exec(sql)?.[0] ?? Str.slice(index)(sql);
     const next = index + token.length;
     if (Str.startsWith("--")(token)) {

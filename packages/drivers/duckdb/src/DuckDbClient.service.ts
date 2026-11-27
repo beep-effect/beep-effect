@@ -308,8 +308,6 @@ const makeAcquirers = Effect.fnUntraced(function* (
         prepareCacheTTL: Duration.zero,
         readOnlyReader: true,
       });
-      // Normalize on every lease: committed schema changes can alter the
-      // effective path even when the writer session settings stay the same.
       return {
         reader,
         synchronize: Effect.fnUntraced(function* () {
@@ -324,8 +322,6 @@ const makeAcquirers = Effect.fnUntraced(function* (
   });
   const streamAcquirer = Effect.gen(function* () {
     const lease = yield* Pool.get(readerPool);
-    // Clear a previous lease's path before BEGIN: a detached catalog can
-    // prevent even transaction control from binding on DuckDB 1.5.6.
     yield* lease.reader.runDriverStatement("RESET search_path", "executeStream");
     yield* Effect.acquireRelease(
       lease.reader.runDriverStatement("BEGIN TRANSACTION READ ONLY", "beginTransaction"),
@@ -408,6 +404,14 @@ const makeFromNative = Effect.fnUntraced(function* (
  * the instance wrapper close with the scope. The session TimeZone is set to
  * `timeZone` (default `UTC`) unless `databaseOptions` already carries a
  * `TimeZone` key and `timeZone` is absent.
+ *
+ * **Gotchas**
+ *
+ * Every reader lease runs `RESET search_path` before its read-only `BEGIN`:
+ * on DuckDB 1.5.6 a catalog detached since the previous lease can stop even
+ * transaction control from binding. The lease then re-normalizes the writer's
+ * session snapshot, because committed schema changes can alter the effective
+ * search path while the writer's session settings stay the same.
  *
  * **Example** (Scoped in-memory client)
  *
