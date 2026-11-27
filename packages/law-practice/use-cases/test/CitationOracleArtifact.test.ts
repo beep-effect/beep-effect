@@ -75,18 +75,18 @@ it.effect("accepts unique ledger bindings and requires complete-case evidence fo
     const empty = yield* decodeProofPlan({ schemaVersion: "citation-ledger-proof-plan/v1", bindings: [] });
     expect(empty.bindings).toEqual([]);
 
-    // Duplicate identities must fail even when each individual binding is valid.
     const duplicate = yield* decodeProofPlan({
       schemaVersion: "citation-ledger-proof-plan/v1",
       bindings: [complete, { ...ready, cases: complete.cases }],
     }).pipe(Effect.flip);
-    expect(duplicate._tag).toBe("SchemaError");
+    expect(duplicate._tag, "duplicate identities fail even when each individual binding is valid").toBe("SchemaError");
 
-    // A successful stage can prepare a case, but cannot assert complete-case parity.
     const stageOnly = yield* decodeProofPlan({
       schemaVersion: "citation-ledger-proof-plan/v1",
       bindings: [{ ...complete, proof: { ...proof, scope: "stage" } }],
     }).pipe(Effect.flip);
-    expect(stageOnly._tag).toBe("SchemaError");
+    expect(stageOnly._tag, "a successful stage can prepare a case but cannot assert complete-case parity").toBe(
+      "SchemaError"
+    );
   })
 );
