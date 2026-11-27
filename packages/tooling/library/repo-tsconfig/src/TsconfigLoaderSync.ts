@@ -41,7 +41,6 @@ import type { TsconfigJson } from "@beep/tsconfig/TsconfigJson";
 
 const $I = $RepoTsconfigId.create("TsconfigLoaderSync");
 
-/** Defect raised when the sync path adapter receives an unsupported operation. */
 class UnsupportedPathOperationError extends S.TaggedError<
   UnsupportedPathOperationError,
   { readonly brand: unique symbol }
@@ -208,24 +207,12 @@ export interface TsconfigLoaderSyncOptions {
   readonly path: SyncPath;
 }
 
-/**
- * A `Path.Path` member the loader pipeline never calls: throw an informative defect if something reaches it.
- *
- * @param member - The unsupported `Path` member name.
- * @returns Never; always throws.
- */
 const unsupported = (member: string): never => {
   throw UnsupportedPathOperationError.make({
     message: `Path.${member} is not supported by TsconfigLoaderSync — its SyncPath adapter only carries resolve/dirname/join/isAbsolute/basename`,
   });
 };
 
-/**
- * Adapt the consumer's `SyncPath` into a core `Path.Path` service value.
- *
- * @param path - The consumer's path implementation.
- * @returns The core `Path` service value.
- */
 const makePathService = (path: SyncPath): Path.Path =>
   Path.Path.of({
     [Path.TypeId]: Path.TypeId,
@@ -248,14 +235,6 @@ const makePathService = (path: SyncPath): Path.Path =>
     toNamespacedPath: () => unsupported("toNamespacedPath"),
   });
 
-/**
- * Run one consumer file operation, wrapping a throw as a platform filesystem would report it.
- *
- * @param method - The `FileSystem` method being served.
- * @param path - The path the operation reads.
- * @param operation - The consumer's synchronous operation.
- * @returns The operation's result, or a `PlatformError` carrying the throw as `cause`.
- */
 const trySync = <A>(
   method: string,
   path: string,
@@ -267,27 +246,6 @@ const trySync = <A>(
       PlatformError.systemError({ _tag: "Unknown", module: "FileSystem", method, pathOrDescriptor: path, cause }),
   });
 
-/**
- * Adapt the consumer's `SyncFileSystem` into a core `FileSystem` service
- * value. A `readFile`, `realPath` or `isFile` throw is wrapped exactly as a platform
- * filesystem would report it: a `PlatformError` whose `SystemError` reason
- * carries module `"FileSystem"`, the method (`"readFileString"` or
- * `"realPath"` or `"stat"`), and the original throw as `cause`. An absent `realPath` is the
- * identity; an absent `isFile` falls back to `exists`. The internal `stat` supplies
- * only the file classification the loader probes; its metadata is empty.
- *
- * **Gotchas**
- *
- * NOTE the deliberate asymmetry with `makePathService`: an unsupported `Path`
- * member throws a named defect, but an unsupported `FileSystem` member
- * inherits `FileSystem.makeNoop`'s behavior — a TYPED `NotFound` failure. If
- * a future loader change reaches for a filesystem operation not overridden
- * here, it surfaces as a spurious `NotFound` (not a crash), and this adapter
- * must be extended to cover the new operation.
- *
- * @param fileSystem - The consumer's file operations.
- * @returns The core `FileSystem` service value.
- */
 const makeFileSystemService = (fileSystem: SyncFileSystem): FileSystem.FileSystem => {
   const realPath = O.getOrElse(O.fromUndefinedOr(fileSystem.realPath), () => identity<string>);
   const isFile = O.getOrElse(O.fromUndefinedOr(fileSystem.isFile), () => fileSystem.exists);
@@ -318,11 +276,6 @@ const makeFileSystemService = (fileSystem: SyncFileSystem): FileSystem.FileSyste
   });
 };
 
-/**
- * Run one loader effect synchronously against the consumer-supplied services,
- * unwrapping the result: a typed failure is thrown as itself, a defect is
- * rethrown as-is — never a fiber-failure wrapper.
- */
 const runWith: {
   <A, E>(options: TsconfigLoaderSyncOptions, effect: Effect.Effect<A, E, FileSystem.FileSystem | Path.Path>): A;
   <A, E>(effect: Effect.Effect<A, E, FileSystem.FileSystem | Path.Path>): (options: TsconfigLoaderSyncOptions) => A;
@@ -344,7 +297,6 @@ const runWith: {
   }
 );
 
-// Implementation of TsconfigLoaderSync.load; the public contract lives on the static.
 const load: {
   (configPath: string, options: TsconfigLoaderSyncOptions): TsconfigJson.Type;
   (options: TsconfigLoaderSyncOptions): (configPath: string) => TsconfigJson.Type;
@@ -354,7 +306,6 @@ const load: {
     runWith(options, TsconfigLoader.load(configPath))
 );
 
-// Implementation of TsconfigLoaderSync.resolve; the public contract lives on the static.
 const resolve: {
   (configPath: string, options: TsconfigLoaderSyncOptions): ResolvedTsconfig;
   (options: TsconfigLoaderSyncOptions): (configPath: string) => ResolvedTsconfig;
@@ -364,7 +315,6 @@ const resolve: {
     runWith(options, TsconfigLoader.resolve(configPath))
 );
 
-// Implementation of TsconfigLoaderSync.compilerOptions; the public contract lives on the static.
 const compilerOptions: {
   (configPath: string, options: TsconfigLoaderSyncOptions): CompilerOptions.Type;
   (options: TsconfigLoaderSyncOptions): (configPath: string) => CompilerOptions.Type;

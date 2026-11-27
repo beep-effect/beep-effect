@@ -28,7 +28,6 @@ const SCHEMES = ["git+ssh://", "git+https://", "ssh://", "https://", "http://"];
 
 const SSH_SHORTHAND = /^(?:[\w.-]+@)?([\w.-]+):(.+)$/u;
 
-// A URL with a scheme loses it and any `user@` before the first slash.
 const withoutScheme = (url: string): O.Option<string> =>
   pipe(
     A.findFirst(SCHEMES, (scheme) => Str.startsWith(scheme)(url)),
@@ -36,7 +35,6 @@ const withoutScheme = (url: string): O.Option<string> =>
     O.map(Str.replace(/^[^/@]*@/u, ""))
   );
 
-// `user@host:path` becomes `host/path`.
 const fromShorthand = (url: string): string =>
   pipe(
     O.fromNullOr(SSH_SHORTHAND.exec(url)),

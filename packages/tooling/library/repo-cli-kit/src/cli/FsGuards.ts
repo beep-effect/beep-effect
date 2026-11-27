@@ -868,9 +868,8 @@ export const readContainedFileBytesNoFollow = Effect.fn("RepoCli.FsGuards.readCo
       });
       let length = 0;
       while (true) {
-        // The read is bounded by the remaining Uint8Array capacity, so conversion is exact.
-        const read1 = yield* file.read(buffer.subarray(length));
-        const read = Number(read1);
+        const sizeWithinBufferCapacity = yield* file.read(buffer.subarray(length));
+        const read = Number(sizeWithinBufferCapacity);
         length += read;
         if (length > byteLimit)
           return yield* fsGuardError(
@@ -896,10 +895,6 @@ export const readContainedFileBytesNoFollow = Effect.fn("RepoCli.FsGuards.readCo
 const isSafePathSegment = (value: string): boolean =>
   value !== "." && value !== ".." && !pipe(value, Str.includes("/")) && !pipe(value, Str.includes("\\"));
 
-// Result of a unique-name allocation: the free name and the updated used set.
-// Kept module-local (not an exported schema) because `usedTargetNames` is a
-// live `HashSet` accumulator threaded through allocation, not a decodable data
-// model — effect/Schema has no `HashSet` combinator to model it faithfully.
 type UniqueNameAllocation = {
   readonly targetName: string;
   readonly usedTargetNames: HashSet.HashSet<string>;
@@ -1126,7 +1121,6 @@ export const hashFileSha256: {
           hasher.update(chunk);
         })
       ).pipe(Effect.mapError((cause) => onError(cause, filePath)));
-      // A SHA-256 digest always encodes to 64 lowercase hex characters.
       return Sha256Hex.make(Hex.encode(hasher.digest()));
     }).pipe(Effect.withSpan("RepoCli.FsGuards.hashFileSha256"))
 );

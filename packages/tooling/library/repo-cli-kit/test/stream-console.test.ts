@@ -39,13 +39,10 @@ const captureStreams = <A>(
 ): { readonly result: A; readonly stdout: ReadonlyArray<string>; readonly stderr: ReadonlyArray<string> } => {
   const stdout: Array<string> = [];
   const stderr: Array<string> = [];
-  // One streaming decoder per stream: a multi-byte sequence may straddle the writer's 8 KiB chunk
-  // boundary, so each chunk is decoded with `stream: true` and the tail is flushed at the end.
   const decodeOut = new TextDecoder();
   const decodeErr = new TextDecoder();
   const originalOut = process.stdout.write;
   const originalErr = process.stderr.write;
-  // Settle every write at once so the module's in-flight counter returns to zero.
   process.stdout.write = ((chunk: string | Uint8Array, callback?: WriteCallback) => {
     stdout.push(P.isString(chunk) ? chunk : decodeOut.decode(chunk, { stream: true }));
     if (options.stdoutWrite !== undefined && callback !== undefined) {
@@ -178,7 +175,6 @@ describe("stream console", () => {
     const { stderr } = captureStreams(
       () => {
         streamConsole.log("in flight");
-        // A JSON payload notes EPIPE while the console line's chunk is still pending.
         noteProcessStreamWriteFailure("stdout", "first");
         held.pipe(MutableRef.get, O.getOrThrow)(new Error("second"));
         drainProcessStreams((value) => MutableRef.set(failure, value));
@@ -190,8 +186,10 @@ describe("stream console", () => {
         },
       }
     );
-    // One marker, the first message, and the in-flight line counted as dropped.
-    expect(stderr).toEqual(["[beep-cli] stdout write failed: first; later stdout lines are dropped\n"]);
+    expect(
+      stderr,
+      "one marker naming the first failure, though a JSON payload noted EPIPE while the console chunk was pending"
+    ).toEqual(["[beep-cli] stdout write failed: first; later stdout lines are dropped\n"]);
     assertSome(
       MutableRef.get(failure),
       StreamWriteFailure.make({ stream: "stdout", message: "first", droppedLines: 2 })
@@ -601,15 +599,14 @@ describe("stream console", () => {
   });
 
   it("keeps multi-byte characters intact across the 8 KiB chunk boundary", () => {
-    // 6,000 two-byte characters span two chunks; an odd boundary would split a code point.
-    const line = Str.repeat(6_000)("\u00e9");
+    const twoChunksOfTwoByteChars = Str.repeat(6_000)("\u00e9");
     const { stdout, stderr } = captureStreams(() => {
-      streamConsole.log(line);
-      streamConsole.error(line);
+      streamConsole.log(twoChunksOfTwoByteChars);
+      streamConsole.error(twoChunksOfTwoByteChars);
     });
     expect(A.length(stdout)).toBeGreaterThan(1);
-    expect(A.join(stdout, "")).toBe(`${line}\n`);
-    expect(A.join(stderr, "")).toBe(`${line}\n`);
+    expect(A.join(stdout, "")).toBe(`${twoChunksOfTwoByteChars}\n`);
+    expect(A.join(stderr, "")).toBe(`${twoChunksOfTwoByteChars}\n`);
     expect(Str.includes("\uFFFD")(A.join(stdout, ""))).toBe(false);
   });
 
@@ -673,12 +670,11 @@ describe("stream console", () => {
         callback();
       }
       expect(drained).toBe(true);
-      // Nothing in flight: the continuation runs synchronously.
       let immediate = false;
       drainProcessStreams(() => {
         immediate = true;
       });
-      expect(immediate).toBe(true);
+      expect(immediate, "with nothing in flight the continuation runs synchronously").toBe(true);
     } finally {
       process.stdout.write = originalOut;
     }
@@ -705,11 +701,10 @@ describe("stream console", () => {
       drainProcessStreams(() => {
         drained = true;
       });
-      // Stderr can finish independently; stdout preserves its FIFO order.
       callbacks[1]?.();
-      expect(drained).toBe(false);
+      expect(drained, "stderr finishes independently while stdout is pending").toBe(false);
       callbacks[0]?.();
-      expect(drained).toBe(false);
+      expect(drained, "stdout preserves its FIFO order: the queued third line is still pending").toBe(false);
       expect(callbacks).toHaveLength(3);
       callbacks[2]?.();
       expect(drained).toBe(true);
@@ -762,9 +757,6 @@ describe("stream console", () => {
     }
   });
 
-  // Bun settles most writes synchronously, inside `write`. Chaining each chunk from its
-  // callback nested one frame set per chunk until a ~100 MB payload overflowed the stack,
-  // the overflow was swallowed, and the process exited 0 with the output cut short.
   const withSynchronousStdout = <A>(
     run: () => A
   ): { readonly result: A; readonly bytes: number; readonly maxDepth: number } => {
@@ -804,7 +796,10 @@ describe("stream console", () => {
     });
     expect(captured.result).toBe(true);
     expect(captured.bytes).toBe(2 * 1024 * 1024 + 1);
-    expect(captured.maxDepth).toBe(1);
+    expect(
+      captured.maxDepth,
+      "a synchronously settled chunk never nests the next write, which would overflow the stack"
+    ).toBe(1);
   });
 
   it("starts queued lines without nesting when a blocked stream then settles synchronously", () => {
@@ -867,8 +862,6 @@ describe("stream console", () => {
   );
 });
 
-// The repo CLI entry wraps `CliRuntime.main` in the stream console, so the kit's failure report must reach stderr
-// through the same latching writers as every other line (bin-main.ts `runRepoCliMain`).
 const runReport = Effect.fnUntraced(function* (
   failure: Error,
   stderrWrite?: (chunk: string | Uint8Array, callback: WriteCallback) => boolean

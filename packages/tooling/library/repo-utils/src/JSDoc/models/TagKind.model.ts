@@ -12,6 +12,12 @@ const $I = $RepoUtilsId.create("JSDoc/models/TagKind.model");
 /**
  * Classifies a tag by its syntactic placement in documentation text.
  *
+ * **Details**
+ *
+ * A `block` tag starts at the top level and owns its content up to the next
+ * block or modifier tag. An `inline` tag sits in braces, embedded within other
+ * content. A `modifier` tag takes no content and marks a quality or flag.
+ *
  * **Example** (Check block TagKind)
  *
  * ```ts
@@ -25,14 +31,7 @@ const $I = $RepoUtilsId.create("JSDoc/models/TagKind.model");
  * @category models
  * @since 0.0.0
  */
-export const TagKind = LiteralKit([
-  // @tag content... (top-level, content until next block/modifier tag)
-  "block",
-  // {@tag content} (embedded within other content)
-  "inline",
-  // @tag (no content, indicates a quality/flag)
-  "modifier",
-]).pipe(
+export const TagKind = LiteralKit(["block", "inline", "modifier"]).pipe(
   $I.annoteSchema("TagKind", {
     description: "The kind of tag",
   })

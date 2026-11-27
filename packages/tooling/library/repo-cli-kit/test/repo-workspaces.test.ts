@@ -1,14 +1,3 @@
-import { identity } from "effect/Function";
-// The repo CLI's one workspace reader (4-A3): members from `@beep/repo-workspaces`
-// `WorkspaceDiscovery`, edges and order from `DependencyGraph`. These pin the
-// behaviour the retired repo-utils readers had and every caller relies on: the
-// root is never a member, directories are real paths, a wildcard whose base is
-// absent selects nothing, a root without workspaces has no members, a member
-// link that leaves the checkout is skipped, a bad root fails closed (a strictly
-// invalid manifest or an escaping pattern), generated directories hold no
-// members and are skipped before their manifests are read, and a
-// self-dependency is no edge.
-
 import {
   DecodedWorkspaceMember,
   UnsafeWorkspacePatternError,
@@ -26,6 +15,7 @@ import { assertInstanceOf, assertTrue, deepStrictEqual, strictEqual } from "@eff
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { identity } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
@@ -40,7 +30,6 @@ const UnknownJson = S.fromJsonString(S.Unknown);
 const json = (value: unknown): string =>
   `${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(value), identity)}\n`;
 
-// A scratch repository: `files` maps repo-relative paths to contents.
 const repository = Effect.fnUntraced(function* (files: Readonly<Record<string, string>>) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -204,11 +193,11 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("RepoWorkspaces", (it) =
           ...twoMembers,
           "package.json": json({ name: "root", workspaces: ["packages/*/", "packages/core/"] }),
         });
-        // The literal names a member the wildcard also selects: one member, at the unslashed path.
         const workspacePackages9 = yield* workspacePackages(root);
         deepStrictEqual(
           A.map(workspacePackages9, (pkg) => `${pkg.name}=${pkg.relativePath}`),
-          ["root=.", "@beep/app=packages/app", "@beep/core=packages/core"]
+          ["root=.", "@beep/app=packages/app", "@beep/core=packages/core"],
+          "a literal naming a member the wildcard also selects yields one member, at the unslashed path"
         );
       })
     );

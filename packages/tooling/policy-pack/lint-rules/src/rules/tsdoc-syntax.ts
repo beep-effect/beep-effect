@@ -25,9 +25,7 @@ class TSDocConfigurationError extends S.TaggedError<TSDocConfigurationError, { r
   $I.annote("TSDocConfigurationError", { description: "TSDoc config could not be loaded or applied." })
 ) {}
 
-// Oxlint's synchronous plugin callback is the runtime boundary. Load the repository config
-// once per file so edits never reuse a stale module-global parser/config cache.
-const loadConfiguration = Effect.fn("Docs.loadTSDocConfiguration")(function* () {
+const loadFreshConfigurationPerFile = Effect.fn("Docs.loadTSDocConfiguration")(function* () {
   const file = yield* Effect.try({
     try: () =>
       TSDocConfigFile.loadFile(NodeURL.fileURLToPath(new URL("../../../../../../tsdoc.json", import.meta.url))),
@@ -68,7 +66,7 @@ export default defineRule({
     docs: { description: "Validate documentation syntax with the repository TSDoc parser configuration." },
   },
   create(context) {
-    const loaded = Effect.runSync(loadConfiguration().pipe(Effect.result));
+    const loaded = Effect.runSync(loadFreshConfigurationPerFile().pipe(Effect.result));
     if (Result.isFailure(loaded)) {
       return {
         Program(node) {

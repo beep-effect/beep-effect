@@ -50,9 +50,7 @@ const REMOTE_READ_ARG = `--cache=${REMOTE_READ_MODE}`;
 const environmentWith = (token: TurboCacheValueSource, cache: string): TurboCacheEnvironment =>
   TurboCacheEnvironment.make({ api: "literal", token, team: "literal", cache });
 
-// The fully configured workstation posture: a 1Password-backed read token, a
-// literal endpoint and team, and the sanctioned read-only cache mode.
-const completeEnvironment = environmentWith("secret-reference", REMOTE_READ_MODE);
+const completeWorkstationEnvironment = environmentWith("secret-reference", REMOTE_READ_MODE);
 
 it.layer(Layer.mergeAll(MemoryFileSystem.layer, Path.layer), { timeout: "10 seconds" })(
   "enrolled host cache defaults",
@@ -212,7 +210,7 @@ const localPlan = (environment: TurboCacheEnvironment, args: ReadonlyArray<strin
 
 describe("turbo cache plan resolution", () => {
   it("honors a complete remote-read configuration", () => {
-    const plan = localPlan(completeEnvironment);
+    const plan = localPlan(completeWorkstationEnvironment);
 
     expect(plan).toEqual(RemoteReadTurboCache.make({ mode: REMOTE_READ_MODE, requiresSecretSession: true }));
     expect(turboCachePlanArgs(plan)).toEqual([REMOTE_READ_ARG]);
@@ -292,7 +290,7 @@ describe("turbo cache plan resolution", () => {
   it.each(["--cache=local:rw", "--no-cache", "--force", "--force=true", "--remote-only", "--remote-cache-read-only"])(
     "leaves argv untouched when the caller passes %s",
     (arg) => {
-      const plan = localPlan(completeEnvironment, ["--filter=@beep/schema", arg]);
+      const plan = localPlan(completeWorkstationEnvironment, ["--filter=@beep/schema", arg]);
 
       expect(plan._tag).toBe("caller-controlled");
       expect(turboCachePlanArgs(plan)).toEqual([]);
@@ -301,7 +299,7 @@ describe("turbo cache plan resolution", () => {
   );
 
   it("leaves CI untouched even with a complete configuration", () => {
-    const plan = resolveTurboCachePlan(completeEnvironment, { args: A.empty(), ci: true });
+    const plan = resolveTurboCachePlan(completeWorkstationEnvironment, { args: A.empty(), ci: true });
 
     expect(plan._tag).toBe("caller-controlled");
     expect(turboCachePlanArgs(plan)).toEqual([]);
@@ -309,7 +307,9 @@ describe("turbo cache plan resolution", () => {
 
   it.effect("prefers the CI verdict over an explicit cache argument", () =>
     Effect.gen(function* () {
-      const expectation = expect(resolveTurboCachePlan(completeEnvironment, { args: ["--force"], ci: true }));
+      const expectation = expect(
+        resolveTurboCachePlan(completeWorkstationEnvironment, { args: ["--force"], ci: true })
+      );
       const decodedTurboCachePlanEffect = yield* decodeTurboCachePlanEffect({
         _tag: "caller-controlled",
         reason: "ci",
@@ -377,7 +377,7 @@ describe("forced local signing fallback", () => {
 
 describe("run-time local-only degradation", () => {
   it("reports whether the checkout's credentials need an op run session", () => {
-    expect(turboCacheEnvironmentNeedsSecretSession(completeEnvironment)).toBe(true);
+    expect(turboCacheEnvironmentNeedsSecretSession(completeWorkstationEnvironment)).toBe(true);
     expect(turboCacheEnvironmentNeedsSecretSession(environmentWith("literal", REMOTE_READ_MODE))).toBe(false);
     expect(turboCacheEnvironmentNeedsSecretSession(TurboCacheEnvironment.make({}))).toBe(false);
   });
@@ -466,7 +466,7 @@ describe("shared turbo cache directory", () => {
   });
 
   it("appends the shared directory to a remote-read plan", () => {
-    const plan = resolveTurboCachePlan(withHome(completeEnvironment), { args: [], ci: false });
+    const plan = resolveTurboCachePlan(withHome(completeWorkstationEnvironment), { args: [], ci: false });
     expect(turboCachePlanArgs(plan)).toEqual([REMOTE_READ_ARG, SHARED_DIR_ARG]);
   });
 
@@ -486,7 +486,7 @@ describe("shared turbo cache directory", () => {
   it.each(["--cache=local:rw", "--force", "--remote-cache-read-only"])(
     "keeps the shared directory when the caller pins the cache mode with %s",
     (arg) => {
-      const plan = resolveTurboCachePlan(withHome(completeEnvironment), { args: [arg], ci: false });
+      const plan = resolveTurboCachePlan(withHome(completeWorkstationEnvironment), { args: [arg], ci: false });
       expect(plan._tag).toBe("caller-controlled");
       expect(turboCachePlanArgs(plan)).toEqual([SHARED_DIR_ARG]);
     }
@@ -518,7 +518,7 @@ describe("shared turbo cache directory", () => {
   });
 
   it("survives the coverage local-only rewrite", () => {
-    const plan = resolveTurboCachePlan(withHome(completeEnvironment), { args: [], ci: false });
+    const plan = resolveTurboCachePlan(withHome(completeWorkstationEnvironment), { args: [], ci: false });
     expect(localOnlyTurboCacheArgs(turboCachePlanArgs(plan))).toEqual([LOCAL_ONLY_ARG, SHARED_DIR_ARG]);
   });
 

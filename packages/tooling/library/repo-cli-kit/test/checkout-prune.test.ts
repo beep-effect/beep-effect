@@ -1,9 +1,3 @@
-// The checkout prune declaration (goals/prunable-product-leaves, seam 1b): a trimmed checkout or
-// downstream fork names what it removed (prune), replaced (owned) and carves back out (keep) in an
-// optional standards file. These pin the pathspec schema, git :(glob) matching, the decode of a
-// present, absent or invalid file, the path predicates, the live-path findings, and the working-tree
-// scan the findings read.
-
 import {
   CHECKOUT_PRUNE_DECLARATION_PATH,
   CheckoutPruneDeclaration,
@@ -39,7 +33,6 @@ import * as S from "effect/Schema";
 
 const decodeEntryResult = S.decodeUnknownResult(CheckoutPruneEntry);
 const decodeDeclarationResult = S.decodeUnknownResult(CheckoutPruneDeclaration);
-// Fixture rows are well-formed; a decode failure here is a broken test, so it throws.
 const decodeEntry = (input: unknown): CheckoutPruneEntry => Result.getOrThrow(decodeEntryResult(input));
 const decodeDeclaration = (input: unknown): CheckoutPruneDeclaration =>
   Result.getOrThrow(decodeDeclarationResult(input));
@@ -82,9 +75,6 @@ describe("checkout prune pathspecs", () => {
     }
   });
 
-  // Each row was checked against `git ls-files ':(glob)<pattern>'` over the same paths: a pattern
-  // matches what it names literally and everything under it, `*` and `?` stay in one segment, `**`
-  // crosses segments (zero included), and wildcards match dot files.
   it("matches paths exactly as git's :(glob) magic does", () => {
     const rows: ReadonlyArray<readonly [string, string, boolean]> = [
       ["renovate.json", "renovate.json", true],
@@ -115,8 +105,11 @@ describe("checkout prune pathspecs", () => {
     ];
     for (const [pattern, path, expected] of rows) {
       const compiled = entry(pattern);
-      strictEqual(compiled.matches(path), expected, `${pattern} ~ ${path}`);
-      // The compiled glob is cached; a second answer comes from the cache.
+      strictEqual(
+        compiled.matches(path),
+        expected,
+        `${pattern} ~ ${path}, as git ls-files ':(glob)${pattern}' answers`
+      );
       strictEqual(compiled.matches(path), expected, `${pattern} ~ ${path} (cached)`);
     }
   });
@@ -219,13 +212,19 @@ describe("checkout prune path predicates", () => {
   it("declares owned paths pruned and owned, and leaves workspace entries to the workspace rule", () => {
     strictEqual(isCheckoutPathDeclaredPruned(declaration, "renovate.json"), true);
     strictEqual(isCheckoutPathOwned(declaration, "renovate.json"), true);
-    // Removed and replaced are told apart: renovate.json is owned, not pruned away.
-    strictEqual(isCheckoutPathPruneDeclared(declaration, "renovate.json"), false);
+    strictEqual(
+      isCheckoutPathPruneDeclared(declaration, "renovate.json"),
+      false,
+      "renovate.json is owned, not pruned away"
+    );
     strictEqual(isCheckoutPathPruneDeclared(declaration, "docs/demo/guide.md"), true);
     strictEqual(isCheckoutPathPruneDeclared("docs/demo/README.md")(declaration), false);
     strictEqual(isCheckoutPathOwned("docs/demo/guide.md")(declaration), false);
-    // An entry that names a workspace package declares that workspace, not its paths.
-    strictEqual(isCheckoutPathDeclaredPruned(declaration, "packages/drivers/demo/src/index.ts"), false);
+    strictEqual(
+      isCheckoutPathDeclaredPruned(declaration, "packages/drivers/demo/src/index.ts"),
+      false,
+      "a workspace entry declares the package, not its paths"
+    );
     strictEqual(isCheckoutPathOwned(declaration, "packages/drivers/own/src/index.ts"), false);
     strictEqual(isCheckoutPathKept("docs/demo/README.md")(declaration), true);
   });
@@ -299,9 +298,8 @@ it.layer(NodeServices.layer)("checkout prune declaration file", (it) => {
       const invalid = yield* repository({ [CHECKOUT_PRUNE_DECLARATION_PATH]: '{ "version": 1, "prune": 3 }\n' });
       const decodeError = yield* Effect.flip(loadCheckoutPruneDeclaration(invalid));
       strictEqual(S.is(CheckoutPruneDeclarationError)(decodeError), true);
-      // A directory where the file belongs exists but cannot be read as text.
-      const unreadable = yield* repository({ [`${CHECKOUT_PRUNE_DECLARATION_PATH}/x`]: "x\n" });
-      const readError = yield* Effect.flip(loadCheckoutPruneDeclaration(unreadable));
+      const directoryAtDeclarationPath = yield* repository({ [`${CHECKOUT_PRUNE_DECLARATION_PATH}/x`]: "x\n" });
+      const readError = yield* Effect.flip(loadCheckoutPruneDeclaration(directoryAtDeclarationPath));
       strictEqual(readError._tag, "CheckoutPruneDeclarationError");
     })
   );
@@ -333,9 +331,7 @@ it.layer(NodeServices.layer)("checkout prune declaration file", (it) => {
   );
 });
 
-// A repository-locating variable inherited from a git hook would point `git init` at the real
-// checkout; an `undefined` value removes it from the child environment.
-const isolatedGitEnv = {
+const gitEnvWithoutHookRepoVars = {
   GIT_DIR: undefined,
   GIT_WORK_TREE: undefined,
   GIT_INDEX_FILE: undefined,
@@ -346,7 +342,7 @@ const isolatedGitEnv = {
 const git = Effect.fnUntraced(function* (cwd: string, args: ReadonlyArray<string>) {
   const handle = yield* ChildProcess.make("git", [...args], {
     cwd,
-    env: isolatedGitEnv,
+    env: gitEnvWithoutHookRepoVars,
     extendEnv: true,
     stdin: "ignore",
     stdout: "ignore",
@@ -360,7 +356,6 @@ it.layer(NodeServices.layer)("checkout prune live files in a git checkout", (it)
     Effect.gen(function* () {
       const root = yield* repository({
         ".gitignore": "dist/\n*.tsbuildinfo\n",
-        // A clone that built and then pulled the commit removing packages/gone keeps these.
         "packages/gone/dist/index.js": "x\n",
         "packages/gone/tsconfig.tsbuildinfo": "{}\n",
         "docs/demo/guide.md": "x\n",
@@ -375,7 +370,11 @@ it.layer(NodeServices.layer)("checkout prune live files in a git checkout", (it)
         ],
       });
       const files = yield* liveCheckoutPruneFiles(root, declaration);
-      deepStrictEqual(files, ["docs/demo/guide.md"]);
+      deepStrictEqual(
+        files,
+        ["docs/demo/guide.md"],
+        "ignored build output a clone keeps after the removal is no live file"
+      );
     })
   );
 });

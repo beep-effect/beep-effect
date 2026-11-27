@@ -72,8 +72,6 @@ it.layer(TestLayer, { timeout: "15 seconds" })("@beep/qa-capture collector", (it
         });
         const batch = A.join([...validLines, "this is not json"], "\n");
 
-        // This shorter scope is the subject of the cleanup assertions below:
-        // the collector must finish before we inspect its files and handle.
         yield* Effect.scoped(
           Effect.gen(function* () {
             const collector = yield* Collector;
@@ -108,12 +106,10 @@ it.layer(TestLayer, { timeout: "15 seconds" })("@beep/qa-capture collector", (it
             });
             expect(preflight.status).toBe(204);
             expect(preflight.headers["access-control-allow-origin"]).toBe(appOrigin);
-            const unrelatedOrigin = yield* HttpClient.get(`${base}/health`, {
+            const responseToUnrelatedCaller = yield* HttpClient.get(`${base}/health`, {
               headers: { origin: "https://unrelated.example" },
             });
-            // A single allowed origin is emitted as a constant; it must never
-            // reflect the unrelated caller or allow every origin.
-            expect(unrelatedOrigin.headers["access-control-allow-origin"]).toBe(appOrigin);
+            expect(responseToUnrelatedCaller.headers["access-control-allow-origin"]).toBe(appOrigin);
             const accepted = yield* Effect.flatMap(eventsResponse.text, decodeEventsAccepted);
             expect(accepted.accepted).toBe(2);
             expect(accepted.rejected).toBe(1);
@@ -122,10 +118,10 @@ it.layer(TestLayer, { timeout: "15 seconds" })("@beep/qa-capture collector", (it
               body: HttpBody.jsonUnsafe({ label: "agent:checkpoint" }),
             });
             const marked = yield* Effect.flatMap(markResponse.text, decodeMarkAccepted);
-            // Canonical session-wide sequencing: two accepted batch events took
-            // seqs 1 and 2, so the server mark receives 3 — never the
-            // page-local or placeholder value.
-            expect(marked.seq).toBe(3);
+            expect(
+              marked.seq,
+              "the two batch events took 1 and 2; the mark gets session-wide 3, never a page-local"
+            ).toBe(3);
 
             const stopFiber = yield* Effect.forkChild(running.awaitStop);
             yield* HttpClient.post(`${base}/stop`, { body: HttpBody.text("", "text/plain") });
@@ -138,16 +134,17 @@ it.layer(TestLayer, { timeout: "15 seconds" })("@beep/qa-capture collector", (it
           })
         );
 
-        // Scope closed: the writer drained and the handle file is gone.
         const exists5 = yield* fs.exists(handlePath);
-        expect(exists5).toBe(false);
+        expect(exists5, "closing the scope drained the writer and removed the owned handle").toBe(false);
         const written = yield* fs.readFileString(eventsPath);
         const lines = pipe(written, Str.split("\n"), A.filter(Str.isNonEmpty));
         expect(A.length(lines)).toBe(3);
         const decoded = yield* Effect.forEach(lines, (line) => decodeActionEventJson(line), { concurrency: 1 });
         expect(A.map(decoded, (event) => event.kind)).toEqual(["pointer-down", "marker", "marker"]);
-        // On-disk seqs are the canonical rewrite: strictly monotone from 1.
-        expect(A.map(decoded, (event) => event.seq)).toEqual([1, 2, 3]);
+        expect(
+          A.map(decoded, (event) => event.seq),
+          "on-disk seqs are the canonical rewrite from 1"
+        ).toEqual([1, 2, 3]);
       }),
     15000
   );
@@ -187,8 +184,6 @@ it.layer(TestLayer, { timeout: "15 seconds" })("@beep/qa-capture collector", (it
           MarkerEvent.make({ ...marker, seq: 8, label: "second-page:third" }),
         ];
 
-        // This shorter scope is the subject of the cleanup assertions below:
-        // the collector must finish before we inspect its files and handle.
         yield* Effect.scoped(
           Effect.gen(function* () {
             const collector = yield* Collector;
@@ -223,12 +218,10 @@ it.layer(TestLayer, { timeout: "15 seconds" })("@beep/qa-capture collector", (it
             });
             expect(preflight.status).toBe(204);
             expect(preflight.headers["access-control-allow-origin"]).toBe(appOrigin);
-            const unrelatedOrigin = yield* HttpClient.get(`${base}/health`, {
+            const responseToUnrelatedCaller = yield* HttpClient.get(`${base}/health`, {
               headers: { origin: "https://unrelated.example" },
             });
-            // A single allowed origin is emitted as a constant; it must never
-            // reflect the unrelated caller or allow every origin.
-            expect(unrelatedOrigin.headers["access-control-allow-origin"]).toBe(appOrigin);
+            expect(responseToUnrelatedCaller.headers["access-control-allow-origin"]).toBe(appOrigin);
             const accepted = yield* Effect.flatMap(eventsResponse.text, decodeEventsAccepted);
             expect(accepted.accepted).toBe(2);
             expect(accepted.rejected).toBe(1);
@@ -247,8 +240,7 @@ it.layer(TestLayer, { timeout: "15 seconds" })("@beep/qa-capture collector", (it
               body: HttpBody.jsonUnsafe({ label: "agent:checkpoint" }),
             });
             const marked = yield* Effect.flatMap(markResponse.text, decodeMarkAccepted);
-            // Five accepted events across two page batches precede the server mark.
-            expect(marked.seq).toBe(6);
+            expect(marked.seq, "five accepted events across two page batches precede the mark").toBe(6);
 
             const stopFiber = yield* Effect.forkChild(running.awaitStop);
             yield* HttpClient.post(`${base}/stop`, { body: HttpBody.text("", "text/plain") });
@@ -261,9 +253,8 @@ it.layer(TestLayer, { timeout: "15 seconds" })("@beep/qa-capture collector", (it
           })
         );
 
-        // Scope closed: the writer drained and the handle file is gone.
         const exists10 = yield* fs.exists(handlePath);
-        expect(exists10).toBe(false);
+        expect(exists10, "closing the scope drained the writer and removed the owned handle").toBe(false);
         const written = yield* fs.readFileString(eventsPath);
         const lines = pipe(written, Str.split("\n"), A.filter(Str.isNonEmpty));
         expect(A.length(lines)).toBe(6);
@@ -276,8 +267,10 @@ it.layer(TestLayer, { timeout: "15 seconds" })("@beep/qa-capture collector", (it
           "marker",
           "marker",
         ]);
-        // On-disk seqs are the canonical rewrite: strictly monotone from 1.
-        expect(A.map(decoded, (event) => event.seq)).toEqual([1, 2, 3, 4, 5, 6]);
+        expect(
+          A.map(decoded, (event) => event.seq),
+          "on-disk seqs are the canonical rewrite from 1"
+        ).toEqual([1, 2, 3, 4, 5, 6]);
         expect(pipe(decoded, A.slice({ start: 2, end: 5 }))).toEqual(
           A.map(secondPage, (event, index) => MarkerEvent.make({ ...event, seq: index + 3 }))
         );
@@ -294,8 +287,7 @@ it.layer(TestLayer, { timeout: "15 seconds" })("@beep/qa-capture collector", (it
         const tmpDir = yield* fs.makeTempDirectoryScoped();
         const handlePath = path.join(tmpDir, "current.json");
 
-        // The test runner's parent process is guaranteed alive and foreign.
-        const foreign = CollectorHandle.make({
+        const aliveForeign = CollectorHandle.make({
           eventsPath: path.join(tmpDir, "round-1", "events.ndjson"),
           pid: process.ppid,
           port: 43117,
@@ -304,7 +296,7 @@ it.layer(TestLayer, { timeout: "15 seconds" })("@beep/qa-capture collector", (it
           sessionId: "qa-live-foreign",
           startedAtEpochMs: 1753838000000,
         });
-        yield* Effect.flatMap(encodeCollectorHandleJson(foreign), (json) => fs.writeFileString(handlePath, json));
+        yield* Effect.flatMap(encodeCollectorHandleJson(aliveForeign), (json) => fs.writeFileString(handlePath, json));
 
         const error = yield* Effect.scoped(
           Effect.gen(function* () {
@@ -325,9 +317,8 @@ it.layer(TestLayer, { timeout: "15 seconds" })("@beep/qa-capture collector", (it
         assert(QaCaptureError.is(error));
         expect(pipe(error.message, Str.includes("still live"))).toBe(true);
 
-        // The live owner's handle survives the refused takeover.
         const remaining = yield* Effect.flatMap(fs.readFileString(handlePath), decodeCollectorHandleJson);
-        expect(remaining.sessionId).toBe("qa-live-foreign");
+        expect(remaining.sessionId, "the live owner's handle survives the refused takeover").toBe("qa-live-foreign");
       }),
     15000
   );
@@ -341,8 +332,6 @@ it.layer(TestLayer, { timeout: "15 seconds" })("@beep/qa-capture collector", (it
         const tmpDir = yield* fs.makeTempDirectoryScoped();
         const handlePath = path.join(tmpDir, "current.json");
 
-        // A pid owned by another user answers signal zero with EPERM: it
-        // exists, this process just may not signal it.
         const otherUserPid = 2147483000;
         const realKill = process.kill.bind(process);
         const spy = vi.spyOn(process, "kill").mockImplementation((pid, signal) => {
@@ -396,11 +385,10 @@ it.layer(TestLayer, { timeout: "15 seconds" })("@beep/qa-capture collector", (it
         const tmpDir = yield* fs.makeTempDirectoryScoped();
         const handlePath = path.join(tmpDir, "current.json");
 
-        // A finished child process yields a pid that is provably dead.
-        const deadPid = Bun.spawnSync(["true"]).pid;
+        const finishedChildPid = Bun.spawnSync(["true"]).pid;
         const stale = CollectorHandle.make({
           eventsPath: path.join(tmpDir, "round-1", "events.ndjson"),
-          pid: deadPid,
+          pid: finishedChildPid,
           port: 43117,
           round: 1,
           sessionDir: path.join(tmpDir, "round-1"),
@@ -432,20 +420,16 @@ it.layer(TestLayer, { timeout: "15 seconds" })("@beep/qa-capture collector", (it
                 sessionId: "qa-reclaimer",
               })
             );
-            // The stale handle was reclaimed by this session.
-            expect(running.handle.sessionId).toBe("qa-reclaimer");
+            expect(running.handle.sessionId, "this session reclaimed the stale handle").toBe("qa-reclaimer");
             const written = yield* Effect.flatMap(fs.readFileString(handlePath), decodeCollectorHandleJson);
             expect(written.sessionId).toBe("qa-reclaimer");
 
-            // Simulate a takeover while this session is still open: another
-            // session's handle replaces the file before the scope closes.
             yield* Effect.flatMap(encodeCollectorHandleJson(successor), (json) => fs.writeFileString(handlePath, json));
           })
         );
 
-        // Teardown of the reclaimer must not delete the successor's handle.
         const remaining = yield* Effect.flatMap(fs.readFileString(handlePath), decodeCollectorHandleJson);
-        expect(remaining.sessionId).toBe("qa-successor");
+        expect(remaining.sessionId, "the reclaimer's teardown leaves the successor's handle").toBe("qa-successor");
       }),
     15000
   );

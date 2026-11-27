@@ -201,8 +201,6 @@ const summarize = (items: ReadonlyArray<AccountHeadroom>, missing: O.Option<Read
   return `${freshAccountHeadroom(items).length} of ${items.length} accounts fresh${split}${O.getOrElse(bestAccountWide(items), () => "")}`;
 };
 
-// `None` when the host's provider listing failed: attribution is unknown, not
-// complete.
 const missingProviders = (
   input: AccountHeadroomInput,
   items: ReadonlyArray<AccountHeadroom>

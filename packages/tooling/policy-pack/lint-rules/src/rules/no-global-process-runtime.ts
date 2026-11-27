@@ -26,11 +26,6 @@ import type { ESTree } from "@oxlint/plugins";
 import type { MaybeNode, MemberAccess } from "./utils.ts";
 
 const RUNTIME_PROPERTIES = HashSet.fromIterable(["platform", "arch"]);
-// The only beep files allowed to read host runtime platform/architecture
-// directly: the shared HostProcess reference module (everything else injects
-// HostProcessPlatform / HostProcessArchitecture in Effect code or imports the
-// current* constants in sync code and tests) and the pre-runtime tsgo
-// bootstrap shim, which has no Effect runtime to inject into.
 const HOST_PROCESS_REFERENCE_FILES = HashSet.fromIterable([
   "packages/foundation/modeling/utils/src/HostProcess.ts",
   "tools/tsgo-shim/tsgo.js",
@@ -42,8 +37,6 @@ const isHostProcessReferenceFile = (filename: string, cwd: string): boolean =>
 
 const hostProcessTarget = (property: string): string =>
   property === "arch" ? "HostProcessArchitecture" : "HostProcessPlatform";
-
-// Distinct wording per detection path: a `process.<prop>` member read vs an `os.<prop>()` call.
 const processReadMessage = (property: string): string =>
   `Use ${hostProcessTarget(property)} instead of process.${property}; inject the runtime reference in Effect code and provide it explicitly in tests.`;
 
@@ -53,6 +46,17 @@ const osCallMessage = (property: string): string =>
 /**
  * Oxlint rule that blocks direct host platform and architecture reads outside
  * the shared host-process reference module.
+ *
+ * **Details**
+ *
+ * Two files may read the host runtime directly: the shared `HostProcess`
+ * reference module, which every other file reaches through
+ * `HostProcessPlatform` / `HostProcessArchitecture` in Effect code or its
+ * `current*` constants in sync code and tests, and the pre-runtime tsgo
+ * bootstrap shim, which has no Effect runtime to inject into. The rule flags
+ * `process.platform` and `process.arch`, read bare (unless a local `process`
+ * shadows it) or through `globalThis.process`, and `platform()` / `arch()`
+ * calls through a namespace, default or destructured `node:os` import.
  *
  * **Example** (Host runtime rule description)
  *
@@ -80,7 +84,6 @@ export default defineRule({
     const nodeOsNamespaces = MutableHashSet.empty<string>();
     const nodeOsRuntimeImports = MutableHashMap.empty<string, string>();
     const shadow = makeIdentifierShadowTracker(["process"]);
-    // Resolved once per file: the visitors run on every member read and call.
     let hostProcessReferenceFile = false;
 
     const resetBindings = () => {
@@ -89,8 +92,6 @@ export default defineRule({
       MutableHashMap.clear(nodeOsRuntimeImports);
       shadow.reset();
     };
-
-    // `globalThis.process` — the namespaced spelling, unaffected by a local `process` binding.
     const isGlobalThisProcess = (node: MaybeNode): boolean =>
       O.exists(
         unwrapMemberExpression(node),
@@ -98,14 +99,10 @@ export default defineRule({
           isIdentifier("globalThis")(access.object) &&
           O.exists(getPropertyName(access.property), (p) => p === "process")
       );
-
-    // A bare global `process` (skipped when locally shadowed) or the explicit `globalThis.process`.
     const isGlobalProcessObject = (node: MaybeNode): boolean => {
       if (isIdentifier("process")(unwrapExpression(node))) return !shadow.isShadowed("process");
       return isGlobalThisProcess(node);
     };
-
-    // Record a destructured `{ platform } from "node:os"` runtime import under its local name.
     const recordRuntimeSpecifier = (specifier: ESTree.ImportSpecifier) => {
       const imported = O.filter(getPropertyName(specifier.imported), (name) => HashSet.has(RUNTIME_PROPERTIES, name));
       if (O.isSome(imported)) MutableHashMap.set(nodeOsRuntimeImports, specifier.local.name, imported.value);
@@ -113,7 +110,6 @@ export default defineRule({
 
     const recordSpecifier = (specifier: ESTree.ImportDeclaration["specifiers"][number]) => {
       if (specifier.type === "ImportSpecifier") return recordRuntimeSpecifier(specifier);
-      // Namespace / default imports expose the whole `node:os` module under one local name.
       MutableHashSet.add(nodeOsNamespaces, specifier.local.name);
     };
 
@@ -122,8 +118,6 @@ export default defineRule({
       if (O.isNone(source) || !HashSet.has(NODE_OS_MODULES, source.value)) return;
       for (const specifier of node.specifiers) recordSpecifier(specifier);
     };
-
-    // `os.platform()` / `nodeOs.arch()` — a runtime call through a tracked `node:os` namespace.
     const namespacedRuntimeCall = (access: MemberAccess): O.Option<string> =>
       O.filter(
         access.object,
@@ -132,8 +126,6 @@ export default defineRule({
         O.flatMap(() => getPropertyName(access.property)),
         O.filter((property) => HashSet.has(RUNTIME_PROPERTIES, property))
       );
-
-    // `platform()` / `arch()` — a runtime call through a destructured `node:os` import.
     const importedRuntimeCall = (callee: MaybeNode): O.Option<string> =>
       O.flatMap(unwrapExpression(callee), identifierName).pipe(
         O.flatMap((name) => MutableHashMap.get(nodeOsRuntimeImports, name))
@@ -141,8 +133,6 @@ export default defineRule({
 
     const getNodeOsRuntimeCall = (callee: MaybeNode): O.Option<string> =>
       O.orElse(importedRuntimeCall(callee), () => O.flatMap(unwrapMemberExpression(callee), namespacedRuntimeCall));
-
-    // `process.platform` / `globalThis.process.arch` — a flagged global-process property read.
     const globalProcessProperty = (node: ESTree.MemberExpression): O.Option<string> =>
       getPropertyName(node.property).pipe(
         O.filter((property) => HashSet.has(RUNTIME_PROPERTIES, property)),

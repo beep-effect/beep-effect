@@ -15,17 +15,11 @@ import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import * as Result from "effect/Result";
 
-// Build a TestLayer that provides FsUtils AND also passes through FileSystem/Path
-// so tests can use them directly (e.g. for makeTempDirectory)
 const PlatformLayer = Layer.mergeAll(NodeServices.layer);
 const TestLayer = FsUtilsLive.pipe(Layer.provideMerge(PlatformLayer));
 
 const MemoryTestLayer = FsUtilsLive.pipe(Layer.provideMerge(Layer.mergeAll(MemoryFileSystem.layer, Path.layer)));
 
-/**
- * A memory volume whose `readDirectory` of `/repo/locked` fails with the given
- * system-error tag; every other call reaches the seeded volume.
- */
 const deniedReadDirectoryLayer = (reason: "PermissionDenied" | "NotFound") =>
   FsUtilsLive.pipe(
     Layer.provideMerge(
@@ -119,9 +113,11 @@ describe("FsUtils", () => {
         const results = yield* utils.globFiles("src/**", {
           cwd: `${__dirname}/..`,
         });
-        // All results should have file extensions (not bare directory names)
         expect(results.length).toBeGreaterThan(0);
-        expect(A.every(results, Str.includes("."))).toBe(true);
+        expect(
+          A.every(results, Str.includes(".")),
+          "every result is a file with an extension, never a bare directory name"
+        ).toBe(true);
 
         const fs = yield* Fs.FileSystem;
         const root = yield* fs.makeTempDirectoryScoped();
@@ -360,9 +356,8 @@ describe("FsUtils", () => {
         const utils = yield* FsUtils;
         const files = yield* utils.globFiles("nonexistent/root/xyz/**", { cwd: "/" });
         expect(files).toEqual([]);
-        // The walk root may be missing; the cwd a relative pattern resolves against may not.
         const missingCwd = yield* Effect.flip(utils.globFiles("**", { cwd: "/nonexistent/root/xyz" }));
-        expect(missingCwd._tag).toBe("DomainError");
+        expect(missingCwd._tag, "a missing walk root yields no files, but a missing cwd fails").toBe("DomainError");
 
         const fs = yield* Fs.FileSystem;
         const root = yield* fs.makeTempDirectoryScoped();
@@ -385,9 +380,10 @@ describe("FsUtils", () => {
         yield* fs.writeFileString(`${tmpDir}/a.ts`, "");
 
         const files = yield* utils.globFiles("**", { cwd: tmpDir, absolute: true });
-        // Global path order places "a.ts" before "a/x.ts" ('.' < '/');
-        // a per-level DFS sort would descend "a" first and invert them.
-        expect(files).toEqual([`${tmpDir}/a.ts`, `${tmpDir}/a/x.ts`]);
+        expect(
+          files,
+          "global path order puts a.ts before a/x.ts (. < /); a per-level DFS sort would descend into a first"
+        ).toEqual([`${tmpDir}/a.ts`, `${tmpDir}/a/x.ts`]);
       })
     );
 
@@ -469,7 +465,6 @@ describe("FsUtils", () => {
 
           yield* fs.makeDirectory(`${tmpDir}/pkg`);
           yield* fs.writeFileString(`${tmpDir}/pkg/index.ts`, "");
-          // A self-referential loop: pkg/loop -> pkg
           yield* fs.symlink(`${tmpDir}/pkg`, `${tmpDir}/pkg/loop`);
 
           const files = yield* utils.globFiles("**", {
@@ -501,8 +496,6 @@ describe("FsUtils", () => {
       );
     });
 
-    // Deterministic in every profile: the walk's readDirectory fault is injected, so the
-    // typed failure never depends on the process's uid or capabilities.
     rootIt.layer(deniedReadDirectoryLayer("PermissionDenied"), { timeout: "10 seconds" })((it) => {
       it.effect(
         "should fail with DomainError when readDirectory is denied mid-walk (injected fault)",
@@ -510,11 +503,14 @@ describe("FsUtils", () => {
           const utils = yield* FsUtils;
 
           const error = yield* utils.globFiles("**/*.ts", { cwd: "/repo", ignore: ["locked/**"] }).pipe(Effect.flip);
-          expect(error._tag).toBe("DomainError");
+          expect(error._tag, "the injected fault fails the walk whatever the process uid or capabilities").toBe(
+            "DomainError"
+          );
           expect(error.message).toBe('Glob failed for pattern "**/*.ts"');
-          // globFiles maps every failure to the same message, so pin the walker's unreadable
-          // branch: any other DomainError (e.g. a missing cwd) must not satisfy this case.
-          expect(error.cause).toMatchObject({
+          expect(
+            error.cause,
+            "every globFiles failure shares one message, so only the cause identifies the unreadable-directory branch"
+          ).toMatchObject({
             _tag: "GlobExpansionError",
             cause: { _tag: "DescendError", reason: "unreadableDirectory", path: "locked" },
           });
@@ -522,14 +518,16 @@ describe("FsUtils", () => {
       );
     });
 
-    // Contrast: a directory that vanishes mid-walk (NotFound) is a benign race, not a failure.
     rootIt.layer(deniedReadDirectoryLayer("NotFound"), { timeout: "10 seconds" })((it) => {
       it.effect(
         "should skip a directory whose readDirectory fails NotFound (injected fault)",
         Effect.fn(function* () {
           const utils = yield* FsUtils;
           const globFiles14 = yield* utils.globFiles("**/*.ts", { cwd: "/repo" });
-          expect(globFiles14).toEqual(["src/a.ts"]);
+          expect(
+            globFiles14,
+            "a directory that vanishes mid-walk is a benign race, skipped rather than failed"
+          ).toEqual(["src/a.ts"]);
         })
       );
     });
@@ -546,14 +544,6 @@ describe("FsUtils", () => {
           yield* fs.writeFileString(`${tmpDir}/locked/a.ts`, "");
           yield* fs.chmod(`${tmpDir}/locked`, 0o000);
 
-          // Real OS permission enforcement is a property of the running process: uid 0 (or
-          // CAP_DAC_OVERRIDE) reads a mode-000 directory. When the probe read succeeds this
-          // case cannot qualify, so it is reported as skipped, never as passed; the injected
-          // fault cases above still cover the error branch.
-          // Expected log noise: vitest's ctx.skip throws, so inside Effect.sync it travels the
-          // Effect defect channel and @effect/vitest logs one "ERROR ... test is skipped; abort
-          // execution" line before rethrowing. The reported outcome is still SKIP (the rethrown
-          // value keeps vitest's skip identity); the line is not a failure.
           const probe = yield* Effect.result(fs.readDirectory(`${tmpDir}/locked`));
           if (Result.isSuccess(probe)) {
             yield* fs.chmod(`${tmpDir}/locked`, 0o755);
@@ -588,9 +578,8 @@ describe("FsUtils", () => {
     it.effect(
       "should return false and never fail for a missing path",
       Effect.fn(function* () {
-        // No error channel to catch: the success value is total.
         const exists17 = yield* exists("/nonexistent/path/xyz");
-        expect(exists17).toBe(false);
+        expect(exists17, "exists has no error channel: a missing path is a false success").toBe(false);
 
         const fs = yield* Fs.FileSystem;
         const present = yield* fs.makeTempDirectoryScoped();
@@ -627,11 +616,10 @@ describe("FsUtils", () => {
         const nested = `${canonicalRoot}/packages/pkg-a`;
 
         yield* fs.makeDirectory(nested, { recursive: true });
-        // package.json lives exactly at the boundary; it must not be returned.
         yield* fs.writeFileString(`${canonicalRoot}/package.json`, '{ "name": "@mock/root" }');
 
-        const owning = yield* findNearestPackageDir(nested, canonicalRoot);
-        assertNone(owning);
+        const boundaryPackageJsonExcluded = yield* findNearestPackageDir(nested, canonicalRoot);
+        assertNone(boundaryPackageJsonExcluded);
       })
     );
 

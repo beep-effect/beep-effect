@@ -1,5 +1,4 @@
-// Ports the upstream canonicalizeGitUrl cases (vitest-agent 1cf1ab94,
-// packages/sdk/src/utils/canonicalize-git-url.ts) onto the repository key.
+// Ported from vitest-agent 1cf1ab94 packages/sdk/src/utils/canonicalize-git-url.ts (MIT).
 import {
   canonicalGitUrl,
   repositoryKeyFromCommonDir,

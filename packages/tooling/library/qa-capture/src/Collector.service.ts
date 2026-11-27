@@ -81,9 +81,6 @@ const $I = $QaCaptureId.create("Collector.service");
  */
 export const SERVER_MARKER_SEQ_BASE = 1000000;
 
-// The witness encodes its own `seq`, but only the collector knows the canonical
-// session-wide one. Re-reading the encoded line through a schema keeps the
-// rewrite schema-owned rather than a raw JSON.parse round trip.
 const EventLine = S.fromJsonString(S.Record(S.String, S.Unknown));
 const decodeEventLine = S.decodeUnknownEffect(EventLine);
 const encodeEventLine = S.encodeUnknownEffect(EventLine);
@@ -272,9 +269,8 @@ const portOfServer = (server: HttpServer.HttpServer["Service"], fallback: number
     Match.orElse(() => fallback)
   );
 
-// `process.kill(pid, 0)` probes liveness without signalling. Only a throw
-// other than EPERM means the pid is gone and its handle file is reclaimable:
-// EPERM is a live process owned by another user that this one may not signal.
+const isLivePidOfAnotherUser = (cause: unknown): boolean => P.hasProperty(cause, "code") && cause.code === "EPERM";
+
 const isPidAlive = (pid: number): Effect.Effect<boolean> =>
   Effect.try({
     try: () => {
@@ -282,16 +278,13 @@ const isPidAlive = (pid: number): Effect.Effect<boolean> =>
       return true;
     },
     catch: (cause) => CollectorServiceOperationError.make({ cause }),
-  }).pipe(Effect.catch(({ cause }) => Effect.succeed(P.hasProperty(cause, "code") && cause.code === "EPERM")));
+  }).pipe(Effect.catch(({ cause }) => Effect.succeed(isLivePidOfAnotherUser(cause))));
 
 const makeService = Effect.fnUntraced(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const witness = yield* Witness;
 
-  // A missing handle file and an undecodable one both read as None: neither
-  // proves a live owner, so the caller decides between reclaiming (serve) and
-  // leaving the file untouched (teardown).
   const readHandleFile = (handlePath: string): Effect.Effect<O.Option<CollectorHandle>> =>
     fs.readFileString(handlePath).pipe(
       Effect.flatMap(decodeCollectorHandleJson),
@@ -299,9 +292,6 @@ const makeService = Effect.fnUntraced(function* () {
       Effect.catchCause(() => Effect.succeedNone)
     );
 
-  // Teardown removes the handle only while this session still owns it: after
-  // a stale-handle takeover the successor's handle must survive the
-  // predecessor's scope close.
   const removeHandleIfOwned = (handlePath: string, sessionId: CollectorHandle["sessionId"]): Effect.Effect<void> =>
     readHandleFile(handlePath).pipe(
       Effect.flatMap(
@@ -313,9 +303,6 @@ const makeService = Effect.fnUntraced(function* () {
       )
     );
 
-  // One live collector owns current.json per checkout: a decodable handle
-  // whose pid is alive and foreign refuses the takeover, while dead-pid or
-  // undecodable handles are stale and get overwritten.
   const guardHandleTakeover = Effect.fnUntraced(function* (handlePath: string) {
     const existing = yield* readHandleFile(handlePath);
     yield* O.match(existing, {
@@ -363,10 +350,6 @@ const makeService = Effect.fnUntraced(function* () {
     const rejectedRef = yield* Ref.make(0);
     const canonicalSeqRef = yield* Ref.make(1);
 
-    // The witness restarts its page-local counter on every navigation, so raw
-    // seqs collide across page loads. The collector owns the canonical
-    // session-wide sequence: every accepted event's seq is rewritten at
-    // ingest, and the on-disk value is the only one evidence may reference.
     const appendEvent = ([event, seq]: readonly [ActionEvent, number]) =>
       encodeActionEventJson(event).pipe(
         Effect.flatMap(decodeEventLine),
@@ -376,9 +359,6 @@ const makeService = Effect.fnUntraced(function* () {
         Effect.catchCause((cause) => Effect.logWarning("qa collector failed to append an event", cause))
       );
 
-    // Drain finalizer registered before the writer fork: on scope close the
-    // queue is ended, the writer consumes every remaining event, and only
-    // then does the writer fiber wind down.
     const writer = yield* pipe(
       Queue.take(queue),
       Effect.flatMap(appendEvent),
@@ -505,6 +485,19 @@ const makeService = Effect.fnUntraced(function* () {
 
 /**
  * Effect service that runs the witness event collector.
+ *
+ * **Details**
+ *
+ * One live collector owns a checkout's handle file (`.beep/qa/current.json`):
+ * serve refuses a decodable handle whose pid is alive and foreign (a pid owned
+ * by another user counts as alive), and overwrites a dead-pid or undecodable
+ * one. Teardown removes the handle only while this session still owns it, so a
+ * successor's handle survives the predecessor's scope close.
+ *
+ * The witness restarts its page-local `seq` on every navigation, so the
+ * collector rewrites every accepted event's `seq` to one session-wide sequence
+ * at ingest; the on-disk value is the only one evidence may reference. Closing
+ * the scope writes every queued event before the writer stops.
  *
  * **Example** (Access collector layer)
  *

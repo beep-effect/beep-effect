@@ -38,17 +38,10 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 
-// Tests run concurrently under the shared vitest config, so each property owns its own
-// file: one shared path lets the two properties overwrite each other mid-run.
-layer(
-  Layer.mergeAll(
-    MemoryFileSystem.layerWith({ "/prop/load/tsconfig.json": "{}", "/prop/resolve/tsconfig.json": "{}" }),
-    Path.layer
-  ),
-  {
-    timeout: "30 seconds",
-  }
-)("loader parser properties", (it) => {
+const onePathPerConcurrentProperty = { "/prop/load/tsconfig.json": "{}", "/prop/resolve/tsconfig.json": "{}" };
+layer(Layer.mergeAll(MemoryFileSystem.layerWith(onePathPerConcurrentProperty), Path.layer), {
+  timeout: "30 seconds",
+})("loader parser properties", (it) => {
   it.effect.prop(
     "load retains encoded document fidelity and its rendering is idempotent",
     [Arbitrary.schema(TsconfigJsonFromString)],

@@ -101,9 +101,7 @@ const EmptyOutputSpawnerLayer = Layer.effect(
   })
 );
 
-// Seed the renderer's module-relative root lookup in the same isolated volume
-// that the controlled spawner reads and writes.
-const MockFileSystemLayer = Layer.effectDiscard(
+const ModuleRootSeededFileSystemLayer = Layer.effectDiscard(
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const moduleDir = NodeURL.fileURLToPath(new URL("../../src/schemas", import.meta.url));
@@ -111,7 +109,7 @@ const MockFileSystemLayer = Layer.effectDiscard(
     yield* fs.writeFileString(`${moduleDir}/bun.lock`, "");
   })
 ).pipe(Layer.provideMerge(MemoryFileSystem.layer));
-const MockPlatformLayer = Layer.mergeAll(MockFileSystemLayer, Path.layer);
+const MockPlatformLayer = Layer.mergeAll(ModuleRootSeededFileSystemLayer, Path.layer);
 const ConcurrentOutputTestLayer = ConcurrentOutputSpawnerLayer.pipe(Layer.provideMerge(MockPlatformLayer));
 const EmptyOutputTestLayer = EmptyOutputSpawnerLayer.pipe(Layer.provideMerge(MockPlatformLayer));
 
@@ -134,10 +132,6 @@ describe("renderBiomeJson", () => {
     );
   });
 
-  // Time-to-certainty ruling 83, must-fail fixture: on 2026-11-03 a shared clone's
-  // `.git/info/exclude` gained `/beep-biome-json-*/`, Biome reported the staged file as
-  // "provided but ignored", and `repo-sanity:tsconfig-sync` failed under a proof key
-  // that had just passed. The render must not read ambient VCS ignore state.
   it.layer(NodeServices.layer, {
     timeout: "20 seconds",
     excludeTestServices: true,
@@ -155,8 +149,6 @@ describe("renderBiomeJson", () => {
         yield* fs.makeDirectory(path.join(root, ".git", "info"), { recursive: true });
         yield* fs.writeFileString(path.join(root, ".git", "info", "exclude"), "/beep-biome-json-*/\n");
 
-        // The control: the same exclude really does hide a staged file from a Biome run
-        // that honours VCS ignores, so the fixture would catch the flag being dropped.
         const staged = path.join(root, "beep-biome-json-control", "docgen.json");
         yield* fs.makeDirectory(path.dirname(staged), { recursive: true });
         yield* fs.writeFileString(staged, '{"name":"@beep/example"}');
@@ -165,10 +157,15 @@ describe("renderBiomeJson", () => {
           ["format", "--write", `--config-path=${path.join(root, "biome.jsonc")}`, staged],
           { stdin: "ignore", stdout: "pipe", stderr: "pipe" }
         ).pipe(Effect.flatMap((handle) => handle.exitCode));
-        expect(honoured).not.toBe(0);
+        expect(
+          honoured,
+          "control: the same exclude hides the staged file from a Biome run that honours VCS ignores"
+        ).not.toBe(0);
 
         const rendered = yield* renderBiomeJsonAt(root, "docgen.json", { name: "@beep/example" });
-        expect(rendered).toBe('{ "name": "@beep/example" }\n');
+        expect(rendered, "the render must not read ambient VCS ignore state such as a clone's .git/info/exclude").toBe(
+          '{ "name": "@beep/example" }\n'
+        );
       })
     );
   });

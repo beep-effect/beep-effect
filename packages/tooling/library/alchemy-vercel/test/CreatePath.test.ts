@@ -13,19 +13,12 @@ import * as Str from "effect/String";
 import { FakeVercel, TEAM_ID } from "./harness/FakeVercel.ts";
 import { dropStateRow, failureTag, makeHarness, typed } from "./harness/Harness.ts";
 
-// The create path: a domain or variable whose `project` prop is another resource's output is not
-// resolved when the plan is made, so the engine cannot read it for adoption and plans `create`.
-// A stack that adopts a live project (OipWeb) takes this path for every domain and variable on
-// it. These tests pin what the real providers then do to the objects that already exist.
-
 const { test } = makeHarness();
 
 const ANSI = new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*m`, "g");
 
-/** The plan's resource lines without color codes: `[Domain] create`. */
 const planLines = (plan: Parameters<typeof formatPlanLines>[0]) => A.map(formatPlanLines(plan), Str.replace(ANSI, ""));
 
-/** Requests that change something: everything but reads. */
 const mutating = (calls: ReadonlyArray<string>): ReadonlyArray<string> =>
   A.filter(calls, (call) => !Str.startsWith("GET ")(call));
 
@@ -34,7 +27,9 @@ const withConfig =
   <X, E, R>(effect: Effect.Effect<X, E, R>): Effect.Effect<X, E, R> =>
     Effect.provideService(effect, ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(values));
 
-describe("the create path onto existing objects", { concurrent: false }, () => {
+describe("the create path onto existing objects: a project prop from another resource's output plans create", {
+  concurrent: false,
+}, () => {
   test.provider("Vercel.Domain makes no mutating request for a domain already on the target project", (scratch) =>
     Effect.gen(function* () {
       const stack = typed(scratch);
@@ -55,14 +50,14 @@ describe("the create path onto existing objects", { concurrent: false }, () => {
       const plan = yield* stack.plan(declare(true));
       expect(planLines(plan)).toContain("[Domain] create");
 
-      // Without adopt(true) the apply refuses the existing domain instead of taking it over.
       const start = A.length(FakeVercel.requestsFor(live.id));
       const refused = yield* Effect.exit(stack.deploy(declare(false)));
       assertSome(failureTag(refused), "OwnedBySomeoneElse");
       expect(
         A.filter(mutating(A.drop(FakeVercel.requestsFor(live.id), start)), (call) =>
           /Domain|Domains|Move|Verify/.test(call)
-        )
+        ),
+        "without adopt(true) the apply refuses the existing domain instead of taking it over"
       ).toEqual([]);
 
       const before = A.length(FakeVercel.requestsFor(live.id));
@@ -152,9 +147,11 @@ describe("the create path onto existing objects", { concurrent: false }, () => {
         const before = A.length(FakeVercel.requestsFor(live.id));
         const env = yield* stack.deploy(declare).pipe(config);
         const calls = A.drop(FakeVercel.requestsFor(live.id), before);
-        // The real API refuses any `key` on a sensitive variable (run 43585534113); the fake does too.
         expect(mutating(calls)).toEqual(["PATCH Env"]);
-        expect(FakeVercel.envPatchFieldsFor(live.id)).toEqual([["value"]]);
+        expect(
+          FakeVercel.envPatchFieldsFor(live.id),
+          "the real API refuses any key on a sensitive variable, and the fake does too"
+        ).toEqual([["value"]]);
         expect(env.envId).toBe(seeded.id);
         const stored = A.filter(FakeVercel.envsOf(live.id), (record) => record.key === "CRM_HUBSPOT_SERVICE_KEY");
         expect(A.map(stored, (record) => [record.id, record.value, record.type, record.target])).toEqual([
@@ -220,13 +217,14 @@ describe("the create path onto existing objects", { concurrent: false }, () => {
       const plan = yield* stack.plan(declare("VT_NEW_NAME"));
       expect(planLines(plan)).toContain("[Secret] replace");
 
-      // A failed create leaves the old variable in place: nothing is deleted before the new one exists.
       const start = A.length(FakeVercel.requestsFor(project.id));
       FakeVercel.refuseEnvCreate("VT_NEW_NAME");
       const failed = yield* Effect.exit(stack.deploy(declare("VT_NEW_NAME")));
       FakeVercel.allowEnvCreate("VT_NEW_NAME");
       expect(Exit.isFailure(failed)).toBe(true);
-      expect(envWrites(start)).not.toContain("DELETE Env");
+      expect(envWrites(start), "a failed create deletes nothing before the new variable exists").not.toContain(
+        "DELETE Env"
+      );
       expect(A.map(FakeVercel.envsOf(project.id), (record) => [record.id, record.key])).toEqual([
         [first.envId, "VT_OLD_NAME"],
       ]);
@@ -259,11 +257,13 @@ describe("the create path onto existing objects", { concurrent: false }, () => {
       const config = withConfig({ VT_TYPE_CHANGE_TOKEN: "token" });
       yield* stack.deploy(declare("encrypted")).pipe(config);
 
-      // A missing `valueFrom` key fails the plan before the delete-first replacement deletes anything.
       const start = A.length(FakeVercel.requestsFor(project.id));
       const missing = yield* Effect.exit(stack.deploy(declare("sensitive")).pipe(withConfig({})));
       expect(Exit.isFailure(missing)).toBe(true);
-      expect(mutating(A.drop(FakeVercel.requestsFor(project.id), start))).toEqual([]);
+      expect(
+        mutating(A.drop(FakeVercel.requestsFor(project.id), start)),
+        "a missing valueFrom key fails the plan before the delete-first replacement deletes anything"
+      ).toEqual([]);
 
       const before = A.length(FakeVercel.requestsFor(project.id));
       yield* stack.deploy(declare("sensitive")).pipe(config);
@@ -276,7 +276,6 @@ describe("the create path onto existing objects", { concurrent: false }, () => {
     "Vercel.EnvVar adopts a sensitive variable whose row is missing with one value-only edit, then plans no changes",
     (scratch) =>
       Effect.gen(function* () {
-        // The staging re-run after run 43585534113: the project's row exists, the variable's does not.
         const stack = typed(scratch);
         yield* stack.destroy();
         const declare = Effect.gen(function* () {

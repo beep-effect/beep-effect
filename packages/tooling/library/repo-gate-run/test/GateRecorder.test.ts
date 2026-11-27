@@ -15,8 +15,6 @@ import { epoch, eventsSource, packageTarget, testRunEvents } from "./support/fix
 
 const encoder = new TextEncoder();
 
-// The tool exited 1 and reported nothing that failed: the reducer adds one
-// errored item carrying the log excerpt.
 const unexplained: ReadonlyArray<GateEvent> = [
   GateEvent.cases.RunStarted.make({
     runId: "r1",

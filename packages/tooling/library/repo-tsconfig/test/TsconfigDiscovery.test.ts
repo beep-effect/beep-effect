@@ -40,7 +40,6 @@ layer(fixtureLayer(tree(["/a/b/tsconfig.json", EMPTY], ["/a/tsconfig.json", EMPT
 layer(fixtureLayer(tree(["/a/tsconfig.json", EMPTY])), { timeout: "30 seconds" })(
   "TsconfigDiscovery.findNearest, tracing",
   (it) => {
-    // Conformance shift (wave 3-2): the span is qualified by its owner, matching TsconfigLoader.*.
     it.effect("names its span TsconfigDiscovery.findNearest, never the bare findNearest", () =>
       Effect.gen(function* () {
         let spanNames = A.empty<string>();
@@ -91,12 +90,6 @@ layer(fixtureLayer(tree(["/a/tsconfig.json", EMPTY])), { timeout: "30 seconds" }
   }
 );
 
-// Pins the INCLUSIVE boundary (Walker.ascend's contract: "stop after this
-// directory, inclusive"). The beyond-boundary test above passes under either
-// inclusive or exclusive semantics — only a config exactly AT stopAt tells
-// them apart. The decoy above stopAt proves the walk stops there: an
-// implementation that ascends past the boundary would still satisfy a bare
-// isSome, but not equality with the at-boundary path.
 layer(fixtureLayer(tree(["/a/b/tsconfig.json", EMPTY], ["/a/tsconfig.json", EMPTY])), { timeout: "30 seconds" })(
   "TsconfigDiscovery.findNearest, stopAt boundary is inclusive",
   (it) => {
@@ -109,10 +102,6 @@ layer(fixtureLayer(tree(["/a/b/tsconfig.json", EMPTY], ["/a/tsconfig.json", EMPT
   }
 );
 
-/**
- * The fixture volume, with an `exists` fault that denies permission on one
- * path. Every other probe delegates to the seeded volume.
- */
 const FsDenying = (denied: string, tree: FixtureTree) =>
   MemoryFileSystem.layerWith(tree, {
     faults: {
@@ -130,15 +119,13 @@ const FsDenying = (denied: string, tree: FixtureTree) =>
     },
   });
 
-// The denied candidate is genuinely present, so only the fault stands between
-// the walk and `/a/b/tsconfig.json`: disarm it and the answer moves nearer.
 layer(
   Layer.mergeAll(
     FsDenying("/a/b/tsconfig.json", tree(["/a/b/tsconfig.json", EMPTY], ["/a/tsconfig.json", EMPTY])),
     Path.layer
   ),
   { timeout: "30 seconds" }
-)("TsconfigDiscovery.findNearest, permission denied on a nearer candidate", (it) => {
+)("TsconfigDiscovery.findNearest, permission denied on a nearer candidate that genuinely exists", (it) => {
   it.effect("absorbs the denied probe and keeps ascending to the further config", () =>
     Effect.gen(function* () {
       const found = yield* TsconfigDiscovery.findNearest("/a/b/c");

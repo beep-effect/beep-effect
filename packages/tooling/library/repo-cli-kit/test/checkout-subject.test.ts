@@ -1,9 +1,3 @@
-// The checkout-subject helper (goals/prunable-product-leaves, seam 1): a check that reads a real
-// repository file names the packet or workspace it depends on, and skips only when the checkout
-// pruned that subject, a declared product leaf whose directory is gone. These pin the subject
-// derivation, the presence and pruning lookups, the inventory read over a scratch checkout with one
-// leaf pruned and one name missing, and the product-leaf declaration against the live checkout.
-
 import {
   CHECKOUT_PRUNE_DECLARATION_PATH,
   CheckoutPruneDeclaration,
@@ -53,7 +47,6 @@ import * as S from "effect/Schema";
 
 const UnknownJson = S.fromJsonString(S.Unknown);
 const decodeDeclarationResult = S.decodeUnknownResult(CheckoutPruneDeclaration);
-// Fixture declarations are well-formed; a decode failure here is a broken test, so it throws.
 const decodeDeclaration = (input: unknown): CheckoutPruneDeclaration =>
   Result.getOrThrow(decodeDeclarationResult(input));
 
@@ -112,9 +105,12 @@ describe("checkout subjects", () => {
     strictEqual(isCheckoutSubjectPresent(inventory, kept), true);
     strictEqual(isCheckoutSubjectPruned(inventory, kept), false);
     strictEqual(isCheckoutSubjectPruned(inventory, leaf), true);
-    // Absent but never declared prunable: not pruned, so its check runs and fails.
     strictEqual(isCheckoutSubjectPresent(inventory, missing), false);
-    strictEqual(isCheckoutSubjectPruned(inventory, missing), false);
+    strictEqual(
+      isCheckoutSubjectPruned(inventory, missing),
+      false,
+      "absent but never declared prunable: not pruned, so its check runs"
+    );
     strictEqual(isCheckoutSubjectPresent(inventory, workspaceSubject("@beep/kept")), true);
     strictEqual(isCheckoutSubjectPresent(inventory, workspaceSubject("@beep/leaf")), false);
     strictEqual(isCheckoutSubjectPruned(inventory, workspaceSubject("@beep/leaf")), true);
@@ -137,9 +133,6 @@ describe("checkout subjects", () => {
   });
 });
 
-// Seam 1b: the checkout's own declaration. This one prunes a packet glob and a driver it names by
-// package, owns a root file, a packet and a workspace it replaced, and keeps one packet and one
-// product leaf out of the prunes.
 const declaration = decodeDeclaration({
   version: 1,
   prune: [
@@ -176,11 +169,17 @@ const packetOf = (root: string) => O.getOrThrow(packetSubjectOf(root));
 describe("checkout prune declaration rules", () => {
   it("prunes an absent packet a prune glob matches, unless it is present, undeclared or kept", () => {
     strictEqual(isCheckoutSubjectPruned(declared, packetOf("goals/demo-gone")), true);
-    // A live packet the glob matches is present, so it stays strict.
-    strictEqual(isCheckoutSubjectPruned(declared, packetOf("goals/demo-live")), false);
+    strictEqual(
+      isCheckoutSubjectPruned(declared, packetOf("goals/demo-live")),
+      false,
+      "a live packet the glob matches is present, so it stays strict"
+    );
     strictEqual(isCheckoutSubjectPruned(declared, packetOf("goals/typo")), false);
-    // The keep entry carves goals/demo-kept out of the glob: missing, it fails.
-    strictEqual(isCheckoutSubjectPruned(declared, packetOf("goals/demo-kept")), false);
+    strictEqual(
+      isCheckoutSubjectPruned(declared, packetOf("goals/demo-kept")),
+      false,
+      "the keep entry carves goals/demo-kept out of the glob"
+    );
   });
 
   it("skips an owned packet, workspace or path although it exists, and a keep entry restores strictness", () => {
@@ -189,12 +188,18 @@ describe("checkout prune declaration rules", () => {
     strictEqual(isCheckoutSubjectPruned(declared, workspaceSubject("@beep/owned")), true);
     strictEqual(isCheckoutSubjectPruned(declared, workspaceSubject("@beep/owned-gone")), true);
     strictEqual(isCheckoutSubjectPruned(declared, workspaceSubject("@beep/owned-kept")), false);
-    // An owned entry for @beep/leaf is carved back out by the keep entry that names the package.
-    strictEqual(isCheckoutSubjectPruned(declared, workspaceSubject("@beep/leaf")), false);
+    strictEqual(
+      isCheckoutSubjectPruned(declared, workspaceSubject("@beep/leaf")),
+      false,
+      "the keep entry naming @beep/leaf carves its owned entry back out"
+    );
     strictEqual(isCheckoutSubjectPruned(declared, repositoryPathSubject("renovate.json")), true);
     strictEqual(isCheckoutSubjectPresent(declared, repositoryPathSubject("renovate.json")), true);
-    // The same kind of path without an owned entry is the repository's, strict and present.
-    strictEqual(isCheckoutSubjectPruned(declared, repositoryPathSubject("package.json")), false);
+    strictEqual(
+      isCheckoutSubjectPruned(declared, repositoryPathSubject("package.json")),
+      false,
+      "a path without an owned entry is the repository's"
+    );
     strictEqual(isCheckoutSubjectPresent(declared, repositoryPathSubject("package.json")), true);
   });
 
@@ -227,12 +232,23 @@ describe("checkout prune declaration rules", () => {
     strictEqual(isCheckoutPathPruned(declared, "goals/demo-gone/research/notes.md"), true);
     strictEqual(isCheckoutPathPruned(declared, "goals/owned/PLAN.md"), true);
     strictEqual(isCheckoutPathPruned("docs/legal/guide.md")(declared), true);
-    // A missing file inside a present packet or workspace, or kept, or the repository's, fails.
-    strictEqual(isCheckoutPathPruned(declared, "goals/demo-live/PLAN.md"), false);
-    strictEqual(isCheckoutPathPruned(declared, "packages/kept/README.md"), false);
-    strictEqual(isCheckoutPathPruned(declared, "goals/demo-kept/PLAN.md"), false);
-    strictEqual(isCheckoutPathPruned(declared, "docs/legal/README.md"), false);
-    strictEqual(isCheckoutPathPruned(declared, "docs/README.md"), false);
+    strictEqual(
+      isCheckoutPathPruned(declared, "goals/demo-live/PLAN.md"),
+      false,
+      "a missing file inside a present packet"
+    );
+    strictEqual(
+      isCheckoutPathPruned(declared, "packages/kept/README.md"),
+      false,
+      "a missing file inside a present workspace"
+    );
+    strictEqual(
+      isCheckoutPathPruned(declared, "goals/demo-kept/PLAN.md"),
+      false,
+      "a missing file inside a kept packet"
+    );
+    strictEqual(isCheckoutPathPruned(declared, "docs/legal/README.md"), false, "a missing kept path");
+    strictEqual(isCheckoutPathPruned(declared, "docs/README.md"), false, "a missing file of the repository's own");
   });
 });
 
@@ -341,7 +357,6 @@ it.layer(NodeServices.layer)("checkout inventory", (it) => {
           workspaces: ["packages/*", "packages/leaf/server", "packages/renamed"],
         }),
         "packages/kept/package.json": json({ name: "@beep/kept" }),
-        // @beep/renamed was renamed in place: its directory remains under a new name.
         "packages/renamed/package.json": json({ name: "@beep/renamed-again" }),
         "goals/kept/README.md": "# kept\n",
         "goals/INDEX.md": "# index\n",
@@ -353,7 +368,11 @@ it.layer(NodeServices.layer)("checkout inventory", (it) => {
       deepStrictEqual(A.sort(names, Order.String), ["@beep/kept", "@beep/renamed-again"]);
       deepStrictEqual(HashMap.toEntries(read.prunedWorkspaces), [["@beep/leaf-server", "packages/leaf/server"]]);
       deepStrictEqual(A.fromIterable(read.prunedPackets), ["goals/leaf"]);
-      strictEqual(isCheckoutSubjectPruned(read, workspaceSubject("@beep/renamed")), false);
+      strictEqual(
+        isCheckoutSubjectPruned(read, workspaceSubject("@beep/renamed")),
+        false,
+        "@beep/renamed was renamed in place: its directory remains"
+      );
     })
   );
 
@@ -421,8 +440,6 @@ it.layer(NodeServices.layer)("checkout inventory", (it) => {
     })
   );
 
-  // The declaration stays honest in any checkout that holds a leaf: a present leaf lives at its
-  // declared directory, and a declared name never disappears while its directory remains.
   it.effect("places every present product leaf at its declared directory, and none half removed", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;

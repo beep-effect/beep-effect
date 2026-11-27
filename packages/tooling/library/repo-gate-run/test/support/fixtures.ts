@@ -1,7 +1,3 @@
-// Builders shared by the gate run tests: a test-gate run and a check-gate
-// run as events, record targets, the ANSI stripper the terminal property
-// uses, and the agent and terminal consoles.
-
 import { GateEvent } from "@beep/gate-report/GateEvent";
 import { Item, ItemDetail, Location } from "@beep/gate-report/Item";
 import { ItemKey } from "@beep/gate-report/ItemKey";
@@ -91,11 +87,10 @@ export const packageTarget = (gate: string) =>
 export const agentConsole = makeGateConsole(ConsoleSettings.make({ audience: "agent" }));
 export const terminalConsole = makeGateConsole(ConsoleSettings.make({ audience: "human", color: "truecolor" }));
 
-// SGR colours and OSC hyperlinks.
-const ansiPattern = /\u001b\[[0-9;]*m|\u001b\]8;[^\u0007\u001b]*(?:\u0007|\u001b\\)/gu;
+const sgrAndOscHyperlinkPattern = /\u001b\[[0-9;]*m|\u001b\]8;[^\u0007\u001b]*(?:\u0007|\u001b\\)/gu;
 
 /** A terminal console with its progress line and every escape removed. */
 export const stripTerminal = (text: string): string =>
-  Str.replace(ansiPattern, "")(A.lastNonEmpty(Str.split(text, CLEAR_LINE)));
+  Str.replace(sgrAndOscHyperlinkPattern, "")(A.lastNonEmpty(Str.split(text, CLEAR_LINE)));
 
 export const linesOf = (text: string): A.NonEmptyReadonlyArray<string> => Str.split(text, "\n");

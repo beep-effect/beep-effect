@@ -36,12 +36,11 @@ describe("renderRunnerUserData", () => {
   });
 
   it("queues an EXIT trap the post-install sets, so it runs before termination instead of replacing it", () => {
-    // `trap` is shadowed only around the post-install; cleanup runs each queued handler first (executed under bash in
-    // @beep/infra-ci-runners RunnerBootstrap.test).
     expect(
       /trap cleanup EXIT\ntrap\(\) \{[^\n]*hook_exit_traps\+=[^\n]*\}\n[\s\S]*echo post[\s\S]*\nunset -f trap\n/u.test(
         script
-      )
+      ),
+      "trap is shadowed only around the post-install; @beep/infra-ci-runners RunnerBootstrap.test runs it under bash"
     ).toBe(true);
   });
 

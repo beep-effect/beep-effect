@@ -23,10 +23,8 @@ import * as S from "effect/Schema";
 import { encodeConfig, jsonReportParser, validateLinterProcess } from "./codec.ts";
 import type { RuleName } from "@beep/lint-rules";
 
-/** Absolute path to the package root (`.../lint-rules`). */
 const packageRoot = NodeURL.fileURLToPath(new URL("../", import.meta.url));
 
-/** One parsed Biome plugin diagnostic. */
 type PluginDiagnostic = {
   readonly message: string;
   readonly severity: string;
@@ -69,7 +67,6 @@ export const BiomeReport = S.Struct({
   ).pipe(S.optionalKey),
 });
 
-/** Decode stdout and retain malformed-report failures. */
 const parseReport = jsonReportParser(BiomeReport);
 
 /**

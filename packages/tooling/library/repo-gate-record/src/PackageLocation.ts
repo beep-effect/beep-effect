@@ -38,7 +38,6 @@ const $I = $RepoGateRecordId.create("PackageLocation");
  */
 export const REPO_ROOT_MARKER = "turbo.json";
 
-// Only the name is read from the package manifest.
 class ManifestName extends S.Opaque<ManifestName, { readonly brand: unique symbol }>()(
   S.Struct({ name: S.optionalKey(S.String) }).pipe(
     $I.annoteSchema("ManifestName", {
@@ -47,7 +46,6 @@ class ManifestName extends S.Opaque<ManifestName, { readonly brand: unique symbo
   )
 ) {}
 
-// Only `extends` is read from a `turbo.json`: a package configuration extends the root's.
 class TurboConfigHead extends S.Opaque<TurboConfigHead, { readonly brand: unique symbol }>()(
   S.Struct({ extends: S.String.pipe(S.Array, S.optionalKey) }).pipe(
     $I.annoteSchema("TurboConfigHead", {

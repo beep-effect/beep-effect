@@ -25,8 +25,6 @@ import type { FoldFixes } from "@beep/gate-report/CauseFold";
  */
 export const WORKSPACE_SUBJECT = "workspace";
 
-// A package name is scoped (`@scope/name`) or has no `/`; anything else is a repository-relative
-// directory, which Turbo only reads as a path when it starts with `./`.
 const isDirectory = (subject: string): boolean => !Str.startsWith("@")(subject) && Str.includes("/")(subject);
 
 const filterOf = (subject: string): string => (isDirectory(subject) ? `./${subject}` : subject);
@@ -39,7 +37,8 @@ const filterOf = (subject: string): string => (isDirectory(subject) ? `./${subje
  *
  * A subject that is a package directory rather than a package name (a run
  * whose name was not known) is filtered as a path, `--filter=./<dir>^...`,
- * which selects the same closure as the package name does.
+ * which selects the same closure as the package name does: Turbo reads a
+ * filter as a path only when it starts with `./`.
  *
  * **Example** (Name the fix for a package and for a directory)
  *

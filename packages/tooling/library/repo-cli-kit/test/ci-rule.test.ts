@@ -22,13 +22,10 @@ import * as Str from "effect/String";
 
 type Env = Readonly<Record<string, string>>;
 
-/** Every variable the rule reads. */
 const SIGNALS = ["CI", "GITHUB_ACTIONS", "CONTINUOUS_INTEGRATION"] as const;
 
-/** `isCi`/`isCiSync`, Lint, CiLane, GithubChecks and the Turbo secret session: `CI` is exactly `"true"`. */
 const exactTrue = (env: Env): boolean => env.CI === "true";
 
-/** DeletePackage: `Config.Boolean("CI")` with a `false` default. */
 const configBoolean = (env: Env): Effect.Effect<boolean | "decode-failure"> =>
   Config.Boolean("CI").pipe(
     Config.withDefault(false),
@@ -37,7 +34,6 @@ const configBoolean = (env: Env): Effect.Effect<boolean | "decode-failure"> =>
     Effect.map(Result.match({ onSuccess: (value) => value, onFailure: () => "decode-failure" as const }))
   );
 
-/** `detectQualityProfile`: `CI` is non-empty. */
 const nonEmpty = (env: Env): boolean => Str.isNonEmpty(env.CI ?? "");
 
 type Row = {

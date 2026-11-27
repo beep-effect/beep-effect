@@ -12,26 +12,24 @@ describe("@beep/qa-capture witness bundling", { concurrent: false }, () => {
         () =>
           Effect.gen(function* () {
             expect(vi.isMockFunction(Bun.build)).toBe(false);
-            const build = yield* Effect.acquireRelease(
+            const passThroughBuildSpy = yield* Effect.acquireRelease(
               Effect.sync(() => vi.spyOn(Bun, "build")),
               (spy) => Effect.sync(() => spy.mockRestore())
             );
-            expect(build).toHaveBeenCalledTimes(0);
+            expect(passThroughBuildSpy).toHaveBeenCalledTimes(0);
             const witness = yield* Witness;
             const script = yield* witness.script;
-            expect(build).toHaveBeenCalledTimes(1);
+            expect(passThroughBuildSpy).toHaveBeenCalledTimes(1);
             expect(script.length).toBeGreaterThan(0);
             expect(script).toContain("__beepQa");
             expect(script).toContain("/events");
-            // The cancel-reset lens needs a ground-truth cancellation instant:
-            // the witness must both listen for pointercancel and emit the
-            // schema-modeled pointer-cancel kind.
-            expect(script).toContain("pointercancel");
-            expect(script).toContain("pointer-cancel");
-            // The pass-through spy preserves native compilation and counts builds.
+            expect(script, "the cancel-reset lens needs the pointercancel listener").toContain("pointercancel");
+            expect(script, "the cancel-reset lens needs the schema-modeled pointer-cancel kind").toContain(
+              "pointer-cancel"
+            );
             const script1 = yield* witness.script;
             expect(script1).toBe(script);
-            expect(build).toHaveBeenCalledTimes(1);
+            expect(passThroughBuildSpy).toHaveBeenCalledTimes(1);
           }),
         20000
       );
@@ -45,26 +43,24 @@ describe("@beep/qa-capture witness bundling", { concurrent: false }, () => {
         () =>
           Effect.gen(function* () {
             expect(vi.isMockFunction(Bun.build)).toBe(false);
-            const build = yield* Effect.acquireRelease(
+            const passThroughBuildSpy = yield* Effect.acquireRelease(
               Effect.sync(() => vi.spyOn(Bun, "build")),
               (spy) => Effect.sync(() => spy.mockRestore())
             );
-            expect(build).toHaveBeenCalledTimes(0);
+            expect(passThroughBuildSpy).toHaveBeenCalledTimes(0);
             const witness = yield* Witness;
             const script = yield* witness.script;
-            expect(build).toHaveBeenCalledTimes(1);
+            expect(passThroughBuildSpy).toHaveBeenCalledTimes(1);
             expect(script.length).toBeGreaterThan(0);
             expect(script).toContain("__beepQa");
             expect(script).toContain("/events");
-            // The cancel-reset lens needs a ground-truth cancellation instant:
-            // the witness must both listen for pointercancel and emit the
-            // schema-modeled pointer-cancel kind.
-            expect(script).toContain("pointercancel");
-            expect(script).toContain("pointer-cancel");
-            // The pass-through spy preserves native compilation and counts builds.
+            expect(script, "the cancel-reset lens needs the pointercancel listener").toContain("pointercancel");
+            expect(script, "the cancel-reset lens needs the schema-modeled pointer-cancel kind").toContain(
+              "pointer-cancel"
+            );
             const script2 = yield* witness.script;
             expect(script2).toBe(script);
-            expect(build).toHaveBeenCalledTimes(1);
+            expect(passThroughBuildSpy).toHaveBeenCalledTimes(1);
           }),
         20000
       );

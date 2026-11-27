@@ -33,7 +33,6 @@ import type { Freshness } from "@beep/palantiri";
 
 const NOW = DateTime.makeUnsafe("2026-10-15T12:00:00.000Z");
 
-// Shaped like a Linux 6.x workstation's /proc/pressure files.
 const CPU = "some avg10=2.13 avg60=1.05 avg300=0.48 total=987654321\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n";
 const MEMORY =
   "some avg10=0.00 avg60=0.12 avg300=0.30 total=4433221\nfull avg10=0.00 avg60=0.05 avg300=0.11 total=2211\n";

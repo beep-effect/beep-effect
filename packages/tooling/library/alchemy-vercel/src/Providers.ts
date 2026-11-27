@@ -37,7 +37,9 @@ export class Providers extends Provider.ProviderCollection<Providers>()("Vercel"
  *
  * The layer still requires the distilled `Credentials` and an
  * `HttpClient`. {@link providers} supplies both from the environment; tests
- * supply an in-memory HTTP client instead.
+ * supply an in-memory HTTP client instead. The layer also outputs `Digest`:
+ * the engine runs `EnvVar`'s plan and reconcile calls, which digest
+ * `valueFrom` values, in the stack context.
  *
  * **Example** (Provide a custom HTTP client)
  *
@@ -59,8 +61,6 @@ export class Providers extends Provider.ProviderCollection<Providers>()("Vercel"
  */
 export const resources = Layer.effect(Providers, Provider.collection([Project, EnvVar, Domain])).pipe(
   Layer.provide(Layer.mergeAll(ProjectProvider, EnvVarProvider, DomainProvider)),
-  // `EnvVar` digests `valueFrom` values while it plans and reconciles; the engine runs those
-  // lifecycle calls in the stack context, so the service is merged into it.
   Layer.provideMerge(Digest.layerWebCrypto)
 );
 

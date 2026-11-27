@@ -7,7 +7,6 @@ import { fixtureLayer, tree } from "../support/fixtures.ts";
 
 const JsonValue = S.fromJsonString(S.Unknown);
 
-/** The walk of `targets` that no `null` ended. */
 const walked = (...targets: ReadonlyArray<string>) => ({ targets, blocked: false });
 
 const nested = (leaf: unknown, depth: number): unknown => {
