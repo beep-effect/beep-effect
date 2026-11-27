@@ -2808,6 +2808,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         "deploy-ci-runners.yml:Deploy CI runners (prod)",
         "fleet-lane-probe.yml:Lane Probe (${{ inputs.lane }})",
         "fleet-missed-event-check.yml:Fleet Missed-Event Check",
+        "fleet-missed-event-check.yml:Fleet Missed-Event Guard",
         "heavy-admit.yml:Heavy Admission",
         "heavy-admit.yml:Heavy",
         // Native Windows verification consumes only the sparse script artifact;

@@ -22,15 +22,11 @@ import type { JsoncNode } from "@beep/jsonc/JsoncNode";
 
 const childrenOf = (node: JsoncNode): ReadonlyArray<JsoncNode> => node.children ?? A.empty();
 
-// The first key, in document order, that repeats a sibling key of its own
-// object. Keys compare by decoded value, so `"b"` and `"\u0062"` collide;
-// recursion is bounded by the engine's nesting depth cap.
 const firstDuplicateKey = (node: JsoncNode): O.Option<JsoncNode> =>
   node.type === "object" ? firstDuplicateInObject(childrenOf(node)) : A.findFirst(childrenOf(node), firstDuplicateKey);
 
 const firstDuplicateInObject = (properties: ReadonlyArray<JsoncNode>): O.Option<JsoncNode> => {
   const seen = MutableHashSet.empty<unknown>();
-  // A property's children are its key node, then its value node.
   return A.findFirst(properties, (property) =>
     O.flatMap(A.head(childrenOf(property)), (key) => {
       if (MutableHashSet.has(seen, key.value)) return O.some(key);
@@ -43,8 +39,6 @@ const firstDuplicateInObject = (properties: ReadonlyArray<JsoncNode>): O.Option<
 const duplicateKeyError = (key: JsoncNode): FrontmatterKeyError =>
   FrontmatterKeyError.make({ reason: "DuplicateKey", offset: key.offset, length: key.length });
 
-// Runs after a successful value parse, so the tree parse cannot fail on its
-// own; its failure channel is kept rather than asserted away.
 const rejectDuplicateKeys = (text: string): Result.Result<void, JsoncParseError | FrontmatterKeyError> =>
   Result.flatMap(
     Jsonc.parseTreeResult(text),
