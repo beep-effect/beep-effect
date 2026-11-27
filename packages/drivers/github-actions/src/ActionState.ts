@@ -183,7 +183,6 @@ export interface ActionStateShape {
   };
 }
 
-/** The runner republishes saved state as `STATE_<key>`. */
 const stateVariable = (key: string): string => `STATE_${key}`;
 
 const make = Effect.gen(function* () {
@@ -199,8 +198,6 @@ const make = Effect.gen(function* () {
     2,
     Effect.fnUntraced(function* (key: string, serialized: string) {
       const writeFailed = (cause: unknown) => ActionStateError.make({ reason: "writeFailed", key, cause });
-      // The same heredoc protocol as ActionOutputs (`internal/runnerFile.ts`):
-      // a key that cannot head a block would corrupt every entry after it.
       if (!isUsableName(key)) {
         return yield* writeFailed(
           InvalidActionStateNameError.make({ message: `"${key}" cannot name a GITHUB_STATE entry` })
@@ -233,13 +230,6 @@ const make = Effect.gen(function* () {
       const encoded = yield* S.encodeUnknownEffect(schema)(value).pipe(
         Effect.mapError((cause) => ActionStateError.make({ reason: "malformed", key, cause }))
       );
-      // Prove at save time that the encoded form survives the boundary it is
-      // about to cross: GITHUB_STATE is text, so what `get` will see is
-      // JSON.parse of this string, not `encoded` itself. A schema whose
-      // encoded side is a class instance (Schema.Option) or an unstringifiable
-      // value (a bigint) fails HERE, naming the key, instead of one phase
-      // later as a `malformed` mystery. States are small; the round-trip is
-      // noise next to the file append.
       const notPlainJson = (cause: unknown) => ActionStateError.make({ reason: "notPlainJson", key, cause });
       const plainJson = yield* S.decodeUnknownEffect(S.Json)(encoded).pipe(Effect.mapError(notPlainJson));
       const serialized = yield* S.encodeEffect(Json)(plainJson).pipe(Effect.mapError(notPlainJson));
@@ -264,9 +254,7 @@ const make = Effect.gen(function* () {
     saveSecret: dual(
       2,
       Effect.fnUntraced(function* (key: string, secret: string) {
-        // Mask first, then persist. The ordering is the guarantee.
         yield* outputs.setSecret(secret);
-        // A string always has a JSON representation; there is no typed encode failure.
         const serialized = yield* S.encodeEffect(Json)(secret).pipe(Effect.orDie);
         yield* write(key, serialized);
       })

@@ -147,8 +147,6 @@ export class ToolInstallerError extends S.TaggedError<ToolInstallerError, { read
       return false;
     }
     if (this.status === undefined) {
-      // No status means the request never completed — a transport fault, which
-      // is the most retryable thing there is.
       return true;
     }
     return this.status >= 500 || this.status === 408 || this.status === 429;
@@ -399,6 +397,11 @@ export declare namespace ProvisionedFile {
  * The members of the {@link ToolInstaller} service: find, download, extract and
  * cache tools in the runner's tool cache, each failing with
  * {@link ToolInstallerError}.
+ *
+ * **Gotchas**
+ *
+ * A statusless download failure is a retryable transport fault. The per-attempt timeout sits inside the retries, so a stalled connection becomes a typed statusless `downloadFailed` instead of hanging to the job timeout. A shared-cache hit missing the requested binary falls through to a reinstall, since another writer may have left an incomplete entry.
+ *
  * @public
  * @category services
  * @since 0.0.0
@@ -503,12 +506,11 @@ export interface ToolInstallerShape {
   readonly provisionFile: (options: ProvisionFileOptions.Encoded) => Effect.Effect<ProvisionedFile, ToolInstallerError>;
 }
 
-/** How many times a retryable download is retried before giving up. */
 const DOWNLOAD_RETRIES = 2;
 
-/** The default per-attempt download budget. See {@link ToolDownloadOptions.timeout}. */
 const DOWNLOAD_TIMEOUT: Duration.Input = "5 minutes";
 
+// decision: atomic-cache-entry-publication
 const make = Effect.gen(function* () {
   const env = yield* ActionEnvironment;
   const fs = yield* FileSystem.FileSystem;
@@ -516,11 +518,8 @@ const make = Effect.gen(function* () {
   const http = yield* HttpClient.HttpClient;
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
 
-  // Resolved once, at construction (`internal/runner.ts` says why not at import).
   const root = yield* toolCacheRoot(env, path);
   const windows = yield* isWindowsRunner(env);
-  // The cache layout's arch segment is the host's, in Node's spelling; read
-  // through the injected reference so a caller can pin it.
   const arch = yield* HostProcessArchitecture;
 
   const cachePath: ToolInstallerShape["cachePath"] = dual(2, (tool: string, version: string): string =>
@@ -572,18 +571,6 @@ const make = Effect.gen(function* () {
     })
   );
 
-  /**
-   * Install a staged directory into the tool cache by renaming it into place.
-   *
-   * **Details**
-   *
-   * **Stage then swap**, and the reason is that the alternative is worse than a
-   * failed install: copying straight into the cache path leaves a *partial*
-   * tool behind when the copy fails halfway, and `find` reports a partial
-   * directory as a hit. Every later run then uses a half-extracted toolchain
-   * and never re-downloads it. A rename within one filesystem is atomic, so the
-   * cache only ever contains complete tools.
-   */
   const swapIntoCache: {
     (staging: string, tool: string, version: string): Effect.Effect<string, ToolInstallerError>;
     (tool: string, version: string): (staging: string) => Effect.Effect<string, ToolInstallerError>;
@@ -593,7 +580,6 @@ const make = Effect.gen(function* () {
       Effect.gen(function* () {
         const destination = cachePath(tool, version);
         yield* fs.makeDirectory(path.dirname(destination), { recursive: true });
-        // A previous interrupted install, or a re-install of the same version.
         yield* fs.remove(`${destination}.complete`, { force: true });
         yield* fs.remove(destination, { recursive: true, force: true });
         yield* fs.rename(staging, destination);
@@ -602,23 +588,6 @@ const make = Effect.gen(function* () {
       }).pipe(Effect.mapError((cause) => ToolInstallerError.make({ reason: "cacheFailed", subject: tool, cause })))
   );
 
-  /**
-   * Move a source tree into the staging directory, consuming the source.
-   *
-   * **Details**
-   *
-   * A rename first: on the same filesystem it is O(1) however large the
-   * toolchain is, where a recursive copy of a hundreds-of-MB tree is the
-   * dominant cost of an install. The staging directory is removed before the
-   * rename because Windows refuses to rename onto an existing directory; its
-   * mktemp name stays reserved in practice. The copy fallback is taken ONLY
-   * for `EXDEV` — a cross-filesystem move, the one case a rename cannot do —
-   * and every other rename failure is reported as-is: a copy after a
-   * permission error would turn a real failure into a slow success. The
-   * fallback removes the source afterwards so the contract is the same on
-   * both paths; that removal is best-effort, since the entry is already
-   * complete and a leftover temp directory is not worth failing the install.
-   */
   const moveIntoStaging: {
     (source: string, staging: string): Effect.Effect<void, PlatformError.PlatformError>;
     (staging: string): (source: string) => Effect.Effect<void, PlatformError.PlatformError>;
@@ -637,7 +606,6 @@ const make = Effect.gen(function* () {
       )
   );
 
-  /** A staging directory beside the cache, so the swap is a rename and not a copy. */
   const staged: {
     <A>(
       tool: string,
@@ -653,9 +621,6 @@ const make = Effect.gen(function* () {
       use: (staging: string) => Effect.Effect<A, ToolInstallerError>
     ): Effect.Effect<A, ToolInstallerError> =>
       Effect.gen(function* () {
-        // `directory: root` matters: a rename across filesystems is not atomic
-        // (and on many platforms not permitted at all), so the staging area has
-        // to live under the cache root rather than in the system temp directory.
         yield* fs.makeDirectory(root, { recursive: true });
         return yield* fs.makeTempDirectory({
           directory: root,
@@ -664,11 +629,7 @@ const make = Effect.gen(function* () {
       }).pipe(
         Effect.mapError((cause) => ToolInstallerError.make({ reason: "cacheFailed", subject: tool, cause })),
         Effect.flatMap((staging) =>
-          use(staging).pipe(
-            // Removed on the failure path only: on the success path it has
-            // already been renamed away and is no longer there to remove.
-            Effect.tapCause(() => Effect.ignore(fs.remove(staging, { recursive: true, force: true })))
-          )
+          use(staging).pipe(Effect.tapCause(() => Effect.ignore(fs.remove(staging, { recursive: true, force: true }))))
         )
       )
   );
@@ -696,9 +657,6 @@ const make = Effect.gen(function* () {
       });
 
       return yield* attempt.pipe(
-        // The per-attempt budget sits INSIDE the retry: a connection that stops
-        // moving becomes a typed, statusless (and therefore retryable)
-        // downloadFailed instead of a silent hang to the job timeout.
         Effect.timeout(options?.timeout ?? DOWNLOAD_TIMEOUT),
         Effect.catchTag("TimeoutError", (cause) =>
           Effect.fail(ToolInstallerError.make({ reason: "downloadFailed", subject: url, cause }))
@@ -720,7 +678,6 @@ const make = Effect.gen(function* () {
       )
   );
 
-  /** Fail before any binary probe or write when its normalized name escapes the entry. */
   const binaryDestination: {
     (directory: string, name: string): Effect.Effect<string, ToolInstallerError>;
     (name: string): (directory: string) => Effect.Effect<string, ToolInstallerError>;
@@ -754,10 +711,6 @@ const make = Effect.gen(function* () {
     })
   );
 
-  /**
-   * Fill a fresh staging directory with `place`, then swap it into the cache
-   * as `tool@version`; a placement failure is `cacheFailed` naming the tool.
-   */
   const stageAndSwap = <E>(
     tool: string,
     version: string,
@@ -809,10 +762,6 @@ const make = Effect.gen(function* () {
       (args) => P.isString(args[0]),
       Effect.fn("ToolInstaller.extractZip")(function* (archive: string, options?: ExtractOptions.Encoded) {
         const destination = yield* destinationFor(options);
-        // The platform comes from `RUNNER_OS` rather than `process.platform`,
-        // which is both the runner's own answer and the only version of this
-        // branch that a test on any host can reach. The command text — and why
-        // the Windows half is belt-and-braces — lives in `internal/archiveCommands.ts`.
         yield* extractWith(unzipCommand({ windows, source: archive, destination }), archive);
         return destination;
       })
@@ -833,11 +782,6 @@ const make = Effect.gen(function* () {
       yield* binaryDestination(cachePath(options.tool, options.version), options.binary);
       const cached = yield* find(options.tool, options.version);
       if (O.isSome(cached)) {
-        // The hit is validated, per find's shared-cache warning: the entry may
-        // have been written by the runner image or a setup-* action, and a hit
-        // without the named binary is a directory that cannot run the tool.
-        // Absence falls through to a reinstall over the entry rather than
-        // failing — the install path is the only recovery a caller has anyway.
         const destination = yield* containedBinaryDestination(cached.value, options.binary);
         if ((yield* typeAt(fs, destination)) === "File") {
           return ProvisionedFile.make({ directory: cached.value, binDir: cached.value });
@@ -861,14 +805,6 @@ const make = Effect.gen(function* () {
 
 const dies = unstubbed("ToolInstaller.makeTest");
 
-/**
- * The root {@link ToolInstaller.makeTest}'s `cachePath` answers under: the
- * same resolution as `make`'s (`internal/runner.ts`), read from the ambient
- * environment because a double has no `ActionEnvironment` to ask. The literal
- * `/tmp/runner-tool-cache` is what `make`'s `path.join("/tmp", "runner-tool-cache")`
- * spells on POSIX, which is the only place a test double runs. Test-double
- * only.
- */
 const testRoot = (): string =>
   Effect.runSync(
     Config.String("RUNNER_TOOL_CACHE")
@@ -990,6 +926,10 @@ export class ToolInstaller extends Context.Service<ToolInstaller, ToolInstallerS
    * (`internal/runner.ts`). **That is a read of the ambient environment**,
    * sanctioned here only because a double has no `ActionEnvironment` to ask,
    * and limited to the test double.
+   *
+   * **Gotchas**
+   *
+   * The default test cache root uses the same ambient-environment resolution as the live installer because a double has no ActionEnvironment. Its POSIX fallback is /tmp/runner-tool-cache; it is test-double-only.
    *
    * **Example** (Stub a cache lookup)
    *

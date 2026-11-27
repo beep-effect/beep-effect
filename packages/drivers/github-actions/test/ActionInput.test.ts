@@ -14,9 +14,7 @@ import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 
-/** Read a config against a fixed runner environment. */
 const read = <A>(config: Config.Config<A>, env: Record<string, string>) =>
-  // The layer is a pure ConfigProvider stub; build it in the runner-owned scope.
   Effect.flatMap(Layer.build(ActionInput.layer(env)), (context) => Effect.provideContext(config, context));
 
 const readOk = <A>(config: Config.Config<A>, env: Record<string, string>) => read(config, env);
@@ -29,7 +27,6 @@ const readFails = <A>(config: Config.Config<A>, env: Record<string, string>) =>
     });
   });
 
-/** The rendered failure text, for asserting that an error names its offending line. */
 const readErrorText = <A>(config: Config.Config<A>, env: Record<string, string>) =>
   Effect.map(Effect.flip(read(config, env)), (error) => String(error));
 
@@ -57,12 +54,12 @@ describe("ActionInput", () => {
   describe("the INPUT_ name mangling", () => {
     it.effect("PRESERVES dashes — the bug that shipped", () =>
       Effect.gen(function* () {
-        // A consumer read process.env["INPUT_SBOM_CONFIG"] directly and
-        // silently got nothing, because the runner publishes
-        // INPUT_SBOM-CONFIG. No caller spells the name here, so the class of
-        // bug is unrepresentable.
         const readOk4 = yield* readOk(ActionInput.string("sbom-config"), { "INPUT_SBOM-CONFIG": "x" });
-        assert.strictEqual(readOk4, "x");
+        assert.strictEqual(
+          readOk4,
+          "x",
+          'A consumer read process.env["INPUT_SBOM_CONFIG"] directly and silently got nothing, because the runner publishes INPUT_SBOM-CONFIG. No caller spells the name here, so the class of bug is unrepresentable.'
+        );
       })
     );
 
@@ -104,10 +101,11 @@ describe("ActionInput", () => {
 
   describe("variable — the mangling, exported", () => {
     it("derives the exact runner variable, dashes preserved", () => {
-      // The hand-written spelling this replaces was INPUT_BIOME_VERSION —
-      // absent on a real runner, so the default silently applied and the
-      // suite went green against the wrong value.
-      assert.strictEqual(ActionInput.variable("biome-version"), "INPUT_BIOME-VERSION");
+      assert.strictEqual(
+        ActionInput.variable("biome-version"),
+        "INPUT_BIOME-VERSION",
+        "The hand-written spelling this replaces was INPUT_BIOME_VERSION — absent on a real runner, so the default silently applied and the suite went green against the wrong value."
+      );
     });
 
     it("replaces spaces with underscores and uppercases; everything else survives", () => {
@@ -120,34 +118,35 @@ describe("ActionInput", () => {
   describe("input-name keys — the with:-block style", () => {
     it.effect("an input-name key serves the typed accessor", () =>
       Effect.gen(function* () {
-        // No caller spells INPUT_BIOME-VERSION: the key is the input name
-        // exactly as the workflow's `with:` block writes it, and the
-        // mangling never leaves the module.
         const readOk8 = yield* readOk(ActionInput.string("biome-version"), { "biome-version": "2.3.14" });
-        assert.strictEqual(readOk8, "2.3.14");
+        assert.strictEqual(
+          readOk8,
+          "2.3.14",
+          "No caller spells INPUT_BIOME-VERSION: the key is the input name exactly as the workflow's with: block writes it, and the mangling never leaves the module."
+        );
       })
     );
 
     it.effect("an input-name key makes a bare Config read resolve, as the production runtime would", () =>
       Effect.gen(function* () {
-        // The requested regression: the test layer resolves a bare
-        // Config.String("biome-version") through the same INPUT_ derivation
-        // Action.run installs, so a suite green under ActionInput.layer is
-        // green for the same reason the action is.
         const readOk9 = yield* readOk(Config.String("biome-version"), { "biome-version": "2.3.14" });
-        assert.strictEqual(readOk9, "2.3.14");
+        assert.strictEqual(
+          readOk9,
+          "2.3.14",
+          'The test layer resolves a bare Config.String("biome-version") through the same INPUT_ derivation installed by Action.run.'
+        );
       })
     );
 
     it.effect("the old hazard stays absent — and the new path cannot reproduce it", () =>
       Effect.gen(function* () {
-        // The hand-written underscore spelling reads as absent, exactly as it
-        // does on a real runner (which publishes INPUT_BIOME-VERSION)…
         yield* readFails(ActionInput.string("biome-version"), { INPUT_BIOME_VERSION: "x" });
-        // …and the same test written input-name-first resolves, because the
-        // caller never had a variable name to misspell.
         const readOk10 = yield* readOk(ActionInput.string("biome-version"), { "biome-version": "x" });
-        assert.strictEqual(readOk10, "x");
+        assert.strictEqual(
+          readOk10,
+          "x",
+          "The hand-written underscore spelling reads as absent, exactly as it does on a real runner (which publishes INPUT_BIOME-VERSION)… …and the same test written input-name-first resolves, because the caller never had a variable name to misspell."
+        );
       })
     );
 
@@ -207,8 +206,6 @@ describe("ActionInput", () => {
     it.effect("accepts a member of the allowed set and narrows to it", () =>
       Effect.gen(function* () {
         const mode = yield* readOk(ActionInput.literals("mode", ["commit", "pr"]), { INPUT_MODE: "pr" });
-        // The compile-time half of the claim: the config's type is the union
-        // of the literals, not `string`.
         const narrowed: Config.Config<"commit" | "pr"> = ActionInput.literals("mode", ["commit", "pr"]);
         const value: "commit" | "pr" = mode;
         assert.strictEqual(value, "pr");
@@ -274,10 +271,12 @@ describe("ActionInput", () => {
 
     it.effect("accepts a Markdown '*' bullet list, not just '-'", () =>
       Effect.gen(function* () {
-        // Before the union grammar, a "*" bullet kept its marker as part of
-        // the value ("* a" survived intact) instead of being stripped.
         const value = yield* readOk(ActionInput.list("paths"), { INPUT_PATHS: "* a\n* b\n" });
-        assert.deepStrictEqual([...value], ["a", "b"]);
+        assert.deepStrictEqual(
+          [...value],
+          ["a", "b"],
+          'A "*" bullet is a marker like "-": "* a" must parse to "a", not keep its marker as part of the value.'
+        );
       })
     );
 
@@ -299,13 +298,12 @@ describe("ActionInput", () => {
 
     it.effect("treats a bulleted '- #tag' as the value '#tag', not a dropped comment", () =>
       Effect.gen(function* () {
-        // The discriminating case: the comment check runs on the untouched,
-        // still-bulleted line, so only a line whose FIRST character (before
-        // any bullet is stripped) is "#" is a comment. "- #tag" starts with
-        // "-", not "#", so it survives the comment filter, and only the
-        // bullet marker is then stripped, leaving "#tag" as the value.
         const value = yield* readOk(ActionInput.list("paths"), { INPUT_PATHS: "- #tag\n- b\n" });
-        assert.deepStrictEqual([...value], ["#tag", "b"]);
+        assert.deepStrictEqual(
+          [...value],
+          ["#tag", "b"],
+          'The discriminating case: the comment check runs on the untouched, still-bulleted line, so only a line whose FIRST character (before any bullet is stripped) is "#" is a comment. "- #tag" starts with "-", not "#", so it survives the comment filter, and only the bullet marker is then stripped, leaving "#tag" as the value.'
+        );
       })
     );
 
@@ -328,7 +326,6 @@ describe("ActionInput", () => {
     );
 
     it.effect("rejects malformed JSON rather than falling back to comma splitting", () =>
-      // Falling back would silently read `["a"` as the single value `["a"`.
       readFails(ActionInput.list("paths"), { INPUT_PATHS: '["a"' })
     );
   });
@@ -373,8 +370,6 @@ describe("ActionInput", () => {
     );
 
     it.effect("rejects an empty key, which no workflow can have meant", () =>
-      // `{ "": v }` became a GitHub custom-property filter matching nothing,
-      // and the run reported "0 repositories discovered" with no reason why.
       readFails(ActionInput.pairs("vars"), { INPUT_VARS: "a=1\n=orphan\n" })
     );
 
@@ -383,7 +378,11 @@ describe("ActionInput", () => {
     it.effect("names the offending line when the key is empty", () =>
       Effect.gen(function* () {
         const text = yield* readErrorText(ActionInput.pairs("vars"), { INPUT_VARS: "a=1\n=orphan\n" });
-        assert.include(text, "=orphan");
+        assert.include(
+          text,
+          "=orphan",
+          '{ "": v } became a GitHub custom-property filter matching nothing, and the run reported "0 repositories discovered" with no reason why.'
+        );
       })
     );
 
@@ -451,8 +450,6 @@ describe("ActionInput", () => {
   });
 
   describe("subsumption of the source package's ActionsConfigProvider", () => {
-    // Confirmed against `runtime/ActionsConfigProvider.ts` rather than assumed:
-    // join with "_", spaces to underscores, uppercase, and empty-is-absent.
     it.effect("joins a nested config path with underscores", () =>
       Effect.gen(function* () {
         const nested = yield* Effect.provideService(
@@ -460,7 +457,11 @@ describe("ActionInput", () => {
           ConfigProvider.ConfigProvider,
           ActionInput.provider({ INPUT_A: "v" })
         );
-        assert.strictEqual(nested, "v");
+        assert.strictEqual(
+          nested,
+          "v",
+          'Confirmed against runtime/ActionsConfigProvider.ts rather than assumed: join with "_", spaces to underscores, uppercase, and empty-is-absent.'
+        );
       })
     );
 
@@ -474,17 +475,18 @@ describe("ActionInput", () => {
           ["a.b", "INPUT_A.B"],
         ];
         for (const [input, expected] of cases) {
-          // Seeded with ONLY the expected variable, so resolving proves the
-          // derivation rather than restating it.
           const value = yield* readOk(ActionInput.string(input), { [expected]: "resolved" });
-          assert.strictEqual(value, "resolved", `${input} should resolve via ${expected}`);
+          assert.strictEqual(
+            value,
+            "resolved",
+            `${input} should resolve via ${expected}. Seeded with ONLY the expected variable, so resolving proves the derivation rather than restating it.`
+          );
         }
       })
     );
   });
 
   describe("providerOver — the runtime's default resolution", () => {
-    /** Read a bare config through the inputs-first provider over a fixed env. */
     const readBare = <A>(config: Config.Config<A>, env: Record<string, string>) =>
       Effect.provideService(
         config,
@@ -502,11 +504,12 @@ describe("ActionInput", () => {
 
     it.effect("resolves a bare flat name through the INPUT_ derivation first", () =>
       Effect.gen(function* () {
-        // The false-green class at its root: the runner publishes
-        // INPUT_DRY-RUN (dashes survive), and a bare Config.String("dry-run")
-        // used to find nothing and fall back to its default.
         const readBare20 = yield* readBare(Config.String("dry-run"), { "INPUT_DRY-RUN": "x" });
-        assert.strictEqual(readBare20, "x");
+        assert.strictEqual(
+          readBare20,
+          "x",
+          'The false-green class at its root: the runner publishes INPUT_DRY-RUN (dashes survive), and a bare Config.String("dry-run") used to find nothing and fall back to its default.'
+        );
       })
     );
 
@@ -519,14 +522,10 @@ describe("ActionInput", () => {
       })
     );
 
-    it.effect("falls back to the ambient lookup unchanged when no input matches", () =>
+    it.effect("falls back to the unchanged, case-sensitive ambient lookup when no input matches", () =>
       Effect.gen(function* () {
-        // The plain variable resolves exactly as it would without the
-        // provider…
         const readBare22 = yield* readBare(Config.String("PLAIN_VAR"), { PLAIN_VAR: "y" });
-        assert.strictEqual(readBare22, "y");
-        // …and the fallback stays case-SENSITIVE: only the attempt
-        // uppercases. A lowercase read gained no new spelling.
+        assert.strictEqual(readBare22, "y", "The plain variable resolves exactly as it would without the provider.");
         yield* readBareFails(Config.String("plain_var"), { PLAIN_VAR: "y" });
       })
     );
@@ -543,38 +542,43 @@ describe("ActionInput", () => {
 
     it.effect("an unsupplied input ('') does not shadow", () =>
       Effect.gen(function* () {
-        // The runner writes "" for every input the workflow left out; the
-        // attempt resolves through the ambient provider, whose
-        // empty-is-absent rule drops it, so the real variable still wins.
         const readBare25 = yield* readBare(Config.String("FOO"), { INPUT_FOO: "", FOO: "from-env" });
-        assert.strictEqual(readBare25, "from-env");
+        assert.strictEqual(
+          readBare25,
+          "from-env",
+          'The runner writes "" for every input the workflow left out; the attempt resolves through the ambient provider, whose empty-is-absent rule drops it, so the real variable still wins.'
+        );
       })
     );
 
     it.effect("a nested path passes through untouched — no invented runner semantics", () =>
       Effect.gen(function* () {
-        // The runner can only set flat INPUT_<MANGLED> variables, so the
-        // attempt applies to single-segment names only. A join-then-mangle
-        // implementation would resolve INPUT_A_B here and fail this test.
         const nested = Config.String("B").pipe(Config.nested("A"));
         const readBare26 = yield* readBare(nested, { A_B: "base", INPUT_A_B: "from-input" });
-        assert.strictEqual(readBare26, "base");
+        assert.strictEqual(
+          readBare26,
+          "base",
+          "The runner can only set flat INPUT_<MANGLED> variables, so the attempt applies to single-segment names only. A join-then-mangle implementation would resolve INPUT_A_B here and fail this test."
+        );
       })
     );
 
     it.effect("ActionInput accessors resolve identically under it", () =>
       Effect.gen(function* () {
-        // The accessor reads INPUT_DRY-RUN; the attempt re-mangles that to
-        // INPUT_INPUT_DRY-RUN, misses, and the fallback resolves the real
-        // variable — so the typed surface is unchanged by the installation.
         const readBare27 = yield* readBare(ActionInput.string("dry-run"), { "INPUT_DRY-RUN": "x" });
-        assert.strictEqual(readBare27, "x");
-        // And an omitted input still reads as absent, so a default is a
-        // default.
+        assert.strictEqual(
+          readBare27,
+          "x",
+          "The accessor reads INPUT_DRY-RUN; the attempt re-mangles that to INPUT_INPUT_DRY-RUN, misses, and the fallback resolves the real variable — so the typed surface is unchanged by the installation."
+        );
         const readBare28 = yield* readBare(ActionInput.string("omitted").pipe(Config.withDefault("fallback")), {
           INPUT_OMITTED: "",
         });
-        assert.strictEqual(readBare28, "fallback");
+        assert.strictEqual(
+          readBare28,
+          "fallback",
+          "And an omitted input still reads as absent, so a default is a default."
+        );
       })
     );
 
@@ -586,11 +590,12 @@ describe("ActionInput", () => {
     )((it) => {
       it.effect("layerDefault composes over the provider explicitly installed beneath it", () =>
         Effect.gen(function* () {
-          // How a test injects a deterministic environment without touching the
-          // process: install an ambient provider under the runtime and let
-          // layerDefault pick it up at build.
           const String29 = yield* Config.String("dry-run");
-          assert.strictEqual(String29, "x");
+          assert.strictEqual(
+            String29,
+            "x",
+            "How a test injects a deterministic environment without touching the process: install an ambient provider under the runtime and let layerDefault pick it up at build."
+          );
           const String30 = yield* Config.String("PLAIN_VAR");
           assert.strictEqual(String30, "y");
         })

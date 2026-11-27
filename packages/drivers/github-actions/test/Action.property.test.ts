@@ -8,8 +8,6 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 const runs = { arbitrary: fcRuns(100) };
-// Diagnostic formatting accepts a Cause and returns text, so it has no
-// self-composition or inverse parser. Its fidelity law preserves both fields.
 it.effect.prop(
   "tagged diagnostics preserve tag and message across failure and defect rendering",
   [Arbitrary.schema(S.String)],
@@ -18,7 +16,11 @@ it.effect.prop(
       const error = { _tag: "Diagnostic", message };
       const rendered = describeCause(Cause.fail(error));
       const expected = message === "" ? "[Diagnostic]" : `[Diagnostic]: ${message}`;
-      assert.strictEqual(rendered, expected);
+      assert.strictEqual(
+        rendered,
+        expected,
+        "Diagnostic formatting accepts a Cause and returns text, so it has no self-composition or inverse parser. Its fidelity law preserves both fields."
+      );
       assert.strictEqual(describeCause(Cause.die(error)), `[defect] ${rendered}`);
       assert.strictEqual(describeCause(Cause.fail({ ...error })), rendered);
       assert.strictEqual(Str.slice(message === "" ? 12 : 14)(rendered), message);
