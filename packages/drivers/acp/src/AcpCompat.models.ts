@@ -53,7 +53,6 @@ const LegacyMeta = S.Record(S.String, S.Json).pipe(S.NullOr, S.optionalKey).anno
 });
 
 // decision: unknown-sentinels-stay-structural
-
 const UnknownContentFields = S.Struct({
   type: S.tag(ACP_UNKNOWN).annotateKey({
     description: "The `_acp_unknown` sentinel.",

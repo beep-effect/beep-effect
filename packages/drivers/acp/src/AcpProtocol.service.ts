@@ -78,8 +78,8 @@ const ACP_STDIO_CLIENT_ID = 0;
  * Typed RPC ids count up from here once per connection. The value stays inside signed int32,
  * because some ACP SDKs (the Kotlin SDK decodes ids as `Int`) do not answer larger ids, and far
  * above extension request ids, which count up from 1. The protocol forwards only responses with
- * non-negative safe-integer ids to the RPC client; effect's own encoder writes a server-level
- * `Defect` with the id -32603.
+ * non-negative safe-integer ids to the RPC client, so the server-level `Defect` that effect's own
+ * encoder writes with the id -32603 never reaches it.
  *
  * **Example** (Allocate the first typed RPC id)
  *
@@ -777,6 +777,8 @@ const protocolFailureOfCause = (cause: ReadonlyArray<ExitCauseEntry>): O.Option<
 
 type AcpInboundResponse = RpcMessage.ResponseChunkEncoded | RpcMessage.ResponseExitEncoded;
 
+// Structural diagnostics for a dropped response: its id when it has one, and the code and message
+// of its protocol error. The error data stays out of the log.
 const uncorrelatedResponseAnnotations = (message: AcpInboundResponse) => {
   const error =
     message._tag === "Exit" && message.exit._tag === "Failure"

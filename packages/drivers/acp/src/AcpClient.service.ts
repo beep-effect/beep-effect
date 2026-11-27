@@ -381,6 +381,7 @@ const makeNotificationChannel = <A>(): Effect.Effect<NotificationChannel<A>> =>
     })
   );
 
+// decision: t3-parity-prompt-and-method-gates
 const initialGeneration = AcpClientProtocolGeneration.match({
   negotiate: (): Normalize.ProtocolGeneration => 2,
   v1: (): Normalize.ProtocolGeneration => 1,
