@@ -35,7 +35,7 @@ const productionSecrets = {
   CI_RUNNERS_GITHUB_WEBHOOK_SECRET: fakeWebhookSecret,
 };
 
-const iamArnGlobMatches = (pattern: string, arn: string) =>
+const arnGlobMatches = (pattern: string, arn: string) =>
   /^[A-Za-z0-9:/*-]+$/u.test(pattern) && new RegExp(`^${Str.replaceAll("*", ".*")(pattern)}$`, "u").test(arn);
 
 const resourceList = (value: string | ReadonlyArray<string> | undefined): ReadonlyArray<string> =>
@@ -340,11 +340,8 @@ describe("CiRunners production stage", () => {
       expect(A.length(grantPatterns)).toBe(2);
       expect(A.length(boundaryPatterns)).toBe(2);
       for (const arn of plannedRoleArnsAtDefaultPath) {
-        expect([arn, A.some(grantPatterns, (pattern) => iamArnGlobMatches(pattern, arn))]).toStrictEqual([arn, true]);
-        expect([arn, A.some(boundaryPatterns, (pattern) => iamArnGlobMatches(pattern, arn))]).toStrictEqual([
-          arn,
-          true,
-        ]);
+        expect([arn, A.some(grantPatterns, (pattern) => arnGlobMatches(pattern, arn))]).toStrictEqual([arn, true]);
+        expect([arn, A.some(boundaryPatterns, (pattern) => arnGlobMatches(pattern, arn))]).toStrictEqual([arn, true]);
       }
       for (const entry of [...roles, ...functions]) {
         expect([entry.fqn, entry.news.permissionsBoundary]).toStrictEqual([entry.fqn, fleetBoundaryPolicyArn]);
@@ -371,7 +368,7 @@ describe("CiRunners production stage", () => {
       );
       const covered = (grant: string) =>
         A.some(allows, (allow) =>
-          A.some(resourceList(allow.Action), (pattern) => iamArnGlobMatches(pattern, Str.split(" ")(grant)[1] ?? ""))
+          A.some(resourceList(allow.Action), (pattern) => arnGlobMatches(pattern, Str.split(" ")(grant)[1] ?? ""))
         );
       expect(A.length(granted)).toBeGreaterThan(0);
       expect(

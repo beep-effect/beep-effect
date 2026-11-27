@@ -485,7 +485,7 @@ const hubOperations: Readonly<Record<string, Handler>> = {
   },
 };
 
-const awsJsonServicesByHostPrefix: ReadonlyArray<{
+const servicesByHostPrefix: ReadonlyArray<{
   readonly prefix: string;
   readonly service: string;
   readonly operations: Readonly<Record<string, Handler>>;
@@ -514,9 +514,7 @@ const route = Effect.fn("FakeAws.route")(function* (
   );
   const text = bodyText(request);
   const input = yield* decodeInput(text === "" ? "{}" : text);
-  const service = A.findFirst(awsJsonServicesByHostPrefix, (candidate) =>
-    Str.startsWith(candidate.prefix)(url.hostname)
-  );
+  const service = A.findFirst(servicesByHostPrefix, (candidate) => Str.startsWith(candidate.prefix)(url.hostname));
   if (O.isNone(service)) return fail("UnknownServiceException", url.hostname);
   account.calls.push(operation);
   const handler = service.value.operations[operation];

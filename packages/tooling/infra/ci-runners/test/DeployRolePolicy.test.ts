@@ -726,7 +726,7 @@ const stringsOf = (value: unknown): ReadonlyArray<string> =>
 
 describe("CiRunners fleet boundary per stage", () => {
   const prodBoundary = fleetBoundary("prod");
-  const stageOwnedArnsAndTagValues = (stage: string): ReadonlyArray<string> => {
+  const stageOwnedValues = (stage: string): ReadonlyArray<string> => {
     const stageNames = physicalNames(stage);
     const pools = A.map(["heavy", "overflow"] as const, (pool) => poolResourceNames(stageNames.fleet, pool));
     const fleetNames = fleetResourceNames(stageNames.fleet);
@@ -765,9 +765,7 @@ describe("CiRunners fleet boundary per stage", () => {
   );
   const matchesOf = (stage: string) =>
     A.filter(
-      A.flatMap(namePatterns, (pattern) =>
-        A.map(stageOwnedArnsAndTagValues(stage), (value) => [pattern, value] as const)
-      ),
+      A.flatMap(namePatterns, (pattern) => A.map(stageOwnedValues(stage), (value) => [pattern, value] as const)),
       ([pattern, value]) => globMatches(pattern, value)
     );
 

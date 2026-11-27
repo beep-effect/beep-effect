@@ -24,13 +24,10 @@ import { FakeRepository, fakeProviders } from "./support/FakeGitHub.ts";
 import { typed } from "./support/Scratch.ts";
 import type { TypedScratch } from "./support/Scratch.ts";
 
-const ownFakeScenario = <E>(
-  name: string,
-  body: (stack: TypedScratch, fake: FakeRepository) => Effect.Effect<void, E>
-) => {
-  const fake = FakeRepository.fromCensus();
-  const { test } = Test.make({ providers: fakeProviders(fake), stage: "test" });
-  test.provider(name, (stack) => body(typed(stack), fake));
+const scenario = <E>(name: string, body: (stack: TypedScratch, fake: FakeRepository) => Effect.Effect<void, E>) => {
+  const fakePerConcurrentTest = FakeRepository.fromCensus();
+  const { test } = Test.make({ providers: fakeProviders(fakePerConcurrentTest), stage: "test" });
+  test.provider(name, (stack) => body(typed(stack), fakePerConcurrentTest));
 };
 
 const decodeLive = decodeLiveRuleset;
@@ -86,7 +83,7 @@ const actions = (plan: { readonly resources: Record<string, { readonly action: s
     ])
   );
 
-ownFakeScenario(
+scenario(
   "over the converged main-branch stack, the fleet-watch change plans only its environment and variable",
   (stack, fake) =>
     Effect.gen(function* () {
@@ -107,7 +104,7 @@ ownFakeScenario(
     })
 );
 
-ownFakeScenario("a first plan adopts the main ruleset and creates no ruleset", (stack, fake) =>
+scenario("a first plan adopts the main ruleset and creates no ruleset", (stack, fake) =>
   Effect.gen(function* () {
     const plan = yield* stack.plan(declareStack(productionConfig, O.none()));
     const planned = actions(plan);
@@ -117,7 +114,7 @@ ownFakeScenario("a first plan adopts the main ruleset and creates no ruleset", (
   })
 );
 
-ownFakeScenario("the first deploy adopts every live object in place and creates nothing", (stack, fake) =>
+scenario("the first deploy adopts every live object in place and creates nothing", (stack, fake) =>
   Effect.gen(function* () {
     const output = yield* stack.deploy(declareStack(productionConfig, O.none()));
     expect(output.mainRulesetId).toBe(10_240_248);
@@ -145,7 +142,7 @@ ownFakeScenario("the first deploy adopts every live object in place and creates 
   })
 );
 
-ownFakeScenario("a live beep-reviewer check survives a deploy, present or absent", (stack, fake) =>
+scenario("a live beep-reviewer check survives a deploy, present or absent", (stack, fake) =>
   Effect.gen(function* () {
     yield* deployCarrying(stack, fake);
     const absent = checkContexts(fake.ruleset(10_240_248));
@@ -170,7 +167,7 @@ ownFakeScenario("a live beep-reviewer check survives a deploy, present or absent
   })
 );
 
-ownFakeScenario("updates converge labels, variables and environment branch policies", (stack, fake) =>
+scenario("updates converge labels, variables and environment branch policies", (stack, fake) =>
   Effect.gen(function* () {
     const changed = StackConfig.make({
       ...productionConfig,
@@ -201,7 +198,7 @@ ownFakeScenario("updates converge labels, variables and environment branch polic
   })
 );
 
-ownFakeScenario("a label description going from Some to None is cleared in the PATCH body", (stack, fake) =>
+scenario("a label description going from Some to None is cleared in the PATCH body", (stack, fake) =>
   Effect.gen(function* () {
     const withDescription = (description: O.Option<string>) =>
       StackConfig.make({
@@ -223,7 +220,7 @@ ownFakeScenario("a label description going from Some to None is cleared in the P
   })
 );
 
-ownFakeScenario("dropping declarations deletes nothing, and a stage destroy is refused", (stack, fake) =>
+scenario("dropping declarations deletes nothing, and a stage destroy is refused", (stack, fake) =>
   Effect.gen(function* () {
     yield* stack.deploy(declareStack(productionConfig, O.none()));
     yield* stack.deploy(
@@ -248,7 +245,7 @@ ownFakeScenario("dropping declarations deletes nothing, and a stage destroy is r
   })
 );
 
-ownFakeScenario("each resource class creates, reads, updates and deletes when it opts into deletion", (stack, fake) =>
+scenario("each resource class creates, reads, updates and deletes when it opts into deletion", (stack, fake) =>
   Effect.gen(function* () {
     const owner = "beep-effect";
     const repository = "beep-effect";
@@ -301,7 +298,7 @@ ownFakeScenario("each resource class creates, reads, updates and deletes when it
   })
 );
 
-ownFakeScenario("a same-name ruleset is not taken over without adoption", (stack, fake) =>
+scenario("a same-name ruleset is not taken over without adoption", (stack, fake) =>
   Effect.gen(function* () {
     const exit = yield* stack
       .deploy(
@@ -318,7 +315,7 @@ ownFakeScenario("a same-name ruleset is not taken over without adoption", (stack
   })
 );
 
-ownFakeScenario("required checks list beep-reviewer last and only once", () =>
+scenario("required checks list beep-reviewer last and only once", () =>
   Effect.sync(() => {
     const doubled = MainRuleset.make({
       ...productionConfig.mainRuleset,

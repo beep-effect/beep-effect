@@ -152,7 +152,7 @@ const authenticate = Effect.fn("TurboCache.authenticate")(function* (
 ) {
   const native = yield* S.decodeUnknownEffect(NativeCrypto)(crypto.subtle).pipe(Effect.orDie);
   const bearer = bearerOf(request);
-  const presented = yield* digest(O.getOrElse(bearer, () => ""));
+  const presentedEvenIfAbsent = yield* digest(O.getOrElse(bearer, () => ""));
   const matches = yield* Effect.forEach(
     credentials,
     (credential) =>
@@ -160,7 +160,7 @@ const authenticate = Effect.fn("TurboCache.authenticate")(function* (
         Effect.flatMap((value) => value.pipe(Redacted.value, digest)),
         Effect.map((expected) => ({
           credential,
-          matches: native.timingSafeEqual.call(crypto.subtle, expected, presented),
+          matches: native.timingSafeEqual.call(crypto.subtle, expected, presentedEvenIfAbsent),
         }))
       ),
     { concurrency: 1 }
