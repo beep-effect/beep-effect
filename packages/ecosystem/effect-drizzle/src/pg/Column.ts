@@ -64,7 +64,6 @@ import type { Option } from "effect/Option";
 import type { AST, Literal } from "effect/SchemaAST";
 import type * as Meta from "../core/Meta.ts";
 
-/** Descriptor-construction failure at an author-input seam. */
 /** @internal */
 class ColumnInvariantError extends TaggedError<ColumnInvariantError, { readonly brand: unique symbol }>(
   "@beep/effect-drizzle/ColumnInvariantError"
@@ -78,7 +77,6 @@ class ColumnInvariantError extends TaggedError<ColumnInvariantError, { readonly 
   }
 ) {}
 
-/** PostgreSQL identity-generation mode. */
 /** @internal */
 type IdentityMode = Meta.IdentityMode;
 
@@ -1113,7 +1111,6 @@ export function resolveName(
     : spec;
 }
 
-/** Storage identity selected from a public PostgreSQL descriptor. */
 type IdentOf<C extends Spec> = C["ident"];
 /**
  * Storage identity inferred for a PostgreSQL descriptor and array depth.

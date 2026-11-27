@@ -35,7 +35,6 @@ import * as TestClock from "effect/testing/TestClock";
 const tailscaleStatusJson = `{"Self":{"DNSName":"desktop.tail.ts.net.","TailscaleIPs":["100.100.100.100","fd7a:115c:a1e0::1","192.168.1.20"]}}`;
 const tailscaleStatusWithSingleIpJson = `{"Self":{"DNSName":"desktop.tail.ts.net.","TailscaleIPs":["100.90.1.2"]}}`;
 
-/** The one tailscale invocation a scripted spawner saw, with the stdio and kill grace every call runs with. */
 const assertTailscaleSpawn = (spawner: ScriptedSpawner, args: ReadonlyArray<string>, stdout: "pipe" | "ignore") => {
   assert.deepEqual(
     A.map(spawner.spawns, (spawn) => [spawn.command, ...spawn.args]),

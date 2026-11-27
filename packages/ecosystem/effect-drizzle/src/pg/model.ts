@@ -49,7 +49,6 @@ import type { AnyModel as CoreAnyModel } from "../core/model.ts";
 import type { ValidateDerivedSqlName, ValidateSqlName } from "../core/names.ts";
 import type { Variant } from "../core/variant.ts";
 
-// Re-export the owning shared variant helpers for the public model surface.
 /** Shared variant helpers exposed by the PostgreSQL model surface.
  * @category models
  * @since 0.0.0
@@ -62,7 +61,6 @@ export {
   Variant,
   VariantField,
 } from "../core/variant.ts";
-// Re-export the owning root error for internal dialect modules.
 /** Internal dialect re-export of the shared model invariant error.
  * @internal
  * @category errors
@@ -94,10 +92,6 @@ export { ModelInvariantError };
 export interface FieldsInput {
   readonly [key: string]: Field.Input;
 }
-
-// ---------------------------------------------------------------------------
-// Resolved metadata (explicit meta + derivation + EntityId auto-references)
-// ---------------------------------------------------------------------------
 
 type AutoRef<I extends Field.Input> = Field.MetaFrom<I>["references"] extends Meta.References
   ? Field.MetaFrom<I>["references"]
@@ -224,10 +218,6 @@ type UnwrappedFields<F extends FieldsInput> = {
   readonly [K in keyof F]: EffectiveSchema<F[K]>;
 };
 
-// ---------------------------------------------------------------------------
-// Compile-time model validation (intersection validator)
-// ---------------------------------------------------------------------------
-
 type IsUnionInner<T, U> = T extends unknown ? ([U] extends [T] ? false : true) : never;
 type IsUnion<T> = [T] extends [never] ? false : true extends IsUnionInner<T, T> ? true : false;
 
@@ -319,10 +309,6 @@ export type ValidateFields<F extends FieldsInput> = {
   (IsUnion<VersionKeys<F>> extends true
     ? Field.SqlTypeError<"model declares multiple optimistic-version fields">
     : unknown);
-
-// ---------------------------------------------------------------------------
-// The class type
-// ---------------------------------------------------------------------------
 
 /**
  * Compile-time diagnostic returned when {@link Model} omits its self type.
@@ -425,10 +411,6 @@ export interface AnyModel extends CoreAnyModel {
     readonly extras: ((columns: never) => ReadonlyArray<TableExtras.Node>) | undefined;
   };
 }
-
-// ---------------------------------------------------------------------------
-// Runtime factory
-// ---------------------------------------------------------------------------
 
 const deriveTableName = (identifier: string): string => {
   const last = getOrElse(lastArray(split(identifier, "/")), () => identifier);

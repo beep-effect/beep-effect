@@ -10,7 +10,6 @@ import { LiteralKit } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
-// shared driver boundary idiom; no in-family home; future foundation capability candidate.
 // fallow-ignore-next-line code-duplication -- driver-boundary idiom repeated across sibling drivers that must not depend on each other; no foundation capability owns it yet. Owner: @beep/exiftool. Exit: import it and delete this copy once a foundation capability package exports the idiom.
 const $I = $ExiftoolId.create("Exiftool.models");
 
@@ -28,7 +27,6 @@ const $I = $ExiftoolId.create("Exiftool.models");
  * @category schemas
  * @since 0.0.0
  */
-// shared driver boundary idiom; no in-family home; future foundation capability candidate.
 // fallow-ignore-next-line code-duplication -- driver-boundary idiom repeated across sibling drivers that must not depend on each other; no foundation capability owns it yet. Owner: @beep/exiftool. Exit: import it and delete this copy once a foundation capability package exports the idiom.
 export const PositiveMilliseconds = S.Finite.check(
   S.makeFilterGroup(
@@ -759,6 +757,11 @@ export class WriteXmpPacketRequest extends S.Opaque<WriteXmpPacketRequest, { rea
 /**
  * Decode an unknown value into a read-tags request.
  *
+ * **Details**
+ *
+ * Unary, with no data-last dual, because the input is unknown; pass parse options to
+ * `ReadTagsRequest.decodeEffect` directly.
+ *
  * **Example** (Decode read-tags request)
  *
  * ```ts
@@ -771,12 +774,16 @@ export class WriteXmpPacketRequest extends S.Opaque<WriteXmpPacketRequest, { rea
  * @category decoding
  * @since 0.0.0
  */
-// Unary by contract: no dual because input is unknown; options stays on ReadTagsRequest.decodeEffect.
 export const decodeReadTagsRequest: (input: unknown) => Effect.Effect<ReadTagsRequest, S.SchemaError> =
   ReadTagsRequest.decodeEffect;
 
 /**
  * Decode an unknown value into a write-tags request.
+ *
+ * **Details**
+ *
+ * Unary, with no data-last dual, because the input is unknown; pass parse options to
+ * `WriteTagsRequest.decodeEffect` directly.
  *
  * **Example** (Decode write-tags request)
  *
@@ -793,12 +800,16 @@ export const decodeReadTagsRequest: (input: unknown) => Effect.Effect<ReadTagsRe
  * @category decoding
  * @since 0.0.0
  */
-// Unary by contract: no dual because input is unknown; options stays on WriteTagsRequest.decodeEffect.
 export const decodeWriteTagsRequest: (input: unknown) => Effect.Effect<WriteTagsRequest, S.SchemaError> =
   WriteTagsRequest.decodeEffect;
 
 /**
  * Decode an unknown value into a write-XMP-packet request.
+ *
+ * **Details**
+ *
+ * Unary, with no data-last dual, because the input is unknown; pass parse options to
+ * `WriteXmpPacketRequest.decodeEffect` directly.
  *
  * **Example** (Decode XMP packet request)
  *
@@ -820,6 +831,5 @@ export const decodeWriteTagsRequest: (input: unknown) => Effect.Effect<WriteTags
  * @category decoding
  * @since 0.0.0
  */
-// Unary by contract: no dual because input is unknown; options stays on WriteXmpPacketRequest.decodeEffect.
 export const decodeWriteXmpPacketRequest: (input: unknown) => Effect.Effect<WriteXmpPacketRequest, S.SchemaError> =
   WriteXmpPacketRequest.decodeEffect;

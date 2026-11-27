@@ -18,10 +18,7 @@ import * as Str from "effect/String";
 
 const decodeM365ConfigInputResult = S.decodeResult(M365ConfigInput);
 
-// Treat absent, blank, or unresolved `op://` reference values (present when
-// secrets are not resolved, e.g. no local `op` session) as absent so the suite
-// skips live Graph calls instead of authenticating with a non-token.
-const envText = (name: string): O.Option<string> =>
+const resolvedEnvText = (name: string): O.Option<string> =>
   pipe(
     O.fromUndefinedOr(Bun.env[name]),
     O.map(Str.trim),
@@ -29,22 +26,22 @@ const envText = (name: string): O.Option<string> =>
   );
 
 const liveEnv = O.all({
-  clientId: envText("M365_CLIENT_ID"),
-  driveId: envText("M365_LIVE_DRIVE_ID"),
-  itemId: envText("M365_LIVE_ITEM_ID"),
-  messageId: envText("M365_LIVE_MESSAGE_ID"),
-  siteId: envText("M365_LIVE_SITE_ID"),
-  tenantId: envText("M365_TENANT_ID"),
-  tokenCachePath: envText("M365_TOKEN_CACHE_PATH"),
+  clientId: resolvedEnvText("M365_CLIENT_ID"),
+  driveId: resolvedEnvText("M365_LIVE_DRIVE_ID"),
+  itemId: resolvedEnvText("M365_LIVE_ITEM_ID"),
+  messageId: resolvedEnvText("M365_LIVE_MESSAGE_ID"),
+  siteId: resolvedEnvText("M365_LIVE_SITE_ID"),
+  tenantId: resolvedEnvText("M365_TENANT_ID"),
+  tokenCachePath: resolvedEnvText("M365_TOKEN_CACHE_PATH"),
 });
-const liveUserId = envText("M365_LIVE_USER_ID");
+const liveUserId = resolvedEnvText("M365_LIVE_USER_ID");
 
 pipe(
   liveEnv,
   O.match({
     onNone: () =>
       describe("@beep/m365 live integration (M365_*)", () => {
-        it.skip("skips live Graph calls when required M365_* env or token cache settings are absent", () => {
+        it.skip("skips live Graph calls when required M365_* settings are absent, blank or unresolved op:// references", () => {
           assertNone(liveEnv);
         });
       }),

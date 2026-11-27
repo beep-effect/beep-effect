@@ -1,6 +1,0 @@
-{
-  "schemaVersion": "comment-law-pending/v1",
-  "package": "@beep/pglite",
-  "root": "packages/drivers/pglite",
-  "scopes": ["."]
-}

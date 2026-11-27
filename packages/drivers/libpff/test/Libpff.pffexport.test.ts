@@ -32,7 +32,6 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
-// `NodeServices` no longer bundles crypto; the archive engine hashes through `Digest`.
 const TestServices = Layer.mergeAll(NodeServices.layer, NodeCrypto.layerDigest);
 
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
@@ -121,9 +120,7 @@ printf 'ok' > "$small/Message.txt"
 exit 0
 `;
 
-// One item whose only body is a single physical HTML line over the RFC 5322
-// 998-octet limit; the assembled EML must re-encode that part as base64.
-const overlongBodyStub = `#!/usr/bin/env bash
+const overlongHtmlBodyLineStub = `#!/usr/bin/env bash
 ${stubVersionBanner}
 target=""
 prev=""
@@ -139,9 +136,7 @@ printf '<p>%s</p>' "$long" > "$item/Message.html"
 exit 0
 `;
 
-// Simulates pffexport writing an item file that already owns the driver's
-// Message.eml name; the driver must not overwrite engine output.
-const collidingStub = `#!/usr/bin/env bash
+const engineOwnedMessageEmlStub = `#!/usr/bin/env bash
 ${stubVersionBanner}
 target=""
 prev=""
@@ -157,9 +152,7 @@ printf 'engine-owned eml bytes' > "$item/Message.eml"
 exit 0
 `;
 
-// Dies from a signal after a successful -V probe: the engine is present, so
-// the failure must surface as a process failure, not engine-unavailable.
-const signalStub = `#!/usr/bin/env bash
+const segfaultAfterVersionProbeStub = `#!/usr/bin/env bash
 ${stubVersionBanner}
 kill -SEGV $$
 `;
@@ -498,13 +491,11 @@ describe("makePffexportFileProcessingEngine", { concurrent: false }, () => {
           const { exportRoot, operation, stubPath } = yield* fixture(stubPffexport);
           const bwrapPath = path.join(path.dirname(stubPath), "standard-env-bwrap");
           const bwrapArgumentsPath = path.join(path.dirname(stubPath), "standard-env-bwrap-arguments");
-          // The engine resolves the env interpreter from the host PATH; pin it to the standard roots so a
-          // workstation shell with a non-standard bash first on PATH (e.g. a nix-store bash) cannot leak in.
-          // The test opts out of `concurrent` so no concurrent sibling observes the pinned PATH.
-          yield* Effect.acquireRelease(
+          const hostPathPinnedToStandardRoots = Effect.acquireRelease(
             Effect.sync(() => vi.stubEnv("PATH", "/usr/bin:/bin")),
             () => Effect.sync(() => vi.unstubAllEnvs())
           );
+          yield* hostPathPinnedToStandardRoots;
           yield* fs.writeFileString(
             stubPath,
             pipe(
@@ -540,7 +531,10 @@ exec "$mapped_command" "\${mapped[@]}"`
           expect(result.children.length).toBeGreaterThan(0);
           const bwrapArguments = yield* fs.readFileString(bwrapArgumentsPath);
           expect(bwrapArguments).toContain("--setenv\nPATH\n/usr/bin:/bin\n");
-          expect(bwrapArguments).toContain(`--\n/usr/bin/env\n-S\n-a pffexport -u BEEP_UNUSED bash\n${stubPath}\n`);
+          expect(
+            bwrapArguments,
+            "the env interpreter comes from the standard roots, never a non-standard bash such as a nix-store one first on the host PATH"
+          ).toContain(`--\n/usr/bin/env\n-S\n-a pffexport -u BEEP_UNUSED bash\n${stubPath}\n`);
           expect(bwrapArguments).not.toContain("--ro-bind\n/\n/\n");
         }),
         { concurrent: false }
@@ -1057,7 +1051,7 @@ exec "$mapped_command" "\${mapped[@]}"`
       it.effect(
         "re-encodes an over-long body line as base64 in the assembled EML",
         Effect.fnUntraced(function* () {
-          const { exportRoot, operation, stubPath } = yield* fixture(overlongBodyStub);
+          const { exportRoot, operation, stubPath } = yield* fixture(overlongHtmlBodyLineStub);
           const engine = yield* makePffexportFileProcessingEngine(
             PffexportEngineConfig.make({ exportRoot, pffexportPath: stubPath })
           );
@@ -1096,7 +1090,7 @@ exec "$mapped_command" "\${mapped[@]}"`
       it.effect(
         "never overwrites an engine-owned Message.eml and keeps children unique",
         Effect.fnUntraced(function* () {
-          const { exportRoot, operation, stubPath } = yield* fixture(collidingStub);
+          const { exportRoot, operation, stubPath } = yield* fixture(engineOwnedMessageEmlStub);
           const engine = yield* makePffexportFileProcessingEngine(
             PffexportEngineConfig.make({ exportRoot, pffexportPath: stubPath })
           );
@@ -1131,7 +1125,7 @@ exec "$mapped_command" "\${mapped[@]}"`
     it.effect(
       "maps a signal-killed pffexport process to archive-export-failed",
       Effect.fnUntraced(function* () {
-        const { exportRoot, operation, stubPath } = yield* fixture(signalStub);
+        const { exportRoot, operation, stubPath } = yield* fixture(segfaultAfterVersionProbeStub);
         const engine = yield* makePffexportFileProcessingEngine(
           PffexportEngineConfig.make({ exportRoot, pffexportPath: stubPath })
         );
@@ -1145,13 +1139,11 @@ exec "$mapped_command" "\${mapped[@]}"`
     );
   });
 
-  // it.live: the timeout races a real subprocess, and the frozen TestClock of
-  // it.effect would never fire Effect.timeoutOrElse against it.
   it.layer(TestServices, { excludeTestServices: true })(
-    "maps a hung pffexport process to operation-timed-out",
+    "maps a hung pffexport process to operation-timed-out on the live clock",
     (it) => {
       it.effect(
-        "maps a hung pffexport process to operation-timed-out",
+        "maps a hung pffexport process to operation-timed-out on the live clock, which a frozen TestClock never fires",
         Effect.fnUntraced(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
@@ -1166,12 +1158,10 @@ exec "$mapped_command" "\${mapped[@]}"`
           const error = yield* engine.exportArchive(operation).pipe(Effect.flip);
 
           expect(error.reason).toBe("operation-timed-out");
-          // Positive child observations prove the export started and handled
-          // cancellation; the original late-write absence check remains below.
           const readFileString7 = yield* fs.readFileString(path.join(exportRoot, `${operation.source.id}.ready`));
-          expect(readFileString7).toBe("ready");
+          expect(readFileString7, "the child observed the export start").toBe("ready");
           const readFileString8 = yield* fs.readFileString(path.join(exportRoot, `${operation.source.id}.cancelled`));
-          expect(readFileString8).toBe("terminated");
+          expect(readFileString8, "the child observed the cancellation").toBe("terminated");
           yield* Effect.sleep("1250 millis");
           const exists9 = yield* fs.exists(path.join(exportRoot, `${operation.source.id}.late`));
           expect(exists9).toBe(false);

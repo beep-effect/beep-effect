@@ -12,7 +12,6 @@ import type { Apply, Lambda } from "effect/Struct";
 
 const variantTuple = <const Values extends readonly [string, ...string[]]>(...values: Values): Values => values;
 
-/** Ordered variant list retained in public declaration inference. */
 const variants = variantTuple("select", "insert", "update", "json", "jsonCreate", "jsonUpdate");
 
 /**

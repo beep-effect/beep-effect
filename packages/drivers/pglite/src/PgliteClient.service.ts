@@ -99,13 +99,6 @@ export const make = (
 ): Effect.Effect<PgliteClientValue & SqlClient.SqlClient, PgliteError, Scope.Scope | Reactivity.Reactivity> =>
   Pglite.make(options).pipe(Effect.mapError((cause) => PgliteError.fromUnknown("connect", cause)));
 
-// The Drizzle Effect Postgres integration resolves the `@effect/sql-pg` PgClient
-// tag from context and, at query time, calls only base SqlClient methods
-// (`unsafe`, `withTransaction`). `PgliteClient` is a `SqlClient` that mirrors the
-// rest of PgClient's surface (`json`, `listen`, `notify`), so it stands in at
-// runtime. This single cast is the one deliberate, contained place the driver
-// boundary bends: if a future drizzle-orm bump starts calling a pg-specific
-// method, this is the failure point to revisit.
 const asPgClient = (client: PgliteClientValue & SqlClient.SqlClient): Pg.PgClient & SqlClient.SqlClient =>
   client as unknown as Pg.PgClient & SqlClient.SqlClient;
 
@@ -114,6 +107,12 @@ const asPgClient = (client: PgliteClientValue & SqlClient.SqlClient): Pg.PgClien
  * under the `@effect/sql-pglite` {@link PgliteClient}, the generic
  * {@link SqlClient.SqlClient}, and the `@effect/sql-pg` {@link Pg.PgClient} tags
  * (via the tag-shim), so Drizzle-backed repositories run unchanged.
+ *
+ * **Gotchas**
+ *
+ * The `PgClient` tag carries the `PgliteClient` value itself, cast: `drizzle-orm/effect-postgres` calls only the
+ * base `SqlClient` methods (`unsafe`, `withTransaction`) at query time, and `PgliteClient` mirrors the rest of
+ * `PgClient` (`json`, `listen`, `notify`). A drizzle-orm bump that calls another pg-specific method fails here.
  *
  * **Example** (Provision multi-tag PGlite layer)
  *

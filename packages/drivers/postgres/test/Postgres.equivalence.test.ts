@@ -20,7 +20,6 @@ describe("Postgres declared-field equivalence", () => {
     const a = PostgresError.fromUnknown("connect", new Error("first failure"), context);
     const b = PostgresError.fromUnknown("connect", new Error("second failure"), context);
 
-    // the defect cause is payload, never identity
-    expect(samePostgresError(a, b)).toBe(true);
+    expect(samePostgresError(a, b), "the defect cause is payload, never identity").toBe(true);
   });
 });

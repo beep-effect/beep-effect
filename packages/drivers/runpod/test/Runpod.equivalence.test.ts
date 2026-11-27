@@ -48,8 +48,7 @@ describe("Runpod declared-field equivalence", () => {
       })
     );
 
-    // the defect cause is payload, never identity
-    expect(sameRunpodDocsError(a, b)).toBe(true);
+    expect(sameRunpodDocsError(a, b), "the defect cause is payload, never identity").toBe(true);
   });
 });
 

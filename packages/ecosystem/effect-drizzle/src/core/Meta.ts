@@ -14,7 +14,6 @@ import { String as StringSchema, TaggedError } from "effect/Schema";
 import type { SQL } from "drizzle-orm";
 import type { TaggedEnum } from "effect/Data";
 
-/** A typed schema expression rendered bound parameters that DDL cannot carry. */
 /** @internal */
 class SqlExpressionError extends TaggedError<SqlExpressionError, { readonly brand: unique symbol }>(
   "@beep/effect-drizzle/SqlExpressionError"
@@ -84,7 +83,6 @@ export type IdentityMode = "always" | "byDefault" | false;
  */
 export type FkAction = "cascade" | "restrict" | "no action" | "set null" | "set default";
 
-/** Cheap guard for author-provided referential actions. */
 /** @internal */
 const isFkAction = (value: unknown): value is FkAction =>
   value === "cascade" ||

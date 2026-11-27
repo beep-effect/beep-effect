@@ -8,8 +8,6 @@ import * as S from "effect/Schema";
 import { vi } from "vitest";
 
 const observed = vi.hoisted(() => ({ constructorCalls: 0 }));
-// A protocol-negative SDK deliberately ignores the supplied adapter. The real
-// pinned SDK/model still construct once; the owner must reject the uncaptured core.
 vi.mock("wink-nlp", (importOriginal) =>
   Promise.all([importOriginal<typeof import("wink-nlp")>(), import("wink-eng-lite-web-model")]).then(
     ([actual, { default: model }]) => ({
@@ -25,7 +23,11 @@ vi.mock("wink-nlp", (importOriginal) =>
 it.effect("the actual live engine layer preserves an uncaptured-core activation refusal", () =>
   Effect.gen(function* () {
     const result = yield* WinkEngineLive.pipe(Layer.build, Effect.result, Effect.scoped);
-    assert.strictEqual(observed.constructorCalls, 1);
+    assert.strictEqual(
+      observed.constructorCalls,
+      1,
+      "the protocol-negative SDK ignores the adapter, yet the pinned SDK and model construct once"
+    );
     assert.strictEqual(Result.isFailure(result), true);
     if (Result.isFailure(result)) {
       assert.strictEqual(S.is(WinkIntrinsicNounActivationError)(result.failure), true);

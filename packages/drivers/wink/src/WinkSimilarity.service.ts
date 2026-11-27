@@ -37,9 +37,6 @@ type VectorSimilarity = {
   readonly cosine: (left: ReadonlyArray<number>, right: ReadonlyArray<number>) => number;
 };
 
-// The wink-nlp similarity module's `bow`, `set`, and `vector` namespaces are
-// in-process native function handles, never decoded from external input;
-// structural `S.declare`s carry them through the runtime schema.
 const BowSimilarityFromSelf = S.declare((u: unknown): u is BowSimilarity => P.isObject(u)).pipe(
   $I.annoteSchema("BowSimilarityFromSelf", {
     description: "In-process wink-nlp bag-of-words cosine similarity handle carried through the service runtime.",
@@ -86,7 +83,6 @@ type WinkSimilarityShape = {
 
 const loadSimilarityRuntime = (): SimilarityRuntime => SimilarityRuntime.make(require("wink-nlp/utilities/similarity"));
 
-// effect-native-migration: WONTFIX (wink-nlp FFI requires native Set)
 const toNativeTermSet = (terms: ReadonlyArray<string>): Set<string> => new Set(terms);
 
 /**

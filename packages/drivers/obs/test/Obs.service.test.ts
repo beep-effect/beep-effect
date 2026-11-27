@@ -68,9 +68,7 @@ class ObsFixture extends Context.Service<ObsFixture, Effect.Success<ReturnType<t
   $I`ObsFixture`
 ) {}
 
-// Every registration builds a separate fixture; mutable protocol state is never
-// shared between cases. The unnamed layer block contains exactly one test.
-const makeObsLayer = (handlers: Effect.Effect<Partial<Record<ObsRequestType, StubHandler>>>) => {
+const makeFreshObsLayer = (handlers: Effect.Effect<Partial<Record<ObsRequestType, StubHandler>>>) => {
   const fixture = Layer.effect(ObsFixture, handlers.pipe(Effect.flatMap(flow(respondWith, makeStubProtocol))));
   const protocol = Layer.effect(
     ObsProtocol,
@@ -84,7 +82,7 @@ const calledTypes = (calls: ReadonlyArray<RecordedRequest>): ReadonlyArray<ObsRe
 
 describe("Obs", () => {
   it.layer(
-    makeObsLayer(
+    makeFreshObsLayer(
       Effect.succeed({
         GetVersion: () =>
           Effect.succeedSome({
@@ -114,7 +112,7 @@ describe("Obs", () => {
   });
 
   it.layer(
-    makeObsLayer(
+    makeFreshObsLayer(
       Effect.gen(function* () {
         const inputExists = yield* Ref.make(false);
         return {
@@ -165,7 +163,7 @@ describe("Obs", () => {
   });
 
   it.layer(
-    makeObsLayer(
+    makeFreshObsLayer(
       Effect.succeed({
         GetInputSettings: () =>
           Effect.succeedSome({
@@ -202,7 +200,7 @@ describe("Obs", () => {
   });
 
   it.layer(
-    makeObsLayer(
+    makeFreshObsLayer(
       Effect.succeed({
         CreateSceneItem: () => Effect.succeedSome({ sceneItemId: 7 }),
         GetInputSettings: () =>
@@ -210,8 +208,6 @@ describe("Obs", () => {
             inputKind: "pipewire-screen-capture-source",
             inputSettings: { RestoreToken: "portal-token-3" },
           }),
-        // The input exists globally (attached to some other scene), so the
-        // freshly-considered QA scene's item list does not reference it.
         GetSceneItemList: () =>
           Effect.succeedSome({ sceneItems: [{ sceneItemId: 2, sourceName: "unrelated-source" }] }),
         GetSceneList: () =>
@@ -231,7 +227,10 @@ describe("Obs", () => {
         const result = yield* obs.ensureQaScene();
         expect(result.inputCreated).toBe(false);
         const recorded = yield* calls;
-        expect(A.contains(calledTypes(recorded), "CreateInput")).toBe(false);
+        expect(
+          A.contains(calledTypes(recorded), "CreateInput"),
+          "the input exists globally on another scene, so only its scene item is created"
+        ).toBe(false);
         const createSceneItem = A.findFirst(recorded, (call) => call.requestType === "CreateSceneItem");
         assertSome(createSceneItem.pipe(O.flatMap((call) => call.requestData)), {
           sceneName: "beep-qa",
@@ -242,7 +241,7 @@ describe("Obs", () => {
   });
 
   it.layer(
-    makeObsLayer(
+    makeFreshObsLayer(
       Effect.succeed({
         StartRecord: (_, publish) =>
           publish(
@@ -273,7 +272,7 @@ describe("Obs", () => {
   });
 
   it.layer(
-    makeObsLayer(
+    makeFreshObsLayer(
       Effect.succeed({
         StopRecord: (_, publish) =>
           publish(
@@ -300,7 +299,7 @@ describe("Obs", () => {
   });
 
   it.layer(
-    makeObsLayer(
+    makeFreshObsLayer(
       Effect.succeed({
         GetRecordStatus: () =>
           Effect.succeedSome({
@@ -328,7 +327,7 @@ describe("Obs", () => {
   });
 
   it.layer(
-    makeObsLayer(
+    makeFreshObsLayer(
       Effect.succeed({
         GetRecordStatus: () => Effect.succeed(O.none<Readonly<Record<string, unknown>>>()),
       })

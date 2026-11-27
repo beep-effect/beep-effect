@@ -52,12 +52,7 @@ const $I = $M365Id.create("M365.auth");
 
 type ICachePlugin = NonNullable<NonNullable<Configuration["cache"]>["cachePlugin"]>;
 
-// The optional peer `@azure/msal-node-extensions` is loaded through a non-literal
-// specifier so TypeScript never resolves the module: hosts that set
-// `tokenCachePath` install it, this workspace does not, and no ambient module
-// declaration is needed (one would shadow the real package types in any program
-// that includes it). `MsalNodeExtensions` mirrors the upstream 5.5.0
-// `types/persistence/*.d.ts` for exactly the members used below.
+// decision: msal-extensions-loaded-unresolved
 const MSAL_NODE_EXTENSIONS_SPECIFIER = "@azure/msal-node-extensions";
 
 interface MsalPersistence {
@@ -85,18 +80,17 @@ interface MsalNodeExtensions {
 const loadMsalNodeExtensions = (): Promise<MsalNodeExtensions> =>
   import(MSAL_NODE_EXTENSIONS_SPECIFIER) as Promise<MsalNodeExtensions>;
 
-// Opaque MSAL handles are constructed in-process (via a dynamic import, so no
-// static constructor exists for `S.instanceOf`) and never decoded from external
-// input; a structural `S.declare` carries them through the runtime schema.
 const CryptoProviderFromSelf = S.declare((u: unknown): u is CryptoProvider => P.isObject(u)).pipe(
   $I.annoteSchema("CryptoProviderFromSelf", {
-    description: "In-process MSAL CryptoProvider handle carried through the auth runtime.",
+    description:
+      "In-process MSAL CryptoProvider handle carried through the auth runtime. MSAL is imported dynamically, so no static constructor exists for S.instanceOf; the handle is never decoded from external input.",
   })
 );
 
 const PublicClientApplicationFromSelf = S.declare((u: unknown): u is PublicClientApplication => P.isObject(u)).pipe(
   $I.annoteSchema("PublicClientApplicationFromSelf", {
-    description: "In-process MSAL PublicClientApplication handle carried through the auth runtime.",
+    description:
+      "In-process MSAL PublicClientApplication handle carried through the auth runtime. MSAL is imported dynamically, so no static constructor exists for S.instanceOf; the handle is never decoded from external input.",
   })
 );
 
@@ -283,8 +277,6 @@ const cachedAccount = (accounts: ReadonlyArray<AccountInfo>): Effect.Effect<O.Op
     ? M365Error.failEffectFromReason("auth", { cause: ambiguousCachedAccountsCause })
     : Effect.succeed(A.head(accounts));
 
-// MSAL calls the plugin from promise land; the host's effects carry no
-// requirements, so they run on the default runtime.
 const persistencePlugin = (persistence: M365TokenCachePersistence): ICachePlugin => ({
   beforeCacheAccess: (context) =>
     Effect.runPromise(
@@ -418,7 +410,6 @@ const acquireAppOnlyToken = Effect.fn("M365Auth.acquireAppOnlyToken")(function* 
   cca: ConfidentialClientApplication,
   scope: string
 ): Effect.fn.Return<Redacted.Redacted<string>, M365Error> {
-  // MSAL serves this from its in-memory cache until the token nears expiry.
   const result = yield* Effect.tryPromise({
     try: () => cca.acquireTokenByClientCredential({ scopes: [scope] }),
     catch: (cause) => M365Error.fromReason("auth", { cause }),
@@ -540,7 +531,8 @@ export class M365Auth extends Context.Service<M365Auth, M365AuthShape>()($I`M365
    *
    * **Details**
    *
-   * There is no user, redirect or persisted cache on this lane. The token's
+   * There is no user, redirect or persisted cache on this lane; MSAL serves
+   * `acquireToken` from its in-memory cache until the token nears expiry. The token's
    * reach is whatever the service principal has been assigned; for mailbox
    * access that should be an Exchange RBAC-for-Applications assignment scoped
    * to specific mailboxes, never a tenant-wide application permission.

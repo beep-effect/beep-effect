@@ -59,6 +59,13 @@ export interface UsptoShape {
   /**
    * Download one published file-wrapper document.
    *
+   * **Gotchas**
+   *
+   * Fails with a `transport` error before any request when the URL is off the configured USPTO host or
+   * resolves to a loopback, link-local, private or cloud-metadata address. At most three redirects are
+   * followed, each only to an official ODP document host and each rebuilt, so `X-API-KEY` is sent only to
+   * the configured API host and never forwarded by fetch.
+   *
    * @since 0.0.0
    */
   readonly downloadDocument: (downloadUrl: string) => Effect.Effect<Uint8Array, UsptoError>;
@@ -255,19 +262,10 @@ interface ResolvedUsptoConfig {
   readonly apiUrl: URLStr;
 }
 
-/**
- * Extract the lowercased hostname of an absolute URL, failing closed to `none`
- * for any value that does not parse into a host.
- */
 const hostOf: (url: string) => O.Option<string> = O.liftThrowable((url: string) =>
   Str.toLowerCase(new URL(url).hostname)
 );
 
-/**
- * Report whether a target URL resolves to the same host as the configured USPTO
- * API origin. Used to scope the `X-API-KEY` credential and to reject
- * cross-origin document downloads before any request is issued.
- */
 const isSameUsptoHost = (url: string, usptoHost: O.Option<string>): boolean =>
   O.match(
     O.zipWith(hostOf(url), usptoHost, (target, expected) => target === expected),
@@ -289,16 +287,13 @@ const statusError = (status: number): UsptoError =>
     Match.orElse(() => UsptoError.fromReason("response-status", { status: S.Natural.make(status) }))
   );
 
+const ODP_DOCUMENT_HOST_PREFIXES = ["https://data-documents.uspto.gov/", "https://data.uspto.gov/"];
+
 const makeService = (client: HttpClient.HttpClient, config: ResolvedUsptoConfig): UsptoShape => {
-  // Host of the configured USPTO API origin. The `X-API-KEY` credential is only
-  // ever attached to requests targeting this host, and the configured host is
-  // the single trusted destination for document downloads.
   const usptoHost = hostOf(config.apiUrl);
 
   const requestFor = (url: string): HttpClientRequest.HttpClientRequest =>
     HttpClientRequest.get(url).pipe(HttpClientRequest.accept("application/json"), (request) =>
-      // Scope the credential: never forward `X-API-KEY` cross-origin, so an
-      // attacker-influenced URL cannot capture the configured secret.
       O.match(config.apiKey, {
         onNone: () => request,
         onSome: (key) =>
@@ -339,14 +334,9 @@ const makeService = (client: HttpClient.HttpClient, config: ResolvedUsptoConfig)
       const location = yield* Effect.fromOption(O.fromUndefinedOr(response.headers.location), () =>
         UsptoError.fromReason("response-status")
       );
-      // ODP's native XML and file-wrapper downloads use these official document
-      // hosts. Validate each hop and rebuild the request so the API key stays
-      // on the API host; never let fetch forward the custom header implicitly.
       if (
         redirectsRemaining <= 0 ||
-        !A.some(["https://data-documents.uspto.gov/", "https://data.uspto.gov/"], (prefix) =>
-          Str.startsWith(prefix)(location)
-        )
+        !A.some(ODP_DOCUMENT_HOST_PREFIXES, (prefix) => Str.startsWith(prefix)(location))
       ) {
         return yield* UsptoError.fromReason("transport");
       }
@@ -363,15 +353,9 @@ const makeService = (client: HttpClient.HttpClient, config: ResolvedUsptoConfig)
 
   return {
     downloadDocument: Effect.fn("Uspto.downloadDocument")(function* (downloadUrl: string) {
-      // Fail closed before any request: reject loopback, link-local, private,
-      // and cloud-metadata destinations, allowlisting only the configured USPTO
-      // origin so a legitimate API host is never blocked.
       yield* assertAllowedRemoteUrl(downloadUrl, {
         allowlist: O.match(usptoHost, { onNone: A.empty<string>, onSome: A.of }),
       }).pipe(Effect.mapError(() => UsptoError.fromReason("transport")));
-      // Enforce same-origin: a document download may only target the configured
-      // USPTO host, so the credential can never leak and the process cannot be
-      // turned into a readback SSRF client for arbitrary hosts.
       if (!isSameUsptoHost(downloadUrl, usptoHost)) {
         return yield* UsptoError.fromReason("transport");
       }

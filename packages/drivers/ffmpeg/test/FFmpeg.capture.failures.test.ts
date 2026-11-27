@@ -47,15 +47,11 @@ const healthyProbeJson = encodeProbeJson({
   ],
 });
 
-// Chrome's MediaRecorder webm output routinely lands without a container
-// duration; the driver must degrade rather than assume one.
-const durationlessProbeJson = encodeProbeJson({
+const durationlessWebmProbeJson = encodeProbeJson({
   format: {},
   streams: [{ height: 1080, width: 1920 }],
 });
 
-// ffprobe emits bare JSON numbers whenever the muxer reports numeric metadata,
-// so the numeric arm of the probe parsers has to hold as well as the string arm.
 const numericProbeJson = encodeProbeJson({
   format: { duration: 2 },
   streams: [
@@ -71,23 +67,17 @@ const numericProbeJson = encodeProbeJson({
 
 const luminanceEdgeStdout = A.join(
   [
-    // Orphan luma line ahead of any frame header.
     "lavfi.signalstats.YAVG=99.0",
-    // Malformed frame header: the index is not an integer.
     "frame:abc  pts:0       pts_time:0",
     "lavfi.signalstats.YAVG=88.0",
     "frame:0    pts:0       pts_time:0",
-    // Above the 8-bit ceiling; clamped rather than rejected.
     "lavfi.signalstats.YAVG=300",
-    // Negative presentation timestamp: the frame header is dropped.
     "frame:1    pts:512     pts_time:-0.5",
     "lavfi.signalstats.YAVG=120",
     "not a frame header and not a luma line",
     "frame:2    pts:1024    pts_time:0.5",
-    // Matches the luma line shape but is not a number; the sample is dropped.
     "lavfi.signalstats.YAVG=.",
     "frame:3    pts:2048    pts_time:1",
-    // Below the floor; clamped rather than rejected.
     "lavfi.signalstats.YAVG=-12",
     "",
   ],
@@ -130,10 +120,6 @@ const makeHandle = (stdout: string, stderr = "", exitCode = 0): ChildProcessSpaw
 const renderPatternPath = (pattern: string, index: number): string =>
   Str.replaceWith(/%0(\d+)d/, (_match, width) => pipe(`${index}`, Str.padStart(Number(width), "0")))(pattern);
 
-/**
- * Fake spawner whose ffprobe payload, exit codes, and output-producing
- * behavior are scripted per test so failure branches can be driven directly.
- */
 const makeScriptedSpawnerLayer = (
   commands: Array<ChildProcess.StandardCommand>,
   overrides: Partial<SpawnScript> = {}
@@ -158,7 +144,6 @@ const makeScriptedSpawnerLayer = (
               return makeHandle(script.ffprobeStdout, "ffprobe stderr", script.ffprobeExitCode);
             }
 
-            // The null muxer probe reports on stdout and writes no output file.
             if (A.contains(args, "null")) {
               return makeHandle(script.ffmpegStdout, "ffmpeg stderr", script.ffmpegExitCode);
             }
@@ -200,8 +185,6 @@ const makeLayer = (
           const path = yield* Path.Path;
           return FileSystem.FileSystem.of({
             ...fs,
-            // Produce a native error before the destination changes; all other
-            // filesystem operations retain their real behavior.
             rename: Effect.fn("FileSystem.FileSystem.rename")((source: string, destination: string) =>
               O.exists(renameFailureTarget, (target) => path.basename(destination) === target) ||
               (failManifestRestore && path.basename(source) === "previous-manifest.json")
@@ -556,8 +539,7 @@ describe("@beep/ffmpeg capture failures", () => {
             expect(error).toBeInstanceOf(FFmpegError);
             expect(error.operation).toBe("probeRegionLuminance");
             expect(error.message).toContain("Failed to stat video input");
-            // The preflight fails before anything is spawned.
-            expect(A.length(commands)).toBe(0);
+            expect(A.length(commands), "the preflight fails before anything is spawned").toBe(0);
           })
         );
       })
@@ -676,12 +658,12 @@ describe("@beep/ffmpeg capture failures", () => {
                   O.getOrElse(() => 0)
                 )
               ).toBe(2);
-              // A bare numeric frame rate carries no "/" to divide through.
               expect(
                 pipe(
                   probe.fps,
                   O.getOrElse(() => 0)
-                )
+                ),
+                "a bare numeric frame rate carries no slash to divide through"
               ).toBe(25);
               expect(
                 pipe(
@@ -702,7 +684,7 @@ describe("@beep/ffmpeg capture failures", () => {
     }
   );
 
-  it.layer(makeTestLayer({ ffprobeStdout: durationlessProbeJson }))(
+  it.layer(makeTestLayer({ ffprobeStdout: durationlessWebmProbeJson }))(
     "extracts frames from a container that reports no duration",
     (it) => {
       it.effect(
@@ -731,9 +713,10 @@ describe("@beep/ffmpeg capture failures", () => {
                 })
               );
 
-              // No duration means no expected frame count; the frames ffmpeg
-              // actually produced still commit under the minimum padding.
-              expect(result.frameCount).toBe(2);
+              expect(
+                result.frameCount,
+                "with no duration the frames ffmpeg produced commit under the minimum padding"
+              ).toBe(2);
               expect(A.map(result.frames, (frame) => frame.fileName)).toEqual([
                 "sample_frame_00000.png",
                 "sample_frame_00001.png",
@@ -745,7 +728,7 @@ describe("@beep/ffmpeg capture failures", () => {
     }
   );
 
-  it.layer(makeTestLayer({ ffprobeStdout: durationlessProbeJson }))(
+  it.layer(makeTestLayer({ ffprobeStdout: durationlessWebmProbeJson }))(
     "refuses to render a contact sheet without a positive duration",
     (it) => {
       it.effect(
@@ -779,8 +762,10 @@ describe("@beep/ffmpeg capture failures", () => {
               expect(error).toBeInstanceOf(FFmpegError);
               expect(error.operation).toBe("renderContactSheet");
               expect(error.message).toContain("reported no positive duration");
-              // Only the probe ran; the tile grid was never spawned.
-              expect(A.map(commands, (command) => command.command)).toEqual(["ffprobe"]);
+              expect(
+                A.map(commands, (command) => command.command),
+                "only the probe ran; the tile grid was never spawned"
+              ).toEqual(["ffprobe"]);
             })
           );
         })
@@ -821,9 +806,8 @@ describe("@beep/ffmpeg capture failures", () => {
             expect(error.operation).toBe("extractClip");
             expect(error.message).toContain("ffmpeg could not extract a clip from");
             expect(exitCodeOf(error)).toBe(9);
-            // The staging directory is released, so nothing is left behind.
             const readDirectory24 = yield* fs.readDirectory(path.dirname(outPath));
-            expect(readDirectory24).toEqual([]);
+            expect(readDirectory24, "the staging directory is released").toEqual([]);
           })
         );
       })
@@ -937,8 +921,14 @@ describe("@beep/ffmpeg capture failures", () => {
                 })
               );
 
-              expect(A.map(result.samples, (sample) => sample.frameIndex)).toEqual([0, 3]);
-              expect(A.map(result.samples, (sample) => sample.meanLuma)).toEqual([255, 0]);
+              expect(
+                A.map(result.samples, (sample) => sample.frameIndex),
+                "the orphan luma line, the non-integer header, the negative-pts frame and a non-numeric luma are dropped"
+              ).toEqual([0, 3]);
+              expect(
+                A.map(result.samples, (sample) => sample.meanLuma),
+                "luma above the 8-bit ceiling or below the floor is clamped rather than rejected"
+              ).toEqual([255, 0]);
               expect(A.map(result.samples, (sample) => sample.ptsTimeSeconds)).toEqual([0, 1]);
             })
           );

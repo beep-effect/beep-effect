@@ -111,17 +111,13 @@ const $I = $BoxProvisioningId.create("BoxContentMigration");
 
 const mebibyte = 1024 * 1024;
 
-/** Box rejects chunked upload sessions for files smaller than 20 MiB. */
-const minimumChunkedThresholdBytes = 20 * mebibyte;
+const boxChunkedSessionFloorBytes = 20 * mebibyte;
 
-/**
- * Smallest part size Box assigns to an upload session. Larger files get larger
- * parts, so dividing by this value never undercounts the part requests.
- */
-const minimumChunkedPartBytes = 8 * mebibyte;
+const smallestBoxPartBytes = 8 * mebibyte;
 
-/** Session create, part listing, and commit requests around the part uploads. */
-const chunkedSessionOverheadCalls = 3;
+const sessionCreateListCommitCalls = 3;
+
+const identityCheckCalls = 1;
 
 const sourceInspectionConcurrency = 4;
 
@@ -132,9 +128,10 @@ const sha256Equivalence = S.toEquivalence(Sha256Hex);
  *
  * **Details**
  *
- * `chunkedThresholdBytes` (default 50 MiB, minimum 20 MiB) selects the chunked
- * route at or above that size and is sealed into the plan, so plan and apply
- * must use the same value. `uploadConcurrency` (default 4) bounds parallel
+ * `chunkedThresholdBytes` (default 50 MiB, minimum 20 MiB, the smallest file Box
+ * accepts in a chunked upload session) selects the chunked route at or above
+ * that size and is sealed into the plan, so plan and apply must use the same
+ * value. `uploadConcurrency` (default 4) bounds parallel
  * uploads. `maxProviderCalls` is a hard cap on Box calls for the whole run.
  * `attemptId` correlates journal entries; a UUID is generated when absent.
  *
@@ -163,7 +160,7 @@ export class BoxContentMigrationOptions extends S.Opaque<
   { readonly brand: unique symbol }
 >()(
   S.Struct({
-    chunkedThresholdBytes: S.Int.check(S.isGreaterThanOrEqualTo(minimumChunkedThresholdBytes)).pipe(
+    chunkedThresholdBytes: S.Int.check(S.isGreaterThanOrEqualTo(boxChunkedSessionFloorBytes)).pipe(
       S.withConstructorDefault(Effect.succeed(50 * mebibyte))
     ),
     uploadConcurrency: S.Int.check(S.isBetween({ minimum: 1, maximum: 16 })).pipe(
@@ -207,7 +204,6 @@ type SourceState =
 
 type ListedItem = {
   readonly providerId: BoxProviderId;
-  /** Lowercase hex SHA-1 for files; absent for folders and web links. */
   readonly sha1: O.Option<string>;
 };
 
@@ -231,35 +227,28 @@ type PlannedFile = {
   readonly source: SourceState;
 };
 
-/** One state per map file, in map order. */
-type SourceStates = ReadonlyArray<SourceState>;
+type SourceStatesInMapOrder = ReadonlyArray<SourceState>;
 
 type PlanContext = {
   readonly files: ReadonlyArray<PlannedFile>;
-  /** Provider id of every required folder that exists, keyed by provider-equivalent path key. */
-  readonly folderIds: MutableHashMap.MutableHashMap<string, BoxProviderId>;
+  readonly existingFolderIds: MutableHashMap.MutableHashMap<string, BoxProviderId>;
   readonly folders: ReadonlyArray<PlannedFolder>;
   readonly listings: MutableHashMap.MutableHashMap<BoxProviderId, FolderListing>;
   readonly plan: BoxContentMigrationPlan;
-  /** Upper bound on the calls the post-apply plan needs once every planned write lands. */
-  readonly postPlanReserve: number;
-  readonly sources: SourceStates;
+  readonly postApplyPlanCallBound: number;
+  readonly sources: SourceStatesInMapOrder;
 };
 
 const rootPathKey = "";
 
-/**
- * Digests here hash canonical JSON this module just built or a plan that already
- * decoded, so a digest failure is an invariant violation, not a recoverable error.
- */
-const hashed = <A>(effect: Effect.Effect<A, BoxCanonicalDigestError | S.SchemaError, Digest.Digest>) =>
+const hashTrusted = <A>(effect: Effect.Effect<A, BoxCanonicalDigestError | S.SchemaError, Digest.Digest>) =>
   Effect.orDie(effect);
 
 const folderPathDigest = (pathKeys: ReadonlyArray<string>) =>
-  hashed(digestEncoded({ kind: "box-content-folder", path: pathKeys }));
+  hashTrusted(digestEncoded({ kind: "box-content-folder", path: pathKeys }));
 
 const fileEntryDigest = (file: BoxContentMigrationFile) =>
-  hashed(
+  hashTrusted(
     digestEncoded({
       fileName: boxNameEquivalenceKey(file.fileName),
       folderPath: contentPathKeys(file.folderPath),
@@ -269,12 +258,11 @@ const fileEntryDigest = (file: BoxContentMigrationFile) =>
     })
   );
 
-/** Marker pages a folder listing needs for `entryCount` entries; exact multiples cost one extra page. */
-const listingPages = (entryCount: number): number => Math.floor(entryCount / markerPageLimit) + 1;
+const markerPagesForEntries = (entryCount: number): number => Math.floor(entryCount / markerPageLimit) + 1;
 
-const uploadProviderCalls = (action: BoxContentUpload): number =>
+const uploadCallsUpperBound = (action: BoxContentUpload): number =>
   action.transport === "chunked"
-    ? chunkedSessionOverheadCalls + Math.ceil(action.sizeBytes / minimumChunkedPartBytes)
+    ? sessionCreateListCommitCalls + Math.ceil(action.sizeBytes / smallestBoxPartBytes)
     : 1;
 
 const isUpload = S.is(BoxContentUpload);
@@ -282,11 +270,9 @@ const isFolderCreate = S.is(BoxContentFolderCreate);
 const isFolderExists = S.is(BoxContentFolderExists);
 const isSkipIdentical = S.is(BoxContentSkipIdentical);
 
-/** The configured cap when `cost` more calls on top of `used` would exceed it. */
 const exceededBudget = (run: Run, used: number, cost: number): O.Option<number> =>
   O.filter(run.maxProviderCalls, (max) => used + cost > max);
 
-/** Charges one required read against the hard budget, failing before the call when it cannot be afforded. */
 const spendRead = Effect.fnUntraced(function* (run: Run, phase: BudgetPhase) {
   const used = yield* Ref.get(run.calls);
   const exceeded = exceededBudget(run, used, 1);
@@ -342,7 +328,6 @@ const readListing = Effect.fn("BoxContentMigration.readListing")(function* (
   return listing;
 });
 
-/** The item occupying a destination name: a file first, then a folder, then any other Box item. */
 const nameOccupant = (listing: FolderListing, nameKey: string): O.Option<ListedItem> =>
   pipe(
     MutableHashMap.get(listing.files, nameKey),
@@ -439,21 +424,20 @@ const ruleUploadCounts = (files: ReadonlyArray<PlannedFile>): ReadonlyArray<BoxC
   return A.sortWith(MutableHashMap.values(byRule), (count) => O.getOrElse(count.ruleId, () => ""), Order.String);
 };
 
-/**
- * Calls the post-apply plan needs if every planned write lands: the identity
- * check plus one listing per folder that has a required child folder or a
- * mapped file, sized for the entries it will hold afterwards.
- */
-const postPlanProviderCalls = (
+const boundPostApplyPlanCalls = (
   map: BoxContentMigrationMap,
   folders: ReadonlyArray<PlannedFolder>,
   files: ReadonlyArray<PlannedFile>,
-  folderIds: MutableHashMap.MutableHashMap<string, BoxProviderId>,
+  existingFolderIds: MutableHashMap.MutableHashMap<string, BoxProviderId>,
   listings: MutableHashMap.MutableHashMap<BoxProviderId, FolderListing>
 ): number => {
-  const additions = MutableHashMap.empty<string, number>();
+  const addedEntriesPerListedFolder = MutableHashMap.empty<string, number>();
   const add = (pathKey: string, count: number) =>
-    MutableHashMap.set(additions, pathKey, O.getOrElse(MutableHashMap.get(additions, pathKey), () => 0) + count);
+    MutableHashMap.set(
+      addedEntriesPerListedFolder,
+      pathKey,
+      O.getOrElse(MutableHashMap.get(addedEntriesPerListedFolder, pathKey), () => 0) + count
+    );
   A.forEach(folders, (planned) => {
     const parentKey = O.getOrElse(planned.folder.parentPathKey, () => rootPathKey);
     add(parentKey, isFolderCreate(planned.action) ? 1 : 0);
@@ -463,15 +447,14 @@ const postPlanProviderCalls = (
   });
   const currentEntries = (pathKey: string): number =>
     pipe(
-      pathKey === rootPathKey ? O.some(map.rootFolderId) : MutableHashMap.get(folderIds, pathKey),
+      pathKey === rootPathKey ? O.some(map.rootFolderId) : MutableHashMap.get(existingFolderIds, pathKey),
       O.flatMap((folderId) => MutableHashMap.get(listings, folderId)),
       O.match({ onNone: () => 0, onSome: (listing) => listing.entryCount })
     );
-  // Every folder that will be listed has an entry in `additions`, possibly zero.
   return A.reduce(
-    A.fromIterable(additions),
-    1,
-    (calls, [pathKey, added]) => calls + listingPages(currentEntries(pathKey) + added)
+    A.fromIterable(addedEntriesPerListedFolder),
+    identityCheckCalls,
+    (calls, [pathKey, added]) => calls + markerPagesForEntries(currentEntries(pathKey) + added)
   );
 };
 
@@ -481,7 +464,7 @@ const buildPlan = Effect.fn("BoxContentMigration.buildPlan")(function* (
   map: BoxContentMigrationMap,
   options: BoxContentMigrationOptions,
   sourcePaths: Path.Path,
-  knownSources: O.Option<SourceStates>
+  knownSources: O.Option<SourceStatesInMapOrder>
 ) {
   const callsBefore = yield* Ref.get(run.calls);
   yield* spendRead(run, phase);
@@ -513,7 +496,7 @@ const buildPlan = Effect.fn("BoxContentMigration.buildPlan")(function* (
       onSome: Effect.succeed,
     });
 
-  const folderIds = MutableHashMap.empty<string, BoxProviderId>();
+  const existingFolderIds = MutableHashMap.empty<string, BoxProviderId>();
   const rootPathDigest = yield* folderPathDigest(A.empty());
   const folders = yield* Effect.forEach(
     requiredContentFolders(map),
@@ -521,9 +504,8 @@ const buildPlan = Effect.fn("BoxContentMigration.buildPlan")(function* (
       const pathDigest = yield* folderPathDigest(folder.pathKeys);
       const parentId = O.match(folder.parentPathKey, {
         onNone: () => O.some(map.rootFolderId),
-        onSome: (parentPathKey) => MutableHashMap.get(folderIds, parentPathKey),
+        onSome: (parentPathKey) => MutableHashMap.get(existingFolderIds, parentPathKey),
       });
-      // A folder below a missing parent is missing too; nothing beneath it is ever listed.
       const existing = yield* O.match(parentId, {
         onNone: () => Effect.succeed(O.none<BoxProviderId>()),
         onSome: (id) => Effect.map(listFolder(id), (listing) => MutableHashMap.get(listing.folders, folder.nameKey)),
@@ -539,7 +521,7 @@ const buildPlan = Effect.fn("BoxContentMigration.buildPlan")(function* (
           return created;
         }),
         onSome: (providerId) => {
-          MutableHashMap.set(folderIds, folder.pathKey, providerId);
+          MutableHashMap.set(existingFolderIds, folder.pathKey, providerId);
           const exists: BoxContentFolderAction = BoxContentFolderExists.make({
             depth: folder.depth,
             pathDigest,
@@ -558,7 +540,7 @@ const buildPlan = Effect.fn("BoxContentMigration.buildPlan")(function* (
     A.zip(entries, sources),
     Effect.fnUntraced(function* ([{ entryDigest, file }, source]) {
       const folderPathKey = contentPathKey(file.folderPath);
-      const listing = yield* O.match(MutableHashMap.get(folderIds, folderPathKey), {
+      const listing = yield* O.match(MutableHashMap.get(existingFolderIds, folderPathKey), {
         onNone: () => Effect.succeed(O.none<FolderListing>()),
         onSome: (folderId) => Effect.asSome(listFolder(folderId)),
       });
@@ -580,19 +562,19 @@ const buildPlan = Effect.fn("BoxContentMigration.buildPlan")(function* (
     isUpload
   );
   const folderCreateCount = countWhere(sortedFolders, (planned) => isFolderCreate(planned.action));
-  const postPlanReserve = postPlanProviderCalls(map, sortedFolders, sortedFiles, folderIds, listings);
+  const postApplyPlanCallBound = boundPostApplyPlanCalls(map, sortedFolders, sortedFiles, existingFolderIds, listings);
   const planProviderCalls = (yield* Ref.get(run.calls)) - callsBefore;
   const fileTagCount = (tag: BoxContentFileAction["_tag"]) =>
     countWhere(sortedFiles, (planned) => planned.action._tag === tag);
 
-  const plan = yield* hashed(
+  const plan = yield* hashTrusted(
     sealBoxContentMigrationPlan(
       BoxContentMigrationPlan.make({
         chunkedThresholdBytes: options.chunkedThresholdBytes,
         expectedEnterpriseId: map.expectedEnterpriseId,
         fileActions: A.map(sortedFiles, (planned) => planned.action),
         folderActions: A.map(sortedFolders, (planned) => planned.action),
-        mapDigest: yield* hashed(boxContentMigrationMapDigest(map)),
+        mapDigest: yield* hashTrusted(boxContentMigrationMapDigest(map)),
         planDigest: Sha256Hex.make(pipe("0", Str.repeat(64))),
         rootFolderId: map.rootFolderId,
         sourceRevision: map.sourceRevision,
@@ -604,8 +586,8 @@ const buildPlan = Effect.fn("BoxContentMigration.buildPlan")(function* (
           estimatedProviderCalls:
             planProviderCalls +
             folderCreateCount +
-            A.reduce(uploads, 0, (calls, upload) => calls + uploadProviderCalls(upload)) +
-            postPlanReserve,
+            A.reduce(uploads, 0, (calls, upload) => calls + uploadCallsUpperBound(upload)) +
+            postApplyPlanCallBound,
           folderCreateCount,
           folderExistsCount: A.length(sortedFolders) - folderCreateCount,
           planProviderCalls,
@@ -619,11 +601,11 @@ const buildPlan = Effect.fn("BoxContentMigration.buildPlan")(function* (
   );
   const context: PlanContext = {
     files: sortedFiles,
-    folderIds,
+    existingFolderIds,
     folders: sortedFolders,
     listings,
     plan,
-    postPlanReserve,
+    postApplyPlanCallBound,
     sources,
   };
   return context;
@@ -757,7 +739,6 @@ const localFailure = (
   providerId: O.Option<BoxProviderId> = O.none()
 ): WriteFailure => ({ failureKind, providerId, status: O.none() });
 
-/** Provider id of a create response that names the expected parent and a provider-equivalent name. */
 const createdFolderId = (created: B.FolderFull, parentId: BoxProviderId, name: string): O.Option<BoxProviderId> =>
   pipe(
     O.all({
@@ -783,12 +764,11 @@ const applyPlan = Effect.fn("BoxContentMigration.applyPlan")(function* (
   write: JournalWriter
 ) {
   const fs = yield* FileSystem.FileSystem;
-  const folderIds = context.folderIds;
+  const existingFolderIds = context.existingFolderIds;
   let budgetStopped = false;
-  /** Whether `cost` more calls still leave room for the post-apply plan. */
   const affordable = Effect.fnUntraced(function* (cost: number) {
     const used = yield* Ref.get(run.calls);
-    return O.isNone(exceededBudget(run, used, cost + context.postPlanReserve));
+    return O.isNone(exceededBudget(run, used, cost + context.postApplyPlanCallBound));
   });
   const charge = (cost: number) => Ref.update(run.calls, (used) => used + cost);
 
@@ -845,10 +825,6 @@ const applyPlan = Effect.fn("BoxContentMigration.applyPlan")(function* (
     return outcome;
   });
 
-  /**
-   * Resolves a 409 from a folder create by re-listing the parent and binding the
-   * folder with the provider-equivalent name. Any other occupant stays a failure.
-   */
   const adoptExistingFolder = Effect.fnUntraced(function* (
     planned: PlannedFolder,
     parentId: BoxProviderId,
@@ -870,7 +846,7 @@ const applyPlan = Effect.fn("BoxContentMigration.applyPlan")(function* (
       return yield* failed(pathDigest, "folder", conflict);
     }
     const providerId = relisted.success.value;
-    MutableHashMap.set(folderIds, planned.folder.pathKey, providerId);
+    MutableHashMap.set(existingFolderIds, planned.folder.pathKey, providerId);
     yield* write((base) =>
       BoxContentJournalAdoptedExistingFolder.make({
         ...base,
@@ -900,17 +876,16 @@ const applyPlan = Effect.fn("BoxContentMigration.applyPlan")(function* (
     }
     const parentId = O.match(planned.folder.parentPathKey, {
       onNone: () => O.some(map.rootFolderId),
-      onSome: (parentPathKey) => MutableHashMap.get(folderIds, parentPathKey),
+      onSome: (parentPathKey) => MutableHashMap.get(existingFolderIds, parentPathKey),
     });
     if (O.isNone(parentId)) {
       return yield* notAttempted(action.pathDigest, "folder", "dependency-failed");
     }
-    // One create plus the re-list a 409 adoption would need.
-    const adoptionReserve = pipe(
+    const adoptionRelistCalls = pipe(
       MutableHashMap.get(context.listings, parentId.value),
-      O.match({ onNone: () => 1, onSome: (listing) => listingPages(listing.entryCount + 1) })
+      O.match({ onNone: () => 1, onSome: (listing) => markerPagesForEntries(listing.entryCount + 1) })
     );
-    if (budgetStopped || !(yield* affordable(1 + adoptionReserve))) {
+    if (budgetStopped || !(yield* affordable(1 + adoptionRelistCalls))) {
       budgetStopped = true;
       return yield* notAttempted(action.pathDigest, "folder", "budget-exhausted");
     }
@@ -943,7 +918,7 @@ const applyPlan = Effect.fn("BoxContentMigration.applyPlan")(function* (
     if (O.isNone(providerId)) {
       return yield* failed(action.pathDigest, "folder", localFailure("unreadable-response"));
     }
-    MutableHashMap.set(folderIds, planned.folder.pathKey, providerId.value);
+    MutableHashMap.set(existingFolderIds, planned.folder.pathKey, providerId.value);
     return yield* applied(action.pathDigest, "folder", providerId.value);
   });
 
@@ -952,8 +927,6 @@ const applyPlan = Effect.fn("BoxContentMigration.applyPlan")(function* (
     action: BoxContentUpload,
     sourcePath: string
   ) {
-    // Box commits chunked bytes before returning its SHA-1. Keep a verified
-    // private snapshot alive through stream consumption via the caller's scope.
     const stage = yield* fs.makeTempDirectoryScoped({ prefix: "beep-box-upload-" }).pipe(Effect.result);
     if (stage._tag === "Failure") {
       return {
@@ -1017,6 +990,7 @@ const applyPlan = Effect.fn("BoxContentMigration.applyPlan")(function* (
             : ({ _tag: "Ready", path: sourcePath } as const);
         if (staged._tag === "Settled") return staged.outcome;
         const bytes: B.BoxByteStream = fs.stream(staged.path).pipe(Stream.mapError(sourceReadFailure));
+        const bodySha1PreconditionHeaders = B.UploadFileHeaders.make({ contentMd5: sha1 });
         yield* write((base) =>
           BoxContentJournalStarted.make({
             ...base,
@@ -1040,10 +1014,7 @@ const applyPlan = Effect.fn("BoxContentMigration.applyPlan")(function* (
             : run.box.uploads
                 .uploadFile(
                   B.BoxUploadFilePayload.make({
-                    // Box verifies the request body against this SHA-1 before storing it.
-                    optionalsInput: UploadFileOptionalsInput.make({
-                      headers: B.UploadFileHeaders.make({ contentMd5: sha1 }),
-                    }),
+                    optionalsInput: UploadFileOptionalsInput.make({ headers: bodySha1PreconditionHeaders }),
                     requestBody: {
                       attributes: UploadFileRequestBodyAttributesField.make({
                         name: planned.file.fileName,
@@ -1068,7 +1039,6 @@ const applyPlan = Effect.fn("BoxContentMigration.applyPlan")(function* (
         if (O.isNone(storedSha1)) {
           return yield* failed(action.entryDigest, "file", localFailure("unreadable-response", O.some(providerId)));
         }
-        // A stored hash that differs is reported, never repaired: the Box item is left exactly as it is.
         return storedSha1.value === sha1
           ? yield* applied(action.entryDigest, "file", providerId)
           : yield* failed(action.entryDigest, "file", localFailure("content-hash-mismatch", O.some(providerId)));
@@ -1078,9 +1048,7 @@ const applyPlan = Effect.fn("BoxContentMigration.applyPlan")(function* (
 
   const folderOutcomes = yield* Effect.forEach(context.folders, applyFolder, { concurrency: 1 });
 
-  // Admission is sequential and in plan order, so the budget stop is deterministic
-  // and every admitted upload has its calls reserved before any of them starts.
-  const admitted = yield* Effect.forEach(
+  const reservedInPlanOrder = yield* Effect.forEach(
     context.files,
     Effect.fnUntraced(function* (planned) {
       const action = planned.action;
@@ -1121,12 +1089,12 @@ const applyPlan = Effect.fn("BoxContentMigration.applyPlan")(function* (
         );
         return settled(blocked);
       }
-      const folderId = MutableHashMap.get(folderIds, planned.folderPathKey);
+      const folderId = MutableHashMap.get(existingFolderIds, planned.folderPathKey);
       if (O.isNone(folderId) || planned.source._tag !== "Present") {
         const notAttempted1 = yield* notAttempted(action.entryDigest, "file", "dependency-failed");
         return settled(notAttempted1);
       }
-      const cost = uploadProviderCalls(action);
+      const cost = uploadCallsUpperBound(action);
       if (budgetStopped || !(yield* affordable(cost))) {
         budgetStopped = true;
         const notAttempted2 = yield* notAttempted(action.entryDigest, "file", "budget-exhausted");
@@ -1145,7 +1113,7 @@ const applyPlan = Effect.fn("BoxContentMigration.applyPlan")(function* (
 
   const uploadOutcomes = MutableHashMap.empty<Sha256Hex, BoxContentActionOutcome>();
   yield* Effect.forEach(
-    admitted,
+    reservedInPlanOrder,
     (entry) =>
       O.match(entry.run, {
         onNone: () => Effect.void,
@@ -1155,10 +1123,12 @@ const applyPlan = Effect.fn("BoxContentMigration.applyPlan")(function* (
     { concurrency: options.uploadConcurrency, discard: true }
   );
   const fileOutcomes = A.getSomes(
-    A.map(admitted, (entry) => O.orElse(entry.outcome, () => MutableHashMap.get(uploadOutcomes, entry.entryDigest)))
+    A.map(reservedInPlanOrder, (entry) =>
+      O.orElse(entry.outcome, () => MutableHashMap.get(uploadOutcomes, entry.entryDigest))
+    )
   );
   const outcomes = A.appendAll(folderOutcomes, fileOutcomes);
-  const uploadedBytes = A.reduce(admitted, 0, (bytes, entry) =>
+  const uploadedBytes = A.reduce(reservedInPlanOrder, 0, (bytes, entry) =>
     pipe(
       MutableHashMap.get(uploadOutcomes, entry.entryDigest),
       O.exists((outcome) => outcome._tag === "Applied")
@@ -1228,7 +1198,7 @@ const makeService = (
       [decodeMap(mapInput), decodeBoxContentMigrationPlan(reviewedPlanInput)],
       { concurrency: 1 }
     );
-    if (!(yield* hashed(hasValidBoxContentMigrationPlanDigest(reviewedPlan)))) {
+    if (!(yield* hashTrusted(hasValidBoxContentMigrationPlanDigest(reviewedPlan)))) {
       return yield* BoxProvisioningInvariantError.make({ code: "invalid-plan-digest" });
     }
     const run = yield* makeRun(options);
@@ -1239,12 +1209,11 @@ const makeService = (
         expectedPlanDigest: reviewedPlan.planDigest,
       });
     }
-    // A run that cannot afford its own post-apply verification writes nothing.
     const usedByPlan = yield* Ref.get(run.calls);
-    const exceeded = exceededBudget(run, usedByPlan, context.postPlanReserve);
-    if (O.isSome(exceeded)) {
+    const postApplyPlanUnaffordable = exceededBudget(run, usedByPlan, context.postApplyPlanCallBound);
+    if (O.isSome(postApplyPlanUnaffordable)) {
       return yield* BoxContentMigrationBudgetError.make({
-        maxProviderCalls: exceeded.value,
+        maxProviderCalls: postApplyPlanUnaffordable.value,
         phase: "post-plan",
         usedProviderCalls: usedByPlan,
       });
@@ -1255,8 +1224,8 @@ const makeService = (
     });
     const write = yield* makeJournalWriter(journal, attemptId, reviewedPlan.planDigest);
     const written = yield* applyPlan(run, map, options, sourcePaths, context, write);
-    // Sources were hashed moments ago for the drift check; only Box state is read again.
-    const post = yield* buildPlan(run, "post-plan", map, options, sourcePaths, O.some(context.sources));
+    const driftCheckSources = O.some(context.sources);
+    const post = yield* buildPlan(run, "post-plan", map, options, sourcePaths, driftCheckSources);
     return BoxContentMigrationApplyResult.make({
       postPlan: post.plan,
       receipt: BoxContentMigrationReceipt.make({
@@ -1312,7 +1281,9 @@ export interface BoxContentMigrationShape {
  * folders in depth order, then uploads with bounded concurrency. It never
  * overwrites, versions, renames, moves, or deletes a Box item, and it opens
  * sources read-only. One failed upload does not stop the others; a failed
- * folder skips only its dependents.
+ * folder skips only its dependents. Uploads are admitted one at a time in plan
+ * order, each reserving its calls before any upload starts, so the uploads a
+ * `maxProviderCalls` budget leaves `NotAttempted` are the same on every run.
  *
  * **Gotchas**
  *
@@ -1321,6 +1292,9 @@ export interface BoxContentMigrationShape {
  * `FolderExists`, so reviewing and applying that plan continues the work. An
  * upload whose stored `sha1` does not verify is reported `Failed` and the Box
  * item is left in place; the next plan reports it as `BlockedNameConflict`.
+ * Box commits chunked bytes before it returns their SHA-1, so a chunked upload
+ * first copies its source into a private temporary directory, re-verifies the
+ * copy, and streams from it until the upload finishes.
  *
  * **Example** (Run the read-only planning entry point)
  *

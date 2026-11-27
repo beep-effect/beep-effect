@@ -45,20 +45,14 @@ const carriesQueryOrFragment = (url: string): boolean => {
 
 const hasHttpProtocol = (url: string): boolean => A.contains(httpProtocols, new URL(url).protocol);
 
-// Endpoint paths are appended verbatim (`${baseUrl}/rmeta/text`), so a trailing
-// slash would yield `//rmeta/text` and a query or fragment would swallow the
-// endpoint path entirely. Normalize the former, reject the latter.
-//
-// The scheme is restricted to http(s) because Tika Server is reached over HTTP
-// (SPEC "Tika Server over HTTP"); it also keeps trailing-slash stripping
-// identity-preserving, which is not true of opaque URLs such as `A:/`.
 const TikaServerBaseUrl = URLStr.pipe(
   S.check(
     S.makeFilter(
       (url: string) => (hasHttpProtocol(url) ? true : "must use the http or https scheme"),
       $I.annote("TikaServerBaseUrlProtocolCheck", {
         title: "Tika Server Base URL Protocol",
-        description: "Checks that the Tika Server base URL uses the http or https scheme.",
+        description:
+          "Checks that the Tika Server base URL uses the http or https scheme: Tika Server is reached over HTTP, and an opaque URL such as `A:/` would not survive trailing-slash stripping unchanged.",
       })
     )
   ),
@@ -67,7 +61,8 @@ const TikaServerBaseUrl = URLStr.pipe(
       (url: string) => (carriesQueryOrFragment(url) ? "must not carry a query string or fragment" : true),
       $I.annote("TikaServerBaseUrlEndpointCheck", {
         title: "Tika Server Base URL",
-        description: "Checks that the Tika Server base URL carries no query string or fragment.",
+        description:
+          "Checks that the Tika Server base URL carries no query string or fragment, which would swallow the endpoint path appended after it.",
       })
     )
   ),
@@ -75,21 +70,19 @@ const TikaServerBaseUrl = URLStr.pipe(
     decode: SchemaGetter.transform((url: URLStr) => URLStr.make(Str.replace(trailingSlashPattern, "")(url))),
     encode: SchemaGetter.passthrough(),
   }),
-  // Piped after the transform so it guards the decoded value: decoding strips
-  // the slash and then satisfies this, while `TikaServerEngineConfig.make` —
-  // which runs type-side checks but not transformations — is rejected outright
-  // instead of silently producing `//rmeta/text`.
   S.check(
     S.makeFilter(
       (url: string) => (trailingSlashPattern.test(url) ? "must not end with a trailing slash" : true),
       $I.annote("TikaServerBaseUrlTrailingSlashCheck", {
         title: "Tika Server Base URL Trailing Slash",
-        description: "Checks that the normalized Tika Server base URL carries no trailing slash.",
+        description:
+          "Checks that the normalized Tika Server base URL carries no trailing slash. It runs after the decode transform, so decoding strips the slash and passes, while `TikaServerEngineConfig.make`, which skips transformations, rejects it instead of producing `//rmeta/text`.",
       })
     )
   ),
   $I.annoteSchema("TikaServerBaseUrl", {
-    description: "Tika Server base URL: http(s) only, no trailing slash, no query string, and no fragment.",
+    description:
+      "Tika Server base URL: http(s) only, no trailing slash, no query string, and no fragment. Endpoint paths such as `/rmeta/text` are appended to it verbatim.",
   })
 );
 
@@ -186,7 +179,9 @@ const tikaServerEngineConfigTimeoutMillisDefault = PosInt.make(defaultTimeoutMil
  * `maxOutputBytes` is the driver-level ceiling on the Tika Server response
  * body — JSON envelope, metadata, and extracted text together — enforced while
  * the body streams. An absent value means unbounded, and a per-operation
- * `maxMaterializedBytes` narrows it further.
+ * `maxMaterializedBytes` narrows it further. An oversized body fails before it
+ * is materialized or parsed, so peak memory stays within the budget plus one
+ * transport chunk.
  *
  * **Example** (Make default engine config)
  *

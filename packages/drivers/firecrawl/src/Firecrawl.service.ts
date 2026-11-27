@@ -68,8 +68,6 @@ const statusError = (status: number): FirecrawlError =>
     Match.orElse(() => FirecrawlError.fromReason("response-status", `Firecrawl returned HTTP ${status}.`, status))
   );
 
-// Reject a declared oversize body before pulling, then enforce the observed byte count;
-// stream finalization cancels the reader on early rejection.
 const readBoundedBody = Effect.fn("Firecrawl.readBoundedBody")(function* (
   response: HttpClientResponse.HttpClientResponse,
   limit: number

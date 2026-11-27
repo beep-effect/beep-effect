@@ -96,7 +96,6 @@ const makeMemoryStore = (): WindowsSecretStoreShape => {
       Effect.sync(() => {
         MutableHashMap.remove(credentials, target);
       }),
-    // Test double: identity "protection" that only copies the bytes.
     protect: (bytes) => Effect.sync(() => Uint8Array.from(bytes)),
     unprotect: (bytes) => Effect.sync(() => Uint8Array.from(bytes)),
   };
@@ -107,7 +106,6 @@ const acquireWindowsStore = Effect.gen(function* () {
   if (platform !== "win32") {
     return yield* SecretStoreUnsupported.make({ platform });
   }
-  // Loaded lazily so non-Windows hosts never evaluate `bun:ffi` bindings.
   const native = yield* Effect.promise(() => import("./internal/WindowsSecretsNative.ts"));
   return yield* native.acquireNativeSecretStore;
 });

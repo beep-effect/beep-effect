@@ -158,13 +158,6 @@ const parseLine = (line: string, lineNumber: number): Result.Result<unknown, Jso
       })
   );
 
-/**
- * Stream `[trimmedLine, physicalLineNumber]` pairs for non-blank lines.
- *
- * Indexing happens on the raw stream (before blank lines are dropped) so the
- * reported `lineNumber` is the zero-based position of the line within the file,
- * even when blank lines precede a malformed record.
- */
 const streamIndexedLines = (
   filePath: string
 ): Stream.Stream<readonly [string, number], PlatformError, FileSystem.FileSystem | Path.Path> =>

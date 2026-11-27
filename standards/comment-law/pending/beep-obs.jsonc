@@ -1,6 +1,0 @@
-{
-  "schemaVersion": "comment-law-pending/v1",
-  "package": "@beep/obs",
-  "root": "packages/drivers/obs",
-  "scopes": ["."]
-}

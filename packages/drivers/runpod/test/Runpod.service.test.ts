@@ -57,7 +57,6 @@ const decodeUnknownCreatePodRequest = S.decodeUnknownEffect(CreatePodRequest);
 
 const $TestI = $RunpodId.create("Runpod.service.test");
 
-// Provider-documented payloads from the vendored OpenAPI document.
 const documentedPod = openApi.paths["/v2/pods"].post.responses["201"].content["application/json"].examples.pod.value;
 const documentedQueuedPod =
   openApi.paths["/v2/pods"].post.responses["202"].content["application/json"].examples.queuedPod.value;
@@ -520,9 +519,6 @@ describe("@beep/runpod", () => {
       Effect.fnUntraced(function* () {
         const testHttp = yield* RunpodTestHttp;
         const runpod = yield* Runpod;
-        // `make` drops unknown keys like every Effect Schema constructor, so the
-        // encode check guards the values that skip it: here a v1 field name a
-        // JavaScript caller writes onto the body after construction.
         const params = CreatePodParams.make({ body: { image: "runpod/pytorch", name: "demo" } });
         const keyAdded = Reflect.set(params.body, "dataCenterId", "US-KS-2");
 
@@ -545,9 +541,12 @@ describe("@beep/runpod", () => {
 
         expect(keyAdded).toBe(true);
         assertSome(failure.operationId, "createPod");
-        expect(failure.reason).toBe("request encoding");
-        // Driver causes are labels: the schema issue would print the rejected value.
-        assertSome(failure.cause, "SchemaError");
+        expect(
+          failure.reason,
+          "make drops unknown keys, so the encode check refuses a v1 field written onto the body after construction"
+        ).toBe("request encoding");
+        const sanitizedCauseLabel = failure.cause;
+        assertSome(sanitizedCauseLabel, "SchemaError");
         expect(refusedCaptures).toEqual([]);
         expect(sentBody).toMatchObject({ env: { ANY_NAME: "1", HF_HOME: "/models" } });
       })

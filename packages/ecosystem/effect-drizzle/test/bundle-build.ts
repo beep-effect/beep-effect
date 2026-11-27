@@ -11,14 +11,9 @@ const packageRoot = NodeURL.fileURLToPath(new URL("../", import.meta.url));
 
 export const bundleConsumerEntrypointId = "test/bundle-pg-integer.consumer.ts";
 
-// The one binding `test/bundle-pg-integer.consumer.ts` re-exports.
 export const bundleConsumerExportName = "integer";
 
-// Peers stay external: the probe measures what this package adds to a consumer
-// bundle, not the cost of effect or drizzle-orm themselves. esbuild is the
-// build engine because it is a pinned devDependency whose version the committed
-// baseline records, so the byte count moves only with this package's source or
-// a deliberate esbuild bump.
+// decision: bundle-probe-esbuild-peers-external
 const externalPeers = ["effect", "effect/*", "drizzle-orm", "drizzle-orm/*"] as const;
 
 export type BundleConsumerArtifact = {
@@ -51,9 +46,7 @@ class BundleImportError extends TaggedError<BundleImportError, { readonly brand:
   "@beep/effect-drizzle/test/BundleImportError"
 )("BundleImportError", { message: StringSchema, cause: Unknown }) {}
 
-// Peers are external, so the artifact is imported from where `effect` and
-// `drizzle-orm` resolve: a scoped directory under this package's git-ignored
-// `.beep/`.
+// decision: bundle-probe-esbuild-peers-external
 export const makeBundleImportDirectory = fnUntraced(function* () {
   const fs = yield* FileSystem;
   const scratchRoot = `${packageRoot}.beep/bundle-probe`;
@@ -61,10 +54,7 @@ export const makeBundleImportDirectory = fnUntraced(function* () {
   return yield* fs.makeTempDirectoryScoped({ directory: scratchRoot, prefix: "import-" });
 });
 
-// A size floor cannot tell a bundle from a stub: an over-shaken artifact that
-// exports a dropped binding is an invalid module of any size. Importing the
-// artifact is the authoritative check, because a dangling export is a
-// link-time SyntaxError.
+// decision: bundle-probe-esbuild-peers-external
 export const importBundleConsumer = fnUntraced(function* (text: string, directory: string) {
   const fs = yield* FileSystem;
   const modulePath = `${directory}/consumer.mjs`;

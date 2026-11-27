@@ -68,20 +68,14 @@ class InvalidPatternError extends S.TaggedError<InvalidPatternError, { readonly 
   })
 ) {}
 
-/**
- * Upper bound on tool-supplied regex length. Patterns above this are rejected
- * before reaching `new RegExp`, bounding the ReDoS surface from catastrophic
- * backtracking on adversarial inputs (the pattern is attacker-controlled via the
- * MCP tool parameters).
- */
-const MAX_PATTERN_LENGTH = 1_000;
+const MAX_REDOS_SAFE_PATTERN_LENGTH = 1_000;
 
 const compileRegex = (pattern: string, flags: string): Effect.Effect<RegExp, InvalidPatternError> =>
-  pattern.length > MAX_PATTERN_LENGTH
+  pattern.length > MAX_REDOS_SAFE_PATTERN_LENGTH
     ? Effect.fail(
         InvalidPatternError.make({
           cause: undefined,
-          message: `Pattern exceeds the maximum supported length of ${MAX_PATTERN_LENGTH} characters`,
+          message: `Pattern exceeds the maximum supported length of ${MAX_REDOS_SAFE_PATTERN_LENGTH} characters`,
         })
       )
     : Effect.try({
@@ -383,8 +377,6 @@ export const StreamingToolkitHandlersLive: Layer.Layer<
             }),
           };
           if (options?.tail !== undefined) {
-            // The tail window returns the last `tail` lines by design; the
-            // result is never a truncated prefix of the file, so report `false`.
             const lines = yield* TextStream.tail(path, { ...readOptions, n: options.tail });
             yield* Effect.annotateCurrentSpan(countAttribute("count", lines.length));
             return { count: lines.length, lines, truncated: false };

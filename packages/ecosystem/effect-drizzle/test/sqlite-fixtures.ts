@@ -35,7 +35,6 @@ const entityId = <const TableName extends string, const EntityType extends strin
 ): Sch & { readonly tableName: TableName; readonly entityType: EntityType } =>
   attachStatics(schema, { tableName, entityType });
 
-/** Dialect-free id and status schemas bound independently by both kits. */
 const SharedUserId = entityId(Finite.pipe(brand("SharedUserId")), "shared_user", "SharedUser");
 const SharedOrganizationId = entityId(
   Finite.pipe(brand("SharedOrganizationId")),
@@ -57,7 +56,6 @@ export const sqliteKit = make("sqlite", (sqlite) => ({
     rowVersion: Int.pipe(sqlite.integer(), sqlite.default(1), sqlite.version()),
   },
   defaultExtras: (columns) => [
-    // SQLite has no `using` index surface; checks and partial indexes are direct extras.
     SqliteTable.check(sql<boolean>`${columns.rowVersion} > 0`, "sqlite_row_version_positive"),
   ],
 }));
@@ -114,7 +112,6 @@ export const _sqliteNativeRepositoryVersionedModel = () => ({
     { spanPrefix: "SqliteUserNative", idColumn: "id" }
   ),
 });
-// Deliberate bypass: proves the versioned model still satisfies Effect SQL's native repository.
 export const sqliteNativeUserRepository = makeSqlRepository(SqliteUser, {
   tableName: SqliteUser.sql.tableName,
   spanPrefix: "SqliteUserNative",

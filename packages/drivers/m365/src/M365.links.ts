@@ -92,8 +92,7 @@ const percentDecode = (raw: string): Result.Result<string, SchemaIssue.Issue> =>
     catch: () => issue("The item id is not valid percent-encoding."),
   });
 
-// Exchange's EWS ids use standard base64; Graph's REST ids swap `/` for `-` and `+` for `_`.
-const toRestAlphabet = flow(Str.replaceAll("/", "-"), Str.replaceAll("+", "_"));
+const ewsToRestIdAlphabet = flow(Str.replaceAll("/", "-"), Str.replaceAll("+", "_"));
 
 const pathItemId = (url: URL): O.Option<string> => {
   const segments = Str.split("/")(url.pathname);
@@ -104,8 +103,7 @@ const pathItemId = (url: URL): O.Option<string> => {
   );
 };
 
-// Read `ItemID` raw so a literal `+` is not turned into a space by form decoding.
-const queryItemId = (url: URL): O.Option<string> =>
+const rawQueryItemId = (url: URL): O.Option<string> =>
   pipe(
     Str.split("&")(Str.slice(1)(url.search)),
     A.findFirst((pair) => Str.startsWith(ITEM_ID_QUERY_KEY)(Str.toLowerCase(pair))),
@@ -117,7 +115,7 @@ const linkItemId = (url: URL): Result.Result<string, SchemaIssue.Issue> =>
   HashSet.has(OUTLOOK_HOSTS, Str.toLowerCase(url.hostname))
     ? pipe(
         pathItemId(url),
-        O.orElse(() => queryItemId(url)),
+        O.orElse(() => rawQueryItemId(url)),
         O.match({
           onNone: () => Result.fail(issue("The Outlook link carries no item id.")),
           onSome: percentDecode,
@@ -131,7 +129,6 @@ const parseLink = (input: string): O.Option<URL> =>
 const rawItemId = (input: string): Result.Result<string, SchemaIssue.Issue> =>
   Str.includes("%")(input) ? percentDecode(input) : Result.succeed(input);
 
-// `message:<id>` / `conversation:<id>` names the kind outright; ids never contain `:`, so the form is unambiguous.
 const explicitKind = (input: string): O.Option<readonly [OutlookItemKind, string]> =>
   pipe(
     Str.match(TAGGED_INPUT_PATTERN)(input),
@@ -159,7 +156,7 @@ const decodeInput = (input: string): Effect.Effect<OutlookItemRef, SchemaIssue.I
     () => pipe(parseLink(trimmed), O.match({ onNone: () => rawItemId(trimmed), onSome: linkItemId }))
   );
   return Effect.fromResult(
-    pipe(raw, Result.map(toRestAlphabet), Result.flatMap(classify(O.map(explicit, ([kind]) => kind))))
+    pipe(raw, Result.map(ewsToRestIdAlphabet), Result.flatMap(classify(O.map(explicit, ([kind]) => kind))))
   );
 };
 
@@ -170,7 +167,11 @@ const decodeInput = (input: string): Effect.Effect<OutlookItemRef, SchemaIssue.I
  * `outlook.office.com` / `outlook.office365.com` forms, including the classic
  * `?ItemID=<id>` query, a bare id, and the tagged `message:<id>` /
  * `conversation:<id>` form that names the kind instead of taking it from the
- * id prefix. The id is percent-decoded and mapped to Graph's REST alphabet.
+ * id prefix; Graph ids never contain `:`, so the tagged form is unambiguous.
+ * The id is percent-decoded and mapped to Graph's REST alphabet: Exchange's EWS
+ * ids use standard base64, and REST ids swap `/` for `-` and `+` for `_`. The
+ * classic `ItemID` query value is read raw, so a literal `+` is not turned into
+ * a space by form decoding.
  * Encoding returns the tagged form, so decoding an encoded reference gives
  * the reference back, whatever its id looks like.
  *

@@ -57,9 +57,7 @@ const bundleNotes = pgTable("driver_bundle_notes", {
   id: serial("id").primaryKey(),
 });
 
-// Multi-statement SQL without `--> statement-breakpoint` markers, exercising
-// the legacy statement split on the in-memory path.
-const bundleNotesMigration = {
+const unmarkedMultiStatementBundle = {
   name: "20260102000000_create_driver_bundle_notes",
   sql: A.join(
     [
@@ -107,9 +105,9 @@ const bodiesWithRatings = (rows: ReadonlyArray<{ readonly body: string; readonly
 if (!shouldRunPgliteIntegration) {
   describe.skip("Postgres PgLite integration", () => {});
 } else {
-  // The shared PgLite wire-protocol server is single-connection; keep the layer
-  // acquisitions sequential so Drizzle and migration tests do not race it.
-  describe("Postgres PgLite integration", { concurrent: false }, () => {
+  describe("Postgres PgLite integration, layers acquired serially on the single-connection server", {
+    concurrent: false,
+  }, () => {
     it.layer(makePostgresClientLayer(), { timeout: "2 minutes" })((it) => {
       it.effect(
         "provides PostgresClient over the PgLite PgClient",
@@ -214,11 +212,8 @@ if (!shouldRunPgliteIntegration) {
               O.getOrElse(() => "drizzle")
             );
 
-            // Journal seeded by the folder path, exactly like a deployed database.
             yield* migrate(db, { migrationsFolder, migrationsSchema });
 
-            // Handoff: the same migration delivered as an in-memory bundle must
-            // be a no-op (name-keyed journal) rather than a re-application.
             yield* migrateBundle(
               db,
               MigrationBundleConfig.make({
@@ -235,7 +230,8 @@ if (!shouldRunPgliteIntegration) {
               pipe(
                 journalAfterHandoff,
                 A.map(({ hash, name }) => ({ hash, name }))
-              )
+              ),
+              "the same migration delivered as a bundle is a no-op on the name-keyed journal"
             ).toEqual([
               {
                 hash: fixtureMigrationHash,
@@ -243,13 +239,12 @@ if (!shouldRunPgliteIntegration) {
               },
             ]);
 
-            // A genuinely new bundle migration applies and journals normally.
             yield* migrateBundle(
               db,
               MigrationBundleConfig.make({
                 migrations: [
                   MigrationBundleEntry.make({ name: fixtureMigrationName, sql: fixtureMigrationSql }),
-                  MigrationBundleEntry.make(bundleNotesMigration),
+                  MigrationBundleEntry.make(unmarkedMultiStatementBundle),
                 ],
                 migrationsSchema,
               })
@@ -271,13 +266,10 @@ if (!shouldRunPgliteIntegration) {
               pipe(
                 journalNames,
                 A.map((row) => row.name)
-              )
-            ).toEqual([fixtureMigrationName, bundleNotesMigration.name]);
+              ),
+              "a new bundle migration applies and journals normally"
+            ).toEqual([fixtureMigrationName, unmarkedMultiStatementBundle.name]);
 
-            // Entries without a timestamped name fail fast instead of silently
-            // re-applying on every boot (v1 journal matching is name-keyed). `make`
-            // validates, so the invalid input is built with checks disabled: the point is
-            // that migrateBundle's own decode rejects an unvalidated config.
             const invalidNameError = yield* migrateBundle(
               db,
               MigrationBundleConfig.make(
@@ -289,7 +281,10 @@ if (!shouldRunPgliteIntegration) {
               )
             ).pipe(Effect.flip);
 
-            expect(invalidNameError._tag).toBe("PostgresError");
+            expect(
+              invalidNameError._tag,
+              "migrateBundle's own decode rejects an unnamed entry built with checks disabled"
+            ).toBe("PostgresError");
           }),
           120_000
         );

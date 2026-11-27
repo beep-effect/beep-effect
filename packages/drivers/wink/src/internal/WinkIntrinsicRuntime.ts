@@ -133,12 +133,11 @@ export class WinkIntrinsicOwner {
           rawForm: request.rawForm,
           remainingWork: request.remainingWork,
         });
-      // This debit precedes identity reads, both vendor calls, and result allocation.
-      const remainingWork = request.remainingWork - debit;
+      const remainingAfterUpfrontDebit = request.remainingWork - debit;
       yield* Effect.annotateCurrentSpan({
         "wink.intrinsic.form_length": request.rawForm.length,
         "wink.intrinsic.work_debit": debit,
-        "wink.intrinsic.remaining_work": remainingWork,
+        "wink.intrinsic.remaining_work": remainingAfterUpfrontDebit,
       });
       const current = O.getOrElse(this.current, () => Effect.succeed(false));
       if (!(yield* current))
@@ -146,9 +145,9 @@ export class WinkIntrinsicOwner {
           reason: "engine-replaced",
           cause: "engine reference no longer names the captured core owner",
           workDebit: debit,
-          remainingWork,
+          remainingWork: remainingAfterUpfrontDebit,
         });
-      return yield* this.read(request, debit, remainingWork);
+      return yield* this.read(request, debit, remainingAfterUpfrontDebit);
     })
   );
   readonly activate = Effect.gen({ self: this }, function* () {

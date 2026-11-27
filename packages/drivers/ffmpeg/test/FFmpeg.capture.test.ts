@@ -163,8 +163,6 @@ const makeCaptureSpawnerLayer = (
               const readFileString1 = yield* fs.readFileString(firstPath);
               expect(readFileString1).toBe("fake output");
             }
-            // The null muxer probe emits per-frame metadata on stdout and
-            // writes no output file.
             if (A.contains(args, "null")) {
               return makeHandle(luminanceStdout, "ffmpeg stderr", commandExitCode);
             }
@@ -854,8 +852,10 @@ describe("@beep/ffmpeg capture", () => {
             const readFileString19 = yield* fs.readFileString(outPath);
             expect(readFileString19).toBe("fake output");
 
-            // The clip is cut without a probe; only the encode command runs.
-            expect(A.map(commands, (command) => command.command)).toEqual(["ffmpeg"]);
+            expect(
+              A.map(commands, (command) => command.command),
+              "the clip is cut without a probe"
+            ).toEqual(["ffmpeg"]);
             const clipCommand = commands[0];
             expect(clipCommand?.args).toContain("libx264");
 
@@ -901,9 +901,10 @@ describe("@beep/ffmpeg capture", () => {
             expect(result.rows).toBe(4);
             expect(result.fileSizeBytes).toBe("fake output".length);
 
-            // 16 tiles across the fixture's 2s duration = fps=8.
             const sheetCommand = commands[A.length(commands) - 1];
-            expect(sheetCommand?.args).toContain("fps=8,scale=320:-1,tile=4x4");
+            expect(sheetCommand?.args, "16 tiles across the fixture's 2s duration is fps=8").toContain(
+              "fps=8,scale=320:-1,tile=4x4"
+            );
           })
         );
       })

@@ -28,8 +28,6 @@ const dataset = makeDataset([
   makeQuad(makeNamedNode("https://example.com/people/alice"), RDF_TYPE, makeNamedNode("https://schema.org/Person")),
 ]);
 
-// Integration with the concrete adapter belongs in the driver, which depends on
-// the semantic-web contracts; declaring the reverse dependency would create a cycle.
 it.layer(CanonicalizationServiceLive, { timeout: "10 seconds" })("canonicalization adapter integration", (it) => {
   const boundedDataset = Arbitrary.schema(S.Struct({ quads: S.Array(Quad).check(S.isMaxLength(3)) })).pipe(
     Arbitrary.map(({ quads }) => makeDataset(quads))

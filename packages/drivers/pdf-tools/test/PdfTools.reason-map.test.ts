@@ -46,23 +46,22 @@ const handleWith = (stdout: Stream.Stream<Uint8Array, PlatformError.PlatformErro
 
 const readFailingHandle = readFailure.pipe(Stream.fail, handleWith);
 
-// The driver raises the kit's per-stream capture budget; one byte past it.
-// The buffer is left unfilled: the kit counts bytes before decoding, so the
-// zeroed pages are never touched.
-const PDF_TOOLS_MAX_OUTPUT_BYTES = 256 * 1024 * 1024;
-const oversizedStdout = Stream.succeed(new Uint8Array(PDF_TOOLS_MAX_OUTPUT_BYTES + 1));
-const oversizedHandle = handleWith(oversizedStdout);
-// One byte past the kit's default budget, still inside the driver's.
-const pastDefaultHandle = handleWith(Stream.succeed(new Uint8Array(DEFAULT_MAX_OUTPUT_BYTES + 1).fill(0x61)));
+const DRIVER_CAPTURE_CEILING_BYTES = 256 * 1024 * 1024;
+const unfilledStdoutPastDriverCeiling = Stream.succeed(new Uint8Array(DRIVER_CAPTURE_CEILING_BYTES + 1));
+const oversizedHandle = handleWith(unfilledStdoutPastDriverCeiling);
+const pastKitDefaultInsideDriverCeiling = handleWith(
+  Stream.succeed(new Uint8Array(DEFAULT_MAX_OUTPUT_BYTES + 1).fill(0x61))
+);
 
 const spawnerOf = (spawn: () => Effect.Effect<ChildProcessSpawner.ChildProcessHandle, PlatformError.PlatformError>) =>
   Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, ChildProcessSpawner.make(spawn));
 
+const noFileAccessForPageText = Layer.merge(FileSystem.layerNoop({}), Path.layer);
+
 const toolsOver = (spawner: Layer.Layer<ChildProcessSpawner.ChildProcessSpawner>) =>
   PdfTools.makeLayer(PdfToolsConfig.make({ timeoutMillis: 50 })).pipe(
     Layer.provide(spawner),
-    // pageText touches no file, so a no-op file system proves it never does.
-    Layer.provide(Layer.merge(FileSystem.layerNoop({}), Path.layer))
+    Layer.provide(noFileAccessForPageText)
   );
 
 const pageText = Effect.gen(function* () {
@@ -137,7 +136,7 @@ describe("@beep/pdf-tools process reason map", () => {
     }
   );
 
-  it.layer(toolsOver(spawnerOf(() => Effect.succeed(pastDefaultHandle))), { timeout: "30 seconds" })(
+  it.layer(toolsOver(spawnerOf(() => Effect.succeed(pastKitDefaultInsideDriverCeiling))), { timeout: "30 seconds" })(
     "when the output is past the kit's default capture bound",
     (it) => {
       it.effect(
@@ -150,8 +149,6 @@ describe("@beep/pdf-tools process reason map", () => {
     }
   );
 
-  // New with the kit: captured output is bounded. The hand-rolled fold had no
-  // ceiling, so this row has no predecessor; it reports as a failing tool run.
   it.layer(toolsOver(spawnerOf(() => Effect.succeed(oversizedHandle))), { timeout: "30 seconds" })(
     "when the output exceeds the capture bound",
     (it) => {
