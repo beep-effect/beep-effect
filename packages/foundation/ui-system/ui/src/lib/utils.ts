@@ -18,16 +18,6 @@ import { clsx } from "clsx";
 import { extendTailwindMerge } from "tailwind-merge";
 import type { ClassValue } from "clsx";
 
-// The theme scales the design system adds on top of Tailwind's defaults
-// (`packages/foundation/ui-system/ui/src/styles/globals.css` and the app themes that import
-// it). tailwind-merge only knows the stock scale names: an unknown `text-<name>` reads as a
-// text color, so `cn("text-xs-plus", "text-muted-foreground")` would drop the font size, and
-// unknown radius, shadow and leading names never conflict with their stock siblings. Every
-// `--text-*`, `--radius-*`, `--shadow-*`, `--leading-*`, `--tracking-*`, `--font-*`, `--ease-*`,
-// `--animate-*`, `--spacing-*`, `--gap-*` and `--background-image-*` token declared in a theme
-// stylesheet, and every `@utility` whose name collides with a stock group (`border-indicator`
-// reads as a border color) must be listed here. `text-anchor-middle` is applied only through
-// d3 attributes, never through `cn`, so it stays unregistered.
 const twMerge = extendTailwindMerge({
   extend: {
     theme: {
@@ -96,6 +86,17 @@ const twMerge = extendTailwindMerge({
  * Later classes win within one Tailwind group, including the custom font sizes, radii,
  * shadows, line heights and sizes the theme declares, so a consumer's `text-sm` replaces a
  * component's `text-xs-plus` and a component's `text-xs-plus` survives a color class.
+ *
+ * **Gotchas**
+ *
+ * tailwind-merge knows only the scale names registered here. An unregistered `text-<name>`
+ * reads as a text color, and an unregistered radius, shadow or leading name never conflicts
+ * with its stock siblings. A theme stylesheet that declares a new `--text-*`, `--radius-*`,
+ * `--shadow-*`, `--leading-*`, `--tracking-*`, `--font-*`, `--ease-*`, `--animate-*`,
+ * `--spacing-*`, `--gap-*` or `--background-image-*` token, or an `@utility` whose name collides
+ * with a stock group (`border-indicator` reads as a border color), must be registered in this
+ * module's tailwind-merge config. `text-anchor-middle` is applied only through d3 attributes,
+ * never through `cn`, so it stays unregistered.
  *
  * **Example** (Custom font size survives a color class)
  *

@@ -17,7 +17,14 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { makeOperation } from "./AdapterState.ts";
-import { freshFloatingSplitId, positionOf, pressStartsOnButton, px, topLeftBox } from "./DropCompiler.ts";
+import {
+  freshFloatingSplitId,
+  positionOf,
+  pressStartsOnButton,
+  preventNativeSelection,
+  px,
+  topLeftBox,
+} from "./DropCompiler.ts";
 import { FloatingGesture, FloatingOverride } from "./Gesture.models.ts";
 import { GroupPane } from "./GroupPane.tsx";
 import { DockIcon } from "./Icons.tsx";
@@ -28,9 +35,6 @@ import type { AdapterState } from "./AdapterState.ts";
 
 const sameGroupId = S.toEquivalence(GroupId);
 
-// Chrome around the kernel's anchored content box: the pane is taller than
-// the stored box by the drag-header, and can never shrink below readable.
-// The header reads the same value back through --dock-header-height in src/dock.css.
 const FLOATING_HEADER_HEIGHT = 32;
 const FLOATING_MIN_WIDTH = 240;
 const FLOATING_MIN_HEIGHT = 160;
@@ -120,9 +124,7 @@ export const FloatingPane = (
       const down = (event: PointerEvent): void => {
         if (P.not(Eq.equals(0))(event.button) || pressStartsOnButton(event)) return;
         event.stopPropagation();
-        // Cancel the native selection drag the browser would otherwise anchor
-        // at the press point and smear across panel text while moving/resizing.
-        event.preventDefault();
+        preventNativeSelection(event);
         node.setPointerCapture?.(event.pointerId);
         props.graph.registry.set(
           props.state.floatingGestureAtom,
@@ -189,13 +191,11 @@ export const FloatingPane = (
           title="Dock"
           onPointerDown={(event) => event.stopPropagation()}
           onClick={() => {
-            // Restore the pre-float placement (neighbor, side, share) when the
-            // neighbor still exists; only fall back to a root-right column
-            // when the origin is gone — QA finding R1-03.
-            const remembered = O.filter(MutableHashMap.get(props.state.preFloatPlacements, groupId), (context) =>
-              O.isSome(DockWorkspace.findTabs(workspace, context.referenceGroupId))
+            const livePreFloatPlacement = O.filter(
+              MutableHashMap.get(props.state.preFloatPlacements, groupId),
+              (context) => O.isSome(DockWorkspace.findTabs(workspace, context.referenceGroupId))
             );
-            const target = O.match(remembered, {
+            const target = O.match(livePreFloatPlacement, {
               onNone: () =>
                 GroupRootSplitPlacement.make({
                   side: "right",

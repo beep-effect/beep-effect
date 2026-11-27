@@ -44,8 +44,6 @@ const forestGreen = ColorScale.make({
   "900": hex("#122812"),
 });
 
-// The light scheme darkens the two accent steps so green text and outlines keep
-// contrast on white; every other step is shared with the dark scheme.
 const forestGreenOnLight = ColorScale.make({ ...forestGreen, "300": hex("#2d632d"), "400": hex("#214e21") });
 
 const dark = ColorScheme.make({
@@ -99,7 +97,6 @@ const typography = Typography.make({
   }),
 });
 
-// A lambda wearing tilted pixel glasses, drawn on a 24-unit grid.
 const mark = BrandMark.make({
   name: "beep",
   viewBox: 24,
@@ -119,6 +116,11 @@ const mark = BrandMark.make({
 
 /**
  * The beep brand identity: forest-green scales on zinc surfaces, Inter and JetBrains Mono, and the lambda mark.
+ *
+ * **Details**
+ *
+ * The light scheme darkens brand steps `300` and `400` so green text and outlines keep contrast on
+ * white; every other brand step is shared with the dark scheme.
  *
  * **Example** (Read the theme-color ground)
  *

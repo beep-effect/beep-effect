@@ -12,27 +12,11 @@ import type { JSX } from "react";
 
 const $I = $UiId.create("components/editor/content-editable");
 
-/**
- * The padding shared by the editable surface and its placeholder overlay. The
- * placeholder is an `absolute top-0 left-0` sibling of the editable, so the
- * empty-state cursor (which sits at the editable's content-box origin) only
- * lines up with the placeholder text when both boxes use the *same* padding.
- * Keeping one constant for both prevents the cursor-above-placeholder drift the
- * previous `py-[18px]` placeholder (vs `py-4` editable) produced.
- *
- * Consumers passing a custom `className` should pass a `placeholderClassName`
- * whose padding matches, for the same reason.
- */
 const DEFAULT_EDITABLE_CLASS_NAME = "relative block min-h-72 min-h-full overflow-auto px-8 py-4 focus:outline-none";
 
 const DEFAULT_PLACEHOLDER_CLASS_NAME =
   "text-muted-foreground pointer-events-none absolute top-0 left-0 overflow-hidden px-8 py-4 text-ellipsis select-none";
 
-/**
- * The compact surface a single message composer uses: one comfortable line that grows to
- * a capped height. Editable and placeholder share `px-3 py-2.5` for the same cursor
- * alignment reason as the document surface.
- */
 const COMPACT_EDITABLE_CLASS_NAME =
   "relative block max-h-60 min-h-10 overflow-auto px-3 py-2.5 text-sm leading-6 focus:outline-none";
 

@@ -116,12 +116,8 @@ const submissionFactInput = {
   submissionKind: "initial",
 };
 
-// The id the fixtures carry. Reattaching exactly this one to an insert is what
-// lets the return leg be compared to the entity the loop started from.
 const ROW_ID = 1;
 
-// The audit envelope every candor entity carries, with `id` deliberately
-// absent: the insert defers to the table sequence, so the database assigns it.
 const BASE_INSERT_KEYS: ReadonlyArray<string> = [
   "createdAt",
   "createdByPrincipal",
@@ -142,8 +138,6 @@ const sortedKeys = (row: Readonly<Record<string, unknown>>): ReadonlyArray<strin
 const expectedInsertKeys = (own: ReadonlyArray<string>): ReadonlyArray<string> =>
   A.sort(A.appendAll(BASE_INSERT_KEYS, own), Order.String);
 
-// Schema equivalence rather than a structural compare: the entities carry
-// `Option` and branded fields whose identity is the schema's to decide.
 const sameEvent = S.toEquivalence(PatentCitationEvent);
 const sameDisposition = S.toEquivalence(CandorDisposition);
 const sameSubmissionFact = S.toEquivalence(IdsSubmissionFact);
@@ -178,8 +172,6 @@ describe("PatentCitationEvent converters", () => {
       const insert = yield* Effect.fromResult(toPatentCitationEventInsert(event));
       const returned = yield* Effect.fromResult(fromPatentCitationEventRow({ ...insert, id: ROW_ID }));
 
-      // The load-bearing surface first, so a drift reads as the field that
-      // moved rather than as one opaque inequality.
       assertSome<string>(returned.reference.number, "7654321");
       expect(DateTime.toEpochMillis(returned.observedAt)).toBe(1);
       expect(returned.actor).toBe("Applicant");
@@ -211,8 +203,6 @@ describe("PatentCitationEvent converters", () => {
     const { grounding: _grounding, ...ungrounded } = eventInput;
 
     pipe(fromPatentCitationEventRow({}), Result.isFailure, assertTrue);
-    // An event without grounding is the dangerous near-miss: every audit column
-    // is present, so only the entity schema can refuse it.
     pipe(fromPatentCitationEventRow(ungrounded), Result.isFailure, assertTrue);
   });
 });
@@ -245,10 +235,11 @@ describe("CandorDisposition converters", () => {
       const insert = yield* Effect.fromResult(toCandorDispositionInsert(disposition));
       const returned = yield* Effect.fromResult(fromCandorDispositionRow({ ...insert, id: ROW_ID }));
 
-      // The judgment must still name the exact observation version it answers;
-      // a disposition that lost its digest would cover the wrong event.
       expect(returned.disposes.eventId).toBe(1);
-      expect(returned.disposes.textDigest).toBe(digest);
+      expect(
+        returned.disposes.textDigest,
+        "a disposition that lost its digest would cover the wrong event version"
+      ).toBe(digest);
       assertSome(returned.rule56Judgment, "Submit");
       expect(DateTime.toEpochMillis(returned.decidedAt)).toBe(2);
       expect(returned.lifecycle).toBe("active");

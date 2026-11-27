@@ -13,6 +13,12 @@ import "./editor-theme.css";
 /**
  * Lexical theme class map shared by the editor block.
  *
+ * **Gotchas**
+ *
+ * The `table` classes let a table scroll horizontally with no wrapper, because Lexical
+ * builds its scroll wrapper only when the table plugin is mounted and the read-only viewer
+ * does not mount it. Cells take no fixed width: a column is as wide as its content needs.
+ *
  * **Example** (Log paragraph theme class)
  *
  * ```ts
@@ -113,14 +119,7 @@ export const editorTheme: EditorThemeClasses = {
     variable: "EditorTheme__tokenVariable",
   },
   characterLimit: "!bg-destructive/50",
-  // `block` + `w-max` + `overflow-x-auto` is the only way a table scrolls when nothing
-  // wraps it (Lexical only builds a scroll wrapper when the table plugin is mounted, and
-  // the read-only viewer does not mount it). It replaces `w-fit overflow-scroll`, which
-  // made the TABLE itself the scroll container — collapsing its min-content width to
-  // zero, so the browser was free to squeeze every column and break words mid-token.
   table: "EditorTheme__table my-3 block w-max max-w-full overflow-x-auto rounded border border-collapse",
-  // No `w-24`: a fixed 96px column is what crushed "verylongvaluecolumn1" into three
-  // stacked fragments. A column is as wide as its content needs, and the table scrolls.
   tableCell:
     "EditorTheme__tableCell relative border px-3 py-2 text-left align-top [&[align=center]]:text-center [&[align=right]]:text-right",
   tableCellActionButton:

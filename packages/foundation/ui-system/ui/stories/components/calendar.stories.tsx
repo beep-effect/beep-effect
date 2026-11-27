@@ -4,15 +4,12 @@ import * as DateTime from "effect/DateTime";
 import { expect, userEvent, within } from "storybook/test";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
-// `react-day-picker` reads calendar fields from a `Date` in the LOCAL timezone, so a
-// UTC-midnight instant can shift to the previous day/month under negative offsets. Pin
-// the time to noon UTC so the local calendar day stays stable across timezones.
-const atNoonUtc = (year: number, month: number, day: number): Date =>
+const stableLocalDayAtNoonUtc = (year: number, month: number, day: number): Date =>
   DateTime.toDateUtc(DateTime.makeUnsafe({ year, month, day, hour: 12 }));
 
-const JANUARY_2025 = atNoonUtc(2025, 1, 1);
-const SAMPLE_DATE = atNoonUtc(2025, 1, 15);
-const RANGE_END = atNoonUtc(2025, 1, 20);
+const JANUARY_2025 = stableLocalDayAtNoonUtc(2025, 1, 1);
+const SAMPLE_DATE = stableLocalDayAtNoonUtc(2025, 1, 15);
+const RANGE_END = stableLocalDayAtNoonUtc(2025, 1, 20);
 
 /**
  * `Calendar` is a date-grid built on `react-day-picker` with this design system's tokens,
@@ -141,11 +138,12 @@ export const WithDisabledDays: Story = {
   args: { disabled: { before: SAMPLE_DATE } },
   play: ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    // `react-day-picker` marks disabled day cells with the native `disabled`
-    // attribute (it only adds `aria-disabled` for a focused-and-disabled day).
     const buttons = canvas.getAllByRole("button", { hidden: true });
     const disabled = A.filter(buttons, (button) => button.hasAttribute("disabled"));
-    expect(A.isReadonlyArrayNonEmpty(disabled)).toBe(true);
+    expect(
+      A.isReadonlyArrayNonEmpty(disabled),
+      "react-day-picker marks disabled days with the native disabled attribute, not aria-disabled"
+    ).toBe(true);
   },
 };
 

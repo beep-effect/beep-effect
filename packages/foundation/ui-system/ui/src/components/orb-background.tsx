@@ -70,12 +70,7 @@ const INTENSITY_LIGHTNESS: Record<OrbIntensity, number> = {
   vivid: 63,
 };
 
-/**
- * A single orb layer descriptor. Sizes are percentages of the container so the
- * backdrop scales with whatever it fills; drift values feed the idle keyframe.
- */
 interface OrbLayer {
-  /** Relative alpha multiplier vs. the intensity base. */
   readonly alphaScale: number;
   readonly blur: number;
   readonly driftDelay: string;
@@ -83,7 +78,6 @@ interface OrbLayer {
   readonly driftX: string;
   readonly driftY: string;
   readonly height: string;
-  /** Hue offset applied on top of the tone's base hue. */
   readonly hueShift: number;
   readonly introDuration: string;
   readonly key: string;
@@ -100,8 +94,6 @@ const LAYERS: ReadonlyArray<OrbLayer> = [
     alphaScale: 1,
     width: "62%",
     height: "78%",
-    // `left` is the orb's left edge, so center ≈ left + width/2. These values
-    // keep the three-orb bloom balanced around the horizontal middle.
     left: "19%",
     top: "-12%",
     rotate: "14deg",
@@ -251,18 +243,15 @@ function OrbBackground({
           )}
           style={
             {
-              // Per-orb geometry, read by the classes above.
               "--orb-width": layer.width,
               "--orb-height": layer.height,
               "--orb-left": layer.left,
               "--orb-top": layer.top,
               "--orb-rotate": layer.rotate,
               "--orb-blur": `${layer.blur}px`,
-              // Gradient inputs (numbers), turned into the radial glow by `orb-gradient` in globals.css.
               "--orb-hue": baseHue + layer.hueShift,
               "--orb-lightness": lightness,
               "--orb-alpha": baseAlpha * layer.alphaScale,
-              // Per-orb timing consumed by the `[data-slot]` animation rules in globals.css.
               "--orb-intro": layer.introDuration,
               "--orb-drift-duration": layer.driftDuration,
               "--orb-drift-delay": layer.driftDelay,

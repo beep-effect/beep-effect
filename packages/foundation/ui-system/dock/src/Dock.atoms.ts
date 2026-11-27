@@ -74,27 +74,20 @@ const makeDockAtomGraph = <E>(
   );
   const runtime = factory(sessionLayer);
 
-  /** Read-only authoritative workspace projection. */
   const workspaceAtom = Atom.readable((get) => get(stateAtom)).pipe(Atom.keepAlive);
 
-  /** All panels in tree order. */
   const panelsAtom = Atom.map(workspaceAtom, DockWorkspace.panels);
 
-  /** Number of non-empty tab groups. */
   const groupCountAtom = Atom.map(workspaceAtom, DockWorkspace.groupCount);
 
-  /** Per-panel projection without component-local state. */
   const panelAtom = Atom.family((panelId: PanelId) => Atom.map(workspaceAtom, DockWorkspace.findPanel(panelId)));
 
-  /** Per-group projection without component-local state. */
   const tabsAtom = Atom.family((groupId: GroupId) => Atom.map(workspaceAtom, DockWorkspace.findTabs(groupId)));
 
-  /** Selected panel projection for one group. */
   const activePanelAtom = Atom.family((groupId: GroupId) =>
     Atom.map(workspaceAtom, DockWorkspace.findActivePanel(groupId))
   );
 
-  /** Service-backed persisted snapshot query. */
   const persistedSnapshotAtom = runtime
     .atom(DockSnapshotStore.use((store) => store.load))
     .pipe(factory.withReactivity([SNAPSHOT_REACTIVITY_KEY]), Atom.keepAlive);
@@ -125,7 +118,6 @@ const makeDockAtomGraph = <E>(
   };
 };
 
-/** Shared implementation behind the dual `makeDockAtomsWith` signature. */
 const makeDockAtomsWithImpl = <E>(
   servicesLayer: Layer.Layer<DockEngine | DockSnapshotStore, E>,
   initial: DockWorkspace = DockWorkspace.empty
@@ -137,18 +129,12 @@ const makeDockAtomsWithImpl = <E>(
         Effect.map((context) => {
           const session = Context.get(context, DockAtomSession);
 
-          /**
-           * The only stateful operation lane. Writes submit synchronously into
-           * the Context-owned Effect runtime; reads expose the latest typed
-           * `AsyncResult` for host adapters.
-           */
           const operationAtom = Atom.writable(
             (get) => get(graph.operationResultAtom),
             (_ctx, operation: DockAtomOperation) => session.submitUnsafe(operation)
           ).pipe(Atom.keepAlive);
           const releaseOperations = graph.registry.mount(operationAtom);
 
-          /** Releases the one-registry session and every service scope it owns. */
           const dispose = (): void => {
             releaseOperations();
             graph.disposeBase();
@@ -188,6 +174,11 @@ interface DockAtomsSessionEffect<E> extends ReturnType<typeof makeDockAtomsWithI
  * **Details**
  *
  * Layer construction failures remain typed in the returned Effect.
+ *
+ * `operationAtom` is the session's only writable atom: writing an operation submits
+ * it synchronously to the session runtime, and reading it yields the latest typed
+ * `AsyncResult`. `dispose` releases the registry and every service scope the
+ * session owns.
  *
  * **Example** (Building a session with services)
  *

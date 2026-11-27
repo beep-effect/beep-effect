@@ -147,7 +147,6 @@ export const chipTheme: ThemeComponents = {
                 color: palette.info.text,
               },
             },
-            // Filled variant for success, error, warning, info
             {
               props: { variant: "filled" },
               style: {

@@ -158,10 +158,14 @@ const ensureUnique = (
   });
 
 /** Provides reason-specific diagnostics for public workspace invariants. */
-// crispen: the public schema already enforces identity uniqueness; this Effect
-// pass remains until schema filters can preserve the exact typed boundary reason.
 /**
  * Validates reason-specific workspace invariants at a public boundary.
+ *
+ * **Details**
+ *
+ * The public schema already enforces identity uniqueness. This pass repeats the
+ * check so a violation fails with its exact typed `DockInvariantViolation` reason,
+ * which schema filters cannot yet preserve; it can go once they can.
  *
  * **Example** (Validate populated workspace)
  *
@@ -875,7 +879,7 @@ const movePanelForest = Effect.fn("DockReducer.movePanelForest")(function* (
     const without = A.remove(panels, current);
     const index = N.clamp(command.target.index.value, { minimum: 0, maximum: A.length(without) });
     if (Eq.equals(current, index)) return unchanged(state, envelope, "panel-position-unchanged");
-    const reordered = O.getOrThrow(A.insertAt(without, index, panel)); // crispen: total after clamp; use total insert when available.
+    const reordered = O.getOrThrow(A.insertAt(without, index, panel));
     const next = DockWorkspace.replaceAtGroup(
       state,
       source.groupId,

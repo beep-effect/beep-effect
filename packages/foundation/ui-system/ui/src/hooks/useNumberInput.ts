@@ -758,9 +758,6 @@ const makeSpinParams = (options: SpinParamsInput): SpinParamsValue =>
     })
   ) as SpinParamsValue;
 
-// `step: 0` (or any non-positive/non-finite step) historically meant "spinning
-// is a no-op". The branded SpinParams cannot carry that state, so the hooks
-// collapse the effective step to 0 whenever the caller provided such a step.
 const effectiveStep = (provided: number | undefined, params: SpinParamsValue): number =>
   provided !== undefined && !isPositiveFiniteStep(provided) ? 0 : params.step;
 

@@ -129,12 +129,6 @@ export type ResolvedThemeMode = typeof ResolvedThemeMode.Type;
 interface AppThemeProviderProps {
   readonly children: React.ReactNode;
   readonly defaultMode?: undefined | ThemeMode;
-  /**
-   * Controls how the active color scheme is persisted. Defaults to MUI's
-   * `localStorage` manager. Pass `null` to disable persistence entirely — e.g.
-   * in Storybook, where the toolbar (not `localStorage`) is the source of truth
-   * and per-story isolation is preferred over a persisted preference.
-   */
   readonly storageManager?: StorageManager | null | undefined;
   readonly theme?: undefined | Theme;
 }
@@ -174,6 +168,12 @@ export const resolveThemeMode: {
 
 /**
  * App theme provider component.
+ *
+ * **Details**
+ *
+ * `storageManager` controls how the active color scheme is persisted and defaults to MUI's
+ * `localStorage` manager. Pass `null` to disable persistence entirely, for example in a story
+ * host whose toolbar, not `localStorage`, is the source of truth.
  *
  * **Example** (Import AppThemeProvider component)
  *

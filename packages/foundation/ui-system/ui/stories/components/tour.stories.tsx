@@ -20,9 +20,6 @@ const onboardingSteps: ReadonlyArray<Step> = [
 
 const tours: ReadonlyArray<Tour> = [{ id: "onboarding", steps: [...onboardingSteps] }];
 
-/**
- * A small consumer that pulls `start` from `useTour` so the story can launch a tour by id.
- */
 function StartTourButton() {
   const { start } = useTour();
   return (

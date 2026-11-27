@@ -2,9 +2,6 @@ import { Alert, AlertAction, AlertDescription, AlertTitle } from "@beep/ui/compo
 import { expect, fn, userEvent, within } from "storybook/test";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
-// The Alert root is a `<div>`, so its `onClick` is typed for `HTMLDivElement`. The
-// `WithAction` story wires its `<button>` to this dedicated mock instead, which carries the
-// correct `HTMLButtonElement` handler type and lets the play function assert on the click.
 const onReloadClick = fn();
 
 /**

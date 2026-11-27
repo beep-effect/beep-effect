@@ -76,12 +76,9 @@ export type AdapterState = {
   >;
 };
 
-// crispen: graph identity and lifetime are host concerns; WeakMap avoids structural hashing and retains no disposed graph.
+// decision: adapter-state-cache-identity
 const states = new WeakMap<DockAtomGraph, MutableHashMap.MutableHashMap<string, AdapterState>>();
-export // Conservative synchronous strip minima (title chars + tab/strip chrome), so
-// sash clamps hold from first paint; measured title minima replace these per
-// group as soon as font capture lands.
-const ESTIMATED_CHAR_WIDTH = 7;
+export const ESTIMATED_CHAR_WIDTH = 7;
 const estimateMinima = (workspace: DockWorkspace, chrome: TabChrome): Readonly<Record<string, number>> => {
   const groups = [
     ...DockWorkspace.match(workspace, {
@@ -113,11 +110,7 @@ const withEstimateFallback = (
 
 export let commandCounter = 0;
 
-// crispen: the key is measurement-config values plus the provider's SEMANTIC
-// identity (captureKey) — referential layer identity would mint a fresh
-// retained state per render whenever a host builds captureLayer inline,
-// while omitting the provider entirely would share stale metrics across
-// distinct providers.
+// decision: adapter-state-cache-identity
 const stateKey = (gap: number, minGroupExtent: number, titleMinima: O.Option<DockTitleMinimaOptions>): string =>
   O.match(titleMinima, {
     onNone: () => `${gap}\u0000${minGroupExtent}`,
@@ -178,7 +171,6 @@ export const adapterState: {
     minGroupExtent: number,
     titleMinima: O.Option<DockTitleMinimaOptions>
   ): AdapterState => {
-    // crispen: geometry inputs remain the adapter identity because the derived atoms close over them.
     const byOptions = O.getOrElse(O.fromUndefinedOr(states.get(graph)), () => {
       const created = MutableHashMap.empty<string, AdapterState>();
       states.set(graph, created);

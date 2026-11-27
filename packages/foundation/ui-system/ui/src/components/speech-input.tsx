@@ -45,7 +45,6 @@ const buttonVariants = cva("!px-0", {
   },
 });
 
-// Context for sharing state between compound components
 interface SpeechInputContextValue {
   readonly cancel: () => void;
   readonly committedTranscripts: string[];
@@ -83,7 +82,6 @@ function useSpeechInput() {
   );
 }
 
-// Root component
 interface SpeechInputEvent {
   readonly committedTranscripts: string[];
   readonly partialTranscript: string;
@@ -91,18 +89,15 @@ interface SpeechInputEvent {
 }
 
 interface SpeechInputProps {
-  // Manual audio options
   readonly audioFormat?: undefined | AudioFormat;
   readonly baseUri?: undefined | string;
   readonly children: ReactNode;
   readonly className?: undefined | string;
 
-  // VAD options
   readonly commitStrategy?: undefined | CommitStrategy;
   readonly getToken: () => Promise<string>;
   readonly languageCode?: undefined | string;
 
-  // Microphone options (for automatic microphone mode)
   readonly microphone?:
     | undefined
     | {
@@ -115,13 +110,11 @@ interface SpeechInputProps {
   readonly minSilenceDurationMs?: undefined | number;
   readonly minSpeechDurationMs?: undefined | number;
 
-  // Connection options
   readonly modelId?: undefined | string;
   readonly onAuthError?: undefined | ((data: { readonly error: string }) => void);
   readonly onCancel?: undefined | ((event: SpeechInputEvent) => void);
   readonly onChange?: undefined | ((event: SpeechInputEvent) => void);
 
-  // Error callbacks
   readonly onError?: undefined | ((error: Error | Event) => void);
   readonly onQuotaExceededError?: undefined | ((data: { readonly error: string }) => void);
   readonly onStart?: undefined | ((event: SpeechInputEvent) => void);
@@ -326,7 +319,6 @@ const SpeechInput = forwardRef<HTMLDivElement, SpeechInputProps>(function Speech
   );
 });
 
-// Record button - toggles between mic icon and stop icon
 type SpeechInputRecordButtonProps = Omit<ComponentPropsWithoutRef<typeof Button>, "size">;
 
 /**
@@ -391,7 +383,6 @@ const SpeechInputRecordButton = forwardRef<HTMLButtonElement, SpeechInputRecordB
   }
 );
 
-// Preview - shows the current transcript with partial
 type SpeechInputPreviewProps = ComponentPropsWithoutRef<"div"> & {
   readonly placeholder?: undefined | string;
 };
@@ -444,7 +435,6 @@ const SpeechInputPreview = forwardRef<HTMLDivElement, SpeechInputPreviewProps>(f
   );
 });
 
-// Cancel button
 type SpeechInputCancelButtonProps = Omit<ComponentPropsWithoutRef<typeof Button>, "size">;
 
 /**

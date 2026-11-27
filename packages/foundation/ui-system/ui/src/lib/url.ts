@@ -55,10 +55,7 @@ const decodeHtmlCharacterReferences = (value: string): string =>
     return isValidCodePoint(codePoint) ? globalThis.String.fromCodePoint(codePoint) : match;
   });
 
-// ASCII-oriented decoding is enough for protocol detection because the blocked
-// scheme names are ASCII-only. We intentionally normalize obfuscated prefixes
-// rather than fully decode arbitrary UTF-8 payloads here.
-const decodePercentEncodedBytes = (value: string): string => {
+const decodeAsciiPercentEscapes = (value: string): string => {
   let decoded = value;
 
   for (let pass = 0; pass < maxDecodePasses; pass++) {
@@ -103,8 +100,8 @@ const normalizeHrefProtocolCandidate: (value: string) => string = flow(
  */
 export const sanitizeAnchorHref = (href: string): string => {
   const decodedHtml = decodeHtmlCharacterReferences(href);
-  const decodedPercent = decodePercentEncodedBytes(href);
-  const decodedHtmlAndPercent = decodePercentEncodedBytes(decodedHtml);
+  const decodedPercent = decodeAsciiPercentEscapes(href);
+  const decodedHtmlAndPercent = decodeAsciiPercentEscapes(decodedHtml);
   const decodedPercentAndHtml = decodeHtmlCharacterReferences(decodedPercent);
   const candidates = [href, decodedHtml, decodedPercent, decodedHtmlAndPercent, decodedPercentAndHtml];
 

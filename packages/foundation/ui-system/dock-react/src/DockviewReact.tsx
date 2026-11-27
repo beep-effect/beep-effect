@@ -23,20 +23,12 @@ import type { DockviewReactProps } from "./DockReact.types.ts";
 import type { AdapterState } from "./internal/AdapterState.ts";
 import type { PointerPosition } from "./internal/Gesture.models.ts";
 
-// FlexLayout's drag-rect pattern: the preview element persists while its
-// kind stays active, and the package stylesheet's transitions tween its
-// bounds — the section overlay flies between groups/quadrants and the caret
-// slides along the strip instead of teleporting.
-
 const DropOverlay = (props: { readonly graph: DockviewReactProps["graph"]; readonly state: AdapterState }) => {
   const drag = useAtomValue(props.state.dragAtom);
   if (O.isNone(drag) || !drag.value.moved || drag.value.concluded) return null;
   return O.match(dropPreview(props.state, props.graph, drag.value), {
     onNone: () => null,
     onSome: DropPreview.match({
-      // Joining a tab list renders IN the strip (position = insertion
-      // index), never as a layout overlay: adding a tab and creating a
-      // section must read as different acts.
       "tab-insertion": (preview) => (
         <div
           data-drop-caret=""
@@ -67,13 +59,6 @@ const DropOverlay = (props: { readonly graph: DockviewReactProps["graph"]; reado
   });
 };
 
-// The label renders trailing the pointer by default and anchors to the
-// pointer's other side once its far edge would cross the container (QA
-// finding: the drag label clipped at right and bottom drop zones). The
-// ellipsis cap bounds the label's true extent, so the flip threshold and
-// the flipped-side clamp are exact rather than a guessed band — long
-// titles cannot out-grow the flip, and narrow containers cannot clip the
-// flipped label off the left edge.
 const GHOST_MAX_WIDTH_PX = 240;
 const GHOST_LINE_HEIGHT_PX = 24;
 const GHOST_OFFSET_X_PX = 12;
@@ -85,23 +70,15 @@ type GhostPlacement = {
   readonly y: number;
 };
 
-// Per-axis: trail the pointer while the label's far edge fits, otherwise
-// anchor to the pointer's other side (translate -100%) and clamp so the
-// flipped label cannot cross the container's near edge either.
 const ghostAxis = (
   pointer: number,
   extent: number,
   offset: number,
   maxSpan: number
 ): { readonly flipped: boolean; readonly position: number } => {
-  // The label can never occupy more than the container, so the flip
-  // threshold and the flipped-side clamp both bound the span by the extent.
-  // Without that bound a container narrower than the cap flips every time and
-  // then anchors past its own far edge — the clipping this exists to prevent,
-  // mirrored.
-  const span = Math.min(maxSpan, extent);
-  return pointer + offset + span > extent
-    ? { flipped: true, position: Math.min(Math.max(pointer - offset, span), extent) }
+  const spanWithinContainer = Math.min(maxSpan, extent);
+  return pointer + offset + spanWithinContainer > extent
+    ? { flipped: true, position: Math.min(Math.max(pointer - offset, spanWithinContainer), extent) }
     : { flipped: false, position: pointer + offset };
 };
 
@@ -115,10 +92,6 @@ const ghostPlacement = (pointer: PointerPosition, container: DockBox): GhostPlac
   };
 };
 
-// Follow-cursor after-image for a promoted tab drag (dockview's PointerGhost
-// pattern): without it, mid-drag there is nothing under the pointer telling
-// the user what they are carrying. Placement only — the package stylesheet
-// owns the mechanics and the shell themes it via [data-drag-ghost].
 const DragGhost = (props: { readonly graph: DockviewReactProps["graph"]; readonly state: AdapterState }) => {
   const drag = useAtomValue(props.state.dragAtom);
   const panels = useAtomValue(props.graph.panelsAtom);
@@ -208,6 +181,10 @@ const DockviewRoot = (
  *
  * Adapter state is cached by graph identity and geometry inputs so portal
  * hosts remain stable across React remounts and dock topology changes.
+ *
+ * Title minima start from a synchronous estimate (title characters plus tab
+ * chrome) so sash clamps hold from the first paint; measured minima replace the
+ * estimate per group once font capture lands.
  *
  * **Gotchas**
  *

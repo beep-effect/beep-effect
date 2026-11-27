@@ -106,14 +106,15 @@ describe("floating dock adapter", { concurrent: false }, () => {
       const graph = yield* mount();
       const first = query(`[data-floating-pane='${floating1Id}']`);
       const second = query(`[data-floating-pane='${floating2Id}']`);
-      // The pane is chrome around the anchored content box: 32px taller for
-      // the drag header, so the kernel geometry inside stays undistorted.
-      expect([
-        first.style.getPropertyValue("--dock-left"),
-        first.style.getPropertyValue("--dock-top"),
-        first.style.getPropertyValue("--dock-width"),
-        first.style.getPropertyValue("--dock-height"),
-      ]).toEqual(["40px", "50px", "240px", "192px"]);
+      expect(
+        [
+          first.style.getPropertyValue("--dock-left"),
+          first.style.getPropertyValue("--dock-top"),
+          first.style.getPropertyValue("--dock-width"),
+          first.style.getPropertyValue("--dock-height"),
+        ],
+        "the pane is 32px taller than its anchored content box, for the drag header"
+      ).toEqual(["40px", "50px", "240px", "192px"]);
       expect(Number(first.style.getPropertyValue("--dock-z"))).toBeLessThan(
         Number(second.style.getPropertyValue("--dock-z"))
       );
@@ -215,10 +216,10 @@ describe("floating dock adapter", { concurrent: false }, () => {
         expect(result.root._tag).toBe("Split");
         expect(result.root._tag === "Split" && result.root.layout.axis).toBe("horizontal");
         if (result.root._tag === "Split" && result.root.layout.axis === "horizontal") {
-          // The float/dock cycle is a round trip: the group returns to the
-          // side it left (pre-float placement memory, QA finding R1-03) —
-          // not a forced root-right column.
-          expect(DockNode.panels(result.root.layout.left)[0]?.id).toBe(dockedPanel.id);
+          expect(
+            DockNode.panels(result.root.layout.left)[0]?.id,
+            "the float/dock round trip returns the group to the side it left"
+          ).toBe(dockedPanel.id);
         }
       }
     })

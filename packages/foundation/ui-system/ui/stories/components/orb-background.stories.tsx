@@ -57,11 +57,6 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/**
- * A framed stage that mimics a real hero surface: a `relative isolate
- * overflow-hidden` panel with the orb backdrop behind centered content. This is
- * exactly how you compose the component in an app.
- */
 function Stage({
   children,
   height = 380,
@@ -105,15 +100,13 @@ export const Default: Story = {
   ),
   play: ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    // Decorative: not exposed to the a11y tree, so query the DOM directly.
     const backdrop = canvasElement.querySelector<HTMLElement>('[data-slot="orb-background"]');
-    expect(backdrop).not.toBeNull();
+    expect(backdrop, "the decorative backdrop is outside the a11y tree, so it is queried from the DOM").not.toBeNull();
     expect(backdrop).toHaveAttribute("aria-hidden", "true");
     expect(backdrop).toHaveAttribute("data-tone", "green");
     expect(backdrop?.className).toContain("pointer-events-none");
     const orbs = canvasElement.querySelectorAll('[data-slot="orb-background-orb"]');
     expect(orbs.length).toBe(3);
-    // Content sits above the backdrop and remains readable.
     expect(canvas.getByRole("heading", { name: "One Prompt. One App." })).toBeVisible();
     return Promise.resolve();
   },
@@ -169,9 +162,8 @@ export const Static: Story = {
   play: ({ canvasElement }) => {
     const orbs = canvasElement.querySelectorAll<HTMLElement>('[data-slot="orb-background-orb"]');
     expect(orbs.length).toBe(3);
-    // Every orb opts out of the idle drift; only the one-shot intro is wired up.
     for (const orb of orbs) {
-      expect(orb).toHaveAttribute("data-animated", "false");
+      expect(orb, "every orb opts out of the idle drift").toHaveAttribute("data-animated", "false");
     }
     return Promise.resolve();
   },

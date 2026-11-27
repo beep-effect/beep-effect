@@ -463,13 +463,6 @@ export class GroupPatch extends S.Opaque<GroupPatch, { readonly brand: unique sy
   )
 ) {}
 
-/**
- * A non-empty tab group represented as a zipper.
- *
- * The active panel is stored directly, so an invalid active-panel reference is
- * not representable.
- */
-
 type SplitPosition = Pick<SplitPlacement, "side" | "splitId" | "newGroupRatio">;
 
 /**
@@ -532,9 +525,8 @@ export class TabsNode extends S.Opaque<TabsNode, { readonly brand: unique symbol
     (tabs: TabsNode, panel: Panel, placement: TabPlacement): TabsNode => {
       const panels = TabsNode.panels(tabs);
       const index = O.getOrElse(placement.index, () => A.length(panels));
-      const inserted = O.getOrThrow(
-        A.insertAt(panels, N.clamp(index, { minimum: 0, maximum: A.length(panels) }), panel)
-      ); // crispen: total after clamp; use a total Effect Array insert when available.
+      const clampedIndex = N.clamp(index, { minimum: 0, maximum: A.length(panels) });
+      const inserted = O.getOrThrow(A.insertAt(panels, clampedIndex, panel));
       const activePanelId = Bool.match(placement.activate, {
         onTrue: () => panel.id,
         onFalse: () => tabs.active.id,
@@ -871,7 +863,6 @@ export class SplitNode extends S.Opaque<SplitNode, { readonly brand: unique symb
 
 type DockNodeShape = TabsNode | SplitNode;
 
-/** Recursive layout tree node. */
 const DockNodeBase = S.Union([TabsNode, SplitNode]).pipe(
   $I.annoteSchema("DockNode", {
     description: "Recursive binary dock tree containing only non-empty leaves.",

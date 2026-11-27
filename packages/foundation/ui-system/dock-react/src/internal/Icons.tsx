@@ -1,8 +1,5 @@
 import type { JSX } from "react";
 
-// Neutral inline glyphs for the adapter's chrome buttons. The adapter is
-// product-agnostic, so these stay dependency-free stroke SVGs drawn in
-// currentColor; hosts size and color them through the button's font/color.
 const Glyph = (props: { readonly children: JSX.Element | ReadonlyArray<JSX.Element> }) => (
   <svg
     aria-hidden="true"

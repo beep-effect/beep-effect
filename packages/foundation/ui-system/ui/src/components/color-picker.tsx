@@ -22,14 +22,14 @@ import type React from "react";
 
 const defaultColorValue = "#000000";
 
-// Unary by contract: `S.decodeUnknownOption` also accepts a trailing
-// `ParseOptions`, which would make the exported symbol a 2-arity function with no
-// decidable data-last dispatch (its first parameter is `unknown`, so no predicate
-// can tell a boundary value from an options bag). Narrowing the exported type to
-// the single-argument form keeps every caller working and leaves `ParseOptions`
-// reachable through `S.decodeUnknownOption(Color.NormalizeHexColor)` directly.
 /**
  * Normalizes a boundary hex color into canonical `#rrggbb` form.
+ *
+ * **Gotchas**
+ *
+ * The export is typed as a one-argument function and takes no `ParseOptions`: with an
+ * `unknown` first parameter no predicate could tell a value from an options bag. Call
+ * `S.decodeUnknownOption(Color.NormalizeHexColor)` directly when options are needed.
  *
  * **Example** (Short hex to canonical)
  *

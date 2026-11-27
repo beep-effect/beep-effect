@@ -109,8 +109,6 @@ export const ActionStyle = LiteralKit(["primary", "danger", "default"]).pipe(
  */
 export type ActionStyle = typeof ActionStyle.Type;
 
-// A foreground wash, not `muted`: the card itself is the muted surface, so a muted button on it
-// would vanish in both themes. The old zinc pair sat one step darker than the card the same way.
 const defaultActionStyleClassName =
   "bg-foreground/5 text-muted-foreground hover:bg-foreground/10 hover:text-foreground";
 
