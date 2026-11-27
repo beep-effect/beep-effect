@@ -1061,7 +1061,7 @@ export class CiCertaintyMainHorizon extends S.Opaque<CiCertaintyMainHorizon, { r
  * The per-commit merge timestamps are `mainRows[].committedAt` and the
  * per-run job counts are `mainRuns[]`; these are their aggregates.
  * `pullRequestRunHostedJobs` counts the started GitHub-hosted jobs of each
- * pull-request head attempt (a check.yml run plus its admitted heavy-admit.yml
+ * code pull-request head attempt (a check.yml run plus its admitted heavy-admit.yml
  * runs), `mainRunHostedJobs` those of each main push run that started a job.
  *
  * **Example** (Read the main run job count p95)

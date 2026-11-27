@@ -1155,7 +1155,7 @@ export const buildCiCertaintyReport = Effect.fn("Ci.buildCiCertaintyReport")(fun
         )
       ),
       pullRequestRunHostedJobs: distributionOf(
-        A.map(attempts, (attempt) => startedJobCount(attempt.jobs, "github-hosted"))
+        A.map(codeAttempts, (attempt) => startedJobCount(attempt.jobs, "github-hosted"))
       ),
     }),
     requestCount: corpus.requestCount,

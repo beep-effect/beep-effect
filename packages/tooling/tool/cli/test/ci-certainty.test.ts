@@ -1348,7 +1348,7 @@ const PLANNED_SIBLING_ROWS = {
   heavyQueue: [46, O.some(3.23)],
   heavySlot: [15, O.some(40.32)],
   lintPolicy: [14, O.some(11.97)],
-  prHostedJobs: [29, O.some(77)],
+  prHostedJobs: [15, O.some(77)],
   property: [15, O.some(17.53)],
 };
 
@@ -1429,8 +1429,9 @@ describe("ci certainty sibling-goal rows", () => {
             report.replayInputs.pullRequestRunHostedJobs.p50,
             report.replayInputs.pullRequestRunHostedJobs.p95,
           ],
-          [3, O.some(2), O.some(5)]
+          [report.heavySlotMinutes.n, O.some(2), O.some(5)]
         );
+        assertSome(report.replayInputs.pullRequestRunHostedJobs.mean, 3.5);
 
         const summary = renderCiCertaintySummaryMarkdown(report);
         expect(summary).toContain(
@@ -1688,6 +1689,26 @@ describe("ci certainty main late-arrival horizon", () => {
 
         deepStrictEqual(report.mainHorizon.since, report.since);
         strictEqual(CI_CERTAINTY_MAIN_HORIZON_DAYS, 7);
+      })
+    );
+  });
+});
+
+describe("ci certainty replay inputs population", () => {
+  it.layer(testLayer)((it) => {
+    it.effect("leaves a docs-head attempt out of the hosted jobs per pull-request head attempt", () =>
+      Effect.gen(function* () {
+        const report = yield* buildCiCertaintyReport(
+          CiCertaintyCorpus.make({
+            ...siblingRowsCorpus,
+            pullRequestRuns: A.filter(siblingRowsCorpus.pullRequestRuns, (run) => run.run.head_sha === ROWS_DOCS_HEAD),
+          })
+        );
+
+        strictEqual(headStartingWith(report.heads, ROWS_DOCS_HEAD).headClass, "docs");
+        strictEqual(report.runnerMinutes.runs, 1);
+        strictEqual(report.replayInputs.pullRequestRunHostedJobs.n, 0);
+        assertNone(report.replayInputs.pullRequestRunHostedJobs.p95);
       })
     );
   });
