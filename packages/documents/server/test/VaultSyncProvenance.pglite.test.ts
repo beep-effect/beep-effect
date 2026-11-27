@@ -32,9 +32,7 @@ const resolver = V.SessionResolver.of({
   ),
   revoked: Effect.fn("VaultSyncProvenance.revoked")(() => Effect.never),
 });
-// The mappings the production host mounts (Layer.ts): genesis first, then the v1 request context,
-// whose principalKey is the string field the driver copies.
-const config = AlchemyPostgresConfig.make({
+const productionProvenanceConfig = AlchemyPostgresConfig.make({
   provenance: ProvenanceMapping.makeOption({
     contextKey: V.GenesisProvenance.key,
     principalField: "principal",
@@ -68,7 +66,7 @@ describe("vault-sync driver provenance", () => {
         const sql = yield* SqlClient.SqlClient;
         const hosted = VaultSyncModel.layer(VaultSyncPolicies).pipe(
           Layer.provide(SecureRandom.layerWebCrypto),
-          Layer.provide(AlchemyPostgres.layer(config))
+          Layer.provide(AlchemyPostgres.layer(productionProvenanceConfig))
         );
         const session = VaultSyncSessionLive.pipe(Layer.provide(Layer.succeed(V.SessionResolver, resolver)));
         const context = yield* Layer.build(Layer.merge(session, hosted));
@@ -89,8 +87,6 @@ describe("vault-sync driver provenance", () => {
         );
         expect(rows).toEqual([{ principal: "User:5", source_kind: "http" }]);
 
-        // The DestinationNames policy registers the destination: a derived event in another aggregate.
-        // Its row joins on the kernel correlation id the Session seeded back to the caller's event.
         const derived = yield* sql`SELECT derived.tag, derived.principal, derived.source_kind, derived.correlation_id,
             root.principal AS root_principal, root.source_kind AS root_source_kind
           FROM alchemy_aggregate_event derived
@@ -101,9 +97,10 @@ describe("vault-sync driver provenance", () => {
           Effect.repeat({ until: A.isReadonlyArrayNonEmpty, schedule: Schedule.spaced("20 millis") }),
           Effect.timeout("10 seconds")
         );
-        // The policy's send captures the reaction fiber's context, not the caller's: no principal is
-        // stamped on the derived row, and the join recovers the caller's principal and transport.
-        expect(derived).toEqual([
+        expect(
+          derived,
+          "the policy's send runs in the reaction fiber's context, so the derived row has no principal; the correlation join recovers the caller's"
+        ).toEqual([
           {
             tag: "DestinationRegistered",
             principal: null,

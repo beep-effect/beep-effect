@@ -48,12 +48,10 @@ class PassScenario extends Domain.Model("VaultSync", {
   sagas: [VaultSyncPass],
 }) {}
 const infrastructure = Layer.mergeAll(PgliteTestLayer, BunServices.layer);
-// The driver's default 30-second lease on purpose: the old runtime frees the deliveries it claimed as it closes, so
-// the fresh one resumes them at once. Holding them to the lease would push a restart past the per-test budget.
 describe("VaultSyncPass SQL durability", () => {
   layer(infrastructure, { timeout: "60 seconds", excludeTestServices: true, concurrent: false })("restart", (it) => {
     for (const phase of ["before-poll", "item-acknowledged"]) {
-      it.effect(`resumes a fresh runtime after ${phase} without duplicate Box calls`, () =>
+      it.effect(`resumes a fresh runtime after ${phase} under the default lease without duplicate Box calls`, () =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
@@ -67,7 +65,9 @@ describe("VaultSyncPass SQL durability", () => {
           yield* fs.writeFileString(path.join(root, "folder", "file.txt"), "synthetic fixture");
           const destinationId = V.DestinationId.make(`documents_sync_destination_a${Str.replaceAll("-", "")(phase)}`);
           const reached = yield* Ref.make(false);
-          const rootLayer = Layer.succeed(VaultSyncRoot, { resolve: Effect.fn("fixture")(() => Effect.succeed(root)) });
+          const rootLayer = Layer.succeed(VaultSyncRoot, {
+            resolve: Effect.fn("fixture")(() => Effect.succeed(root)),
+          });
           const adapters = BoxMirrorLive.pipe(
             Layer.provide(Layer.succeedContext(fixtures)),
             Layer.provide(
@@ -100,11 +100,8 @@ describe("VaultSyncPass SQL durability", () => {
             destinationId,
             V.RegisterDestination.make({ orgId: 1, workspaceId: 1, name: "synthetic" })
           );
-          // A pre-existing cursor exercises echoes and drift; an unbootstrapped Box poll starts at now.
-          yield* Context.get(old, V.SyncDestination).send(
-            destinationId,
-            V.RecordDestinationPoll.make({ position: "0", error: null })
-          );
+          const preexistingCursorPoll = V.RecordDestinationPoll.make({ position: "0", error: null });
+          yield* Context.get(old, V.SyncDestination).send(destinationId, preexistingCursorPoll);
           yield* Context.get(old, VaultSyncPass).start(phase, { destinationId });
           yield* Ref.get(reached).pipe(
             Effect.repeat({ until: (value) => value, schedule: Schedule.spaced("10 millis") }),
@@ -161,9 +158,11 @@ describe("VaultSyncPass SQL durability", () => {
           yield* Scope.close(oldScope, Exit.void);
           const fresh = yield* Layer.build(runtime);
           const result = yield* Context.get(fresh, VaultSyncPass).get(phase).result.pipe(Effect.timeout("20 seconds"));
-          expect(result).toEqual({ operationsSucceeded: 3, conflicts: phase === "before-poll" ? 2 : 0 });
+          expect(
+            result,
+            "the closing runtime frees its claimed deliveries, so the fresh one resumes them well inside the lease"
+          ).toEqual({ operationsSucceeded: 3, conflicts: phase === "before-poll" ? 2 : 0 });
           const counts = yield* fixture.counts;
-          // Measure this run against the suite fixture counts captured before starting.
           expect(counts.ensureFolder - beforeCounts.ensureFolder).toBe(1);
           expect(counts.uploadFile - beforeCounts.uploadFile).toBe(2);
           const state = yield* Context.get(fresh, V.SyncDestination).get(destinationId);
@@ -173,14 +172,13 @@ describe("VaultSyncPass SQL durability", () => {
           const ackRows = yield* sql`SELECT seq FROM alchemy_aggregate_event
             WHERE model='VaultSync' AND aggregate='SyncItem' AND id=${fileId} AND tag='ItemPushed'`;
           expect(ackRows).toHaveLength(1);
-          // D17 F1: command ids carry opaque ids only, never a vault path.
           const commandIds = yield* sql<{ readonly command_id: string }>`SELECT command_id
             FROM alchemy_aggregate_event WHERE model='VaultSync' AND command_id LIKE ${`${phase}/%`}`;
           expect(commandIds.length).toBeGreaterThan(0);
           const leaked = A.filter(commandIds, (row) =>
             A.some(["file.txt", "a.txt", "folder"], (part) => Str.includes(part)(row.command_id))
           );
-          expect(leaked).toEqual([]);
+          expect(leaked, "command ids carry opaque ids only, never a vault path").toEqual([]);
           const again = yield* Context.get(fresh, VaultSyncPass).start(phase, { destinationId });
           const repeated = yield* again.result;
           expect(repeated).toEqual(result);
@@ -232,7 +230,6 @@ describe("VaultSyncPass SQL durability", () => {
         expect(skippedResult).toEqual({ operationsSucceeded: 0, conflicts: 0 });
         const after = yield* fixture.counts;
         expect(after).toEqual(before);
-        // A probe-only pass refreshes availability and runs no mirror verb.
         const probing = yield* Context.get(runtime, VaultSyncPass).start("probe-pass", {
           destinationId: failing,
           probeOnly: true,
@@ -240,7 +237,7 @@ describe("VaultSyncPass SQL durability", () => {
         const probed = yield* probing.result.pipe(Effect.timeout("20 seconds"));
         expect(probed).toEqual({ operationsSucceeded: 0, conflicts: 0 });
         const afterProbe = yield* fixture.counts;
-        expect(afterProbe).toEqual(after);
+        expect(afterProbe, "a probe-only pass refreshes availability and runs no mirror verb").toEqual(after);
       })
     );
   });

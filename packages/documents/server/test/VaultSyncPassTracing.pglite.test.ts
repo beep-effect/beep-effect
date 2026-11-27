@@ -42,7 +42,6 @@ class TracedPass extends Domain.Model("VaultSync", {
   sagas: [VaultSyncPass],
 }) {}
 
-/** Every span the runtime started, in start order. */
 const spans: Array<Tracer.NativeSpan> = [];
 const tracer = Tracer.make({
   span: (options) => {
@@ -54,7 +53,6 @@ const tracer = Tracer.make({
 
 const named = (name: string) => A.filter(spans, (span) => span.name === name);
 const byId = () => R.fromEntries(A.map(spans, (span) => [span.spanId, span] as const));
-// Span ids from a span up to its root, following parents by id.
 const ancestorIds = (span: Tracer.NativeSpan): ReadonlyArray<string> => {
   const index = byId();
   const up = (current: Tracer.NativeSpan): ReadonlyArray<string> =>
@@ -66,11 +64,9 @@ const ancestorIds = (span: Tracer.NativeSpan): ReadonlyArray<string> => {
 };
 const stringValues = (span: Tracer.NativeSpan) => A.filter(A.fromIterable(span.attributes.values()), P.isString);
 
-// Names that would identify a client or matter if they reached telemetry.
-const folderName = "matter-acme-holdings";
-const fileName = "privileged-brief.txt";
+const identifyingFolderName = "matter-acme-holdings";
+const identifyingFileName = "privileged-brief.txt";
 
-// An in-memory vault: the pass reads it through the FileSystem service only.
 const infrastructure = Layer.mergeAll(PgliteTestLayer, MemoryFileSystem.layer, Path.layer);
 
 describe("VaultSyncPass tracing (D17)", () => {
@@ -81,8 +77,11 @@ describe("VaultSyncPass tracing (D17)", () => {
         const path = yield* Path.Path;
         const fixtures = yield* DmsMirrorFixtureLayer.pipe(Layer.fresh, Layer.build);
         const root = yield* fs.makeTempDirectoryScoped();
-        yield* fs.makeDirectory(path.join(root, folderName));
-        yield* fs.writeFileString(path.join(root, folderName, fileName), "synthetic privileged text");
+        yield* fs.makeDirectory(path.join(root, identifyingFolderName));
+        yield* fs.writeFileString(
+          path.join(root, identifyingFolderName, identifyingFileName),
+          "synthetic privileged text"
+        );
         const rootLayer = Layer.succeed(VaultSyncRoot, { resolve: Effect.fn("fixture")(() => Effect.succeed(root)) });
         const adapters = BoxMirrorLive.pipe(
           Layer.provide(Layer.succeedContext(fixtures)),
@@ -134,9 +133,11 @@ describe("VaultSyncPass tracing (D17)", () => {
         );
         expect(run.attributes.get("documents.vault_sync.destination_id")).toBe(destinationId);
         expect(run.attributes.get("documents.vault_sync.operations_succeeded")).toBe(2);
-        // Each Box call is a client span under its pump step, labelled by operation only.
         const calls = named("BoxMirror.call");
-        expect(A.map(calls, (span) => span.kind)).toContain("client");
+        expect(
+          A.map(calls, (span) => span.kind),
+          "each Box call is a client span under its pump step"
+        ).toContain("client");
         expect(
           A.sort(
             A.dedupe(
@@ -146,16 +147,19 @@ describe("VaultSyncPass tracing (D17)", () => {
               )
             ),
             Str.Order
-          )
+          ),
+          "Box call spans are labelled by operation only"
         ).toEqual(A.sort(["ensureFolder", "pollEvents", "resolveRoot", "uploadFile"], Str.Order));
 
-        // D17 R1: no span name or attribute carries a vault path, a path segment or the vault root.
         const leaked = A.filter(spans, (span) =>
           A.some([span.name, ...stringValues(span)], (text) =>
-            A.some([folderName, fileName, root], (segment) => Str.includes(segment)(text))
+            A.some([identifyingFolderName, identifyingFileName, root], (segment) => Str.includes(segment)(text))
           )
         );
-        expect(A.map(leaked, (span) => span.name)).toEqual([]);
+        expect(
+          A.map(leaked, (span) => span.name),
+          "no span name or attribute carries a vault path, a path segment or the vault root"
+        ).toEqual([]);
       })
     );
   });

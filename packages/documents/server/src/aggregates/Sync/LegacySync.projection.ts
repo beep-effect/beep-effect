@@ -30,8 +30,7 @@ const $I = $DocumentsServerId.create("aggregates/Sync/LegacySync.projection");
 const decodeRowVersions = S.decodeUnknownEffect(S.Array(S.Struct({ row_version: S.Int })));
 const encodeJsonValue = S.encodeEffect(S.fromJsonString(S.Unknown));
 const IdRows = S.NonEmptyArray(S.Struct({ id: S.Int }));
-// The legacy readers decode `entity_type` as the identity's entity type, not the table name.
-const entityTypes = {
+const identityEntityTypes = {
   item: Documents.SyncItemId.entityType,
   operation: Documents.SyncOperationId.entityType,
   conflict: Documents.SyncConflictId.entityType,
@@ -87,9 +86,7 @@ const store = Effect.gen(function* () {
     );
     return A.headNonEmpty(rows).id;
   });
-  // Marks the writer and advances the source checkpoint; false means the delivery was already applied.
   const claimCheckpoint = Effect.fnUntraced(function* (entity: string, stream: string, seq: number) {
-    // The writer epoch fence admits only transactions that carry this marker.
     yield* markSyncModelWriter.pipe(Effect.provideService(SqlClient.SqlClient, sql));
     const accepted = yield* sql`INSERT INTO documents_sync_projection_checkpoint (projection, stream, seq)
       VALUES (${entity}, ${stream}, ${seq}) ON CONFLICT(projection, stream) DO UPDATE SET seq=EXCLUDED.seq
@@ -97,13 +94,12 @@ const store = Effect.gen(function* () {
     return A.isReadonlyArrayNonEmpty(accepted);
   });
   const write = Effect.fnUntraced(function* (
-    entity: keyof typeof entityTypes,
+    entity: keyof typeof identityEntityTypes,
     publicId: string,
     stream: string,
     seq: number,
     at: number,
     columns: Readonly<Record<string, unknown>>,
-    // Written when the row is created and never updated, like the creation audit columns.
     insertOnly: Readonly<Record<string, unknown>> = {}
   ) {
     yield* sql
@@ -116,13 +112,11 @@ const store = Effect.gen(function* () {
           const existing = yield* sql`SELECT row_version FROM ${sql(table)} WHERE id=${id}`.pipe(
             Effect.flatMap(decodeRowVersions)
           );
-          // The source checkpoint makes a single increment safe on redelivery; imported
-          // row versions are compatibility state and must never reset to source seq.
           const rowVersion = A.isReadonlyArrayNonEmpty(existing) ? existing[0].row_version + 1 : 1;
           const row = {
             id,
             public_id: publicId,
-            entity_type: entityTypes[entity],
+            entity_type: identityEntityTypes[entity],
             org_id: meta.orgId,
             workspace_id: meta.workspaceId,
             provider: "box",
@@ -160,8 +154,7 @@ const store = Effect.gen(function* () {
           yield* sql`INSERT INTO documents_sync_legacy_identity (entity, public_id, id)
         VALUES (${entity}, ${row.public_id}, ${row.id}) ON CONFLICT(entity, public_id)
         DO UPDATE SET id = EXCLUDED.id`;
-          // JSON values must be serialized for SqlClient's generic insert helper.
-          const stored = {
+          const jsonEncodedRow = {
             ...row,
             created_by_principal: yield* encodeJsonValue(row.created_by_principal),
             updated_by_principal: yield* encodeJsonValue(row.updated_by_principal),
@@ -170,8 +163,8 @@ const store = Effect.gen(function* () {
           yield* sql`SELECT setval(pg_get_serial_sequence('documents_sync_legacy_identity','id'),
         GREATEST((SELECT COALESCE(MAX(id),1) FROM documents_sync_legacy_identity),
           (SELECT last_value FROM documents_sync_legacy_identity_id_seq)),true)`;
-          yield* sql`INSERT INTO ${sql(`documents_sync_${entity}`)} ${sql.insert(stored)}
-        ON CONFLICT(id) DO UPDATE SET ${sql.update(stored)}`;
+          yield* sql`INSERT INTO ${sql(`documents_sync_${entity}`)} ${sql.insert(jsonEncodedRow)}
+        ON CONFLICT(id) DO UPDATE SET ${sql.update(jsonEncodedRow)}`;
         })
       )
       .pipe(Effect.orDie);
@@ -258,7 +251,6 @@ const cursorColumns = (
   last_error: state.cursorError,
   status: state.cursorError === null ? "active" : "error",
 });
-// Only advance and failure events of a registered destination with a cursor write the cursor row.
 const cursorTarget = (event: { readonly _tag: string }, state: V.DestinationState | null) =>
   (event._tag === "CursorAdvanced" || event._tag === "CursorFailed") &&
   state?._tag === "Registered" &&
@@ -268,6 +260,19 @@ const cursorTarget = (event: { readonly _tag: string }, state: V.DestinationStat
 const SelectionRows = S.Array(S.Struct({ public_id: S.NullOr(S.String), paused: S.Boolean }));
 /**
  * Writes derived rows with D14 numeric references and transactional delivery checkpoints.
+ *
+ * **Details**
+ *
+ * Each delivery's transaction carries the Model writer marker, the only transactions the writer
+ * epoch fence admits, and advances the source checkpoint first; an already-applied delivery writes
+ * nothing. An operation row takes its workspace from its destination's state, not its item's row:
+ * the destination's registration commits before any operation can name it, while the item row,
+ * written by another projection, may not exist yet.
+ *
+ * **Gotchas**
+ *
+ * `row_version` increments once per applied delivery, which the source checkpoint makes safe on
+ * redelivery, and never resets to the source sequence: imported row versions are compatibility state.
  *
  * **Example** (Inspect declaration)
  * ```ts
@@ -298,9 +303,6 @@ export const LegacySyncProjections = Layer.mergeAll(
     Effect.gen(function* () {
       const { genesis, write, path, identity } = yield* store;
       const destinations = yield* V.SyncDestination;
-      // The operation belongs to its destination's workspace. The destination's registration commits
-      // before any operation can name it, so its state is the owner whatever order the item and
-      // operation projections run in; the item row, written by another projection, may not exist yet.
       const destinationWorkspace = Effect.fnUntraced(function* (destinationId: V.DestinationId) {
         const destination = yield* destinations.get(destinationId).pipe(Effect.orDie);
         return destination?._tag === "Registered" ? { workspace_id: destination.workspaceId } : {};
@@ -322,8 +324,7 @@ export const LegacySyncProjections = Layer.mergeAll(
             envelope.seq,
             DateTime.toEpochMillis(envelope.at),
             columns,
-            // The key is fixed when the row is created: an imported row keeps its legacy key text through
-            // later live events, and a live row keeps the operation id it was queued under.
+            // decision: genesis-keeps-legacy-rows-verbatim
             { idempotency_key: state.input.idempotencyKey }
           );
         }
@@ -370,8 +371,7 @@ export const LegacySyncProjections = Layer.mergeAll(
           Effect.orDie
         );
       });
-      // A paused or unselected imported cursor keeps its row; otherwise the selected or derived id is written.
-      const selectedCursor = Effect.fnUntraced(function* (destinationId: string) {
+      const writableCursorId = Effect.fnUntraced(function* (destinationId: string) {
         const rows = yield* sql`SELECT public_id,paused FROM documents_sync_cursor_selection
           WHERE destination_id=${destinationId}`.pipe(
           Effect.flatMap(S.decodeUnknownEffect(SelectionRows)),
@@ -388,7 +388,7 @@ export const LegacySyncProjections = Layer.mergeAll(
           }
           const target = cursorTarget(event, state);
           if (O.isNone(target)) continue;
-          const publicId = yield* selectedCursor(source.id);
+          const publicId = yield* writableCursorId(source.id);
           if (O.isNone(publicId)) continue;
           const at = DateTime.toEpochMillis(envelope.at);
           yield* write("cursor", publicId.value, envelope.stream, envelope.seq, at, cursorColumns(target.value, event));
