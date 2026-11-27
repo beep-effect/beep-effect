@@ -1,7 +1,3 @@
-// The text each cell of a shared formula is given: the first cell's formula with its relative references moved by
-// the distance between the two cells. A string constant, a quoted sheet name and a bracketed piece hold no
-// reference and come through as written; whole-column and whole-row ranges move along their own axis.
-
 import { Xlsx } from "@beep/xlsx/Xlsx.codec";
 import { describe, expect, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
@@ -15,7 +11,6 @@ import { sheet, workbook } from "./support/workbooks.ts";
 const xmlText = (text: string): string =>
   Str.replaceAll(">", "&gt;")(Str.replaceAll("<", "&lt;")(Str.replaceAll("&", "&amp;")(text)));
 
-/** The formulas a sheet gives, cell by cell, when `formula` is shared from C2 to the cells named. */
 const sharedFrom = Effect.fn("sharedFrom")(function* (formula: string, cells: ReadonlyArray<string>) {
   const dependents = A.join(
     A.map(
@@ -32,13 +27,12 @@ const sharedFrom = Effect.fn("sharedFrom")(function* (formula: string, cells: Re
   );
 });
 
-/** Checks the formulas a sheet gives when `formula` is shared from C2 to the cells named. */
 const expectShared = (formula: string, cells: ReadonlyArray<string>, expected: ReadonlyArray<string>) =>
   Effect.map(sharedFrom(formula, cells), (found) => {
     expect(found).toEqual(expected);
   });
 
-describe("a shared formula", () => {
+describe("a shared formula gives each cell the first cell's text, its relative references moved by the distance", () => {
   it.effect("leaves a string constant as it is, doubled quotes included, and moves the references round it", () =>
     Effect.gen(function* () {
       yield* expectShared('A2&"A2"', ["C3"], ['A2&"A2"', 'A3&"A2"']);
@@ -73,9 +67,7 @@ describe("a shared formula", () => {
     )
   );
 
-  // A sheet span (`JAN:DEC!`) names sheets, not columns: a reference is never followed by `!`. A run of capitals
-  // inside a longer name (`MyJAN`, `myA1`) is part of that name, whatever case the name's other letters are in.
-  it.effect("leaves the sheets of a 3D reference and a name holding capitals and digits as they are", () =>
+  it.effect("leaves a sheet span such as `JAN:DEC!` and capitals inside a longer name of any case as they are", () =>
     Effect.gen(function* () {
       yield* expectShared("SUM(JAN:DEC!B2)", ["D3"], ["SUM(JAN:DEC!B2)", "SUM(JAN:DEC!C3)"]);
       yield* expectShared("SUM(A:C!B2)+A1!B2", ["D3"], ["SUM(A:C!B2)+A1!B2", "SUM(A:C!C3)+A1!C3"]);
@@ -87,10 +79,9 @@ describe("a shared formula", () => {
     })
   );
 
-  // Whatever two sheets a 3D reference spans, a dependent cell gets the same span and only the cell moves.
   const SheetName = S.String.check(S.isPattern(/^[A-Za-z]{1,6}$/));
   it.effect.prop(
-    "gives every cell the sheet span of a 3D reference unchanged",
+    "gives every cell the sheet span of a 3D reference unchanged, whatever two sheets it spans, moving only the cell",
     [Arbitrary.schema(SheetName), Arbitrary.schema(SheetName)],
     ([from, to]) => {
       const span = `${from}:${to}!`;
@@ -99,10 +90,9 @@ describe("a shared formula", () => {
     { arbitrary: { runs: 100 } }
   );
 
-  // Whatever a string constant holds, references among them, a dependent cell gets it unchanged.
   const Constant = S.String.check(S.isPattern(/^(?:[A-Z0-9:$! ]|"")*$/), S.isMaxLength(24));
   it.effect.prop(
-    "gives every cell the string constants of the first, unchanged",
+    "gives every cell the string constants of the first unchanged, whatever they hold, references included",
     [Arbitrary.schema(Constant), Arbitrary.schema(Constant)],
     ([first, second]) =>
       Effect.gen(function* () {

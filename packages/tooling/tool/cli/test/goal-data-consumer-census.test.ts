@@ -36,13 +36,13 @@ import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
-import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import { skipWhenPruned } from "./support/CheckoutSkip.ts";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
+import { TEST_TASKS, testInputGlobs, testTasksOf, undeclaredTestTasks } from "./support/TurboTestInputs.ts";
 import type { CheckoutSubject } from "@beep/repo-cli-kit/CheckoutSubject";
 
 // ROUT-03 (goals/route-soundness-repair): the packet-data consumer census. It regenerates, from
@@ -78,7 +78,6 @@ const READ_SHAPES: ReadonlyArray<RegExp> = [
   /(?<!!)\$TURBO_ROOT\$\/((?:goals|explorations)\/[^"'`\s),]*)/gu,
 ];
 const NEGATED_TURBO_INPUT = /!\$TURBO_ROOT\$\/((?:goals|explorations)\/[^"'`\s),]*)/gu;
-const TURBO_ROOT_INPUT = /^(!?)\$TURBO_ROOT\$\//u;
 const ROUT_09_FIXTURE = "packages/law-practice/use-cases/test/fixtures/eyecite/authority-identity-cases.json";
 // A bare string literal in test code, as `path.join(repoRoot, "goals/...")` passes it. Test code
 // also names packet paths as data (synthetic temp trees, classifier rows), so this shape only
@@ -307,51 +306,7 @@ const owningPackageDirectory = (source: string, tracked: HashSet.HashSet<string>
   );
 };
 
-const decodePackageName = S.decodeUnknownEffect(
-  S.fromJsonString(S.Struct({ name: S.NonEmptyString, scripts: S.Record(S.String, S.String).pipe(S.optionalKey) }))
-);
-
-const decodePackageTurbo = S.decodeUnknownEffect(
-  S.fromJsonString(
-    S.Struct({
-      tasks: S.Record(S.String, S.Struct({ inputs: S.Array(S.String).pipe(S.optionalKey) })),
-    })
-  )
-);
-
-const TEST_TASKS: ReadonlyArray<string> = ["test", "test:integration", "test:integration:parallel"];
-
-const testTasksOf = Effect.fnUntraced(function* (root: string, directory: string) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const text = yield* fs.readFileString(path.join(root, directory, "package.json"));
-  const manifest = yield* decodePackageName(text);
-  const scripts = manifest.scripts ?? R.empty<string, string>();
-  return A.filter(TEST_TASKS, (task) => R.has(scripts, task));
-});
-
-const declaredTestInputs = Effect.fnUntraced(function* (turboPath: string, task: string) {
-  const fs = yield* FileSystem.FileSystem;
-  const text = yield* fs.readFileString(turboPath);
-  const turbo = yield* decodePackageTurbo(text);
-  return pipe(
-    R.get(turbo.tasks, task),
-    O.flatMapNullishOr((task) => task.inputs),
-    O.getOrElse(A.empty<string>)
-  );
-});
-
-const testInputGlobs = Effect.fnUntraced(function* (root: string, directory: string, task: string) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const turboPath = path.join(root, directory, "turbo.json");
-  const present = yield* fs.exists(turboPath);
-  const inputs = present ? yield* declaredTestInputs(turboPath, task) : A.empty<string>();
-  const rootInputs = A.filterMap(inputs, (input) =>
-    TURBO_ROOT_INPUT.test(input) ? Result.succeed(Str.replace(TURBO_ROOT_INPUT, "$1")(input)) : Result.failVoid
-  );
-  return yield* GlobSet.compile(A.isReadonlyArrayNonEmpty(rootInputs) ? rootInputs : ["!**"]);
-});
+const decodePackageName = S.decodeUnknownEffect(S.fromJsonString(S.Struct({ name: S.NonEmptyString })));
 
 // The mutations the packet names: malform the frozen citation fixture, the spawned citation
 // ops child and a ciops research JSON (the `.ts` ops script is the first tracked one the census finds), plus
@@ -633,12 +588,7 @@ it.layer(Layer.provideMerge(CensusFactsLive, Layer.provideMerge(Git.layer, NodeS
         Effect.fnUntraced(function* (entry) {
           const directory = owningPackageDirectory(entry.source, tracked);
           if (O.isNone(directory)) return O.some(`${entry.path} <- ${entry.source}: no owning package`);
-          const tasks = yield* testTasksOf(root, directory.value);
-          const missing = yield* Effect.filter(
-            tasks,
-            (task) => Effect.map(testInputGlobs(root, directory.value, task), (globs) => !globs.matches(entry.path)),
-            { concurrency: 1 }
-          );
+          const missing = yield* undeclaredTestTasks(root, directory.value, entry.path);
           return A.isReadonlyArrayNonEmpty(missing)
             ? O.some(
                 `${entry.path} <- ${entry.source}; add "$TURBO_ROOT$/${entry.path}" (or a glob over it) to the ${A.join(missing, ", ")} inputs of ${directory.value}/turbo.json`

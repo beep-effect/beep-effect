@@ -8,7 +8,9 @@
         "$TURBO_ROOT$/goals/citation-extraction-engine/ops/**",
         "!$TURBO_ROOT$/goals/citation-extraction-engine/ops/manifest.json",
         "$TURBO_ROOT$/goals/citation-extraction-engine/history/evidence/2026-11-08-six-form-selection/profile.frozen.json.txt",
-        "$TURBO_ROOT$/packages/law-practice/use-cases/test/fixtures/**"
+        "$TURBO_ROOT$/packages/law-practice/use-cases/test/fixtures/**",
+        "$TURBO_ROOT$/packages/_internal/db-admin/drizzle/**",
+        "$TURBO_ROOT$/packages/law-practice/domain/test/fixtures/claim-element/**"
       ]
     },
     "test:integration": {
@@ -17,7 +19,9 @@
         "$TURBO_ROOT$/goals/citation-extraction-engine/ops/**",
         "!$TURBO_ROOT$/goals/citation-extraction-engine/ops/manifest.json",
         "$TURBO_ROOT$/goals/citation-extraction-engine/history/evidence/2026-11-08-six-form-selection/profile.frozen.json.txt",
-        "$TURBO_ROOT$/packages/law-practice/use-cases/test/fixtures/**"
+        "$TURBO_ROOT$/packages/law-practice/use-cases/test/fixtures/**",
+        "$TURBO_ROOT$/packages/_internal/db-admin/drizzle/**",
+        "$TURBO_ROOT$/packages/law-practice/domain/test/fixtures/claim-element/**"
       ]
     },
     "test:integration:parallel": {
@@ -26,7 +30,9 @@
         "$TURBO_ROOT$/goals/citation-extraction-engine/ops/**",
         "!$TURBO_ROOT$/goals/citation-extraction-engine/ops/manifest.json",
         "$TURBO_ROOT$/goals/citation-extraction-engine/history/evidence/2026-11-08-six-form-selection/profile.frozen.json.txt",
-        "$TURBO_ROOT$/packages/law-practice/use-cases/test/fixtures/**"
+        "$TURBO_ROOT$/packages/law-practice/use-cases/test/fixtures/**",
+        "$TURBO_ROOT$/packages/_internal/db-admin/drizzle/**",
+        "$TURBO_ROOT$/packages/law-practice/domain/test/fixtures/claim-element/**"
       ]
     }
   }

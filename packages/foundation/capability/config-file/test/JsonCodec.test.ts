@@ -32,8 +32,7 @@ describe("JsonCodec", () => {
       assert.strictEqual(error._tag, "ConfigCodecError");
       assert.strictEqual(error.codec, "json");
       assert.strictEqual(error.operation, "parse");
-      // The underlying SchemaError survives structurally.
-      assert.instanceOf(error.cause, S.SchemaError);
+      assert.instanceOf(error.cause, S.SchemaError, "the underlying SchemaError survives structurally");
     })
   );
 
@@ -53,10 +52,8 @@ describe("JsonCodec", () => {
       const cause = exit.pipe(Exit.getCause, O.getOrThrow);
       assertExitFailure(exit, cause);
       assertSome(Exit.getCause(exit), cause);
-      // A defect would mean the parser threw instead of failing typed: assert the
-      // cause is a genuine Fail reason, not a Die reason.
-      assert.isTrue(Cause.hasFails(cause));
-      assert.isFalse(Cause.hasDies(cause));
+      assert.isTrue(Cause.hasFails(cause), "the parser fails typed with a Fail reason");
+      assert.isFalse(Cause.hasDies(cause), "a Die reason would mean the parser threw");
     })
   );
 });
