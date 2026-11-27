@@ -1,7 +1,31 @@
+/**
+ * Serves the `Connections` operation from the reader of the locator's platform.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import type * as Rpc from "effect/rpc/Rpc"
-import { connections } from "../../content.ts"
+import { connections } from "../../reader.ts"
 import type { Contract } from "./Connections.contract.ts"
 
+/**
+ * **Details**
+ *
+ * Checked against its contract here, so a drift between the two is reported in
+ * this file and not where the layer is assembled.
+ *
+ * **Example** (Hand the handler to a layer)
+ *
+ * ```ts import.meta.vitest name="Hand the Connections handler to a layer"
+ * import { Handler } from "@beep/scratchpad/int/rpcs/Connections/Connections.handler"
+ * import * as P from "effect/Predicate"
+ *
+ * P.isFunction(Handler) // => true
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 export const Handler = (({ locator, connection }) => connections(locator, connection)) satisfies Rpc.ToHandlerFn<
   typeof Contract
 >

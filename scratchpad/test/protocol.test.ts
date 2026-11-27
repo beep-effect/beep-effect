@@ -1,15 +1,17 @@
 import {
   Account,
   ConnectionsHidden,
+  handleOf,
+  Post,
+  Profile,
+} from "@beep/scratchpad/int/content";
+import {
   DzenReader,
   FacebookReader,
   FanslyReader,
-  handleOf,
   InstagramReader,
   OnlyFansReader,
   PinterestReader,
-  Post,
-  Profile,
   RedditReader,
   RedGifsReader,
   SnapchatReader,
@@ -18,20 +20,37 @@ import {
   VscoReader,
   XReader,
   YouTubeReader,
-} from "@beep/scratchpad/int/content";
+} from "@beep/scratchpad/int/reader";
 import {
   AuthRequired,
   CollectionLocator,
   Locator,
   LocatorFromUrl,
+  MappedItem,
   type Platform,
   PostLocator,
   RateLimited,
   RedGifsTarget,
   locate,
 } from "@beep/scratchpad/int/locator";
+import {
+  DzenMapper,
+  FacebookMapper,
+  FanslyMapper,
+  InstagramMapper,
+  OnlyFansMapper,
+  PinterestMapper,
+  RedditMapper,
+  RedGifsMapper,
+  SnapchatMapper,
+  ThreadsMapper,
+  TikTokMapper,
+  VscoMapper,
+  XMapper,
+  YouTubeMapper,
+} from "@beep/scratchpad/int/mapper";
 import { ReaderRpcs } from "@beep/scratchpad/int/protocol";
-import { ReaderHandlers } from "@beep/scratchpad/int/protocol.handler";
+import { ReaderHandlers } from "@beep/scratchpad/int/protocol.layer";
 import { expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -88,7 +107,30 @@ const readers = Layer.mergeAll(
   Layer.succeed(DzenReader, signedOut("dzen"))
 );
 
-it.layer(ReaderHandlers.pipe(Layer.provide(readers)))("the reader protocol", (it) => {
+const unmapped = { items: () => Stream.empty };
+const mappers = Layer.mergeAll(
+  Layer.succeed(RedGifsMapper, {
+    items: () =>
+      Stream.make(MappedItem.make({ source: clip("calmclip").source, videos: 1 })).pipe(
+        Stream.concat(Stream.fail(RateLimited.make({ platform: "redgifs" })))
+      ),
+  }),
+  Layer.succeed(XMapper, unmapped),
+  Layer.succeed(YouTubeMapper, unmapped),
+  Layer.succeed(FacebookMapper, unmapped),
+  Layer.succeed(FanslyMapper, unmapped),
+  Layer.succeed(InstagramMapper, unmapped),
+  Layer.succeed(OnlyFansMapper, unmapped),
+  Layer.succeed(PinterestMapper, unmapped),
+  Layer.succeed(SnapchatMapper, unmapped),
+  Layer.succeed(ThreadsMapper, unmapped),
+  Layer.succeed(TikTokMapper, unmapped),
+  Layer.succeed(VscoMapper, unmapped),
+  Layer.succeed(RedditMapper, unmapped),
+  Layer.succeed(DzenMapper, unmapped)
+);
+
+it.layer(ReaderHandlers.pipe(Layer.provide(Layer.merge(readers, mappers))))("the reader protocol", (it) => {
   it.effect("reads a profile from a URL in two steps", () =>
     Effect.gen(function* () {
       const client = yield* RpcTest.makeClient(ReaderRpcs);
@@ -137,6 +179,19 @@ it.layer(ReaderHandlers.pipe(Layer.provide(readers)))("the reader protocol", (it
         Stream.runCollect
       );
       expect(A.fromIterable(seen)).toEqual(["https://www.redgifs.com/watch/calmclip", "https://www.redgifs.com/watch/loudclip", "throttled"]);
+    }).pipe(Effect.scoped)
+  );
+
+  it.effect("streams mapped items and keeps what arrived before a tagged failure", () =>
+    Effect.gen(function* () {
+      const client = yield* RpcTest.makeClient(ReaderRpcs);
+      const locator = yield* locate("https://www.redgifs.com/users/example");
+      const seen = yield* client.Items({ locator }).pipe(
+        Stream.map(({ videos }) => videos),
+        Stream.catchTag("RateLimited", () => Stream.make(0)),
+        Stream.runCollect
+      );
+      expect(A.fromIterable(seen)).toEqual([1, 0]);
     }).pipe(Effect.scoped)
   );
 

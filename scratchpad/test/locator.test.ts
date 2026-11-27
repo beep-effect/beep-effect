@@ -1,41 +1,19 @@
 import {
-  AuthRequired,
-  DzenMapper,
-  FacebookMapper,
-  FanslyMapper,
-  InstagramMapper,
-  OnlyFansMapper,
-  PinterestMapper,
-  RedditMapper,
-  SnapchatMapper,
-  ThreadsMapper,
-  TikTokMapper,
-  VscoMapper,
   FacebookTarget,
   Locator,
   LocatorFromUrl,
-  MappedItem,
   PostLocator,
   CollectionLocator,
-  RedGifsMapper,
-  RedGifsTarget,
-  XMapper,
   XTarget,
-  YouTubeMapper,
-  YouTubeTarget,
-  items,
   landing,
   locate,
 } from "@beep/scratchpad/int/locator";
 import { describe, expect, it } from "@effect/vitest";
-import * as A from "effect/Array";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
-import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Stream from "effect/Stream";
 
 const decode = S.decodeUnknownOption(LocatorFromUrl);
 const encode = S.encodeOption(LocatorFromUrl);
@@ -164,10 +142,6 @@ describe("LocatorFromUrl", () => {
   });
 });
 
-const video = PostLocator.make(
-  Locator.cases.youtube.make({ target: YouTubeTarget.cases.post.make({ id: "dQw4w9WgXcQ" }) })
-);
-
 describe("landing", () => {
   it("resolves a post to its owner's listing only when the URL names the owner", () => {
     const home = (url: string) => decode(url).pipe(O.flatMap(landing), O.flatMap(encode));
@@ -184,48 +158,7 @@ describe("landing", () => {
   });
 });
 
-it.layer(
-  Layer.mergeAll(
-    Layer.succeed(XMapper, { items: () => Stream.fail(AuthRequired.make({ platform: "x" })) }),
-    Layer.succeed(YouTubeMapper, {
-      items: YouTubeTarget.match({
-        collection: () => Stream.make(MappedItem.make({ source: video, videos: 1 })),
-        post: (target) => Stream.make(MappedItem.make({ source: PostLocator.make(Locator.cases.youtube.make({ target })), videos: 1 })),
-      }),
-    }),
-    Layer.succeed(RedGifsMapper, {
-      items: RedGifsTarget.match({ collection: () => Stream.empty, post: () => Stream.empty }),
-    }),
-    Layer.succeed(DzenMapper, { items: () => Stream.empty }),
-    Layer.succeed(FacebookMapper, { items: () => Stream.empty }),
-    Layer.succeed(FanslyMapper, { items: () => Stream.empty }),
-    Layer.succeed(InstagramMapper, { items: () => Stream.empty }),
-    Layer.succeed(OnlyFansMapper, { items: () => Stream.empty }),
-    Layer.succeed(PinterestMapper, { items: () => Stream.empty }),
-    Layer.succeed(RedditMapper, { items: () => Stream.empty }),
-    Layer.succeed(SnapchatMapper, { items: () => Stream.empty }),
-    Layer.succeed(ThreadsMapper, { items: () => Stream.empty }),
-    Layer.succeed(TikTokMapper, { items: () => Stream.empty }),
-    Layer.succeed(VscoMapper, { items: () => Stream.empty })
-  )
-)("items", (it) => {
-  it.effect("routes a locator to the mapper service of its platform", () =>
-    Effect.gen(function* () {
-      const locator = yield* locate("https://youtube.com/@veritasium/videos");
-      const found = yield* items(locator).pipe(Stream.runCollect);
-      const stored = yield* S.encodeEffect(S.Array(MappedItem))(found);
-      expect(A.map(stored, ({ source }) => source)).toEqual(["https://www.youtube.com/watch?v=dQw4w9WgXcQ"]);
-    })
-  );
-
-  it.effect("keeps a site failure typed for the caller", () =>
-    Effect.gen(function* () {
-      const locator = yield* locate("https://x.com/jack/media");
-      const failure = yield* items(locator).pipe(Stream.runCollect, Effect.flip);
-      expect(failure._tag).toBe("AuthRequired");
-    })
-  );
-
+describe("locate", () => {
   it.effect("names the input when no site routes it", () =>
     Effect.gen(function* () {
       const failure = yield* Effect.flip(locate("https://example.org/jack"));

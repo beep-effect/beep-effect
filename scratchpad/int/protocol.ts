@@ -7,15 +7,16 @@
  */
 import * as RpcGroup from "effect/rpc/RpcGroup"
 import type { Locator } from "./locator.ts"
-import { Connections, Posts, Profile } from "./rpcs/index.ts"
+import { Connections, Items, Posts, Profile } from "./rpcs/index.ts"
+import * as Operation from "./rpcs/Operation.ts"
 
 /**
- * The three things any locator can be asked for, on every platform.
+ * The four things any locator can be asked for, on every platform.
  *
  * **Details**
  *
  * The payload is a whole {@link Locator}, so one group covers every platform
- * and the platform is read from the value. `Posts` and `Connections` are
+ * and the platform is read from the value. `Items`, `Posts` and `Connections` are
  * streams, so their failures travel in the stream and keep their tags. A
  * caller reaches them through a client built from this group; where the
  * handlers run is the client's concern, in this process or behind a transport.
@@ -34,9 +35,4 @@ import { Connections, Posts, Profile } from "./rpcs/index.ts"
  * @category protocols
  * @since 0.0.0
  */
-export const ReaderRpcs = RpcGroup.make(
-  Posts.Contract,
-  Profile.Contract,
-  Connections.Contract
-)
-
+export const ReaderRpcs = RpcGroup.make(...Operation.contracts({ Items, Posts, Profile, Connections }))
