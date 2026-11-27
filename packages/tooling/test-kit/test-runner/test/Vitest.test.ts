@@ -207,12 +207,10 @@ it.effect("preserves typed runner error messages and encoded diagnostic fields",
   })
 );
 
-// Only the source-only watchdog seam advances this logical clock. Body TestClock
-// remains owned by @effect/vitest; no native timers arrange the deadline race.
-const watchdogClock = Context.get(Context.empty(), Clock.Clock);
+const watchdogSeamClock = Context.get(Context.empty(), Clock.Clock);
 let watchdogMillis = 0;
 const controlledIt = makeIt({
-  ...watchdogClock,
+  ...watchdogSeamClock,
   monotonicTimeNanos: Effect.sync(() => BigInt(watchdogMillis) * 1_000_000n),
   monotonicTimeNanosUnsafe: () => BigInt(watchdogMillis) * 1_000_000n,
   sleep: (duration) =>

@@ -1220,9 +1220,6 @@ const buildPgExternalLayer: (
           connectTimeout: Duration.millis(config.connectTimeoutMs),
           ssl: config.ssl,
           acquireForStream: false,
-          // The harness swaps search_path and re-runs identical DDL/queries over
-          // one session; the default named-statement cache then collides with
-          // "prepared statement already exists" across harness phases.
           prepare: false,
         }).pipe(
           Effect.retry(PgConnectRetryPolicy),
@@ -1531,6 +1528,12 @@ export const PgliteInProcessTestDriver: SqlTestDriver<
 /**
  * External PostgreSQL-compatible integration-test driver backed by a caller-managed server.
  *
+ * **Gotchas**
+ *
+ * The client never prepares named statements. The harness swaps `search_path` and re-runs
+ * identical DDL and queries over one session, where the default named-statement cache fails
+ * with "prepared statement already exists" across harness phases.
+ *
  * **Example** (Read external driver name)
  *
  * ```ts
@@ -1615,7 +1618,14 @@ const makeConfiguredSqlTestLayer = <Config, Services, SqlService extends Service
  *
  * `makePgliteLayer` accepts an optional `hooks` argument (migrate / seed) and
  * returns a fresh scoped {@link makePgliteSqlTestLayer} layer using whichever
- * driver the environment selects.
+ * driver the environment selects. It is generic per call, so `makePgliteLayer({ migrate })`
+ * infers the hook error types (for example `SqlError`) instead of fixing them to `never` at
+ * gate creation. Its `inProcess` options (for example bundled PGlite extensions) apply only to
+ * the in-process driver; the external and testcontainers lanes own their server-side extensions.
+ *
+ * `shouldRunPgliteIntegration` is always `true`: the in-process `@beep/pglite` driver is the
+ * docker-free default, so the pglite integration suites always run. `BEEP_TEST_DATABASE_URL`
+ * (external) and `BEEP_TEST_DATABASE_DRIVER=pglite-testcontainers` are opt-in alternatives.
  *
  * **Example** (Default integration gate setup)
  *
@@ -1638,27 +1648,15 @@ const makeConfiguredSqlTestLayer = <Config, Services, SqlService extends Service
  * @since 0.0.0
  */
 export const makePgliteIntegrationGate = (env?: typeof PgliteIntegrationGateEnv.Encoded) => {
-  // Real usage reads the selection from the environment via Config (Node-safe,
-  // law-clean; CI exports these before the process starts, so the boot snapshot
-  // is exactly right). Tests pass `env` explicitly to exercise each branch
-  // without mutating the process environment.
   const resolved = env ?? {
     databaseDriver: Config.String("BEEP_TEST_DATABASE_DRIVER").pipe(Config.option, Effect.runSync, O.getOrUndefined),
     databaseUrl: Config.String("BEEP_TEST_DATABASE_URL").pipe(Config.option, Effect.runSync, O.getOrUndefined),
   };
   const sharedConnectionUri = pipe(resolved.databaseUrl, O.fromNullishOr, O.filter(Str.isNonEmpty));
   const shouldUseTestcontainers = resolved.databaseDriver === "pglite-testcontainers";
-  // The in-process @beep/pglite driver is the docker-free default, so the pglite
-  // integration suites always run. `BEEP_TEST_DATABASE_URL` (external) and
-  // `BEEP_TEST_DATABASE_DRIVER=pglite-testcontainers` remain opt-in fallbacks.
   const shouldRunPgliteIntegration: boolean = true;
   const pgliteIntegrationTimeoutMillis = 300_000;
 
-  // Generic per call so `makePgliteLayer({ migrate })` infers the hook error
-  // types (e.g. SqlError) instead of fixing them to `never` at gate creation.
-  // `inProcess` (e.g. bundled PGlite extensions) only applies to the in-process
-  // driver; the external and testcontainers lanes own their server-side
-  // extension surface.
   const makePgliteLayer = <MigrateError = never, SeedError = never>(
     hooks?: SqlTestHooks<MigrateError, SeedError>,
     inProcess?: PgliteInProcessTestDriverConfigInput

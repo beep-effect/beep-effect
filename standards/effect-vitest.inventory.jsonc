@@ -1903,15 +1903,15 @@
       "reason": "A typed hook, config, extension or provision failure must be captured inside the test's Effect.exit; suite-layer acquisition would fail before the driver, phase and cause could be inspected. Owner: @beep/test-utils. Exit: retire when EV002 recognises a provision inside Effect.exit whose acquisition failure the test asserts (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:packages/tooling/test-kit/test-utils/test/integration/SqlTest.pglite.test.ts:245:provideScopedLayer@14#1",
+      "id": "EV002:packages/tooling/test-kit/test-utils/test/integration/SqlTest.pglite.test.ts:237:provideScopedLayer@14#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/test-utils",
       "file": "packages/tooling/test-kit/test-utils/test/integration/SqlTest.pglite.test.ts",
-      "line": 245,
-      "endLine": 245,
+      "line": 237,
+      "endLine": 237,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:534ed1b3d322eaae6d9d0fe1eb6b023c752f29f4251ca7b5f533362e82a1e026",
+      "occurrence": "v2:d07b328b7e5cdb564a3b14db1a017fd9ff82f57b2827fbd9a642b667ac945fce",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(makeSqlTestLayer({ config: undefined, driver: PgliteInProcessTestDriver }))",
       "replacement": {
@@ -1925,15 +1925,15 @@
       "reason": "Scoped SQL provision is the subject: per-call freshness, hooks, driver selection or a post-close reconnect must complete inside the test body with the real driver. Owner: @beep/test-utils. Exit: retire when EV002 recognises a provision whose per-call freshness or post-close reconnect the test asserts (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:packages/tooling/test-kit/test-utils/test/integration/SqlTest.pglite.test.ts:293:provideScopedLayer@14#1",
+      "id": "EV002:packages/tooling/test-kit/test-utils/test/integration/SqlTest.pglite.test.ts:282:provideScopedLayer@14#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/test-utils",
       "file": "packages/tooling/test-kit/test-utils/test/integration/SqlTest.pglite.test.ts",
-      "line": 293,
-      "endLine": 293,
+      "line": 282,
+      "endLine": 282,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:7a2c9a5282ce2d94009d926e263424f43424f4b4deda90d1992bdedc642e9a35",
+      "occurrence": "v2:99d84230288d73fe2377f219afb4eaa4631ae9b16829659f562ff188e5b2b2e5",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(makeSharedLayer())",
       "replacement": {
@@ -1947,15 +1947,15 @@
       "reason": "Scoped SQL provision is the subject: per-call freshness, hooks, driver selection or a post-close reconnect must complete inside the test body with the real driver. Owner: @beep/test-utils. Exit: retire when EV002 recognises a provision whose per-call freshness or post-close reconnect the test asserts (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:packages/tooling/test-kit/test-utils/test/integration/SqlTest.pglite.test.ts:321:provideScopedLayer@14#1",
+      "id": "EV002:packages/tooling/test-kit/test-utils/test/integration/SqlTest.pglite.test.ts:310:provideScopedLayer@14#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/test-utils",
       "file": "packages/tooling/test-kit/test-utils/test/integration/SqlTest.pglite.test.ts",
-      "line": 321,
-      "endLine": 321,
+      "line": 310,
+      "endLine": 310,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:2e920fb8d8911ebac502ff77ccd580a47a182b1354a8c5cfba71453f29dcb8f1",
+      "occurrence": "v2:bc929c7330e6d81c2e1f72e481ce6480f22412c265adea3774101f3357a87b13",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(makeSharedLayer())",
       "replacement": {
@@ -1969,15 +1969,15 @@
       "reason": "Scoped SQL provision is the subject: per-call freshness, hooks, driver selection or a post-close reconnect must complete inside the test body with the real driver. Owner: @beep/test-utils. Exit: retire when EV002 recognises a provision whose per-call freshness or post-close reconnect the test asserts (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:packages/tooling/test-kit/test-utils/test/integration/SqlTest.pglite.test.ts:333:provideScopedLayer@14#1",
+      "id": "EV002:packages/tooling/test-kit/test-utils/test/integration/SqlTest.pglite.test.ts:322:provideScopedLayer@14#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/test-utils",
       "file": "packages/tooling/test-kit/test-utils/test/integration/SqlTest.pglite.test.ts",
-      "line": 333,
-      "endLine": 333,
+      "line": 322,
+      "endLine": 322,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:7e83298cd169918ca315a1d95995e8c10ca9bfe75336c95999e212da232dfef2",
+      "occurrence": "v2:e39fca6afab6e29f0c39ca1ad4f592161abd2a3cf99770ddfaf7ba543d4bb10d",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(makeSharedLayer())",
       "replacement": {
@@ -1991,15 +1991,15 @@
       "reason": "Scoped SQL provision is the subject: per-call freshness, hooks, driver selection or a post-close reconnect must complete inside the test body with the real driver. Owner: @beep/test-utils. Exit: retire when EV002 recognises a provision whose per-call freshness or post-close reconnect the test asserts (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:packages/tooling/test-kit/test-utils/test/integration/SqlTest.pglite.test.ts:363:provideScopedLayer@8#1",
+      "id": "EV002:packages/tooling/test-kit/test-utils/test/integration/SqlTest.pglite.test.ts:352:provideScopedLayer@8#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/test-utils",
       "file": "packages/tooling/test-kit/test-utils/test/integration/SqlTest.pglite.test.ts",
-      "line": 363,
-      "endLine": 381,
+      "line": 352,
+      "endLine": 370,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:951c3b02620da4ecd0ecf7f3020b854edae87946e396f5121417b04ae588bb49",
+      "occurrence": "v2:2c292065a1222f2c3ca39330f84fd9f061d60a9bc2547c941679055da9ccd8e9",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer( makeSharedLayer({ migrate: Effect.gen(function* () { const sql = (yield* SqlClient.SqlClient).withoutTransforms(); yield* sql` CREATE TABLE seeded_values ( value TEXT NOT NULL ) `;",
       "replacement": {
@@ -2013,15 +2013,15 @@
       "reason": "Scoped SQL provision is the subject: per-call freshness, hooks, driver selection or a post-close reconnect must complete inside the test body with the real driver. Owner: @beep/test-utils. Exit: retire when EV002 recognises a provision whose per-call freshness or post-close reconnect the test asserts (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:packages/tooling/test-kit/test-utils/test/integration/SqlTest.pglite.test.ts:397:provideScopedLayer@10#1",
+      "id": "EV002:packages/tooling/test-kit/test-utils/test/integration/SqlTest.pglite.test.ts:386:provideScopedLayer@10#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/test-utils",
       "file": "packages/tooling/test-kit/test-utils/test/integration/SqlTest.pglite.test.ts",
-      "line": 397,
-      "endLine": 401,
+      "line": 386,
+      "endLine": 390,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:550bde038895159134da4ed2444e600e53f84b83e821a31a9a63e44edb11b0c7",
+      "occurrence": "v2:dab771826096cefb6d21a24cadbe15f25a07c388d6b2ca3a5552c59842ec0298",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer( makeSharedLayer({ migrate: Effect.fail(\"boom\"), }) )",
       "replacement": {
@@ -2035,15 +2035,15 @@
       "reason": "A typed hook, config, extension or provision failure must be captured inside the test's Effect.exit; suite-layer acquisition would fail before the driver, phase and cause could be inspected. Owner: @beep/test-utils. Exit: retire when EV002 recognises a provision inside Effect.exit whose acquisition failure the test asserts (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:packages/tooling/test-kit/test-utils/test/integration/SqlTest.pglite.test.ts:436:provideScopedLayer@8#1",
+      "id": "EV002:packages/tooling/test-kit/test-utils/test/integration/SqlTest.pglite.test.ts:425:provideScopedLayer@8#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/test-utils",
       "file": "packages/tooling/test-kit/test-utils/test/integration/SqlTest.pglite.test.ts",
-      "line": 436,
-      "endLine": 436,
+      "line": 425,
+      "endLine": 425,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:567dc96480d1c0ec1dac299908d0720bf77bda516a2963e35b9e575a0a67415e",
+      "occurrence": "v2:200577c4aa9d3d4a28ec8de1edb5501304025f3ae0d0c9a138a5be487c5085a2",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(makeExternalNoIsolationLayer(connectionUri))",
       "replacement": {
@@ -2057,13 +2057,13 @@
       "reason": "Scoped SQL provision is the subject: per-call freshness, hooks, driver selection or a post-close reconnect must complete inside the test body with the real driver. Owner: @beep/test-utils. Exit: retire when EV002 recognises a provision whose per-call freshness or post-close reconnect the test asserts (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:packages/tooling/test-kit/test-utils/test/integration/SqlTest.pglite.test.ts:476:provideScopedLayer@16#1",
+      "id": "EV002:packages/tooling/test-kit/test-utils/test/integration/SqlTest.pglite.test.ts:465:provideScopedLayer@16#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/test-utils",
       "file": "packages/tooling/test-kit/test-utils/test/integration/SqlTest.pglite.test.ts",
-      "line": 476,
-      "endLine": 476,
+      "line": 465,
+      "endLine": 465,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:ea4ca70caf237a2c5e80738b585dd735fc20d4d6920d47bd47ec9f74c1eb9817",
       "class": "unresolved-layer-provide",

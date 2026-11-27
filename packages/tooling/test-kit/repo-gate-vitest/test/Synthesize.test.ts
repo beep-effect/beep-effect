@@ -1,9 +1,5 @@
-// Retargets the Vitest-object cases of upstream
-// packages/sdk/__test__/build-report.test.ts and packages/ui/__test__/synthesize.test.ts
-// (vitest-agent 1cf1ab94): stack-frame formatting, missing results and
-// diagnostics, unknown-state normalization, throwing getters, suite-level
-// failures, timeouts and the suite path. Upstream counted into a summary;
-// here the events reduce through the model and the report is asserted.
+// Ported from vitest-agent packages/sdk/__test__/build-report.test.ts at 1cf1ab94 (MIT).
+// Ported from vitest-agent packages/ui/__test__/synthesize.test.ts at 1cf1ab94 (MIT).
 import { reduceEvents } from "@beep/gate-report/Reducer";
 import { StrayOutput } from "@beep/gate-report/StrayOutput";
 import { UNREADABLE_FIELD } from "@beep/repo-gate-vitest/internal/ErrorText";
@@ -346,7 +342,7 @@ describe("synthesizeEvents — failures", () => {
     assert.isFalse(isTimeoutError({ message: "expected 1 to be 2" }));
   });
 
-  // Retarget upstream packages/sdk/__test__/detect-timeout.test.ts (vitest-agent 1cf1ab94).
+  // Ported from vitest-agent packages/sdk/__test__/detect-timeout.test.ts at 1cf1ab94 (MIT).
   it("matches a hook-timeout message", () => {
     assert.isTrue(isTimeoutError({ message: "Hook timed out in 10000ms." }));
   });
@@ -411,8 +407,7 @@ describe("synthesizeEvents — suite-level failures", () => {
     assertSome(item.failureKind, "load");
     assert.strictEqual(report.totals.loadFailed, 1);
     assert.strictEqual(report.totals.failed, 0);
-    // A load failure reads the same alone as beside other modules (the model's GR-4 fix).
-    assert.strictEqual(report.reason, "failed");
+    assert.strictEqual(report.reason, "failed", "a load failure reads the same alone as beside other modules");
   });
 
   it("fails a module whose afterAll hook threw even though every test passed", () => {
@@ -541,8 +536,7 @@ describe("synthesizeEvents — reported objects that throw", () => {
     assert.strictEqual(report.totals.loadFailed, 1);
   });
 
-  // Older Vitest reporters hand objects without the optional accessors.
-  it("reads a test without attempts() and a suite without errors() as having none", () => {
+  it("reads a test without attempts() and a suite without errors(), as older Vitest reporters hand them, as having none", () => {
     const bare: VitestTestCase = {
       type: "test",
       name: "bare",

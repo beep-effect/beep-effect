@@ -255,6 +255,13 @@ export class ThreadTimeline extends S.Opaque<ThreadTimeline, { readonly brand: u
  * prompt. Both the renderer and the history projection read the conversation
  * through here so they agree on what the thread now says.
  *
+ * **Gotchas**
+ *
+ * A turn only replaces one already behind it. A parent link that points at the
+ * turn itself, at a turn that has not happened yet, or at no turn at all is
+ * ignored, and the turn simply continues the conversation: a corrupt link can
+ * never truncate the transcript.
+ *
  * **Example** (Filter superseded branch turns)
  *
  * ```ts
@@ -280,12 +287,6 @@ export const activeBranchTurns = (turns: ReadonlyArray<TimelineTurn>): ReadonlyA
   A.reduce(A.sort(turns, turnIndexOrder), A.empty<TimelineTurn>(), (branch, turn) =>
     pipe(
       turn.parentTurnId,
-      // A turn only replaces one that is already behind it. A link pointing at
-      // itself, or forward at a turn that has not happened yet, cannot describe a
-      // replacement — it can only be corruption. Such a link is ignored (the turn
-      // simply continues the conversation) rather than trusted: an unresolvable
-      // parent must never be able to truncate the transcript, which is what a
-      // reader would lose if this projection took a corrupt link at its word.
       O.filter(P.not(Eq.equals(turn.turnId))),
       O.flatMap((replacedTurnId) =>
         A.findFirstIndex(

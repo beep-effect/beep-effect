@@ -1,6 +1,3 @@
-// The shared Vitest configuration runs inside a worker whenever a test imports it, and it must read
-// the environment without building Effect's default ConfigProvider, which is built once, from the
-// environment at its first use: a test that stubs a variable afterwards would read the old value.
 import { describe, expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -8,10 +5,10 @@ import * as Str from "effect/String";
 
 const SHARED = new URL("../../../../../vitest.shared.ts", import.meta.url);
 
-describe("the shared configuration's environment reads", () => {
-  // In a process of its own: a coverage run shares one worker between test files, and any of them may
-  // already have built the default provider.
-  it("leave a variable set after the import visible to the default provider", { timeout: 60_000 }, () => {
+describe("the shared configuration's environment reads skip the default ConfigProvider, which a worker builds once at first use", () => {
+  it("leave a variable set after the import visible to the default provider, in a fresh process: coverage shares workers", {
+    timeout: 60_000,
+  }, () => {
     const probe = [
       `await import("${SHARED.href}");`,
       'process.env.BEEP_SHARED_CONFIG_PROBE = "set after the import";',
@@ -33,16 +30,18 @@ describe("the shared configuration's environment reads", () => {
     ]);
   });
 
-  // A new read would add a Config call or a runSync outside the one helper, and fail here.
   it.effect.each(["vitest.shared.ts", "vitest.setup.ts"])("go through one read with its own provider in %s", (name) =>
     Effect.gen(function* () {
       const source = yield* Effect.promise(() => Bun.file(new URL(`../../../../../${name}`, import.meta.url)).text());
       const count = (pattern: RegExp) => Str.split(source, pattern).length - 1;
-      expect([
-        count(/\bConfig\.(?:String|Int|Number|Boolean|NonEmptyString|schema)\(/),
-        count(/\bEffect\.runSync\b/),
-        count(/Effect\.provideService\(ConfigProvider\.ConfigProvider, /),
-      ]).toEqual([1, 1, 1]);
+      expect(
+        [
+          count(/\bConfig\.(?:String|Int|Number|Boolean|NonEmptyString|schema)\(/),
+          count(/\bEffect\.runSync\b/),
+          count(/Effect\.provideService\(ConfigProvider\.ConfigProvider, /),
+        ],
+        "one Config call, one runSync and one provider: a new read outside the helper adds a call"
+      ).toEqual([1, 1, 1]);
     })
   );
 });

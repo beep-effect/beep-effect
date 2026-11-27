@@ -20,8 +20,6 @@ const migrationsFolder = NodeURL.fileURLToPath(new URL("../../../../_internal/db
 const { shouldRunPgliteIntegration, pgliteIntegrationTimeoutMillis } = makePgliteIntegrationGate();
 const decodeSetWorkspaceVaultInput = S.decodeUnknownEffect(Workspace.SetWorkspaceVaultInput);
 
-// The db-admin drizzle folder contains `CREATE EXTENSION btree_gist`, so the
-// suite is pinned to the in-process driver with the bundled extension.
 const WorkspaceVaultDrizzleLayer = makeDrizzleLayer().pipe(
   Layer.provideMerge(
     Layer.fresh(makePgliteSqlTestLayer({ inProcess: { extensions: { btree_gist } }, mode: "in-process" }))
@@ -56,8 +54,6 @@ if (!shouldRunPgliteIntegration) {
           const first = yield* fs.makeTempDirectoryScoped({ prefix: "beep-workspace-vault-a-" });
           const second = yield* fs.makeTempDirectoryScoped({ prefix: "beep-workspace-vault-b-" });
 
-          // The first call inserts the row at version 1; the move updates one
-          // column and must still advance the optimistic token.
           const decodedSetWorkspaceVaultInput = yield* decodeSetWorkspaceVaultInput({
             vaultRootPath: first,
             workspaceId: 9,
@@ -72,7 +68,10 @@ if (!shouldRunPgliteIntegration) {
           const rows = yield* db
             .select({ rowVersion: DbSchema.workspace.rowVersion, vaultRootPath: DbSchema.workspace.vaultRootPath })
             .from(DbSchema.workspace);
-          expect(A.map(rows, (row) => [row.vaultRootPath, row.rowVersion] as const)).toEqual([[second, 2]]);
+          expect(
+            A.map(rows, (row) => [row.vaultRootPath, row.rowVersion] as const),
+            "the first call inserts the row at version 1; the move updates one column and still advances the token"
+          ).toEqual([[second, 2]]);
         }),
         pgliteIntegrationTimeoutMillis
       );

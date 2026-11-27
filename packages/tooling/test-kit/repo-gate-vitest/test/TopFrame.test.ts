@@ -1,8 +1,4 @@
-// Retargets upstream packages/plugin/__test__/process-failure.test.ts
-// (vitest-agent 1cf1ab94): frame defaults, provided frame values, the raw
-// stack fallback and the signature. The function-boundary cases are not
-// ported: the model takes no parser dependency (SPEC port inventory), so the
-// signature always uses the raw-line bucket.
+// Ported from vitest-agent packages/plugin/__test__/process-failure.test.ts at 1cf1ab94 (MIT).
 import { FailureSignatureInput, failureSignature } from "@beep/gate-report/FailureSignature";
 import {
   coerceErrorText,
@@ -151,7 +147,7 @@ describe("error text", () => {
     assertSome(coerceErrorText(10n), "10n");
   });
 
-  // Retarget upstream packages/sdk/__test__/coerce-error-text.test.ts (vitest-agent 1cf1ab94).
+  // Ported from vitest-agent packages/sdk/__test__/coerce-error-text.test.ts at 1cf1ab94 (MIT).
   it("renders an Error's name and message instead of an empty object", () => {
     assertSome(coerceErrorText(new Error("boom")), '{"name":"Error","message":"boom"}');
   });

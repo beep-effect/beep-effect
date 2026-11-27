@@ -1,9 +1,3 @@
-// Real Vitest on small fixture packages, the reporter registered by path,
-// and the record read back through the record library. The fixtures follow
-// the goal's fixture decision: a green run, a red run with an assertion diff,
-// a timeout and a module that fails to load, and an empty run. They are
-// written under the checkout's ignored `.beep/` directory, never into a
-// workspace package.
 import { RecordTarget } from "@beep/repo-gate-record/GatePaths";
 import { GateRecordStore } from "@beep/repo-gate-record/GateRecordStore";
 import * as NodeServices from "@effect/platform-node/NodeServices";
@@ -22,7 +16,6 @@ import * as Str from "effect/String";
 
 const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
-// A fixture runs `bun x --bun vitest run`, or its own `test` script when it has one.
 const runFixture = Effect.fn("RepoGateVitestTest.runFixture")(function* (
   name: string,
   files: Readonly<Record<string, string>>,
@@ -115,8 +108,7 @@ it.layer(NodeServices.layer, { timeout: "120 seconds" })("a real Vitest run", (i
     })
   );
 
-  // The shape of @beep/repo-utils' `beep:test`: most files under Bun, then the one that needs Node.
-  it.effect("records the two Vitest runs one script chains as one run", () =>
+  it.effect("records the two Vitest runs one script chains as one run, like repo-utils' Bun-then-Node beep:test", () =>
     Effect.gen(function* () {
       const { exitCode, report } = yield* runFixture(
         "chained",

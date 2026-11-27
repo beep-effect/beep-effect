@@ -30,8 +30,6 @@ const WorkspaceVaultRootPathChecks = S.makeFilter(
   })
 );
 
-// Trailing separators are dropped only after a non-separator segment character,
-// so bare roots ("/", "C:\", "\\host\share") keep their existing rejection path.
 const stripTrailingSeparators = Str.replace(/([^:/\\])[\\/]+$/u, "$1");
 
 const WorkspaceVaultRootPathValue = S.String.check(WorkspaceVaultRootPathChecks).pipe(
@@ -42,7 +40,9 @@ const WorkspaceVaultRootPathValue = S.String.check(WorkspaceVaultRootPathChecks)
  * **Details**
  *
  * Decoding normalizes trailing path separators, so `"/tmp/vault/"` and
- * `"/tmp/vault"` decode to the same value.
+ * `"/tmp/vault"` decode to the same value. Separators are dropped only after a
+ * segment character, so a bare root (`"/"`, `"C:\"`, `"\\host\share"`) reaches the
+ * absolute-path check unchanged.
  *
  * **Example** (Decode trailing-slash vault path)
  *

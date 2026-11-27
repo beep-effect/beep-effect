@@ -42,10 +42,7 @@ const UnmigratedThreadStoreLayer = makeDrizzleLayer().pipe(
   Layer.provideMerge(CuidState.Default.pipe(Layer.provideMerge(BunCrypto.layer)))
 );
 
-// A failed statement leaves an implicit-transaction PGlite session in the
-// aborted state, where the only legal next statement is the rollback that
-// quiesces it, so every expected failure is followed by one.
-const quiesce = Effect.fnUntraced(function* () {
+const rollbackAbortedSession = Effect.fnUntraced(function* () {
   const sql = yield* SqlClient.SqlClient;
   yield* Effect.ignore(sql.unsafe("ROLLBACK"));
 });
@@ -62,23 +59,23 @@ describe("Workspace ThreadStore driver failures", { concurrent: false }, () => {
         const created = yield* Effect.flip(
           store.createThread(CreateThreadInput.make({ title: "New thread", workspaceId }))
         );
-        yield* quiesce();
+        yield* rollbackAbortedSession();
         const listed = yield* Effect.flip(store.listThreads(workspaceId));
-        yield* quiesce();
+        yield* rollbackAbortedSession();
         const retitled = yield* Effect.flip(
           store.setTitleIfEmpty(
             SetThreadTitleIfEmptyInput.make({ emptyTitle: "New thread", threadId, title: "Matter intake" })
           )
         );
-        yield* quiesce();
+        yield* rollbackAbortedSession();
         const appended = yield* Effect.flip(
           store.appendTurn(
             AppendTurnInput.make({ content: docOf("Hello"), parentTurnId: O.none(), role: "user", threadId })
           )
         );
-        yield* quiesce();
+        yield* rollbackAbortedSession();
         const projected = yield* Effect.flip(store.timeline(threadId));
-        yield* quiesce();
+        yield* rollbackAbortedSession();
 
         expect(A.map([created, listed, retitled, appended, projected], isThreadStoreUnavailable)).toEqual([
           true,

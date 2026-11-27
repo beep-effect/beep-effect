@@ -1,7 +1,3 @@
-// The registered reporter called directly with synthetic Vitest objects, as
-// the repo CLI's coverage reporter test does: the record it writes, the
-// no-op before Vitest starts it, and the one stderr line when it switches
-// itself off.
 import { RecordTarget } from "@beep/repo-gate-record/GatePaths";
 import { GateRecordStore } from "@beep/repo-gate-record/GateRecordStore";
 import GateVitestReporter from "@beep/repo-gate-vitest/Vitest.reporter";
@@ -22,8 +18,9 @@ afterEach(() => {
 
 const target = RecordTarget.cases.PackageTarget.make({ packageDir: PACKAGE_DIR, gate: "test" });
 
-// The cases spy on the error console, so they run one at a time.
-describe("GateVitestReporter", { concurrent: false }, () => {
+describe("GateVitestReporter on synthetic Vitest objects, one case at a time since the cases spy on the error console", {
+  concurrent: false,
+}, () => {
   it.layer(NodeServices.layer)("on disk", (it) => {
     it.effect("writes the package record at the end of a run, printing nothing", () =>
       Effect.gen(function* () {

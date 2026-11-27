@@ -53,10 +53,6 @@ const $I = $TestUtilsId.create("ImportGraph");
 export const stripComments = (source: string): string =>
   pipe(source, Str.replace(/(^|\n)\s*\/\/.*/g, "$1"), Str.replace(/\/\*[\s\S]*?\*\//g, ""));
 
-// One pattern for every runtime edge form, so edges come back in source order.
-// Group 1 marks a type-only `import type … from` / `export type … from` edge,
-// whose specifier group 2 holds; group 3 is a side-effect `import "x"` at the
-// start of a line; group 4 is a dynamic `import("x")`.
 const EDGE =
   /(?:^|\n)\s*(?:import|export)\b(\s+type\b)?\s*(?:[\w$]+\s*,\s*)?(?:\{[^{};]*\}|\*\s*(?:as\s+[\w$]+)?|[\w$]+)\s*from\s*["']([^"']+)["']|(?:^|\n)\s*import\s*["']([^"']+)["']|\bimport\s*\(\s*["']([^"']+)["']\s*\)/g;
 
@@ -101,11 +97,8 @@ export const runtimeImportsOf = (source: string): ReadonlyArray<string> =>
  */
 export type Sources = HashMap.HashMap<string, string>;
 
-/** How {@link fromGlob} turns glob keys into module ids. */
 interface FromGlobOptions {
-  /** The leading glob-key text to drop, for example `"../../src/"`. */
   readonly prefix: string;
-  /** Text put in front of the remainder, for example `"@beep/other/src/"`; empty by default. */
   readonly root?: string | undefined;
 }
 
@@ -114,8 +107,8 @@ interface FromGlobOptions {
  *
  * **Details**
  *
- * Every key loses its first `prefix.length` characters and gains `root` in
- * front, so `"../../src/internal/a.ts"` with prefix `"../../src/"` becomes
+ * Every key loses its first `prefix.length` characters and gains `root` (empty
+ * when omitted) in front, so `"../../src/internal/a.ts"` with prefix `"../../src/"` becomes
  * `"internal/a.ts"`. Give a second package's sources a `root` to walk both in
  * one {@link Sources} map with `HashMap.union`.
  *
@@ -245,17 +238,9 @@ export class ImportClosure extends S.Opaque<ImportClosure, { readonly brand: uni
   )
 ) {}
 
-/** What {@link closure} walks. */
 interface ClosureOptions {
-  /**
-   * The module ids a bare specifier enters, for walking into another
-   * package's sources held under a `root` (see {@link fromGlob}). By default
-   * no bare specifier is entered.
-   */
   readonly enter?: ((specifier: string) => ReadonlyArray<string>) | undefined;
-  /** The module id the walk starts from. */
   readonly entry: string;
-  /** The module texts the walk may enter. */
   readonly sources: Sources;
 }
 
@@ -263,7 +248,6 @@ const isRelative = Str.startsWith(".");
 
 const enterNothing = (_specifier: string): ReadonlyArray<string> => [];
 
-// Resolve `./x.ts` or `../x.ts` against the importing module's directory.
 const resolveFrom = (module: string, specifier: string): string =>
   A.join(
     A.reduce(Str.split(specifier, "/"), A.dropRight(Str.split(module, "/"), 1), (segments, part) =>
@@ -279,9 +263,11 @@ const sorted = (values: HashSet.HashSet<string>): ReadonlyArray<string> => A.sor
  *
  * **Details**
  *
- * Relative edges are resolved against the importing module and followed. Bare
- * edges are collected into `packages`; the walk enters one only when `enter`
- * maps it to module ids. A module id with no text fails the walk with
+ * The walk starts at `entry` and reads module texts from `sources`. Relative
+ * edges are resolved against the importing module and followed. Bare edges are
+ * collected into `packages`; the walk enters one only when `enter` maps it to
+ * module ids, for walking into another package's sources held under a `root`
+ * (see {@link fromGlob}), and by default enters none. A module id with no text fails the walk with
  * {@link ImportGraphMissingSourceError}, so a misspelled entry cannot pass as
  * an empty closure.
  *

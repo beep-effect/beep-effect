@@ -45,11 +45,6 @@ export const SUITE_LOAD_FAILURE_LABEL = "test suite failed to load";
  */
 export const SUITE_FAILURE_LABEL = "test suite failed";
 
-/**
- * What one finished Vitest run is synthesized from.
- *
- * @since 0.0.0
- */
 type SynthesisInput = {
   readonly runId: string;
   readonly gate: string;
@@ -156,7 +151,6 @@ const testItem =
     });
   };
 
-// The first free name for a test: its full name, else the full name with the next ordinal from 2.
 const freeName = (taken: HashSet.HashSet<string>, fullName: string, ordinal = 1): string => {
   const candidate = ordinal === 1 ? fullName : `${fullName} (${ordinal})`;
   return HashSet.has(taken, candidate) ? freeName(taken, fullName, ordinal + 1) : candidate;
@@ -196,8 +190,6 @@ const withDropped = (detail: ItemDetail, dropped: number): ItemDetail =>
 
 const NO_ERROR = errorDetail({ message: "the module failed without an error" });
 
-// One fault per error, up to the bound: a module whose `beforeAll` and `afterAll` both threw keeps
-// both messages. A failed module with no error at all still gets one fault.
 const unitFaults = (input: {
   readonly root: string;
   readonly unit: string;
@@ -233,10 +225,6 @@ const anySuiteFailed = (module: VitestModule): boolean =>
     (suite) => ItemOutcome.is.failed(normalizeState(guarded(() => suite.state(), "pending")))
   );
 
-// A module fails as a unit when it or one of its suites carries errors (a
-// load failure or a hook throw), or when it or a suite is failed with no
-// failed test to explain it: Vitest may leave the module green when only a
-// suite entity failed.
 const moduleFault = (input: {
   readonly root: string;
   readonly module: VitestModule;
@@ -296,6 +284,15 @@ const unhandledEvent =
  * The package is the root unit and every test file a unit under it. The
  * events end with Vitest's own reason and no exit code: the reporter cannot
  * see the process exit, and the reducer decides the verdict from the items.
+ *
+ * A test file fails as a unit when it or one of its suites carries errors (a
+ * load failure or a hook throw), with one fault per error up to the bound, or
+ * when it or a suite is failed with no failed test to explain it.
+ *
+ * **Gotchas**
+ *
+ * Vitest may leave a module green when only a suite entity failed, so suite
+ * states are read as well as the module's own.
  *
  * @since 0.0.0
  */

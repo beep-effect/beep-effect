@@ -22,7 +22,6 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { OutputStream } from "@beep/gate-report/Vocabulary";
 
-// Stray control characters a sample drops once its escape sequences are stripped.
 const CONTROL = /[\u0000-\u0008\u000b-\u001f\u007f]/gu;
 
 /**
@@ -34,12 +33,6 @@ const CONTROL = /[\u0000-\u0008\u000b-\u001f\u007f]/gu;
  */
 export const isEscapeOnly = (text: string): boolean => Str.isNonEmpty(text) && Str.isEmpty(stripEscapes(text));
 
-/**
- * The bounds of one recorder: how many sample lines it keeps and how many
- * characters of each.
- *
- * @since 0.0.0
- */
 type RecorderOptions = {
   readonly maxSamples?: number;
   readonly maxSampleChars?: number;
@@ -88,17 +81,15 @@ export const makeStrayOutputRecorder = (options: RecorderOptions = {}): StrayOut
     return line.cut || text.length > maxChars ? `${Str.takeLeft(text, maxChars)}…` : text;
   };
 
-  // The line counted, and sampled when there is room; a blank line is not a line.
   const finish = (stream: OutputStream, line: Pending, into: Tally, samples: Array<StrayOutputSample>): void => {
     if (Str.isEmpty(clean(line.text))) return;
     into[stream] += 1;
     if (samples.length < maxSamples) samples.push(StrayOutputSample.make({ stream, text: sampleOf(line) }));
   };
 
-  // Hold at most what a sample can show (plus slack for escapes stripped
-  // later), so a line that never ends stays small.
+  const heldCharsWithEscapeSlack = maxChars * 4;
   const append = (line: Pending, text: string): void => {
-    const room = maxChars * 4 - line.text.length;
+    const room = heldCharsWithEscapeSlack - line.text.length;
     if (text.length <= room) {
       line.text = `${line.text}${text}`;
       return;

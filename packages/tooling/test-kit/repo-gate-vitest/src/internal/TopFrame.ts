@@ -16,11 +16,6 @@ import * as Str from "effect/String";
 import { framesOf, messageOf, readField } from "./ErrorText.ts";
 import type { VitestError } from "./VitestShapes.ts";
 
-/**
- * One stack frame with its function, file and one-based position.
- *
- * @since 0.0.0
- */
 type Frame = {
   readonly method: O.Option<string>;
   readonly file: string;
@@ -28,9 +23,7 @@ type Frame = {
   readonly column: number;
 };
 
-// Anchored per line: the function name and the file path never cross a
-// newline or a parenthesis, so a stack-shaped input cannot backtrack badly.
-const FRAME_LINE = /^\s*at\s+(?:([\w$.<>[\] ]+?)\s+)?\(?([^\n)]+):(\d+):(\d+)\)?\s*$/u;
+const NON_BACKTRACKING_FRAME_LINE = /^\s*at\s+(?:([\w$.<>[\] ]+?)\s+)?\(?([^\n)]+):(\d+):(\d+)\)?\s*$/u;
 
 const UNKNOWN_FILE = "<unknown>";
 
@@ -49,8 +42,7 @@ const positionOf = (digits: string | undefined): number =>
 
 const parseLine = (line: string): O.Option<Frame> =>
   pipe(
-    O.fromNullishOr(FRAME_LINE.exec(line)),
-    // The file group is not optional: a line that matches always names one.
+    O.fromNullishOr(NON_BACKTRACKING_FRAME_LINE.exec(line)),
     O.flatMap((match) =>
       O.map(
         O.fromNullishOr(match[2]),
