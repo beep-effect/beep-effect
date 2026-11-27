@@ -68,19 +68,59 @@ export const relativePositionOf: Dual2<AdapterState, PointerEvent, PointerPositi
     });
   }
 );
-// Presses on chrome buttons inside a gesture surface must not start a
-// drag/move: native pointer capture would retarget the release and swallow
-// the button's click (native capture beats React-level stopPropagation).
+
+/**
+ * Reports whether a pointer press began on a chrome button inside a gesture surface.
+ *
+ * **Gotchas**
+ *
+ * Check it before starting a drag or move: native pointer capture would
+ * retarget the release and swallow the button's click, and a React-level
+ * `stopPropagation` on the button cannot prevent that.
+ *
+ * @category predicates
+ * @since 0.0.0
+ */
 export const pressStartsOnButton = (event: PointerEvent): boolean =>
   event.target instanceof Element && P.isNotNull(event.target.closest("button"));
 
-// A native cancellation has already released capture, and releasing a pointer
-// the element no longer captures throws NotFoundError straight out of the
-// handler — so ownership is checked first.
+/**
+ * Releases a pointer capture only while the element still holds it.
+ *
+ * **Gotchas**
+ *
+ * Use it instead of calling `releasePointerCapture` directly: a native
+ * cancellation has already released capture, and releasing a pointer the
+ * element no longer captures throws `NotFoundError` out of the handler. Pass the
+ * pointerId recorded at the press, not the cancelling event's: a synthetic
+ * `pointercancel` carries a default pointerId and skips the implicit release.
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
 export const releaseCapture: Dual2<HTMLElement, number, void> = dual(2, (node: HTMLElement, pointerId: number) => {
   if (node.hasPointerCapture?.(pointerId) === true) node.releasePointerCapture?.(pointerId);
 });
 
+/**
+ * Cancels the default action of a press that starts a drag, move or resize.
+ *
+ * **Details**
+ *
+ * Chrome anchors a native text selection at the press point even on a
+ * `user-select: none` surface and extends it across panel content while the
+ * pointer moves; over an existing selection it can escalate to native
+ * drag-and-drop, which cancels the pointer stream mid-gesture.
+ *
+ * **Gotchas**
+ *
+ * It also suppresses the native click-to-focus transfer. A caller whose target
+ * takes focus restores it by hand, so roving tab focus and Enter/Space track
+ * the pressed element instead of the previously focused one.
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
 export const preventNativeSelection = (event: PointerEvent): void => event.preventDefault();
 
 const DRAG_PROMOTION_RADIUS_PX = 5;

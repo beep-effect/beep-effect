@@ -148,6 +148,13 @@ export const makeOperation = (
 /**
  * Returns the memoized adapter state for a graph and its geometry configuration.
  *
+ * **Gotchas**
+ *
+ * Pass the state's `rootRef` to the root element as-is. React 19 re-runs a ref
+ * callback whenever its identity changes, and this cached callback is what keeps
+ * one ResizeObserver per mounted root; an inline wrapper would re-wire it on
+ * every render.
+ *
  * @category constructors
  * @since 0.0.0
  */
@@ -259,9 +266,6 @@ export const adapterState: {
     const onReadySlot: { current: ((event: { readonly api: DockviewAdapterApi }) => void) | undefined } = {
       current: undefined,
     };
-    // Stable identity across renders: React 19 only re-runs a ref callback when
-    // its identity changes, so wiring the ResizeObserver here (instead of inline
-    // in the component) keeps one observer per mounted root.
     const rootNode: { current: HTMLElement | null } = { current: null };
     const rootRef = (node: HTMLDivElement | null): (() => void) | undefined => {
       if (P.isNull(node)) return undefined;

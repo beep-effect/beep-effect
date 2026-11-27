@@ -73,12 +73,7 @@ export class ReactContextInvariantError extends S.TaggedError<
   })
 ) {}
 
-// `missingPipeableSignature` relates the data-first return to the data-last
-// inner return, and a naked type parameter resolves away before that comparison
-// can succeed. This distributive conditional stays deferred while being the
-// identity for every instantiation, so both overloads keep the caller's exact
-// context type and the two returns still relate.
-type RequiredReactContext<Value> = Value extends unknown ? Value : never;
+type DeferredContextIdentity<Value> = Value extends unknown ? Value : never;
 
 /**
  * Require that a React context hook has been called under its provider.
@@ -97,8 +92,8 @@ type RequiredReactContext<Value> = Value extends unknown ? Value : never;
  * @since 0.0.0
  */
 export const requireReactContext: {
-  <Value>(context: Value | null, options: ReactContextInvariantOptions): RequiredReactContext<Value>;
-  (options: ReactContextInvariantOptions): <Value>(context: Value | null) => RequiredReactContext<Value>;
+  <Value>(context: Value | null, options: ReactContextInvariantOptions): DeferredContextIdentity<Value>;
+  (options: ReactContextInvariantOptions): <Value>(context: Value | null) => DeferredContextIdentity<Value>;
 } = dual(2, <Value>(context: Value | null, options: ReactContextInvariantOptions): Value => {
   if (context === null) {
     throw ReactContextInvariantError.make({ message: options.message });

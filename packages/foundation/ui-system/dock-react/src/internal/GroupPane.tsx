@@ -170,9 +170,6 @@ const Tab = (props: {
       }
       if (P.not(Eq.equals(0))(event.button) || pressStartsOnButton(event)) return;
       preventNativeSelection(event);
-      // preventDefault also suppresses the native click-to-focus transfer;
-      // restore it so roving tab focus and Enter/Space track the clicked tab
-      // instead of re-activating the previously focused one.
       node.focus({ preventScroll: true });
       node.setPointerCapture?.(event.pointerId);
       const pointer = relativePositionOf(props.state, event);
@@ -343,9 +340,9 @@ const TabStrip = (
         );
       },
     });
-    const firstMeasurement = Bool.not(measuredThisMount.current);
+    const firstMeasurementMustRerender = Bool.not(measuredThisMount.current);
     measuredThisMount.current = true;
-    if (firstMeasurement || Bool.not(panelIdsEqual(overflowed, nextOverflow))) setOverflowed(nextOverflow);
+    if (firstMeasurementMustRerender || Bool.not(panelIdsEqual(overflowed, nextOverflow))) setOverflowed(nextOverflow);
   };
   const measureStripLatest = useRef(measureStrip);
   useEffect(() => {
