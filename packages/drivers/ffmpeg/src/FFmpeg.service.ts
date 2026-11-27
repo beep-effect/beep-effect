@@ -1254,11 +1254,11 @@ const makeService = Effect.fn("FFmpeg.make")(function* (configInput?: FFmpegConf
     const manifestCandidate = pipe(
       request.manifestPath,
       O.match({
-        // fallow-ignore-next-line code-duplication -- intra-file twin: extractFrames and extractFramesAt resolve the manifest path inside the output directory the same way; each operation keeps its own FFmpegError operation tag and message. Owner: @beep/ffmpeg. Exit: extract one helper parameterized by operation name and message when another frame or clip operation is added.
         onNone: () => path.join(outDir, "extract-frames-manifest.json"),
         onSome: path.resolve,
       })
     );
+    // fallow-ignore-next-line code-duplication -- intra-file twin: extractFrames and extractFramesAt resolve the manifest path inside the output directory the same way; each operation keeps its own FFmpegError operation tag and message. Owner: @beep/ffmpeg. Exit: extract one helper parameterized by operation name and message when another frame or clip operation is added._X_
     const containedManifestPath = yield* resolvePathWithinRoot({ root: outDir, candidate: manifestCandidate }).pipe(
       Effect.provideService(FileSystem.FileSystem, fs),
       Effect.provideService(Path.Path, path),
