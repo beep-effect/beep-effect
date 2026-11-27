@@ -92,6 +92,13 @@ describe("parsePlanLog", () => {
     expect(A.join(entries[0]?.changedProperties ?? [], ",")).not.toContain("@");
   });
 
+  it("reports an identifier-shaped bare scalar as (value), because only a keyed line names a property", () => {
+    const { entries } = parsePlanLog(
+      A.join([colored("ApiKey", "update"), line("  + tokens:"), line("  +   - token123"), line("  + rotation")], "\n")
+    );
+    expect(entries[0]?.changedProperties).toEqual(["tokens", "(value)"]);
+  });
+
   it("ignores action tasks and the summary line", () => {
     const log = parsePlanLog(A.join([line("Plan: no changes"), line("[Seed] run [action]")], "\n"));
     expect(log.entries).toEqual([]);

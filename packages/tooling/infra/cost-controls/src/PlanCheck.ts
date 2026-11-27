@@ -344,20 +344,21 @@ export class PlanCheckFailed extends S.TaggedError<PlanCheckFailed, { readonly b
 const ansi = /\u001b\[[0-9;]*m/gu;
 const logPrefix = /^\[\d{2}:\d{2}:\d{2}\.\d{3}\] [A-Z]+: ?/u;
 const resourceLine = /^\[([^\]]+)\] ([a-z]+)\b(?! \[action\])/u;
-const changeLine = /^ {2}([+-]) ([^:]+)/u;
+const changeLine = /^ {2}([+-]) ([^:]+)(:?)/u;
 const propertyName = /^[A-Za-z_$][\w$.-]*$/u;
 
-const safePropertyName = (raw: string): string => {
+const safePropertyName = (raw: string, keyed: boolean): string => {
   const name = pipe(raw, Str.trim, Str.replace(/^-\s*/u, ""), Str.trim);
   if (Str.isEmpty(name)) return "";
-  return propertyName.test(name) ? name : "(value)";
+  return keyed && propertyName.test(name) ? name : "(value)";
 };
 
 const clean = (line: string) => pipe(line, Str.replace(ansi, ""), Str.replace(logPrefix, ""));
 const isPlanAction = S.is(PlanAction);
 
 const withChangedProperty = (entries: ReadonlyArray<PlanEntry>, line: string): ReadonlyArray<PlanEntry> => {
-  const property = safePropertyName(changeLine.exec(line)?.[2] ?? "");
+  const [, , raw = "", keyColon = ""] = changeLine.exec(line) ?? [];
+  const property = safePropertyName(raw, Str.isNonEmpty(keyColon));
   return pipe(
     A.last(entries),
     O.filter(() => Str.isNonEmpty(property)),
@@ -393,14 +394,10 @@ const emptyParse: ParseState = { entries: [], unreadable: [], latestReadable: tr
  * entry, so they never land on the readable resource before it. Lines that are not resource
  * lines (the summary, `Done:` and other log output) never match.
  *
- * A change line contributes its property name: the text before the first
- * colon, minus any YAML list marker, kept only when it is identifier-shaped,
- * and `(value)` otherwise, so an address never reaches the job log.
- *
- * **Gotchas**
- *
- * A bare list scalar that is itself identifier-shaped (`- token123`) cannot be
- * told apart from a property name, so it is reported by that text.
+ * A change line names a property only when it carries a key colon: the text
+ * before that colon, minus any YAML list marker, when it is identifier-shaped.
+ * Every other change line, a bare list scalar such as `- token123` included,
+ * reports `(value)`, so no declared value reaches the job log.
  *
  * **Example** (Parse one adopted resource)
  *
