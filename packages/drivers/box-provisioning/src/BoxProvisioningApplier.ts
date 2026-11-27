@@ -331,17 +331,7 @@ const readObservedFolder = Effect.fn("BoxProvisioningApplier.readObservedFolder"
     .pipe(Effect.flatMap(toObservedFolderFromFull));
 });
 
-/**
- * Revalidates only folder identity fields that dependent writes cannot change.
- *
- * **Details**
- *
- * Provider id, parent provider id, and Box-equivalent name remain stable across
- * child and collaboration writes. The folder etag is deliberately excluded:
- * Box's behavior when child membership changes is unverified, so an etag change
- * cannot safely distinguish external drift from the reconciler's own prior
- * dependent mutation. A folder's own action precondition still checks its etag.
- */
+// decision: folder-dependency-skips-etag
 const validateFolderDependency = Effect.fn("BoxProvisioningApplier.validateFolderDependency")(function* (
   box: B.Box["Service"],
   logicalKey: BoxLogicalKey,

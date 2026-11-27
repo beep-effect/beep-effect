@@ -31,9 +31,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 
-// Absent, blank, or unresolved `op://` values count as absent, so the suite
-// skips instead of authenticating with a placeholder.
-const envText = (name: string): O.Option<string> =>
+const resolvedEnvText = (name: string): O.Option<string> =>
   pipe(
     O.fromUndefinedOr(Bun.env[name]),
     O.map(Str.trim),
@@ -41,24 +39,22 @@ const envText = (name: string): O.Option<string> =>
   );
 
 const liveEnv = O.all({
-  clientId: envText("M365_APP_ONLY_CLIENT_ID"),
-  mailbox: envText("M365_APP_ONLY_MAILBOX"),
-  privateKey: envText("M365_APP_ONLY_CERT_PRIVATE_KEY"),
-  tenantId: envText("M365_APP_ONLY_TENANT_ID"),
-  thumbprintSha256: envText("M365_APP_ONLY_CERT_THUMBPRINT_SHA256"),
+  clientId: resolvedEnvText("M365_APP_ONLY_CLIENT_ID"),
+  mailbox: resolvedEnvText("M365_APP_ONLY_MAILBOX"),
+  privateKey: resolvedEnvText("M365_APP_ONLY_CERT_PRIVATE_KEY"),
+  tenantId: resolvedEnvText("M365_APP_ONLY_TENANT_ID"),
+  thumbprintSha256: resolvedEnvText("M365_APP_ONLY_CERT_THUMBPRINT_SHA256"),
 });
 
-// Reading needs credentials only. Writing a calendar entry into a real mailbox
-// needs this second, explicit opt-in.
-const liveContactsWrite = O.exists(envText("M365_LIVE_CONTACTS_WRITE"), (value) => value === "1");
-const liveWrite = O.exists(envText("M365_LIVE_WRITE"), (value) => value === "1");
+const liveContactsWrite = O.exists(resolvedEnvText("M365_LIVE_CONTACTS_WRITE"), (value) => value === "1");
+const calendarWriteOptIn = O.exists(resolvedEnvText("M365_LIVE_WRITE"), (value) => value === "1");
 
 pipe(
   liveEnv,
   O.match({
     onNone: () =>
       describe("@beep/m365 app-only live integration (M365_APP_ONLY_*)", () => {
-        it.skip("skips live Graph calls when the M365_APP_ONLY_* settings are absent", () => {
+        it.skip("skips live Graph calls when M365_APP_ONLY_* settings are absent, blank or unresolved op:// references", () => {
           assertNone(liveEnv);
         });
       }),
@@ -156,7 +152,7 @@ pipe(
             })
           );
 
-          (liveWrite ? it.effect : it.effect.skip)(
+          (calendarWriteOptIn ? it.effect : it.effect.skip)(
             "creates one uniquely keyed test event, finds it by key, and deletes it (M365_LIVE_WRITE=1)",
             Effect.fnUntraced(function* () {
               const m365 = yield* M365;

@@ -6,7 +6,6 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
-// Synthetic ids: the base64 body carries `+`, `/` and `=` so every escape path runs.
 const decode = S.decodeEffect(OutlookItemRefFromInput);
 const encode = S.encodeEffect(OutlookItemRefFromInput);
 const refuses = (input: string) => Effect.flip(decode(input)).pipe(Effect.map((error) => error._tag));

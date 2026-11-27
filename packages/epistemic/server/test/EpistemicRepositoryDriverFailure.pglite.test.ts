@@ -32,10 +32,7 @@ const UnmigratedDrizzleLayer = makeDrizzleLayer().pipe(
   Layer.provideMerge(Layer.fresh(makePgliteSqlTestLayer({ mode: "in-process" })))
 );
 
-// A failed statement leaves an implicit-transaction PGlite session in the
-// aborted state, where the only legal next statement is the rollback that
-// quiesces it, so every expected failure is followed by one.
-const quiesce = Effect.fn("EpistemicRepositoryDriverFailure.quiesce")(function* () {
+const rollbackAbortedSession = Effect.fn("EpistemicRepositoryDriverFailure.rollbackAbortedSession")(function* () {
   const sql = yield* SqlClient.SqlClient;
   yield* sql.unsafe("ROLLBACK").pipe(Effect.orDie);
 });
@@ -48,7 +45,9 @@ describe("Epistemic repository driver failures", { concurrent: false }, () => {
         const repository = yield* makeDrizzleClaimDispositionRepository();
         const claimId = yield* decodeCandidateClaimId(1);
 
-        const failure = yield* repository.listByClaim(claimId).pipe(Effect.flip, Effect.ensuring(quiesce()));
+        const failure = yield* repository
+          .listByClaim(claimId)
+          .pipe(Effect.flip, Effect.ensuring(rollbackAbortedSession()));
 
         pipe(ClaimDispositionRepositoryUnavailable.is(failure), assertTrue);
         expect(failure.operation).toBe("listByClaim");

@@ -28,19 +28,12 @@ const $I = $BoxId.create("scripts/generate");
 
 const scriptDir = import.meta.dirname;
 
-const BYTE_OR_EVENT_PATTERN = /\b(?:ByteStream|EventStream)\b/;
+const STREAMING_MODULE_SIGNATURE_PATTERN = /\b(?:ByteStream|EventStream)\b/;
 
-// Model cross-references in generated schema expressions are always emitted as
-// `S.suspend(() => Name)` by `schemaForReference`, so this is the whole edge set
-// of the declaration graph the reachability prune walks.
-const SUSPEND_REFERENCE_PATTERN = /S\.suspend\(\(\) => ([A-Za-z_$][A-Za-z0-9_$]*)\)/g;
+const SCHEMA_REF_SUSPEND_PATTERN = /S\.suspend\(\(\) => ([A-Za-z_$][A-Za-z0-9_$]*)\)/g;
 
 const GENERATED_MODELS_MODULE = "Box.models.gen";
 
-/**
- * The declaration flavour extracted from a Box SDK type surface: an `interface`,
- * a `class`, or a `type` alias.
- */
 const DeclarationKind = LiteralKit(["class", "interface", "type"]).pipe(
   $I.annoteSchema("DeclarationKind", {
     description: "The kind of declaration extracted from the Box SDK type surface.",
@@ -59,9 +52,7 @@ class GeneratedField extends S.Opaque<GeneratedField, { readonly brand: unique s
   )
 ) {}
 
-// crispen: the optional fields stay schema-optional (`| undefined`) rather than
-// `Option` because the AST walker reads them via `?? default` / `!== undefined`;
-// `Option` would add wrapping noise here without enforcing any extra invariant.
+// decision: generator-keeps-plain-traversal-types
 class GeneratedDeclaration extends S.Opaque<GeneratedDeclaration, { readonly brand: unique symbol }>()(
   S.Struct({
     baseName: S.optionalKey(S.String),
@@ -156,9 +147,7 @@ class BoxSdkPaths extends S.Opaque<BoxSdkPaths, { readonly brand: unique symbol 
   )
 ) {}
 
-// crispen: kept as a plain interface with effect collections — this is mutable
-// traversal state (accumulated during recursion), not a decodable data model, so a
-// schema would misrepresent it. See "When NOT to crispen".
+// decision: generator-keeps-plain-traversal-types
 interface GenerationState {
   readonly constrainedTypes: MutableHashSet.MutableHashSet<string>;
   readonly declarationNames: MutableHashSet.MutableHashSet<string>;
@@ -185,9 +174,6 @@ const toIdentifier = flow(
   A.join("")
 );
 
-// crispen: `JSON.stringify` is the exact JS string-literal escaper for codegen; the
-// schema JSON codec is Effect-only and would force this whole sync render layer into
-// Effect for zero correctness gain (see apps/professional-desktop scripts).
 const stringLiteral = (value: string): string =>
   Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(value), identity);
 
@@ -590,7 +576,7 @@ const referenceTypeReferencesNonJson = (node: ts.TypeReferenceNode, state: Gener
   A.some(node.typeArguments ?? A.empty<ts.TypeNode>(), (argument) => typeReferencesNonJson(argument, state));
 
 const typeReferencesNonJson = (node: ts.TypeNode, state: GenerationState): boolean =>
-  BYTE_OR_EVENT_PATTERN.test(node.getText()) ||
+  STREAMING_MODULE_SIGNATURE_PATTERN.test(node.getText()) ||
   Match.value(node).pipe(
     Match.when(ts.isParenthesizedTypeNode, (parenthesized) => typeReferencesNonJson(parenthesized.type, state)),
     Match.when(ts.isArrayTypeNode, (array) => typeReferencesNonJson(array.elementType, state)),
@@ -703,7 +689,7 @@ const sortDeclarations = (declarations: ReadonlyArray<GeneratedDeclaration>): Re
 
 const referencedDeclarationNames = (expression: string): ReadonlyArray<string> =>
   A.getSomes(
-    A.map(A.fromIterable(Str.matchAll(SUSPEND_REFERENCE_PATTERN)(expression)), (match) => O.fromNullishOr(match[1]))
+    A.map(A.fromIterable(Str.matchAll(SCHEMA_REF_SUSPEND_PATTERN)(expression)), (match) => O.fromNullishOr(match[1]))
   );
 
 const declarationExpressions = (declaration: GeneratedDeclaration): ReadonlyArray<string> => {
@@ -713,17 +699,11 @@ const declarationExpressions = (declaration: GeneratedDeclaration): ReadonlyArra
     : A.append(fieldExpressions, declaration.schemaExpression);
 };
 
-// Every declaration name a single declaration depends on: its `.extend` base
-// class plus every `S.suspend` reference in its own schema expressions.
 const declarationReferences = (declaration: GeneratedDeclaration): ReadonlyArray<string> => {
   const references = A.flatMap(declarationExpressions(declaration), referencedDeclarationNames);
   return declaration.baseName === undefined ? references : A.prepend(references, declaration.baseName);
 };
 
-/**
- * Walk the declaration graph from `roots`, following `S.suspend` references and
- * `.extend` base names, and return every declaration name that must be emitted.
- */
 const reachableDeclarationNames = (
   declarations: ReadonlyArray<GeneratedDeclaration>,
   roots: ReadonlyArray<string>
@@ -755,18 +735,16 @@ const reachableDeclarationNames = (
   return reached;
 };
 
-// `M.Foo` in a value position.
-const propertyAccessMemberName = (node: ts.Node, alias: string): string | undefined =>
+const valuePositionMemberName = (node: ts.Node, alias: string): string | undefined =>
   ts.isPropertyAccessExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === alias
     ? node.name.text
     : undefined;
 
-// `M.Foo` in a type position.
-const qualifiedMemberName = (node: ts.Node, alias: string): string | undefined =>
+const typePositionMemberName = (node: ts.Node, alias: string): string | undefined =>
   ts.isQualifiedName(node) && ts.isIdentifier(node.left) && node.left.text === alias ? node.right.text : undefined;
 
 const aliasMemberName = (node: ts.Node, alias: string): string | undefined =>
-  propertyAccessMemberName(node, alias) ?? qualifiedMemberName(node, alias);
+  valuePositionMemberName(node, alias) ?? typePositionMemberName(node, alias);
 
 const namespaceMemberNames = (sourceFile: ts.SourceFile, alias: string): ReadonlyArray<string> => {
   let names = A.empty<string>();
@@ -841,9 +819,6 @@ const findFiles: (
 
 const isDeclarationFile = Str.endsWith(".d.ts");
 
-// The driver's own hand-written sources are a second root set for the model
-// closure: `Box.streaming.ts` supplies the byte/event operations the generator
-// deliberately skips, and still needs their payload models emitted.
 const isHandWrittenSourceFile = (filePath: string): boolean =>
   Str.endsWith(".ts")(filePath) && !Str.includes("_generated")(filePath);
 
@@ -854,10 +829,7 @@ const writeGeneratedFile = Effect.fn("Box.generate.writeGeneratedFile")(function
   yield* fs.writeFileString(filePath, `${Str.trimEnd(content)}\n`);
 });
 
-// Walk up for the installed SDK rather than assuming it sits in the repo root's
-// node_modules: git worktrees have no node_modules of their own and resolve
-// against the primary checkout.
-const findSdkRoot = Effect.fn("Box.generate.findSdkRoot")(function* (startDirectory: string) {
+const findNearestSdkRoot = Effect.fn("Box.generate.findNearestSdkRoot")(function* (startDirectory: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   let directory = startDirectory;
@@ -880,7 +852,7 @@ const findSdkRoot = Effect.fn("Box.generate.findSdkRoot")(function* (startDirect
 const resolveBoxPaths = Effect.fnUntraced(function* () {
   const path = yield* Path.Path;
   const packageRoot = path.resolve(scriptDir, "..");
-  const sdkRoot = yield* findSdkRoot(packageRoot);
+  const sdkRoot = yield* findNearestSdkRoot(packageRoot);
   const generatedRoot = path.resolve(packageRoot, "src/_generated");
   return BoxSdkPaths.make({
     clientPath: path.resolve(sdkRoot, "lib/client.d.ts"),
@@ -919,7 +891,7 @@ const collectNonJsonDeclarationNames = Effect.fn("Box.generate.collectNonJsonDec
   files: ReadonlyArray<string>
 ) {
   return yield* collectStatementNames(files, (statement, sourceFile) =>
-    BYTE_OR_EVENT_PATTERN.test(statement.getText(sourceFile))
+    STREAMING_MODULE_SIGNATURE_PATTERN.test(statement.getText(sourceFile))
   );
 });
 
@@ -1064,7 +1036,7 @@ const classifyManagerMethod = (
               " "
             )}`;
             return Match.value(
-              BYTE_OR_EVENT_PATTERN.test(signatureText) || methodReferencesNonJson(member, state)
+              STREAMING_MODULE_SIGNATURE_PATTERN.test(signatureText) || methodReferencesNonJson(member, state)
             ).pipe(
               Match.when(true, () => SkippedMethodDisposition.make({ name: fullMethodName })),
               Match.when(false, () =>
@@ -1733,9 +1705,6 @@ const generate = Effect.gen(function* () {
   const declarations = yield* collectDeclarations(sourceFiles, state);
   const allManagerProperties = yield* collectManagerProperties(paths.clientPath);
 
-  // Demand-scoped surface: whole managers and individual `manager.method`
-  // operations are admitted from `box.surface.ts`. See
-  // goals/box-typecheck-cost/SPEC.md.
   const allowedManagers = MutableHashSet.fromIterable(GENERATED_MANAGERS);
   const allowedOperations = MutableHashSet.fromIterable(GENERATED_OPERATIONS);
   const managerProperties = A.filter(
@@ -1774,8 +1743,6 @@ const generate = Effect.gen(function* () {
     (operationName) => !A.some(discoveredOperationNames, (candidate) => candidate === operationName)
   );
 
-  // Model roots come from the kept operations plus the driver's own hand-written
-  // sources; everything else is pruned by reachability.
   const handWrittenRoots = yield* collectHandWrittenModelRoots(paths.handWrittenSourceRoot);
   const operationRoots = A.flatMap(methods.generated, (method) =>
     A.appendAll(
@@ -1844,8 +1811,6 @@ const generate = Effect.gen(function* () {
 
 const MainLive = Layer.mergeAll(BunFileSystem.layer, BunPath.layer);
 
-// Build the platform layers into a Context once and provide it at this entry point,
-// keeping scope lifetimes correct and satisfying effect(strictEffectProvide).
 const program = MainLive.pipe(
   Layer.build,
   Effect.flatMap(

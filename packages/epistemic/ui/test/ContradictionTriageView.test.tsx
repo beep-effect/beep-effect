@@ -756,7 +756,6 @@ describe("ContradictionTriageView", { concurrent: false }, () => {
       const tabs = requireElement(container, '[data-testid="contradiction-narrow-layout"]', HTMLElement);
       expect(tabs.className).toContain("@6xl/triage:hidden");
 
-      // The narrow layout is a tablist: the active trigger is selected and each trigger names its pane.
       const comparisonTab = requireElement(
         container,
         '[data-testid="contradiction-tab-comparison"]',

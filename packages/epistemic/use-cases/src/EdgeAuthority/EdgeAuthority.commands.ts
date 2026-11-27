@@ -40,24 +40,13 @@ const UnknownRecord = S.Record(S.String, S.Unknown);
 
 const $I = $EpistemicUseCasesId.create("EdgeAuthority/EdgeAuthority.commands");
 
-/**
- * Audit provenance every edge write carries. The repository derives the row's
- * `createdAt`/`updatedAt` from the command's `recordedAt` and its principals
- * from `recordedBy`; nothing here is inferred from ambient state.
- *
- * `orgId` is the typed organization the row belongs to. It is carried separately
- * from `identity.orgScope` because the digest needs the org as a string component
- * while the row needs it as an entity id. That the two denote the same
- * organization is enforced by {@link OrgScopeAgreementCheck} on the command
- * schemas themselves — see the check for why it lives here rather than in the
- * repository.
- */
 const edgeFactAuditFields = {
   orgId: Shared.OrganizationId.annotateKey({
-    description: "Organization the edge version belongs to; must denote the identity's org scope.",
+    description:
+      "Typed organization id stamped on the row; identity.orgScope names the same organization as a digest string.",
   }),
   recordedBy: Principal.annotateKey({
-    description: "Principal that asserted the fact.",
+    description: "Principal that asserted the fact; stamped as the row's created and updated principal.",
   }),
   schemaVersion: SemanticVersion.annotateKey({
     description: "Schema version stamped on the written edge version.",
@@ -67,21 +56,6 @@ const edgeFactAuditFields = {
   }),
 } as const;
 
-/**
- * Cross-field agreement between the two places a command names its organization:
- * `identity.orgScope`, the string component folded into the logical-edge digest,
- * and `orgId`, the typed entity id stamped on the row.
- *
- * They must denote the same organization. A disagreement is not a database
- * problem the repository could catch — the write would succeed, producing a row
- * owned by one organization under a digest partitioned by another, and every
- * later read of that logical edge would silently mix two tenants. The command is
- * therefore the enforcement point: a command that cannot be decoded cannot be
- * issued, so the mismatch is unrepresentable rather than merely rejected.
- *
- * The failure is reported at the `identity.orgScope` path, since that is the
- * component the caller derived rather than the id it was given.
- */
 const OrgScopeAgreementCheck = S.makeFilter(
   (command: { readonly identity: Pick<LogicalEdgeIdentity, "orgScope">; readonly orgId: Shared.OrganizationId }) =>
     Equal.equals(command.identity.orgScope, `${command.orgId}`)
@@ -92,7 +66,8 @@ const OrgScopeAgreementCheck = S.makeFilter(
         },
   $I.annote("OrgScopeAgreementCheck", {
     title: "Org scope agreement",
-    description: "The logical edge identity's org scope must denote the command's organization id.",
+    description:
+      "The logical edge identity's org scope must denote the command's organization id. The database would accept a mismatched row, filed under another organization's digest partition and mixing two tenants on every read, so the command refuses to decode; the issue sits at identity.orgScope, the component the caller derived.",
   })
 );
 

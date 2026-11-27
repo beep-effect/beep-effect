@@ -26,19 +26,16 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
-// `NodeServices` no longer bundles crypto; the archive engine hashes through `Digest`.
 const TestServices = Layer.mergeAll(NodeServices.layer, NodeCrypto.layerDigest);
 
 const decodePosixPath = S.decodeEffect(PosixPath);
 
 const BEEP_TEST_LIBPFF_PST_ENV = "BEEP_TEST_LIBPFF_PST";
 
-// Snapshot the opt-in lane key once, treating absent and blank values as "not
-// configured" so the live registrations report skips instead of exporting a phantom PST.
-// Operators can point this at any real PST — the documented public sample is
-// Apache Tika's testPST.pst, pinned by commit URL and sha256 in the package
-// README; no PST binary is committed to this public repository.
-const livePstPath = Config.String(BEEP_TEST_LIBPFF_PST_ENV).pipe(Config.option, Effect.map(O.filter(Str.isNonEmpty)));
+const nonBlankLivePstPath = Config.String(BEEP_TEST_LIBPFF_PST_ENV).pipe(
+  Config.option,
+  Effect.map(O.filter(Str.isNonEmpty))
+);
 const decodeMessageRecord = S.decodeUnknownEffect(S.fromJsonString(PffexportMessageRecord));
 const PffexportMessageRecordArbitrary = Arbitrary.schema(PffexportMessageRecord);
 
@@ -74,8 +71,6 @@ const liveOperation = Effect.fn("LibpffLive.operation")(function* (pstPath: stri
 });
 
 describe("@beep/libpff live pffexport", () => {
-  // Deterministic even without the opt-in PST: proves the JSONL codec the
-  // live assertions below decode through.
   it.effect.prop(
     "round-trips schema-derived message records through the JSONL string codec",
     [PffexportMessageRecordArbitrary],
@@ -93,7 +88,7 @@ describe("@beep/libpff live pffexport", () => {
     (it) => {
       it.effect("reports a runtime pffexport version and exports a real PST", (context) =>
         Effect.gen(function* () {
-          const pstPath = yield* livePstPath;
+          const pstPath = yield* nonBlankLivePstPath;
           if (O.isNone(pstPath)) {
             return yield* Effect.sync(() =>
               context.skip("BEEP_TEST_LIBPFF_PST is not configured; real PST integration did not run")
@@ -126,21 +121,8 @@ describe("@beep/libpff live pffexport", () => {
             const record = yield* decodeMessageRecord(pipe(jsonl, Str.trimEnd, Str.split("\n"))[0]);
             expect(record.messagePath.length).toBeGreaterThan(0);
 
-            // Every assembled EML must be RFC 5322-shaped: no foldable line
-            // over the 998-octet limit anywhere in the message — headers fold,
-            // and a body part with a longer physical line is re-encoded as
-            // base64 rather than folded — plus a real Date header wherever
-            // pffexport gave us a parseable client-submit time.
-            //
-            // One deliberate exemption keeps this from becoming a false alarm
-            // on a future fixture. A header line with no space has no fold
-            // point to promote to a continuation indent, so the driver emits it
-            // intact rather than mutating the value — those lines are skipped
-            // here. Lines split on /\r?\n/, not "\r\n": remaining 8bit bodies
-            // may legally carry bare-LF endings, and splitting only on CRLF
-            // would glue their lines into false over-long positives.
             const encoder = new TextEncoder();
-            const foldable = (line: string): boolean => pipe(line, Str.includes(" "));
+            const hasFoldPoint = (line: string): boolean => pipe(line, Str.includes(" "));
             let datedEmlCount = 0;
             for (const child of emlChildren) {
               const eml = yield* fs.readFileString(path.join(exportRoot, child.relativePath));
@@ -152,17 +134,21 @@ describe("@beep/libpff live pffexport", () => {
                   onSome: (separator) => pipe(eml, Str.slice(0, separator)),
                 })
               );
+              const linesSplitOnCrlfOrBareLf = pipe(eml, Str.split(/\r?\n/));
               const overLong = A.filter(
-                pipe(eml, Str.split(/\r?\n/)),
-                (line) => foldable(line) && encoder.encode(line).length > 998
+                linesSplitOnCrlfOrBareLf,
+                (line) => hasFoldPoint(line) && encoder.encode(line).length > 998
               );
-              expect(overLong).toStrictEqual([]);
+              expect(
+                overLong,
+                "headers fold and a longer body line goes to base64; only a line with no space may stay over 998 octets"
+              ).toStrictEqual([]);
               expect(headerBlock).not.toContain("X-Beep-Libpff-Client-Submit-Time");
               if (pipe(headerBlock, Str.includes("\r\nDate: ")) || pipe(headerBlock, Str.startsWith("Date: "))) {
                 datedEmlCount += 1;
               }
             }
-            expect(datedEmlCount).toBeGreaterThan(0);
+            expect(datedEmlCount, "a parseable client-submit time yields a real Date header").toBeGreaterThan(0);
           }
         })
       );
@@ -174,7 +160,7 @@ describe("@beep/libpff live pffexport", () => {
     (it) => {
       it.effect("keeps a missing live source inside the operation error contract", (context) =>
         Effect.gen(function* () {
-          const pstPath = yield* livePstPath;
+          const pstPath = yield* nonBlankLivePstPath;
           if (O.isNone(pstPath)) {
             return yield* Effect.sync(() =>
               context.skip("BEEP_TEST_LIBPFF_PST is not configured; real PST integration did not run")

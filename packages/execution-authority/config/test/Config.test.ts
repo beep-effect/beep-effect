@@ -77,12 +77,9 @@ describe("ExecutionAuthorityConfigLive", () => {
   });
 
   it.effect(
-    "keeps malformed configuration in the typed failure channel",
+    "keeps malformed configuration in the typed failure channel, including a blank allowlist entry a naive split drops",
     Effect.fnUntraced(function* () {
       const configurations = [
-        // A blank entry between commas is dropped silently by a naive split;
-        // here it must fail, so an operator typo cannot quietly shrink the
-        // allowlist into a denial they did not intend.
         { EXECUTION_AUTHORITY_EGRESS_DESTINATION_ALLOWLIST: "https://a.example," },
         { EXECUTION_AUTHORITY_POLICY_REVISION: "not-a-semver" },
       ];
@@ -166,8 +163,6 @@ describe("grant fixtures", () => {
   it.effect(
     "produces a byte-stable digest across reconstructions",
     Effect.fnUntraced(function* () {
-      // The acceptance test chains ledger rows against this digest, so a fixture
-      // that drifts between runs would make the chain unreproducible.
       const grant = yield* decodeExecutionGrant({
         budget: { maxToolCalls: null },
         expiresAt: 86_400_000,
@@ -186,7 +181,9 @@ describe("grant fixtures", () => {
         addGrant(emptyDraftGrantSet(defaultPolicyRevision), grant).pipe(Result.flatMap(freezeGrantSet(fixtureFrozenAt)))
       );
 
-      expect(rebuilt.digest).toBe(fixtureFrozenGrantSet.digest);
+      expect(rebuilt.digest, "the acceptance test chains ledger rows against this digest").toBe(
+        fixtureFrozenGrantSet.digest
+      );
     })
   );
 

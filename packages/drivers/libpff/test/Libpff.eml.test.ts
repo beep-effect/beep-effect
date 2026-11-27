@@ -31,20 +31,21 @@ describe("foldHeaderLine", () => {
     expect(original.length).toBeGreaterThan(998);
     expect(folded.length).toBeGreaterThan(1);
     expect(A.every(folded, (line) => octets(line) <= 998)).toBe(true);
-    // Continuations carry the single-space indent that marks them as folded.
-    expect(A.every(folded.slice(1), (line) => pipe(line, Str.startsWith(" ")))).toBe(true);
+    expect(
+      A.every(folded.slice(1), (line) => pipe(line, Str.startsWith(" "))),
+      "continuations carry the single-space indent that marks them as folded"
+    ).toBe(true);
     expect(pipe(O.fromNullishOr(folded[0]), O.map(Str.startsWith(" ")), O.getOrUndefined)).toBe(false);
-    // Unfolding per RFC 5322 restores the original byte for byte.
-    expect(A.join(folded, "")).toBe(original);
+    expect(A.join(folded, ""), "unfolding per RFC 5322 restores the original byte for byte").toBe(original);
   });
 
   it("passes through a line with no fold point at all", () => {
-    // Nothing to promote to a continuation indent. Splitting would insert
-    // whitespace that survives unfolding and corrupt the value, so the
-    // over-long line is emitted exactly as it arrived.
     const original = pipe("a", Str.repeat(3000));
 
-    expect(foldHeaderLine(original)).toStrictEqual([original]);
+    expect(
+      foldHeaderLine(original),
+      "a split would insert whitespace that survives unfolding, so the over-long line is emitted as it arrived"
+    ).toStrictEqual([original]);
   });
 
   it("keeps an unbreakable value whole while still folding at the one real space", () => {
@@ -52,9 +53,10 @@ describe("foldHeaderLine", () => {
     const original = `X-Blob: ${token}`;
     const folded = foldHeaderLine(original);
 
-    // The space after the field name is a legitimate fold point, so it is used;
-    // the value itself is never cut.
-    expect(folded).toStrictEqual(["X-Blob:", ` ${token}`]);
+    expect(folded, "the space after the field name is a fold point; the value itself is never cut").toStrictEqual([
+      "X-Blob:",
+      ` ${token}`,
+    ]);
     expect(A.join(folded, "")).toBe(original);
   });
 
@@ -64,21 +66,22 @@ describe("foldHeaderLine", () => {
     const folded = foldHeaderLine(original);
 
     expect(folded.length).toBeGreaterThan(1);
-    // Every foldable line respects the limit; only the unbreakable token is over.
-    expect(A.filter(folded, (line) => octets(line) > 998)).toHaveLength(1);
+    expect(
+      A.filter(folded, (line) => octets(line) > 998),
+      "every foldable line respects the limit; only the unbreakable token is over"
+    ).toHaveLength(1);
     expect(A.some(folded, (line) => pipe(line, Str.includes(token)))).toBe(true);
-    // Still byte-for-byte reversible, because every break sat on a real space.
-    expect(A.join(folded, "")).toBe(original);
+    expect(A.join(folded, ""), "still byte-for-byte reversible, because every break sat on a real space").toBe(
+      original
+    );
   });
 
   it("measures octets rather than characters", () => {
-    // Each euro sign is three octets, so 400 of them exceed the limit while the
-    // character count alone would not. Spaces give it somewhere to fold.
     const original = `Subject: ${pipe("€ ", Str.repeat(400))}`;
 
     expect(original.length).toBeLessThan(998);
-    expect(octets(original)).toBeGreaterThan(998);
-    expect(foldHeaderLine(original).length).toBeGreaterThan(1);
+    expect(octets(original), "each euro sign is three octets, so 400 of them exceed the limit").toBeGreaterThan(998);
+    expect(foldHeaderLine(original).length, "the spaces give the line somewhere to fold").toBeGreaterThan(1);
     expect(A.every(foldHeaderLine(original), (line) => octets(line) <= 998)).toBe(true);
   });
 });
@@ -100,15 +103,15 @@ describe("rfc5322DateFromOutlookTimestamp", () => {
   });
 
   it("declines out-of-range calendar and clock components", () => {
-    // The pattern only constrains digit counts, so these all match it.
-    for (const value of [
+    const patternShapedButOutOfRange = [
       "Nov 99, 2020 25:61:61.000000000 UTC",
       "Nov 26, 2020 24:00:00.000000000 UTC",
       "Nov 26, 2020 22:60:00.000000000 UTC",
       "Nov 26, 2020 22:18:60.000000000 UTC",
       "Nov 00, 2020 22:18:29.000000000 UTC",
       "Nov 31, 2020 22:18:29.000000000 UTC",
-    ]) {
+    ];
+    for (const value of patternShapedButOutOfRange) {
       assertNone(rfc5322DateFromOutlookTimestamp(value));
     }
   });
@@ -118,8 +121,8 @@ describe("rfc5322DateFromOutlookTimestamp", () => {
     expect(O.getOrElse(rfc5322DateFromOutlookTimestamp("Feb 29, 2020 00:00:00.000000000 UTC"), () => "")).toBe(
       "29 Feb 2020 00:00:00 +0000"
     );
-    // Century rule: 1900 is not a leap year, 2000 is.
-    assertNone(rfc5322DateFromOutlookTimestamp("Feb 29, 1900 00:00:00.000000000 UTC"));
+    const centuryNonLeapFeb29 = rfc5322DateFromOutlookTimestamp("Feb 29, 1900 00:00:00.000000000 UTC");
+    assertNone(centuryNonLeapFeb29);
     expect(O.getOrElse(rfc5322DateFromOutlookTimestamp("Feb 29, 2000 00:00:00.000000000 UTC"), () => "")).toBe(
       "29 Feb 2000 00:00:00 +0000"
     );
@@ -163,9 +166,7 @@ describe("assembleEml", () => {
       headerBlock: "Subject: hi",
     });
 
-  // Strips the RFC 2045 76-column wrapping and decodes the payload back to
-  // the body string the part was assembled from.
-  const decodeBase64Payload = (payload: string): string =>
+  const unwrapAndDecodeBase64Payload = (payload: string): string =>
     Result.getOrElse(Base64.decodeString(A.join(pipe(payload, Str.split("\r\n")), "")), () => "");
 
   const singlePartPayload = (eml: string): string =>
@@ -198,7 +199,7 @@ describe("assembleEml", () => {
     expect(eml).toContain("Content-Transfer-Encoding: base64");
     const payload = singlePartPayload(eml);
     expect(A.every(pipe(payload, Str.split("\r\n")), (line) => line.length <= 76)).toBe(true);
-    expect(decodeBase64Payload(payload)).toBe(content);
+    expect(unwrapAndDecodeBase64Payload(payload)).toBe(content);
   });
 
   it("keeps a body line of exactly 998 octets 8bit", () => {
@@ -211,15 +212,13 @@ describe("assembleEml", () => {
   });
 
   it("measures octets rather than characters", () => {
-    // Each euro sign is three octets, so 333 of them cross the limit while
-    // the character count stays far below it.
     const content = pipe("€", Str.repeat(333));
     const eml = singlePart(content);
 
     expect(content.length).toBe(333);
-    expect(octets(content)).toBe(999);
+    expect(octets(content), "each euro sign is three octets, so 333 of them cross the limit").toBe(999);
     expect(eml).toContain("Content-Transfer-Encoding: base64");
-    expect(decodeBase64Payload(singlePartPayload(eml))).toBe(content);
+    expect(unwrapAndDecodeBase64Payload(singlePartPayload(eml))).toBe(content);
   });
 
   it("preserves mixed line endings byte for byte through base64", () => {
@@ -227,17 +226,17 @@ describe("assembleEml", () => {
     const eml = singlePart(content);
 
     expect(eml).toContain("Content-Transfer-Encoding: base64");
-    expect(decodeBase64Payload(singlePartPayload(eml))).toBe(content);
+    expect(unwrapAndDecodeBase64Payload(singlePartPayload(eml))).toBe(content);
   });
 
   it("counts a lone CR toward its physical line", () => {
-    // No recognized line break splits this, so it is one 1001-octet physical
-    // line: the bare CR is content, not a terminator.
     const content = `${pipe("c", Str.repeat(500))}\r${pipe("d", Str.repeat(500))}`;
     const eml = singlePart(content);
 
-    expect(eml).toContain("Content-Transfer-Encoding: base64");
-    expect(decodeBase64Payload(singlePartPayload(eml))).toBe(content);
+    expect(eml, "the bare CR is content, so this is one 1001-octet physical line").toContain(
+      "Content-Transfer-Encoding: base64"
+    );
+    expect(unwrapAndDecodeBase64Payload(singlePartPayload(eml))).toBe(content);
   });
 
   it("encodes a long multipart body while leaving the attachment part and boundaries unchanged", () => {
@@ -258,7 +257,7 @@ describe("assembleEml", () => {
 
     const bodySection = pipe(eml, Str.split(`\r\n--${boundary}\r\n`))[1] ?? "";
     expect(
-      decodeBase64Payload(
+      unwrapAndDecodeBase64Payload(
         pipe(
           bodySection,
           Str.indexOf("\r\n\r\n"),
@@ -303,8 +302,7 @@ describe("synthesizeEmlHeaderBlock", () => {
         "\r\n"
       )
     );
-    // The nonstandard carrier header is gone.
-    expect(block).not.toContain("X-Beep-Libpff-Client-Submit-Time");
+    expect(block, "the nonstandard carrier header is gone").not.toContain("X-Beep-Libpff-Client-Submit-Time");
   });
 
   it("omits Date rather than emitting an unparseable submit time", () => {

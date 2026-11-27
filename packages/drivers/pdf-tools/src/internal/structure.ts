@@ -34,12 +34,11 @@ import type { PDFDocument } from "pdf-lib";
 import type { StreamCheck } from "../PdfTools.models.ts";
 
 const headerPattern = /^%PDF-(\d\.\d)/;
-// One UTF-16 unit per byte, so string offsets are byte offsets.
-const latin1 = new TextDecoder("latin1");
+const oneCharPerByteDecoder = new TextDecoder("latin1");
 
 const headerVersion = (bytes: Uint8Array): string =>
   pipe(
-    O.fromNullishOr(headerPattern.exec(latin1.decode(bytes.subarray(0, 16)))),
+    O.fromNullishOr(headerPattern.exec(oneCharPerByteDecoder.decode(bytes.subarray(0, 16)))),
     O.flatMap((match) => O.fromUndefinedOr(match[1])),
     O.getOrElse(() => "")
   );
@@ -107,13 +106,10 @@ const fontName = (font: PDFDict): string => {
 
 const fontOrder = Order.mapInput(Order.String, (font: PdfFont) => font.name);
 
-// No deflate stream inflates to more than 1032 times its own size, so this
-// bounds what an inflate produced before it failed, which zlib does not report.
-const MAX_DEFLATE_RATIO = 1032;
+const MAX_DEFLATE_EXPANSION_RATIO = 1032;
 
 const flateDecode = PDFName.of("FlateDecode");
 
-// The raw bytes are zlib data only when FlateDecode is the first filter.
 const firstFilterIsFlate = (doc: PDFDocument, dict: PDFDict): boolean => {
   const filter = resolve(doc, dict.get(PDFName.of("Filter")));
   return (filter instanceof PDFArray ? resolve(doc, filter.get(0)) : filter) === flateDecode;
@@ -132,9 +128,7 @@ const endstreamNext = /^\s*endstream/;
 const sameBytes = (a: Uint8Array, b: Uint8Array): boolean =>
   a.length === b.length && a.every((byte, index) => byte === b[index]);
 
-// Offsets where the data of every definition of `ref` starts, the last
-// definition (the one pdf-lib keeps) first.
-const dataOffsets = (text: string, ref: PDFRef): ReadonlyArray<number> =>
+const dataOffsetsLastDefinitionFirst = (text: string, ref: PDFRef): ReadonlyArray<number> =>
   pipe(
     A.fromIterable(
       Str.matchAll(new RegExp(`(?<!\\d)${ref.objectNumber}\\s+${ref.generationNumber}\\s+obj`, "g"))(text)
@@ -153,11 +147,9 @@ interface PdfFile {
   readonly text: () => string;
 }
 
-// The stream's data as its declared /Length places it in the file: where
-// pdf-lib's bytes start, `length` bytes long, followed by `endstream`.
 const dataAtDeclaredLength = (file: PdfFile, ref: PDFRef, parsed: Uint8Array, length: number): O.Option<Uint8Array> => {
   const shared = Math.min(length, parsed.length);
-  return A.findFirst(dataOffsets(file.text(), ref), (start) =>
+  return A.findFirst(dataOffsetsLastDefinitionFirst(file.text(), ref), (start) =>
     start + length <= file.bytes.length &&
     sameBytes(file.bytes.subarray(start, start + shared), parsed.subarray(0, shared)) &&
     endstreamNext.test(Str.slice(start + length, start + length + 64)(file.text()))
@@ -166,11 +158,7 @@ const dataAtDeclaredLength = (file: PdfFile, ref: PDFRef, parsed: Uint8Array, le
   );
 };
 
-// pdf-lib ends a stream whose /Length is an indirect object at the first
-// `endstream`, minus the EOL before it, so data that itself ends in 0x0D
-// loses that byte. When the parsed bytes and the declared length disagree,
-// the stream is re-read from the file at its declared length; when no
-// definition in the file fits that length, pdf-lib's bytes are judged.
+// decision: indirect-length-streams-reread-from-file
 const rawBytesOf = (doc: PDFDocument, file: PdfFile, ref: PDFRef, stream: PDFRawStream): Uint8Array =>
   pipe(
     declaredLength(doc, stream.dict),
@@ -181,17 +169,10 @@ const rawBytesOf = (doc: PDFDocument, file: PdfFile, ref: PDFRef, stream: PDFRaw
 
 const containerTypes = A.map(["ObjStm", "XRef"], (type) => PDFName.of(type));
 const containerMarkers = ["/ObjStm", "/XRef"];
-// PDF object/generation widths are bounded, avoiding suffix retries on long digits.
-const objectHeader = /(?<!\d)(\d{1,10})\s+(\d{1,5})\s+obj\b/g;
-// How far before its `/Type` an object stream's `N G obj` header may sit.
-const HEADER_WINDOW = 64 * 1024;
-// Cap candidates before decoding overlapping windows or parsing objects.
-// The two marker families share this budget, including markers in stream data.
-// Overflow reports partial discovery; structural inspection still succeeds.
+const boundedWidthObjectHeader = /(?<!\d)(\d{1,10})\s+(\d{1,5})\s+obj\b/g;
+const HEADER_SEARCH_BYTES_BEFORE_MARKER = 64 * 1024;
 const MAX_CONTAINER_CANDIDATES = 128;
 
-// Offsets of every `/ObjStm` and `/XRef` name in the file (`/XRefStm` too,
-// which the stream type check below discards).
 const markerOffsets = (bytes: Uint8Array) => {
   const buffer = NodeBuffer.Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   const offsets: Array<number> = [];
@@ -206,13 +187,10 @@ const markerOffsets = (bytes: Uint8Array) => {
   return { offsets, check: "complete" as const };
 };
 
-// The ref and body offset of the last `N G obj` header before `at`.
-const headerBefore = (bytes: Uint8Array, at: number): O.Option<readonly [PDFRef, number]> => {
-  const from = Math.max(0, at - HEADER_WINDOW);
-  // Keep only the last match: dense fake headers must not allocate an array
-  // of every match in each overlapping window.
+const lastObjHeaderBefore = (bytes: Uint8Array, at: number): O.Option<readonly [PDFRef, number]> => {
+  const from = Math.max(0, at - HEADER_SEARCH_BYTES_BEFORE_MARKER);
   let last: O.Option<RegExpMatchArray> = O.none();
-  for (const header of Str.matchAll(objectHeader)(latin1.decode(bytes.subarray(from, at)))) {
+  for (const header of Str.matchAll(boundedWidthObjectHeader)(oneCharPerByteDecoder.decode(bytes.subarray(from, at)))) {
     last = O.some(header);
   }
   return O.map(last, (header): readonly [PDFRef, number] => [
@@ -221,16 +199,12 @@ const headerBefore = (bytes: Uint8Array, at: number): O.Option<readonly [PDFRef,
   ]);
 };
 
-// pdf-lib decodes object streams and cross-reference streams itself, with a
-// decoder that ignores the Adler-32 checksum, and never adds them to the
-// document, so they are found in the file: from the header before each
-// `/ObjStm` or `/XRef` name, the object is parsed and kept when it is a stream
-// of that type.
+// decision: container-streams-found-by-bounded-scan
 const containerStreamsOf = (doc: PDFDocument, bytes: Uint8Array) => {
   const discovery = markerOffsets(bytes);
   const streams = pipe(
     discovery.offsets,
-    A.flatMap((at) => A.fromOption(headerBefore(bytes, at))),
+    A.flatMap((at) => A.fromOption(lastObjHeaderBefore(bytes, at))),
     A.dedupeWith(([, a], [, b]) => a === b),
     A.flatMap(([ref, body]) =>
       pipe(
@@ -254,30 +228,23 @@ const objectOrder = Order.mapInput(Order.Number, ([ref]: readonly [PDFRef, PDFRa
 const isOutputLimit = (cause: unknown): boolean =>
   P.hasProperty(cause, "code") && cause.code === "ERR_BUFFER_TOO_LARGE";
 
-// Bytes the check may still inflate, and whether it ran out.
 interface InflateBudget {
   exhausted: boolean;
   remaining: number;
 }
 
-// The largest output one inflate may be asked for: the runtime's buffer
-// limit. Bun refuses a `maxOutputLength` above it (4 GiB there) with
-// ERR_OUT_OF_RANGE, which would read as an undecodable stream.
-const MAX_INFLATE_OUTPUT = NodeBuffer.constants.MAX_LENGTH;
+const RUNTIME_MAX_INFLATE_OUTPUT_BYTES = NodeBuffer.constants.MAX_LENGTH;
 
-// A strict inflate (the default Z_FINISH flush) fails on a stream that is
-// cut short anywhere, its Adler-32 checksum included. Every byte zlib
-// produces is charged to the budget, a failed inflate's at the most its
-// input could have produced; once the budget is spent, or one stream would
-// inflate past the runtime's buffer limit, the stream is not judged and the
-// check stops.
+// decision: undecodable-streams-use-strict-inflate
 const inflateFailure = (raw: Uint8Array, budget: InflateBudget): O.Option<string> => {
   if (budget.remaining < 1) {
     budget.exhausted = true;
     return O.none();
   }
   return Result.match(
-    Result.try(() => NodeZlib.inflateSync(raw, { maxOutputLength: Math.min(budget.remaining, MAX_INFLATE_OUTPUT) })),
+    Result.try(() =>
+      NodeZlib.inflateSync(raw, { maxOutputLength: Math.min(budget.remaining, RUNTIME_MAX_INFLATE_OUTPUT_BYTES) })
+    ),
     {
       onSuccess: (inflated) => {
         budget.remaining -= inflated.length;
@@ -289,17 +256,13 @@ const inflateFailure = (raw: Uint8Array, budget: InflateBudget): O.Option<string
           budget.exhausted = true;
           return O.none();
         }
-        budget.remaining -= Math.min(budget.remaining, raw.length * MAX_DEFLATE_RATIO);
+        budget.remaining -= Math.min(budget.remaining, raw.length * MAX_DEFLATE_EXPANSION_RATIO);
         return O.some(P.isError(cause) && cause.message.length > 0 ? cause.message : "inflate failed");
       },
     }
   );
 };
 
-// Every FlateDecode stream, object and cross-reference streams included,
-// whose bytes fail a strict inflate, in object order, until the inflate
-// budget runs out. An encrypted file is not checked: its streams are
-// ciphertext.
 const undecodableStreamsOf = (options: {
   readonly bytes: Uint8Array;
   readonly doc: PDFDocument;
@@ -314,7 +277,7 @@ const undecodableStreamsOf = (options: {
     return { streams: [], check: "encrypted", discovery: "encrypted" };
   }
   let text: string | undefined;
-  const file: PdfFile = { bytes, text: () => (text ??= latin1.decode(bytes)) };
+  const file: PdfFile = { bytes, text: () => (text ??= oneCharPerByteDecoder.decode(bytes)) };
   const budget: InflateBudget = { remaining: options.maxInflatedBytes, exhausted: false };
   const containers = containerStreamsOf(doc, bytes);
   const streams = pipe(
@@ -412,9 +375,7 @@ const numbersOf = (doc: PDFDocument, value: unknown): ReadonlyArray<number> => {
     : [];
 };
 
-// `/Rect` is [llx lly urx ury] in default user space, bottom-left up; convert
-// to points from the crop box's top-left corner, the pdftotext frame.
-const rectOf = (
+const rectFromCropBoxTopLeft = (
   numbers: ReadonlyArray<number>,
   box: { readonly x: number; readonly y: number; readonly height: number }
 ): O.Option<PdfRect> => {
@@ -447,7 +408,7 @@ export const annotationsOf = (doc: PDFDocument): ReadonlyArray<PdfAnnotation> =>
         pipe(
           resolveDict(doc, entry),
           O.flatMap((dict) =>
-            O.map(rectOf(numbersOf(doc, dict.get(PDFName.of("Rect"))), box), (rect) => {
+            O.map(rectFromCropBoxTopLeft(numbersOf(doc, dict.get(PDFName.of("Rect"))), box), (rect) => {
               const subtype = dict.get(PDFName.of("Subtype"));
               return PdfAnnotation.make({
                 page: index + 1,

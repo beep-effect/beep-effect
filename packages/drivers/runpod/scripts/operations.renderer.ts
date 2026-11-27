@@ -19,8 +19,6 @@ import type { ExtraRenderer, GenerateConfig } from "@beep/codegen-kit";
 
 const $I = $RunpodId.create("scripts/operations.renderer");
 
-// Runpod serves every REST API v2 path under `/v2`. Descriptor paths are
-// relative to the `https://api.runpod.io/v2` base URL, so the prefix is stripped.
 const RUNPOD_API_PATH_PREFIX = "/v2";
 const COMPONENT_SCHEMA_REF_PREFIX = "#/components/schemas/";
 const COMPONENT_PARAMETER_REF_PREFIX = "#/components/parameters/";
@@ -313,22 +311,20 @@ const postProcessError = (message: string, cause: unknown): CodegenPostProcessEr
 const encodeJsonLiteral = (value: unknown): string =>
   Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(value), identity);
 
-// Render the Runpod-owned operation table from the patched OpenAPI document.
 const renderOperations: ExtraRenderer = Effect.fn("RunpodGenerator.renderOperations")(
   function* (config, refresh, fetch) {
     const source = yield* fetch(config.source, refresh);
     const patch = yield* decodePatch(openApiPatchInput).pipe(
       Effect.mapError((cause) => postProcessError("Could not decode openapi.patch.json", cause))
     );
-    // The same patch list generate.ts hands the models generator.
-    const patched = yield* OpenApiPatch.applyPatches(
+    const patchedLikeModelsGenerator = yield* OpenApiPatch.applyPatches(
       [
         { source: "openapi.patch.json", patch },
         { source: "openapi.lowering.ts", patch: closedObjectPatch(source) },
       ],
       source
     ).pipe(Effect.mapError((cause) => postProcessError("Could not apply the Runpod OpenAPI patches", cause)));
-    const document = yield* OpenApiDocument.decodeUnknownEffect(patched).pipe(
+    const document = yield* OpenApiDocument.decodeUnknownEffect(patchedLikeModelsGenerator).pipe(
       Effect.mapError((cause) => postProcessError("Could not decode the patched Runpod OpenAPI document", cause))
     );
     yield* ensureNoUnevaluatedClosures(document);
@@ -357,8 +353,6 @@ export const renderRunpodOperations: {
   (config: GenerateConfig, refresh: boolean, fetch: Parameters<ExtraRenderer>[2]): ReturnType<ExtraRenderer>;
 } = dual(3, renderOperations);
 
-// Effect's JSON Schema importer cannot read `unevaluatedProperties`; the
-// lowering patch must have rewritten every closure before models are generated.
 const ensureNoUnevaluatedClosures = Effect.fnUntraced(function* (document: OpenApiDocument) {
   const remaining = pipe(
     Struct.entries(document.components.schemas),
@@ -368,7 +362,7 @@ const ensureNoUnevaluatedClosures = Effect.fnUntraced(function* (document: OpenA
 
   if (A.isReadonlyArrayNonEmpty(remaining)) {
     return yield* postProcessError(
-      `Component schemas still declare unevaluatedProperties after lowering: ${A.join(remaining, ", ")}`,
+      `Component schemas still declare unevaluatedProperties after lowering, which Effect's JSON Schema importer cannot read: ${A.join(remaining, ", ")}`,
       "unlowered closure"
     );
   }
@@ -400,8 +394,6 @@ const generatedOperationNames = (operation: Operation): ReadonlyArray<string> =>
     )
   );
 
-// Both generated modules are re-exported from the package barrel, so an
-// operations export may not reuse a model name.
 const ensureNoModelNameCollisions = Effect.fnUntraced(function* (
   document: OpenApiDocument,
   operations: ReadonlyArray<Operation>
@@ -412,7 +404,7 @@ const ensureNoModelNameCollisions = Effect.fnUntraced(function* (
 
   if (A.isReadonlyArrayNonEmpty(collisions) || A.isReadonlyArrayNonEmpty(duplicates)) {
     return yield* postProcessError(
-      `Generated operation exports collide: ${A.join(A.appendAll(collisions, duplicates), ", ")}`,
+      `Generated operation exports collide with each other or with a model name in the shared package barrel: ${A.join(A.appendAll(collisions, duplicates), ", ")}`,
       "export name collision"
     );
   }
@@ -478,8 +470,6 @@ const stripApiPathPrefix = (path: string): Effect.Effect<string, CodegenPostProc
     )
   );
 
-// An operation without its own `security` inherits the document's; an empty
-// requirement list (or only empty requirements) makes the operation public.
 const isAuthenticated = (document: OpenApiDocument, operation: OpenApiOperation): boolean =>
   pipe(
     O.fromUndefinedOr(operation.security),
@@ -530,7 +520,6 @@ const buildOperations = Effect.fnUntraced(function* (document: OpenApiDocument) 
   return operations;
 });
 
-// Operation-level parameters override path-level ones with the same name and location.
 const mergeParameters = (
   pathParameters: ReadonlyArray<OpenApiParameter>,
   operationParameters: ReadonlyArray<OpenApiParameter>
@@ -617,9 +606,6 @@ const parameterSchema = (parameter: OpenApiParameter): JsonSchema =>
     O.getOrElse(() => StringJsonSchema)
   );
 
-// Form-style query parameters repeat their key by default (`explode: true`);
-// `explode: false` joins array values with commas, and a JSON `content`
-// parameter carries one JSON-encoded value.
 const queryEncoding = (parameter: OpenApiParameter): OperationQueryEncoding =>
   pipe(
     O.fromUndefinedOr(parameter.content),
@@ -631,8 +617,6 @@ const queryEncoding = (parameter: OpenApiParameter): OperationQueryEncoding =>
     })
   );
 
-// Path parameters are interpolated by field name, so they must already be
-// valid identifiers; other locations camel-case a non-identifier wire name.
 const requestFieldName = (name: string): string => (isJsIdentifier(name) ? name : Str.camelCase(name));
 
 const isUnnamablePathParameter = (location: RequestFieldLocation, parameter: OpenApiParameter): boolean =>
@@ -767,15 +751,13 @@ const eventStreamResponse = (status: string): OperationResponse => ({
   typeExpression: "Sse.Event",
 });
 
-// A body-less status is `void` when it is the only success status, and
-// `undefined` beside other bodies so the result union stays inspectable.
-const emptyResponse = (status: string, alone: boolean): OperationResponse => ({
+const emptyResponse = (status: string, onlySuccessStatus: boolean): OperationResponse => ({
   alias: O.none(),
   body: OperationResponseBodyKind.Enum.none,
-  decoderExpression: O.some(alone ? "S.Void" : "S.Undefined"),
+  decoderExpression: O.some(onlySuccessStatus ? "S.Void" : "S.Undefined"),
   schema: O.none(),
   status,
-  typeExpression: alone ? "void" : "undefined",
+  typeExpression: onlySuccessStatus ? "void" : "undefined",
 });
 
 const successResponse = (
@@ -844,7 +826,6 @@ const operationKind = (
   );
 };
 
-// Every property a schema evaluates, following component refs and `allOf`.
 const schemaProperties = (document: OpenApiDocument, schema: JsonSchema): Readonly<Record<string, JsonSchema>> => {
   const target = pipe(
     refNameFromSchema(schema),
@@ -863,8 +844,6 @@ const schemaProperties = (document: OpenApiDocument, schema: JsonSchema): Readon
   return { ...fromMembers, ...(target.properties ?? R.empty<string, JsonSchema>()) };
 };
 
-// A cursor-paginated list takes a `cursor` query parameter and answers with a
-// `pagination` block beside exactly one array of items.
 const operationPagination = Effect.fnUntraced(function* (input: {
   readonly document: OpenApiDocument;
   readonly kind: OperationKind;
@@ -1559,8 +1538,7 @@ const referencedSchemaExpression = (schema: JsonSchema): O.Option<string> =>
     O.map((refName) => wrapNullable(schema, `S.suspend(() => Models.${refName})`))
   );
 
-// OpenAPI 3.1 wraps a lone `$ref` that carries sibling annotations in `allOf`.
-const singleMemberExpression = (schema: JsonSchema, hint: string): O.Option<string> =>
+const annotatedRefWrapperExpression = (schema: JsonSchema, hint: string): O.Option<string> =>
   pipe(
     O.fromUndefinedOr(schema.allOf),
     O.filter((members) => A.length(members) === 1),
@@ -1632,7 +1610,6 @@ const schemaTypes = (schema: JsonSchema): ReadonlyArray<string> =>
     Match.orElse((types): ReadonlyArray<string> => types)
   )(schema.type);
 
-// The first non-null type; OpenAPI 3.1 spells nullability as a `"null"` member.
 const schemaType = (schema: JsonSchema): string | undefined =>
   pipe(
     schemaTypes(schema),
@@ -1656,7 +1633,7 @@ const primitiveSchemaExpression = (schema: JsonSchema, hint: string): string =>
 const schemaExpression = (schema: JsonSchema, hint: string): string =>
   pipe(
     referencedSchemaExpression(schema),
-    O.orElse(() => singleMemberExpression(schema, hint)),
+    O.orElse(() => annotatedRefWrapperExpression(schema, hint)),
     O.orElse(() => enumSchemaExpression(schema)),
     O.getOrElse(() => primitiveSchemaExpression(schema, hint))
   );

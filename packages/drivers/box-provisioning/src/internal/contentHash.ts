@@ -6,12 +6,9 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Stream from "effect/Stream";
 
-/** Read size used while hashing; memory stays bounded by this regardless of file size. */
 const hashChunkBytes = 1024 * 1024;
 
-/** Content identity of one local file computed in a single streaming pass. */
 type ContentHashes = {
-  /** Lowercase hex SHA-1, the content hash Box reports as a file's `sha1`. */
   readonly sha1: string;
   readonly sha256: Sha256Hex;
   readonly sizeBytes: number;

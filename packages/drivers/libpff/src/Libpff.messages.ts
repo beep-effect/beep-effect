@@ -24,10 +24,7 @@ import type * as AST from "effect/SchemaAST";
 
 const $I = $LibpffId.create("Libpff.messages");
 
-type JsonEncodeEffect<Input> = {
-  // Data-last first: the `(input, options?)` overload would otherwise absorb a
-  // lone parse-options argument and hide the curried form. The trailing
-  // optionality must mirror the data-first signature exactly.
+type JsonEncodeDataLastFirst<Input> = {
   (options?: AST.ParseOptions): (input: Input) => Effect.Effect<string, S.SchemaError>;
   (input: Input, options?: AST.ParseOptions): Effect.Effect<string, S.SchemaError>;
 };
@@ -99,7 +96,7 @@ export class PffexportMessageRecord extends S.Opaque<PffexportMessageRecord, { r
     })
   )
 ) {
-  static readonly encodeJson: JsonEncodeEffect<PffexportMessageRecord> = dual(
+  static readonly encodeJson: JsonEncodeDataLastFirst<PffexportMessageRecord> = dual(
     SchemaUtils.isCodecDataFirst,
     S.encodeUnknownEffect(S.fromJsonString(PffexportMessageRecord))
   );

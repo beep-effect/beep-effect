@@ -43,8 +43,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
-// Optional on insert: the column's SQL default supplies the first version.
-const insertedRowVersion = (rowVersion: number | undefined): number => rowVersion ?? 1;
+const sqlDefaultedRowVersion = (rowVersion: number | undefined): number => rowVersion ?? 1;
 
 const decodeEvidenceModelResult = S.decodeUnknownResult(EvidenceModel);
 const decodeUnknownEvidenceModelResult = S.decodeUnknownResult(EvidenceModel);
@@ -63,7 +62,7 @@ const edgeVersionRow = (insert: EdgeVersion.EdgeVersionInsert, id: number): Edge
   ...insert,
   deletedAt: absentAsNull(insert.deletedAt),
   deletedByPrincipal: absentAsNull(insert.deletedByPrincipal),
-  rowVersion: insertedRowVersion(insert.rowVersion),
+  rowVersion: sqlDefaultedRowVersion(insert.rowVersion),
   id,
   evidenceScope: absentAsNull(insert.evidenceScope),
   expiredAt: absentAsNull(insert.expiredAt),
@@ -128,8 +127,6 @@ const FrozenEvidenceColumns = EvidenceModel.select.mapFields(({ id, publicId, ..
 const EvidenceColumnsJson = S.toEncoded(FrozenEvidenceColumns).pipe(S.fromJsonString);
 const decodeCurrentPosition = S.decodeUnknownResult(S.toType(EvidencePosition));
 
-// Exactly the decode input documented on EdgeVersion.model.ts: both temporal
-// axes arrive as epoch millis and every open bound as null.
 const edgeVersionInput = (id: number) => ({
   ...productEntityFixtureInput("EpistemicEdgeVersion", id),
   evidenceScope: null,
@@ -173,10 +170,7 @@ const claimDispositionInput = (id: number) => ({
   ],
 });
 
-// Every row codec here is a class schema, so an unencodable entity has to stay
-// an instance of its model: clone onto the same prototype and corrupt a single
-// column rather than handing the encoder a bare struct it would reject wholesale.
-const withUnencodablePublicId = <A extends object>(entity: A): A =>
+const modelInstanceWithBadPublicId = <A extends object>(entity: A): A =>
   Object.assign(Object.create(Object.getPrototypeOf(entity)), entity, { publicId: 42 });
 
 const converterFailure = <A, E>(result: Result.Result<A, E>): Effect.Effect<E, A> =>
@@ -192,9 +186,6 @@ const expectConverterFailure = (
   expect(Str.isNonEmpty(error.reason)).toBe(true);
 };
 
-// `defaultFormatter` renders a `message: ""` annotation verbatim, so this is a
-// real SchemaError whose rendered message is empty - the input every
-// `fromSchema` fallback branch is written for.
 const emptyMessageSchemaError = S.decodeUnknownResult(S.String.annotate({ message: "" }))(0).pipe(
   Result.flip,
   Effect.fromResult
@@ -303,9 +294,9 @@ describe("EpistemicTables", () => {
     });
     expect(columns.artifactFixtureKey.columnType).toBe("PgText");
     expect(columns.spanFixtureKey.columnType).toBe("PgText");
-    // The span is JSONB precisely so the fractional confidence survives: there
-    // is no float storage kind to project it onto.
-    expect(columns.span.columnType).toBe("PgJsonb");
+    expect(columns.span.columnType, "JSONB keeps the fractional confidence; there is no float storage kind").toBe(
+      "PgJsonb"
+    );
   });
 
   it("projects EdgeVersion onto the migrated bitemporal column set", () => {
@@ -339,12 +330,10 @@ describe("EpistemicTables", () => {
       version: "version",
     });
 
-    // Both axes are BIGINT epoch millis, and only the lower bound of each is
-    // required — an absent upper bound is a nullable column, never a sentinel.
     expect(columns.validFrom.columnType).toBe("PgBigInt53");
     expect(columns.validFrom.notNull).toBe(true);
     expect(columns.validTo.columnType).toBe("PgBigInt53");
-    expect(columns.validTo.notNull).toBe(false);
+    expect(columns.validTo.notNull, "an absent upper bound is a nullable column, never a sentinel").toBe(false);
     expect(columns.recordedAt.columnType).toBe("PgBigInt53");
     expect(columns.recordedAt.notNull).toBe(true);
     expect(columns.expiredAt.columnType).toBe("PgBigInt53");
@@ -444,11 +433,8 @@ describe("EpistemicTables", () => {
           ...insert,
           deletedAt: absentAsNull(insert.deletedAt),
           deletedByPrincipal: absentAsNull(insert.deletedByPrincipal),
-          rowVersion: insertedRowVersion(insert.rowVersion),
+          rowVersion: sqlDefaultedRowVersion(insert.rowVersion),
           id: 10,
-          // $inferInsert types the nullable columns as optional (number | null |
-          // undefined); the select-row converter expects number | null, so resolve
-          // each absent optional to its concrete null before round-tripping.
           activityId: insert.activityId ?? null,
           costUsdApproxMicros: insert.costUsdApproxMicros ?? null,
           credentialReference: insert.credentialReference ?? null,
@@ -484,7 +470,7 @@ describe("EpistemicTables", () => {
           ...insert,
           deletedAt: absentAsNull(insert.deletedAt),
           deletedByPrincipal: absentAsNull(insert.deletedByPrincipal),
-          rowVersion: insertedRowVersion(insert.rowVersion),
+          rowVersion: sqlDefaultedRowVersion(insert.rowVersion),
           id: 10,
         })
       );
@@ -511,7 +497,7 @@ describe("EpistemicTables", () => {
           ...insert,
           deletedAt: absentAsNull(insert.deletedAt),
           deletedByPrincipal: absentAsNull(insert.deletedByPrincipal),
-          rowVersion: insertedRowVersion(insert.rowVersion),
+          rowVersion: sqlDefaultedRowVersion(insert.rowVersion),
           id: 10,
         })
       );
@@ -559,7 +545,7 @@ describe("EpistemicTables", () => {
         ...insert,
         deletedAt: absentAsNull(insert.deletedAt),
         deletedByPrincipal: absentAsNull(insert.deletedByPrincipal),
-        rowVersion: insertedRowVersion(insert.rowVersion),
+        rowVersion: sqlDefaultedRowVersion(insert.rowVersion),
         id: 10,
         span: {
           confidence: 0.92,
@@ -597,7 +583,7 @@ describe("EpistemicTables", () => {
         ...insert,
         deletedAt: absentAsNull(insert.deletedAt),
         deletedByPrincipal: absentAsNull(insert.deletedByPrincipal),
-        rowVersion: insertedRowVersion(insert.rowVersion),
+        rowVersion: sqlDefaultedRowVersion(insert.rowVersion),
         id: 10,
         span: {
           confidence: 0.92,
@@ -657,9 +643,8 @@ describe("EpistemicTables", () => {
       expect(insert.qualifiers).toStrictEqual({ statute: "35 USC 103" });
       expect(insert.fact).toStrictEqual({ note: "cited in the office action" });
       expect(insert.version).toBe(1);
-      // Open upper bounds encode to null on both axes rather than to a sentinel.
       expect(insert.validFrom).toBe(1_000);
-      expect(insert.validTo).toBeNull();
+      expect(insert.validTo, "an open upper bound encodes to null on both axes, never a sentinel").toBeNull();
       expect(insert.recordedAt).toBe(1_000);
       expect(insert.expiredAt).toBeNull();
       expect(insert.supersedesId).toBeNull();
@@ -744,7 +729,7 @@ describe("EpistemicTables", () => {
           ...insert,
           deletedAt: absentAsNull(insert.deletedAt),
           deletedByPrincipal: absentAsNull(insert.deletedByPrincipal),
-          rowVersion: insertedRowVersion(insert.rowVersion),
+          rowVersion: sqlDefaultedRowVersion(insert.rowVersion),
           id: 10,
         })
       );
@@ -764,7 +749,7 @@ describe("EpistemicTables", () => {
           ...insert,
           deletedAt: absentAsNull(insert.deletedAt),
           deletedByPrincipal: absentAsNull(insert.deletedByPrincipal),
-          rowVersion: insertedRowVersion(insert.rowVersion),
+          rowVersion: sqlDefaultedRowVersion(insert.rowVersion),
           id: record.id,
           activityId: insert.activityId ?? null,
           costUsdApproxMicros: insert.costUsdApproxMicros ?? null,
@@ -788,7 +773,7 @@ describe("EpistemicTables", () => {
       const insert = yield* Effect.fromResult(CandidateClaim.toCandidateClaimInsert(claim));
 
       const converterFailure1 = yield* converterFailure(
-        CandidateClaim.toCandidateClaimInsert(withUnencodablePublicId(claim))
+        CandidateClaim.toCandidateClaimInsert(modelInstanceWithBadPublicId(claim))
       );
       expectConverterFailure(converterFailure1, "CandidateClaimConverterError", "toInsert");
       const converterFailure2 = yield* converterFailure(
@@ -809,7 +794,7 @@ describe("EpistemicTables", () => {
       const insert = yield* Effect.fromResult(ClaimDisposition.toClaimDispositionInsert(disposition));
 
       const converterFailure3 = yield* converterFailure(
-        ClaimDisposition.toClaimDispositionInsert(withUnencodablePublicId(disposition))
+        ClaimDisposition.toClaimDispositionInsert(modelInstanceWithBadPublicId(disposition))
       );
       expectConverterFailure(converterFailure3, "ClaimDispositionConverterError", "toInsert");
       const converterFailure4 = yield* converterFailure(
@@ -830,7 +815,7 @@ describe("EpistemicTables", () => {
       const insert = yield* Effect.fromResult(EdgeVersion.toEdgeVersionInsert(version));
 
       const converterFailure5 = yield* converterFailure(
-        EdgeVersion.toEdgeVersionInsert(withUnencodablePublicId(version))
+        EdgeVersion.toEdgeVersionInsert(modelInstanceWithBadPublicId(version))
       );
       expectConverterFailure(converterFailure5, "EdgeVersionConverterError", "toInsert");
       const converterFailure6 = yield* converterFailure(
@@ -850,7 +835,7 @@ describe("EpistemicTables", () => {
       const insert = yield* Effect.fromResult(UsageRecord.toUsageRecordInsert(record));
 
       const converterFailure7 = yield* converterFailure(
-        UsageRecord.toUsageRecordInsert(withUnencodablePublicId(record))
+        UsageRecord.toUsageRecordInsert(modelInstanceWithBadPublicId(record))
       );
       expectConverterFailure(converterFailure7, "UsageRecordConverterError", "toInsert");
       const converterFailure8 = yield* converterFailure(
@@ -869,7 +854,7 @@ describe("EpistemicTables", () => {
       `falls back to a generic reason when ${tag} lifts an empty schema failure`,
       Effect.fnUntraced(function* () {
         const schemaError = yield* emptyMessageSchemaError;
-        expect(schemaError.message).toBe("");
+        expect(schemaError.message, 'defaultFormatter renders a message: "" annotation verbatim').toBe("");
 
         const converterError = lift(schemaError);
         expect(converterError._tag).toBe(tag);
@@ -916,7 +901,7 @@ it.layer(P4Layer.merge(P4NodeFileSystem.layer, P4Digest.layerWebCrypto), {
             span,
             deletedAt: absentAsNull(insert.deletedAt),
             deletedByPrincipal: absentAsNull(insert.deletedByPrincipal),
-            rowVersion: insertedRowVersion(insert.rowVersion),
+            rowVersion: sqlDefaultedRowVersion(insert.rowVersion),
           })
         );
         expect(read.span).toEqual(position);
@@ -943,7 +928,7 @@ it.layer(P4Layer.merge(P4NodeFileSystem.layer, P4Digest.layerWebCrypto), {
           ...insert,
           deletedAt: absentAsNull(insert.deletedAt),
           deletedByPrincipal: absentAsNull(insert.deletedByPrincipal),
-          rowVersion: insertedRowVersion(insert.rowVersion),
+          rowVersion: sqlDefaultedRowVersion(insert.rowVersion),
           id: 10,
           span,
         })
@@ -976,7 +961,7 @@ it.layer(P4Layer.merge(P4NodeFileSystem.layer, P4Digest.layerWebCrypto), {
           ...insert,
           deletedAt: absentAsNull(insert.deletedAt),
           deletedByPrincipal: absentAsNull(insert.deletedByPrincipal),
-          rowVersion: insertedRowVersion(insert.rowVersion),
+          rowVersion: sqlDefaultedRowVersion(insert.rowVersion),
           id: 10,
           span,
         })

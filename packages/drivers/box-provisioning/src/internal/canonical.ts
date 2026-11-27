@@ -137,7 +137,6 @@ export const hasValidBoxProvisioningPlanDigest = Effect.fnUntraced(function* (pl
 
 const joinPath = A.join("/");
 
-/** Entry-order-independent form of a migration map: folders by path, files by destination (unique in a valid map). */
 const canonicalBoxContentMigrationMap = (map: BoxContentMigrationMap): BoxContentMigrationMap =>
   BoxContentMigrationMap.make({
     ...map,
