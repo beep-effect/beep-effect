@@ -30,15 +30,12 @@ import type { MemoryFilePath, NodeId, RevisionId } from "./NodeIdentity.models.t
 import type { BaseExport } from "./Operation.models.ts";
 import type { ApplyRefusal } from "./OperationCapture.models.ts";
 
-// A live node of the working state; `revision` is none once the batch
-// replaced the node or when the batch inserted it.
 interface WorkNode {
   readonly nodeId: NodeId;
   revision: O.Option<RevisionId>;
   text: string;
 }
 
-// Where a live node sits: its node and the node list of its file.
 interface Placed {
   readonly list: Array<WorkNode>;
   readonly node: WorkNode;
@@ -81,7 +78,6 @@ const workingOf = (base: BaseExport): Working => {
   return working;
 };
 
-// Runs `change` on the live node `nodeId` when it still has `expected`.
 const withLive = (
   working: Working,
   nodeId: NodeId,
@@ -114,7 +110,6 @@ const place = (working: Working, path: MemoryFilePath, list: Array<WorkNode>, in
   return ok;
 };
 
-// Places `node` right after the live node `predecessor` of the same file.
 const placeAfter = (
   working: Working,
   path: MemoryFilePath,

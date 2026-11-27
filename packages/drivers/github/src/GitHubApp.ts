@@ -130,20 +130,7 @@ export class GitHubAppError extends S.TaggedError<GitHubAppError, { readonly bra
 }
 
 const AppCredentialsFields = {
-  /** The app id or client id. */
   appId: S.String.pipe($I.annoteKey("AppCredentials.appId", { description: "The app id or client id." })),
-  /**
-   * The app's private key, in PEM.
-   *
-   * **Gotchas**
-   *
-   * PKCS#1 (an `RSA PRIVATE KEY` PEM block, which is what github.com hands
-   * you) is converted to PKCS#8 automatically **on Node**. On a runtime without
-   * `node:crypto` a PKCS#1 key fails with an explicit `kind: "jwt"` error, and
-   * the fix is to convert the key once with
-   * `openssl pkcs8 -topk8 -inform PEM -outform PEM -nocrypt`. This constraint is
-   * inherited from the JWT signer and is identical to `@octokit/auth-app`'s.
-   */
   privateKey: S.Redacted(S.String).pipe(
     $I.annoteKey("AppCredentials.privateKey", { description: "The app's private key, in PEM." })
   ),
@@ -157,6 +144,14 @@ const AppCredentialsFields = {
  * The private key stays `Redacted` on both sides of the schema, so the members
  * that take credentials accept {@link AppCredentials.Encoded} and a caller
  * passes an object literal.
+ *
+ * **Gotchas**
+ *
+ * A PKCS#1 private key (an `RSA PRIVATE KEY` PEM block, which is what
+ * github.com hands you) is converted to PKCS#8 automatically **on Node**. On a
+ * runtime without `node:crypto` it fails with a `kind: "jwt"` error; convert
+ * the key once with `openssl pkcs8 -topk8 -inform PEM -outform PEM -nocrypt`.
+ * The constraint comes from the JWT signer and matches `@octokit/auth-app`'s.
  *
  * **Example** (Describe app credentials)
  *
@@ -229,15 +224,7 @@ export type PermissionName = typeof PermissionName.Type;
 
 const isPermissionName = S.is(PermissionName);
 
-/**
- * The permissions a token request narrows to, keyed as GitHub spells them.
- *
- * **Details**
- *
- * `S.Record` does not run a refined key schema against incoming keys, so the
- * spelling rule is a filter over the whole map that reports each offending
- * key at its own path.
- */
+// decision: permission-names-checked-by-filter
 const RequestedPermissions = S.Record(S.String, PermissionLevel)
   .check(
     S.makeFilter(
@@ -521,12 +508,8 @@ export class InstallationToken extends S.Class<InstallationToken, { readonly bra
   }
 }
 
-/** Re-mint a minute before GitHub would start refusing the token. */
 const DEFAULT_SKEW = Duration.seconds(60);
 
-// Installation tokens live one hour. A skew at or past half of that would make
-// `clientLayer` re-mint (and revoke the previous token) on nearly every call,
-// which can 401 a concurrent request still holding the old client.
 const MAX_REFRESH_SKEW = Duration.minutes(30);
 
 const refreshSkewWithinCeiling = (skew: Duration.Duration): boolean =>
@@ -585,7 +568,6 @@ export const assertPermissions: {
     TokenPermissions.fromGitHub(token.permissions).assertSufficient(required).pipe(Effect.as(token))
 );
 
-/** A git author address: one `@`, a dotted domain, and no whitespace. */
 const CommitEmail = S.String.check(S.isPattern(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)).pipe(
   $I.annoteSchema("CommitEmail", { description: "A git author address." })
 );
@@ -833,7 +815,8 @@ export class GitHubAppOptions extends S.Opaque<GitHubAppOptions, { readonly bran
           (skew) => refreshSkewWithinCeiling(skew),
           $I.annote("GitHubAppOptionsRefreshSkewCheck", {
             title: "Refresh skew ceiling",
-            description: "Installation tokens live one hour; the skew must stay under thirty minutes.",
+            description:
+              "Installation tokens live one hour; the skew must stay under thirty minutes. A skew at or past half the lifetime re-mints, revoking the previous token, on nearly every call, which can 401 a concurrent request still holding the old client.",
             message: "refreshSkew must be at least zero and under thirty minutes",
           })
         )
@@ -861,14 +844,6 @@ export declare namespace GitHubAppOptions {
   export type Encoded = typeof GitHubAppOptions.Encoded;
 }
 
-/**
- * Build the app service shape; `observe` sees every minted credential.
- *
- * **Details**
- *
- * Declared above {@link GitHubApp} because the class's `layer` static calls it
- * while the class is being defined.
- */
 const makeApp: {
   (
     options: GitHubAppOptions.Encoded,
@@ -951,8 +926,7 @@ const makeApp: {
                 )
                 .pipe(Effect.catch(appFailure("token")))
             );
-            // Only the HTTP wait is restored above. Own a received string credential
-            // while masked, even if its other fields fail decoding or decoding yields.
+            // decision: minted-token-ownership-masked
             const observed = S.decodeUnknownOption(ObservedCredential)(minted);
             if (O.isSome(observed)) {
               yield* observe(Redacted.make(observed.value.token));
@@ -993,9 +967,6 @@ const makeApp: {
         const wire = yield* S.decodeEffect(IdentityResponse)(app).pipe(Effect.mapError(decodeFailure("identity")));
         const slug = wire.slug ?? "";
         const name = wire.name;
-        // `GET /users/{slug}[bot]` rejects an app JWT, so this bears the
-        // installation token when one was supplied and otherwise runs
-        // unauthenticated — 60 requests per hour per IP.
         const userClient = yield* asBearer(request.installationToken, options);
         const user = yield* userClient
           .request("GET /users/{username}", { username: `${slug}[bot]` })
@@ -1121,7 +1092,8 @@ export class GitHubApp extends Context.Service<GitHubApp, GitHubAppShape>()($I`G
    * expires (`options.refreshSkew` ahead, one minute by default), so a
    * long-running program does not start answering 401 when the hour ends.
    * Refreshes are serialized behind one permit: concurrent requests that find
-   * the token spent mint one replacement and share it.
+   * the token spent mint one replacement and share it. Each refresh revokes
+   * the token it replaces, so at most one live token exists at a time.
    *
    * The request's `permissions`, `repositories` and `repositoryIds` narrow
    * every token the layer mints, the first and each refresh alike. The layer
@@ -1272,7 +1244,6 @@ export interface GitHubAppShape {
 
 const unstubbed = unstubbedFor({ service: "GitHubApp" });
 
-/** Mint an app JWT. The only cryptography in this package, and it is a leaf call. */
 const mintJwt = (credentials: AppCredentials.Encoded): Effect.Effect<Redacted.Redacted<string>, GitHubAppError> =>
   Effect.tryPromise({
     try: () => githubAppJwt({ id: credentials.appId, privateKey: Redacted.value(credentials.privateKey) }),
@@ -1280,7 +1251,6 @@ const mintJwt = (credentials: AppCredentials.Encoded): Effect.Effect<Redacted.Re
       GitHubAppError.of("jwt", error instanceof Error ? error.message : "could not sign the app JWT", error),
   }).pipe(Effect.map((result) => Redacted.make(result.token)));
 
-/** A client speaking as the app itself. */
 const asApp: {
   (
     credentials: AppCredentials.Encoded,
@@ -1298,7 +1268,6 @@ const asApp: {
     Effect.flatMap(mintJwt(credentials), (jwt) => makeClientShape({ ...options, token: jwt, credential: "app-jwt" }))
 );
 
-/** A client speaking as a holder of `token`, or as nobody when there is none. */
 const asBearer: {
   (token: Redacted.Redacted<string> | undefined, options: GitHubAppOptions.Encoded): Effect.Effect<GitHubClientShape>;
   (
@@ -1313,7 +1282,6 @@ const asBearer: {
 const appFailure = (kind: GitHubAppError["kind"]) => (error: GitHubError) =>
   Effect.fail(GitHubAppError.of(kind, error.reason, error));
 
-// Selected wire fields are decoded before projection; unrelated response fields stay ignored.
 const InstallationResponse = S.Struct({
   id: S.Union([S.Finite, S.BigInt]),
   account: S.Struct({ login: S.optionalKey(S.String) }).pipe(S.NullOr, S.optionalKey),
@@ -1337,21 +1305,11 @@ const TokenResponse = S.Struct({
 const decodeFailure = (kind: GitHubAppError["kind"]) => (error: S.SchemaError) =>
   GitHubAppError.of(kind, `GitHub returned an unexpected ${kind} payload`, error);
 
-/** Check a token request against its schema before any JWT is signed or call made. */
 const validateRequest = (raw: TokenRequest.Encoded): Effect.Effect<TokenRequest, GitHubAppError> =>
   S.decodeEffect(TokenRequest)(raw).pipe(
     Effect.mapError((error) => GitHubAppError.of("request", `invalid token request: ${error.message}`, error))
   );
 
-/**
- * The `access_tokens` JSON body, in GitHub's spelling.
- *
- * **Details**
- *
- * Empty when the request narrows nothing, so octokit sends no body and the
- * wire stays identical to a plain mint. Shared by `token` and, through it,
- * `scopedToken` and `clientLayer`.
- */
 const accessTokenBody = (request: TokenRequest.Encoded) =>
   O.getSomesStruct({
     permissions: O.fromUndefinedOr(request.permissions),
@@ -1359,23 +1317,12 @@ const accessTokenBody = (request: TokenRequest.Encoded) =>
     repository_ids: O.fromUndefinedOr(request.repositoryIds),
   });
 
-/** GitHub's permission values are strings; anything else is not a permission. */
 const normalizePermissions = (raw: unknown): Record<string, string> => {
   if (!P.isObjectOrArray(raw)) return {};
   const entries = P.isObject(raw) ? R.toEntries(raw) : R.toEntries<keyof typeof raw & string, unknown>(raw);
   return R.fromEntries(A.filter(entries, (entry): entry is [string, string] => P.isString(entry[1])));
 };
 
-/**
- * A client shape that re-mints its installation token before it expires.
- *
- * **Details**
- *
- * The rotation is invisible to a caller: each member resolves the current
- * client first, and "current" means "minted, and not within a minute of
- * expiry". Rotating revokes the token it replaces, so at most one live token
- * exists at a time and the scope's release revokes the last of them.
- */
 const makeRotatingClient: {
   (
     request: TokenRequest.Encoded,
@@ -1397,7 +1344,6 @@ const makeRotatingClient: {
     const closed = yield* Ref.make(false);
     const rotation = yield* Semaphore.make(1);
     const skew = options.refreshSkew ?? DEFAULT_SKEW;
-    // The options arrive encoded, so the schema's ceiling check is re-applied here.
     if (!refreshSkewWithinCeiling(skew)) {
       return yield* GitHubAppError.of(
         "request",
@@ -1414,15 +1360,12 @@ const makeRotatingClient: {
         yield* restore(revokeHeld);
         yield* Ref.set(owned, O.none());
         const minted = yield* restore(app.token(request));
-        // The mint observer already owns the raw credential before decoding.
-        // Ownership stays masked across this handoff to client construction.
         const client = yield* restore(makeClientShape({ ...options, token: minted.token }));
         yield* Ref.set(held, O.some({ token: minted, client }));
         return client;
       })
     );
 
-    /** The live client, re-minting first if the held token is spent. */
     const refresh = Effect.gen(function* () {
       const now = yield* Clock.currentTimeMillis;
       const state = yield* Ref.get(held);
@@ -1443,8 +1386,7 @@ const makeRotatingClient: {
       })
     ).pipe(rotation.withPermits(1));
 
-    // Closing never waits for the rotation permit: prevent new work, stop and
-    // join the active child, then revoke the credential it last transferred.
+    // decision: minted-token-ownership-masked
     yield* Effect.addFinalizer(
       Effect.fnUntraced(function* () {
         yield* Ref.set(closed, true);
@@ -1457,14 +1399,8 @@ const makeRotatingClient: {
       })
     );
 
-    // Mint eagerly so bad credentials fail layer construction in the App channel.
     yield* fresh;
 
-    // A credential failure is reported in the channel the caller is already
-    // handling: "could not authenticate" IS an authorization failure from a
-    // request's point of view, and widening every method's error type to add a
-    // GitHubAppError would tax every caller for a case only this layer can
-    // produce.
     const current: Effect.Effect<GitHubClientShape, GitHubError> = fresh.pipe(
       Effect.catchTag("GitHubAppError", (error) =>
         Effect.fail(

@@ -1,18 +1,9 @@
-import { identity } from "effect/Function";
-// The `packageManager` field: `<name>@<version>[+<integrity>]`.
-//
-// Two of the three components are shared verbatim with `@beep/npm-spec`'s
-// `PackageManagerPin` and are tested here for the FIELD's behaviour, not the
-// pin's: the version through `@beep/semver`'s strict parse, the integrity
-// through npm's `CorepackIntegrityHash`. The third — the name — is deliberately
-// looser than the pin's four literals, and the latitude has its own suite
-// below.
-
 import { CorepackIntegrityHash, IntegrityHash } from "@beep/npm-spec/IntegrityHash";
 import { PackageManager } from "@beep/package-json/PackageManager";
 import { SemVer } from "@beep/semver";
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -22,7 +13,7 @@ const UnknownJson = S.fromJsonString(S.Unknown);
 const decode = S.decodeUnknownEffect(PackageManager.FromString);
 const encode = S.encodeUnknownEffect(PackageManager.FromString);
 
-describe("PackageManager.FromString", () => {
+describe("PackageManager.FromString (<name>@<version>[+<integrity>])", () => {
   it.effect("parses name, version and integrity", () =>
     Effect.gen(function* () {
       const pm = yield* decode("pnpm@10.33.0+sha512.abc");
@@ -58,31 +49,36 @@ describe("PackageManager.FromString", () => {
     })
   );
 
-  // A well-formed `name@version+<integrity>` whose integrity is not a valid
-  // `IntegrityHash` must fail typed through the decode, never construct the
-  // branded field and escape as an unhandled defect.
   it.effect("rejects a malformed integrity as a typed failure, not a defect", () =>
     Effect.gen(function* () {
       const error = yield* Effect.flip(decode("pnpm@10.33.0+GARBAGE!!"));
-      assert.strictEqual(error._tag, "SchemaError");
+      assert.strictEqual(
+        error._tag,
+        "SchemaError",
+        "an integrity that is not an IntegrityHash must fail the decode, never escape as a defect"
+      );
     })
   );
 
-  // The `packageManager` field only ever carries corepack's `<algo>.<hex>`
-  // integrity. A valid SRI or yarn `10c0/` form — accepted by the wider
-  // `IntegrityHash` brand — is too loose here and must fail typed, never
-  // construct the field and escape as a defect.
   it.effect("rejects an SRI integrity (not the corepack form)", () =>
     Effect.gen(function* () {
       const error = yield* Effect.flip(decode("pnpm@10.33.0+sha512-abcd1234=="));
-      assert.strictEqual(error._tag, "SchemaError");
+      assert.strictEqual(
+        error._tag,
+        "SchemaError",
+        "the field carries only corepack's <algo>.<hex> integrity, narrower than the IntegrityHash brand"
+      );
     })
   );
 
   it.effect("rejects a yarn 10c0/ checksum integrity (not the corepack form)", () =>
     Effect.gen(function* () {
       const error = yield* Effect.flip(decode("pnpm@10.33.0+10c0/abcdef0123"));
-      assert.strictEqual(error._tag, "SchemaError");
+      assert.strictEqual(
+        error._tag,
+        "SchemaError",
+        "the field carries only corepack's <algo>.<hex> integrity, narrower than the IntegrityHash brand"
+      );
     })
   );
 
@@ -94,44 +90,37 @@ describe("PackageManager.FromString", () => {
     })
   );
 
-  // corepack's own package.json pins yarn with a sha224 tail; the shared
-  // schema admits it and this field must too.
   it.effect("accepts corepack's sha224 default-pin integrity", () =>
     Effect.gen(function* () {
       const input = "yarn@4.12.0+sha224.877304e3c9e5b53431969ee2ca17ee44f366533b0da5a4ba9c2bd447";
       const pm = yield* decode(input);
       const encoded1 = yield* encode(pm);
-      assert.strictEqual(encoded1, input);
+      assert.strictEqual(encoded1, input, "corepack's own package.json pins yarn with a sha224 tail");
     })
   );
 
-  // The first `+` after the version begins the integrity, always. Under the
-  // semver reading, the version here would be "10.33.0+sha512.abc" with no
-  // integrity — both assertions fail under that split.
   it.effect("the first + begins the integrity, never semver build metadata", () =>
     Effect.gen(function* () {
       const pm = yield* decode("pnpm@10.33.0+sha512.abc");
-      assert.strictEqual(pm.version, "10.33.0");
+      assert.strictEqual(pm.version, "10.33.0", "a semver split would read the version as 10.33.0+sha512.abc");
       assert.deepStrictEqual(pm.integrity, O.some("sha512.abc"));
     })
   );
 
-  // `deadbeef` is a syntactically valid semver build identifier, so a parser
-  // that fell back to build-metadata parsing would ACCEPT this input.
   it.effect("a valid build-metadata tail that is not a corepack hash still fails", () =>
     Effect.gen(function* () {
       const error = yield* Effect.flip(decode("pnpm@10.33.0+deadbeef"));
-      assert.strictEqual(error._tag, "SchemaError");
+      assert.strictEqual(
+        error._tag,
+        "SchemaError",
+        "deadbeef is a valid semver build identifier, so a build-metadata fallback would accept it"
+      );
       assert.include(String(error), "integrity");
     })
   );
 });
 
-// The strictening. Each of these was ACCEPTED by the previous regex-level
-// version grammar (`\d+\.\d+\.\d+(?:-[a-zA-Z0-9._-]+)?`) and is rejected by
-// `@beep/semver`'s strict parse — the same validation corepack performs
-// with `semver.valid`. Reinstating that regex turns this whole block red.
-describe("PackageManager.FromString version rejection matrix", () => {
+describe("PackageManager.FromString version rejection matrix (strict SemVer parse, as corepack's semver.valid)", () => {
   const rejects = (input: string, why: string) =>
     it.effect(`rejects ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(input), identity)} — ${why}`, () =>
       Effect.gen(function* () {
@@ -141,28 +130,20 @@ describe("PackageManager.FromString version rejection matrix", () => {
       })
     );
 
-  // Leading zeros on a numeric component are not SemVer 2.0.0 (§2).
-  rejects("pnpm@01.2.3", "leading zero on major");
-  rejects("pnpm@1.02.3", "leading zero on minor");
-  rejects("pnpm@1.2.03", "leading zero on patch");
-  // Leading zeros on a NUMERIC prerelease identifier are not valid either (§9);
-  // an alphanumeric identifier with a leading zero (`0rc`) is fine.
-  rejects("pnpm@1.2.3-01", "leading zero on a numeric prerelease identifier");
-  // An empty prerelease identifier (`a..b`) is malformed (§9).
-  rejects("pnpm@1.2.3-a..b", "empty prerelease identifier");
+  rejects("pnpm@01.2.3", "leading zero on major (SemVer §2)");
+  rejects("pnpm@1.02.3", "leading zero on minor (SemVer §2)");
+  rejects("pnpm@1.2.03", "leading zero on patch (SemVer §2)");
+  rejects("pnpm@1.2.3-01", "leading zero on a numeric prerelease identifier (SemVer §9)");
+  rejects("pnpm@1.2.3-a..b", "empty prerelease identifier (SemVer §9)");
   rejects("pnpm@1.2.3-", "empty prerelease");
-  // Ranges, partials and dist-tags were already rejected and stay rejected.
   rejects("pnpm@^9.0.0", "range");
   rejects("pnpm@9", "partial version");
   rejects("pnpm@9.1", "partial version");
   rejects("pnpm@latest", "dist-tag");
   rejects("pnpm@v1.2.3", "v prefix");
   rejects("pnpm@", "empty version");
-  // Padded version substrings: `SemVer.isPinnable` refuses surrounding
-  // whitespace, where a bare `SemVer.parseResult` check TRIMS and silently
-  // canonicalizes — these two discriminate the shared export from that mutant.
-  rejects("pnpm@ 10.33.0", "leading whitespace on the version");
-  rejects("pnpm@10.33.0 ", "trailing whitespace on the version");
+  rejects("pnpm@ 10.33.0", "leading whitespace on the version (isPinnable refuses padding, parseResult trims)");
+  rejects("pnpm@10.33.0 ", "trailing whitespace on the version (isPinnable refuses padding, parseResult trims)");
 
   it.effect("still accepts the prerelease forms that ARE valid", () =>
     Effect.gen(function* () {
@@ -174,30 +155,20 @@ describe("PackageManager.FromString version rejection matrix", () => {
     })
   );
 
-  // The field schema, not just the codec: a directly-constructed value with a
-  // bad version is bad wiring, and must not produce a manifest string that
-  // re-parses differently (or not at all).
-  it("a malformed version is rejected at construction", () => {
+  it("a malformed version is rejected at construction, not encoded to a string that re-parses differently", () => {
     assert.throws(() => PackageManager.make({ name: "pnpm", version: "01.2.3", integrity: O.none() }));
     assert.throws(() => PackageManager.make({ name: "pnpm", version: "latest", integrity: O.none() }));
-    // Build metadata is inexpressible in the grammar — the `+` position is
-    // spoken for by the integrity — so it is refused at construction rather
-    // than encoding to a string that re-parses as an invalid integrity.
-    assert.throws(() => PackageManager.make({ name: "pnpm", version: "1.2.3+build", integrity: O.none() }));
-    // Padding is refused at construction too — the shared schema's whitespace
-    // posture, not just the codec's.
-    assert.throws(() => PackageManager.make({ name: "pnpm", version: " 1.2.3", integrity: O.none() }));
-    // The control: the same construction with an exact version succeeds.
+    const buildMetadataInIntegritySlot = () =>
+      PackageManager.make({ name: "pnpm", version: "1.2.3+build", integrity: O.none() });
+    assert.throws(buildMetadataInIntegritySlot);
+    const paddedVersionAtConstruction = () =>
+      PackageManager.make({ name: "pnpm", version: " 1.2.3", integrity: O.none() });
+    assert.throws(paddedVersionAtConstruction);
     const pm = PackageManager.make({ name: "pnpm", version: "1.2.3", integrity: O.none() });
-    assert.strictEqual(pm.version, "1.2.3");
+    assert.strictEqual(pm.version, "1.2.3", "the control: the same construction with an exact version succeeds");
   });
 });
 
-// The name half is where this field model and `@beep/npm-spec`'s
-// `PackageManagerPin` deliberately diverge. Evidence for the latitude, recorded
-// in the module's TSDoc: corepack 0.34.0 recognises only npm/pnpm/yarn and
-// would reject `bun@1.2.20` — a value six published packages in this repo's own
-// node_modules carry — and npm documents no constraint on the field at all.
 describe("PackageManager name latitude (deliberately wider than PackageManagerPin)", () => {
   it.effect("accepts names outside the pin's four literals", () =>
     Effect.gen(function* () {
@@ -219,86 +190,75 @@ describe("PackageManager name latitude (deliberately wider than PackageManagerPi
   );
 });
 
-// The consolidation guards. The two halves need DIFFERENT mechanisms, and the
-// reason is worth stating: `Schema.check` is erased from the built type, so
-// severing a shared schema is neither a type error nor — with a faithful copy —
-// a behaviour change.
-describe("PackageManager consolidation", () => {
-  // The integrity half is a shared VALUE, so object identity settles it. A
-  // private copy of the corepack restriction would pass every rejection test
-  // above and compile clean; only this assertion sees it.
+describe("PackageManager consolidation (Schema.check is erased from the type, so identity guards the sharing)", () => {
   it("integrity IS @beep/npm-spec's shared corepack schema, not a copy that agrees with it", () => {
-    // `Schema.Option(X)` keeps `X` on `.value`.
+    const optionWrappedIntegrity = PackageManager.fields.integrity.value;
     assert.strictEqual(
-      PackageManager.fields.integrity.value,
+      optionWrappedIntegrity,
       CorepackIntegrityHash,
-      "the corepack restriction must not be re-derived here — consume CorepackIntegrityHash"
+      "the corepack restriction must not be re-derived here — consume CorepackIntegrityHash; a copy compiles clean"
     );
-    // The control: the assertion discriminates, and is not satisfied by the
-    // unrestricted brand the shared schema narrows.
-    assert.notStrictEqual<unknown>(PackageManager.fields.integrity.value, IntegrityHash);
+    assert.notStrictEqual<unknown>(
+      optionWrappedIntegrity,
+      IntegrityHash,
+      "the control: the unrestricted brand the shared schema narrows must not satisfy the identity check"
+    );
   });
 
-  // The version half is a shared VALUE too since it became
-  // `SemVer.PinnableVersionString`, so identity settles it the same way.
   it("version IS @beep/semver's shared pinnable schema, not a copy that agrees with it", () => {
-    // A non-optional field keeps the schema directly on `fields`.
     assert.strictEqual(
       PackageManager.fields.version,
       SemVer.PinnableVersionString,
       "the pinnable-version restriction must not be re-derived here — consume SemVer.PinnableVersionString"
     );
-    // The control: the assertion discriminates against the two neighbours a
-    // faithful re-derivation would plausibly reach for.
-    assert.notStrictEqual(PackageManager.fields.version, SemVer.ExactVersionString);
-    assert.notStrictEqual(PackageManager.fields.version, S.String);
+    assert.notStrictEqual(
+      PackageManager.fields.version,
+      SemVer.ExactVersionString,
+      "the control: a plausible faithful re-derivation must not satisfy the identity check"
+    );
+    assert.notStrictEqual(
+      PackageManager.fields.version,
+      S.String,
+      "the control: a plausible faithful re-derivation must not satisfy the identity check"
+    );
   });
 
-  // The equivalence corpus stays as the BEHAVIOURAL guard: whatever this
-  // field accepts must be exactly what `@beep/semver`'s strict parse
-  // accepts (minus build metadata, which the grammar cannot express). A
-  // hand-rolled parser that drifts from SemVer on any corpus entry fails here,
-  // whichever direction it drifts. Corpus entries are untrimmed on purpose:
-  // on PADDED input the oracle below (parseResult, which trims) and the field
-  // (SemVer.isPinnable, which refuses padding) legitimately disagree — that
-  // divergence is pinned by its own test, not by this corpus.
-  it.effect("accepts exactly what SemVer.parseResult accepts, no build metadata", () =>
-    Effect.gen(function* () {
-      const corpus = [
-        "1.2.3",
-        "0.0.0",
-        "10.33.0",
-        "1.2.3-rc.1",
-        "1.2.3-0rc",
-        "1.2.3-alpha.0",
-        "1.2.3-0.3.7",
-        "01.2.3",
-        "1.02.3",
-        "1.2.03",
-        "1.2.3-01",
-        "1.2.3-a..b",
-        "1.2.3-",
-        "1.2",
-        "1",
-        "v1.2.3",
-        "^1.2.3",
-        "latest",
-        "",
-        // Build metadata parses as SemVer but is inexpressible in this
-        // grammar — the `+` position belongs to the integrity — so the field
-        // must reject it even though SemVer accepts it.
-        "1.2.3+build",
-      ];
-      for (const version of corpus) {
-        const parsed = SemVer.parseResult(version);
-        const semverAccepts = Result.isSuccess(parsed) && parsed.success.build.length === 0;
-        const decoded = yield* Effect.result(decode(`pnpm@${version}`));
-        assert.strictEqual(
-          Result.isSuccess(decoded),
-          semverAccepts,
-          `"${version}": the field and SemVer.parseResult must agree`
-        );
-      }
-    })
+  it.effect(
+    "accepts exactly what SemVer.parseResult accepts, minus build metadata (the + slot is the integrity's)",
+    () =>
+      Effect.gen(function* () {
+        const unpaddedCorpus = [
+          "1.2.3",
+          "0.0.0",
+          "10.33.0",
+          "1.2.3-rc.1",
+          "1.2.3-0rc",
+          "1.2.3-alpha.0",
+          "1.2.3-0.3.7",
+          "01.2.3",
+          "1.02.3",
+          "1.2.03",
+          "1.2.3-01",
+          "1.2.3-a..b",
+          "1.2.3-",
+          "1.2",
+          "1",
+          "v1.2.3",
+          "^1.2.3",
+          "latest",
+          "",
+          "1.2.3+build",
+        ];
+        for (const version of unpaddedCorpus) {
+          const parsed = SemVer.parseResult(version);
+          const semverAccepts = Result.isSuccess(parsed) && parsed.success.build.length === 0;
+          const decoded = yield* Effect.result(decode(`pnpm@${version}`));
+          assert.strictEqual(
+            Result.isSuccess(decoded),
+            semverAccepts,
+            `"${version}": the field and SemVer.parseResult must agree; a drifting hand-rolled parser fails here`
+          );
+        }
+      })
   );
 });

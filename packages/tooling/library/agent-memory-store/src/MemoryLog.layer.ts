@@ -177,8 +177,6 @@ const recordOrder = Effect.fnUntraced(function* (entry: Entry) {
     FROM agent_memory_order`;
 });
 
-// One log holds one memory folder: a FolderImported lands only when the log
-// holds none, checked in the writer transaction like the compare-and-set.
 const importFolder = Effect.fnUntraced(function* (folderDigest: Sha256Hex, entry: Entry) {
   const sql = yield* SqlClient.SqlClient;
   const rows = yield* sql`
@@ -256,9 +254,8 @@ const reviseNode = Effect.fnUntraced(function* (
   yield* recordOrder(entry);
 });
 
-const openHold = Effect.fnUntraced(function* (holdId: HoldId, entry: Entry) {
+const openHoldOnce = Effect.fnUntraced(function* (holdId: HoldId, entry: Entry) {
   const sql = yield* SqlClient.SqlClient;
-  // A HoldId names one hold; a repeated WriteHeld never reopens a settled one.
   yield* sql`INSERT INTO agent_memory_holds ${sql.insert({ hold_id: holdId, open: 1 })} ON CONFLICT DO NOTHING`;
   yield* recordOrder(entry);
 });
@@ -282,11 +279,8 @@ const resolveHold = Effect.fnUntraced(function* (holdId: HoldId, entry: Entry) {
 const isStoreFailure = (error: unknown): error is SqlError.SqlError | S.SchemaError =>
   SqlError.isSqlError(error) || S.isSchemaError(error);
 
-// The first defect of a cause when it is a store failure a handler raised;
-// any other cause passes through unchanged.
 const storeFailureDefect = Filter.composePassthrough(Cause.findDefect, Filter.fromPredicate(isStoreFailure));
 
-// The MemoryLogError a failed store operation becomes.
 const failedWith =
   (operation: string) =>
   (cause: unknown): MemoryLogError =>
@@ -313,7 +307,7 @@ const handlers = EventLog.group(MemoryEvents, (group) =>
     )
     .handle("FileImported", ({ entry }) => Effect.catchIf(recordOrder(entry), isStoreFailure, Effect.die))
     .handle("WriteHeld", ({ payload, entry }) =>
-      Effect.catchIf(openHold(payload.holdId, entry), isStoreFailure, Effect.die)
+      Effect.catchIf(openHoldOnce(payload.holdId, entry), isStoreFailure, Effect.die)
     )
     .handle("HoldResolved", ({ payload, entry }) =>
       Effect.catchIf(resolveHold(payload.holdId, entry), isStoreFailure, Effect.die)

@@ -51,7 +51,6 @@ export const OcctErrorReason = OcctErrorReasonBase.pipe(
  */
 export type OcctErrorReason = typeof OcctErrorReason.Type;
 
-// shared error-boundary idiom; no in-family home, future foundation capability candidate.
 // fallow-ignore-next-line code-duplication -- error-boundary cause-reflection idiom repeated across sibling drivers that must not depend on each other; no foundation capability owns it yet. Owner: @beep/occt. Exit: import it and delete this copy once a foundation capability package exports the idiom.
 const causeText = (cause: unknown): O.Option<string> =>
   P.isString(cause) ? O.some(cause) : P.isError(cause) ? O.some(cause.message) : O.none();

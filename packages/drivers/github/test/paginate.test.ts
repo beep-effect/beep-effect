@@ -8,7 +8,6 @@ import * as Ref from "effect/Ref";
 import * as Stream from "effect/Stream";
 import type { PageSource } from "@beep/github/internal/paginate";
 
-/** A source that hands out the given pages in order, counting its calls. */
 const recordedPages = <A>(pages: ReadonlyArray<ReadonlyArray<A>>, calls: Ref.Ref<number>): PageSource<A> => {
   let index = 0;
   return {
@@ -24,9 +23,8 @@ describe("paginate", () => {
       const calls = yield* Ref.make(0);
       const items = yield* Stream.runCollect(paginate(() => recordedPages([[1, 2], [3, 4], [5]], calls), undefined));
       assert.deepStrictEqual(items, [1, 2, 3, 4, 5]);
-      // Three pages plus the one call that reports completion.
       const got = yield* Ref.get(calls);
-      assert.strictEqual(got, 4);
+      assert.strictEqual(got, 4, "three pages plus the one call that reports completion");
     })
   );
 
