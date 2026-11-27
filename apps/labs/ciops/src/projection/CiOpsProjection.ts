@@ -51,13 +51,6 @@ type PlanEpisodeError = HandoffReadError | HandoffDigestMismatchError | HandoffD
  * current-proposal shell. `emitLanePlan` serializes a lane plan in the
  * provisional lane-plan vocabulary only.
  *
- * **Gotchas**
- *
- * Handoff hashing consumes raw bytes, never a re-encoded string. Every
- * Uint8Array decodes and its digest cannot fail, but schema decoding still
- * types an issue; planEpisode maps that issue into HandoffReadError to keep
- * it inside the declared contract §8.1 failure union.
- *
  * @category services
  * @since 0.0.0
  */
