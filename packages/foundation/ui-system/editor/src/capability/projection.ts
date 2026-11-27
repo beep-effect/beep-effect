@@ -174,6 +174,10 @@ export const formatChord: {
 /**
  * Projects slash-menu commands into the existing chat typeahead item model.
  *
+ * **Details**
+ *
+ * `hint` occupies a short right-aligned typeahead slot. Sentence-long help is searchable through keywords and is deliberately omitted from that slot.
+ *
  * **Example** (Project no slash commands)
  *
  * ```ts import.meta.vitest name="Project no slash commands"
@@ -201,8 +205,6 @@ export const projectSlashItems: {
       SlashItem.make({
         key: command.id,
         label: command.label,
-        // `hint` is the typeahead's short right-aligned slot; the sentence-long
-        // help text belongs in search keywords, not next to the label.
         keywords: A.filter(Str.split(command.helpText, " "), Str.isNonEmpty),
         onSelect: run(command.id),
       })
