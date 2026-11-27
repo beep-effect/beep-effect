@@ -2026,10 +2026,11 @@ export class Ol extends S.Opaque<Ol, OlBrandSharedWithoutClassBaseRecursion>()(
     }),
     start: OrderedListStart.pipe(
       S.withConstructorDefault(Effect.succeed(olStartDefault)),
+      S.annotateKey({
+        description: "First ordinal used by the ordered list. Defaults to one.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(olStartDefault))
-    ).annotateKey({
-      description: "First ordinal used by the ordered list. Defaults to one.",
-    }),
+    ),
   }).pipe(
     $I.annoteSchema("Ol", {
       po: "table",
@@ -2618,14 +2619,13 @@ const tableAlignDefault = Arr.empty<TableAlignment>();
  */
 export class Table extends S.Opaque<Table, { readonly brand: unique symbol }>()(
   S.TaggedStruct("table", {
-    align: S.Array(TableAlignment)
-      .pipe(
-        S.withConstructorDefault(Effect.succeed(tableAlignDefault)),
-        S.withDecodingDefaultType(Effect.succeed(tableAlignDefault))
-      )
-      .annotateKey({
+    align: S.Array(TableAlignment).pipe(
+      S.withConstructorDefault(Effect.succeed(tableAlignDefault)),
+      S.annotateKey({
         description: "Column alignment values in display order. Missing entries render as unaligned columns.",
       }),
+      S.withDecodingDefaultType(Effect.succeed(tableAlignDefault))
+    ),
     headerRow: SchemaUtils.BoolKeyDefaultFalse.annotateKey({
       description: "Whether the first row renders as a table header. Defaults to false on construction and decode.",
     }),

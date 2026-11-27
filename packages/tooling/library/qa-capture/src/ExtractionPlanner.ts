@@ -812,10 +812,10 @@ export class BuildExtractionPlanOptions extends S.Opaque<
   S.Struct({
     budget: ArtifactBudget.pipe(
       S.withConstructorDefault(Effect.succeed(buildExtractionPlanOptionsBudgetDefault)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(buildExtractionPlanOptionsBudgetDefault)),
       $I.annoteKey("BuildExtractionPlanOptions.budget", {
         description: "Artifact byte budget the plan must fit inside.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(buildExtractionPlanOptionsBudgetDefault))
     ),
     events: S.Array(ActionEvent).pipe(
       $I.annoteKey("BuildExtractionPlanOptions.events", {
@@ -824,10 +824,10 @@ export class BuildExtractionPlanOptions extends S.Opaque<
     ),
     rules: ExtractionRuleSet.pipe(
       S.withConstructorDefault(Effect.succeed(defaultExtractionRules)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(defaultExtractionRules)),
       $I.annoteKey("BuildExtractionPlanOptions.rules", {
         description: "Extraction rules deciding which spans become windows.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultExtractionRules))
     ),
   }).pipe(
     $I.annoteSchema("BuildExtractionPlanOptions", {

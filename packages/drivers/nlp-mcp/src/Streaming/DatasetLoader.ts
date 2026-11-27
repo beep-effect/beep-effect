@@ -219,16 +219,18 @@ export class DatasetLoadTextOptions extends S.Opaque<DatasetLoadTextOptions, { r
   S.Struct({
     encoding: TextEncoding.pipe(
       S.withConstructorDefault(Effect.succeed("utf-8" as const)),
+      S.annotateKey({
+        description: 'Text decoding label applied to local file bytes (default: "utf-8").',
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed("utf-8" as const))
-    ).annotateKey({
-      description: 'Text decoding label applied to local file bytes (default: "utf-8").',
-    }),
+    ),
     timeout: PositiveInteger.pipe(
       S.withConstructorDefault(Effect.succeed(DEFAULT_TIMEOUT_MS)),
+      S.annotateKey({
+        description: "Remote URL load timeout in milliseconds.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(DEFAULT_TIMEOUT_MS))
-    ).annotateKey({
-      description: "Remote URL load timeout in milliseconds.",
-    }),
+    ),
   }).pipe(
     $I.annoteSchema("DatasetLoadTextOptions", {
       description: "Options for loading a dataset as raw text.",
@@ -256,10 +258,11 @@ export class DatasetLoadLinesOptions extends S.Opaque<DatasetLoadLinesOptions, {
     }),
     timeout: PositiveInteger.pipe(
       S.withConstructorDefault(Effect.succeed(DEFAULT_TIMEOUT_MS)),
+      S.annotateKey({
+        description: "Remote URL load timeout in milliseconds.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(DEFAULT_TIMEOUT_MS))
-    ).annotateKey({
-      description: "Remote URL load timeout in milliseconds.",
-    }),
+    ),
     trim: SchemaUtils.BoolKeyDefaultFalse.annotateKey({
       description: "Trim surrounding whitespace from loaded lines.",
     }),
@@ -290,10 +293,11 @@ export class DatasetLoadJsonlOptions extends S.Opaque<DatasetLoadJsonlOptions, {
     }),
     timeout: PositiveInteger.pipe(
       S.withConstructorDefault(Effect.succeed(DEFAULT_TIMEOUT_MS)),
+      S.annotateKey({
+        description: "Remote URL load timeout in milliseconds.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(DEFAULT_TIMEOUT_MS))
-    ).annotateKey({
-      description: "Remote URL load timeout in milliseconds.",
-    }),
+    ),
   }).pipe(
     $I.annoteSchema("DatasetLoadJsonlOptions", {
       description: "Options for loading a dataset as JSONL records.",
@@ -318,10 +322,11 @@ export class DatasetLoadJsonOptions extends S.Opaque<DatasetLoadJsonOptions, { r
   S.Struct({
     timeout: PositiveInteger.pipe(
       S.withConstructorDefault(Effect.succeed(DEFAULT_TIMEOUT_MS)),
+      S.annotateKey({
+        description: "Remote URL load timeout in milliseconds.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(DEFAULT_TIMEOUT_MS))
-    ).annotateKey({
-      description: "Remote URL load timeout in milliseconds.",
-    }),
+    ),
   }).pipe(
     $I.annoteSchema("DatasetLoadJsonOptions", {
       description: "Options for loading a dataset as a single JSON document.",

@@ -46,12 +46,14 @@ export class TesseractConfig extends S.Opaque<TesseractConfig, { readonly brand:
   S.Struct({
     pageTimeoutMillis: PosInt.pipe(
       S.withConstructorDefault(Effect.succeed(defaultPageTimeoutMillis)),
+      S.annotateKey({ description: "Timeout in milliseconds for one Tesseract call on one page." }),
       S.withDecodingDefaultTypeKey(Effect.succeed(defaultPageTimeoutMillis))
-    ).annotateKey({ description: "Timeout in milliseconds for one Tesseract call on one page." }),
+    ),
     tesseractPath: S.NonEmptyString.pipe(
       S.withConstructorDefault(Effect.succeed("tesseract")),
+      S.annotateKey({ description: "Executable path or command name of tesseract." }),
       S.withDecodingDefaultTypeKey(Effect.succeed("tesseract"))
-    ).annotateKey({ description: "Executable path or command name of tesseract." }),
+    ),
   }).pipe(
     $I.annoteSchema("TesseractConfig", {
       description: "Executable path and per-page timeout for the Tesseract command-line engine.",

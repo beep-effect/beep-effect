@@ -63,31 +63,41 @@ export class MatterIndexEntry extends S.Opaque<MatterIndexEntry, { readonly bran
     clientKey: MatterClientKey.annotateKey({
       description: "Client that owns the matter.",
     }),
-    docketNumbers: S.Array(MatterDocketNumber)
-      .pipe(S.withDecodingDefaultKey(Effect.succeed([])), S.withConstructorDefault(Effect.succeed([])))
-      .annotateKey({
+    docketNumbers: S.Array(MatterDocketNumber).pipe(
+      S.annotateKey({
         description: "Docket numbers of the matter's filings.",
       }),
-    applicationNumbers: S.Array(UsptoNormalizedApplicationNumber)
-      .pipe(S.withDecodingDefaultKey(Effect.succeed([])), S.withConstructorDefault(Effect.succeed([])))
-      .annotateKey({
+      S.withDecodingDefaultKey(Effect.succeed([])),
+      S.withConstructorDefault(Effect.succeed([]))
+    ),
+    applicationNumbers: S.Array(UsptoNormalizedApplicationNumber).pipe(
+      S.annotateKey({
         description: "Eight-digit USPTO application numbers in the matter.",
       }),
-    patentNumbers: S.Array(PatentNumber)
-      .pipe(S.withDecodingDefaultKey(Effect.succeed([])), S.withConstructorDefault(Effect.succeed([])))
-      .annotateKey({
+      S.withDecodingDefaultKey(Effect.succeed([])),
+      S.withConstructorDefault(Effect.succeed([]))
+    ),
+    patentNumbers: S.Array(PatentNumber).pipe(
+      S.annotateKey({
         description: "Digits-only patent numbers granted in the matter.",
       }),
-    contactAddresses: S.Array(EmailString)
-      .pipe(S.withDecodingDefaultKey(Effect.succeed([])), S.withConstructorDefault(Effect.succeed([])))
-      .annotateKey({
+      S.withDecodingDefaultKey(Effect.succeed([])),
+      S.withConstructorDefault(Effect.succeed([]))
+    ),
+    contactAddresses: S.Array(EmailString).pipe(
+      S.annotateKey({
         description: "Normalized email addresses of the matter's contacts.",
       }),
-    contactDomains: S.Array(MailDomain)
-      .pipe(S.withDecodingDefaultKey(Effect.succeed([])), S.withConstructorDefault(Effect.succeed([])))
-      .annotateKey({
+      S.withDecodingDefaultKey(Effect.succeed([])),
+      S.withConstructorDefault(Effect.succeed([]))
+    ),
+    contactDomains: S.Array(MailDomain).pipe(
+      S.annotateKey({
         description: "Sender domains associated with the matter's client.",
       }),
+      S.withDecodingDefaultKey(Effect.succeed([])),
+      S.withConstructorDefault(Effect.succeed([]))
+    ),
   }).pipe(
     $I.annoteSchema("MatterIndexEntry", {
       description: "Identifiers and contacts that tie mail to one matter.",
@@ -124,26 +134,34 @@ export class MatterIndexEntry extends S.Opaque<MatterIndexEntry, { readonly bran
  */
 export class UnattributedMatter extends S.Opaque<UnattributedMatter, { readonly brand: unique symbol }>()(
   S.Struct({
-    docketNumbers: S.Array(MatterDocketNumber)
-      .pipe(S.withDecodingDefaultKey(Effect.succeed([])), S.withConstructorDefault(Effect.succeed([])))
-      .annotateKey({
+    docketNumbers: S.Array(MatterDocketNumber).pipe(
+      S.annotateKey({
         description: "Docket numbers of the matter's filings.",
       }),
-    applicationNumbers: S.Array(UsptoNormalizedApplicationNumber)
-      .pipe(S.withDecodingDefaultKey(Effect.succeed([])), S.withConstructorDefault(Effect.succeed([])))
-      .annotateKey({
+      S.withDecodingDefaultKey(Effect.succeed([])),
+      S.withConstructorDefault(Effect.succeed([]))
+    ),
+    applicationNumbers: S.Array(UsptoNormalizedApplicationNumber).pipe(
+      S.annotateKey({
         description: "Eight-digit USPTO application numbers in the matter.",
       }),
-    patentNumbers: S.Array(PatentNumber)
-      .pipe(S.withDecodingDefaultKey(Effect.succeed([])), S.withConstructorDefault(Effect.succeed([])))
-      .annotateKey({
+      S.withDecodingDefaultKey(Effect.succeed([])),
+      S.withConstructorDefault(Effect.succeed([]))
+    ),
+    patentNumbers: S.Array(PatentNumber).pipe(
+      S.annotateKey({
         description: "Digits-only patent numbers granted in the matter.",
       }),
-    familyKeys: S.Array(MatterDocketNumber)
-      .pipe(S.withDecodingDefaultKey(Effect.succeed([])), S.withConstructorDefault(Effect.succeed([])))
-      .annotateKey({
+      S.withDecodingDefaultKey(Effect.succeed([])),
+      S.withConstructorDefault(Effect.succeed([]))
+    ),
+    familyKeys: S.Array(MatterDocketNumber).pipe(
+      S.annotateKey({
         description: "Family keys of the matter, client-keyed or bare; compared only with extracted docket references.",
       }),
+      S.withDecodingDefaultKey(Effect.succeed([])),
+      S.withConstructorDefault(Effect.succeed([]))
+    ),
   }).pipe(
     $I.annoteSchema("UnattributedMatter", {
       description: "Identifiers of a matter that cannot be a tag target.",
@@ -175,11 +193,13 @@ export class MatterIndex extends S.Opaque<MatterIndex, { readonly brand: unique 
     entries: S.Array(MatterIndexEntry).annotateKey({
       description: "One entry per taggable matter.",
     }),
-    unattributed: S.Array(UnattributedMatter)
-      .pipe(S.withDecodingDefaultKey(Effect.succeed([])), S.withConstructorDefault(Effect.succeed([])))
-      .annotateKey({
+    unattributed: S.Array(UnattributedMatter).pipe(
+      S.annotateKey({
         description: "Identifier sets of matters that cannot be tagged; a hit needs the attorney.",
       }),
+      S.withDecodingDefaultKey(Effect.succeed([])),
+      S.withConstructorDefault(Effect.succeed([]))
+    ),
     builtAt: S.DateTimeUtcFromString.annotateKey({
       description: "UTC instant the snapshot was read.",
     }),
@@ -224,50 +244,64 @@ export class MailEnvelope extends S.Opaque<MailEnvelope, { readonly brand: uniqu
     messageId: MailMessageId.annotateKey({
       description: "Provider message id.",
     }),
-    internetMessageId: S.OptionFromNullOr(InternetMessageId)
-      .pipe(S.withDecodingDefaultKey(Effect.succeed(null)), S.withConstructorDefault(Effect.succeedNone))
-      .annotateKey({
+    internetMessageId: S.OptionFromNullOr(InternetMessageId).pipe(
+      S.annotateKey({
         description: "RFC 5322 Message-ID, when the provider reports one.",
       }),
-    conversationId: S.OptionFromNullOr(MailConversationId)
-      .pipe(S.withDecodingDefaultKey(Effect.succeed(null)), S.withConstructorDefault(Effect.succeedNone))
-      .annotateKey({
+      S.withDecodingDefaultKey(Effect.succeed(null)),
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
+    conversationId: S.OptionFromNullOr(MailConversationId).pipe(
+      S.annotateKey({
         description: "Conversation id, when the provider reports one.",
       }),
+      S.withDecodingDefaultKey(Effect.succeed(null)),
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
     subject: S.String.annotateKey({
       description: "Subject line; may be empty.",
     }),
-    senderAddress: S.OptionFromNullOr(EmailString)
-      .pipe(S.withDecodingDefaultKey(Effect.succeed(null)), S.withConstructorDefault(Effect.succeedNone))
-      .annotateKey({
+    senderAddress: S.OptionFromNullOr(EmailString).pipe(
+      S.annotateKey({
         description: "Normalized sender address, when the message has a usable one.",
       }),
-    recipientAddresses: S.Array(EmailString)
-      .pipe(S.withDecodingDefaultKey(Effect.succeed([])), S.withConstructorDefault(Effect.succeed([])))
-      .annotateKey({
+      S.withDecodingDefaultKey(Effect.succeed(null)),
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
+    recipientAddresses: S.Array(EmailString).pipe(
+      S.annotateKey({
         description: "Normalized recipient addresses.",
       }),
+      S.withDecodingDefaultKey(Effect.succeed([])),
+      S.withConstructorDefault(Effect.succeed([]))
+    ),
     receivedAt: S.DateTimeUtcFromString.annotateKey({
       description: "UTC instant the message was received.",
     }),
-    categories: S.Array(S.String)
-      .pipe(S.withDecodingDefaultKey(Effect.succeed([])), S.withConstructorDefault(Effect.succeed([])))
-      .annotateKey({
+    categories: S.Array(S.String).pipe(
+      S.annotateKey({
         description: "Current Outlook categories in mailbox order, including foreign ones.",
       }),
+      S.withDecodingDefaultKey(Effect.succeed([])),
+      S.withConstructorDefault(Effect.succeed([]))
+    ),
     hasAttachments: S.Boolean.annotateKey({
       description: "Whether the message carries attachments.",
     }),
-    changeKey: S.OptionFromNullOr(S.String)
-      .pipe(S.withDecodingDefaultKey(Effect.succeed(null)), S.withConstructorDefault(Effect.succeedNone))
-      .annotateKey({
+    changeKey: S.OptionFromNullOr(S.String).pipe(
+      S.annotateKey({
         description: "Provider version token of the message, when reported; guards category writes.",
       }),
-    bodyPreview: S.OptionFromNullOr(S.String)
-      .pipe(S.withDecodingDefaultKey(Effect.succeed(null)), S.withConstructorDefault(Effect.succeedNone))
-      .annotateKey({
+      S.withDecodingDefaultKey(Effect.succeed(null)),
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
+    bodyPreview: S.OptionFromNullOr(S.String).pipe(
+      S.annotateKey({
         description: "Short provider body preview; never persisted.",
       }),
+      S.withDecodingDefaultKey(Effect.succeed(null)),
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
   }).pipe(
     $I.annoteSchema("MailEnvelope", {
       description: "The subset of a mailbox message the tagger reads.",
@@ -507,23 +541,26 @@ const defaultMaxAttachmentBytes = 50 * 1024 * 1024;
 export class TaggingPolicy extends S.Opaque<TaggingPolicy, { readonly brand: unique symbol }>()(
   S.Struct({
     confidenceThreshold: UnitInterval.pipe(
+      S.annotateKey({
+        description: "Minimum confidence the best candidate needs to be matched.",
+      }),
       S.withDecodingDefaultKey(Effect.succeed(0.8)),
       S.withConstructorDefault(Effect.succeed(UnitInterval.make(0.8)))
-    ).annotateKey({
-      description: "Minimum confidence the best candidate needs to be matched.",
-    }),
+    ),
     ambiguityMargin: UnitInterval.pipe(
+      S.annotateKey({
+        description: "Minimum lead the best candidate needs over the runner-up.",
+      }),
       S.withDecodingDefaultKey(Effect.succeed(0.15)),
       S.withConstructorDefault(Effect.succeed(UnitInterval.make(0.15)))
-    ).annotateKey({
-      description: "Minimum lead the best candidate needs over the runner-up.",
-    }),
+    ),
     maxAttachmentBytes: S.Natural.pipe(
+      S.annotateKey({
+        description: "Largest attachment, in bytes, the filer downloads and files; defaults to 50 MiB.",
+      }),
       S.withDecodingDefaultKey(Effect.succeed(defaultMaxAttachmentBytes)),
       S.withConstructorDefault(Effect.succeed(defaultMaxAttachmentBytes))
-    ).annotateKey({
-      description: "Largest attachment, in bytes, the filer downloads and files; defaults to 50 MiB.",
-    }),
+    ),
   }).pipe(
     $I.annoteSchema("TaggingPolicy", {
       description: "Thresholds that turn matter candidates into a tagging decision, plus the attachment size cap.",
@@ -586,11 +623,13 @@ export class MatterMatched extends S.Opaque<MatterMatched, { readonly brand: uni
     evidence: S.NonEmptyArray(MatterEvidence).annotateKey({
       description: "Evidence supporting the match; at least one item.",
     }),
-    practiceCategories: S.Array(PracticeCategory)
-      .pipe(S.withDecodingDefaultKey(Effect.succeed([])), S.withConstructorDefault(Effect.succeed([])))
-      .annotateKey({
+    practiceCategories: S.Array(PracticeCategory).pipe(
+      S.annotateKey({
         description: "Practice categories that ride alongside the match.",
       }),
+      S.withDecodingDefaultKey(Effect.succeed([])),
+      S.withConstructorDefault(Effect.succeed([]))
+    ),
   }).pipe(
     $I.annoteSchema("MatterMatched", {
       description: "Tagging decision assigning the message to one matter.",
@@ -616,16 +655,20 @@ export class MatterUnmatched extends S.Opaque<MatterUnmatched, { readonly brand:
     reason: UnmatchedReason.annotateKey({
       description: "Why no matter was assigned.",
     }),
-    candidates: S.Array(MatterCandidate)
-      .pipe(S.withDecodingDefaultKey(Effect.succeed([])), S.withConstructorDefault(Effect.succeed([])))
-      .annotateKey({
+    candidates: S.Array(MatterCandidate).pipe(
+      S.annotateKey({
         description: "Candidates considered and rejected, best first.",
       }),
-    practiceCategories: S.Array(PracticeCategory)
-      .pipe(S.withDecodingDefaultKey(Effect.succeed([])), S.withConstructorDefault(Effect.succeed([])))
-      .annotateKey({
+      S.withDecodingDefaultKey(Effect.succeed([])),
+      S.withConstructorDefault(Effect.succeed([]))
+    ),
+    practiceCategories: S.Array(PracticeCategory).pipe(
+      S.annotateKey({
         description: "Practice categories that ride alongside the outcome.",
       }),
+      S.withDecodingDefaultKey(Effect.succeed([])),
+      S.withConstructorDefault(Effect.succeed([]))
+    ),
   }).pipe(
     $I.annoteSchema("MatterUnmatched", {
       description: "Tagging decision leaving the message without a matter.",

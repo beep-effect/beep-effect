@@ -1,0 +1,72 @@
+language js
+
+// `S.withDecodingDefaultKey(d)` builds `optionalKey(toEncoded(self)).pipe(decodeTo(self))`
+// and `S.withDecodingDefaultTypeKey(d)` adds an `encodeTo(optionalKey(self))`. An
+// annotation applied after either lands on that outer transformation node, which
+// annotates the decoded side only: `S.toJsonSchemaDocument` documents the encoded
+// side and drops it (effect SCHEMA.md, "Annotating the Encoded Side of a
+// Transformation"). The same annotation applied before the default reaches both
+// sides, and the field's key context still carries it.
+//
+//   X.pipe(S.withDecodingDefaultTypeKey(d), S.annotateKey({...}))
+//     ->  X.pipe(S.annotateKey({...}), S.withDecodingDefaultTypeKey(d))
+//   X.pipe(S.withDecodingDefaultKey(d)).annotateKey({...})
+//     ->  X.pipe(S.annotateKey({...}), S.withDecodingDefaultKey(d))
+//
+// Flagged annotations: `annotate`, `annotateKey` (namespace or method form) and a
+// composer's `annoteKey`. `$I.annoteSchema` is not flagged: it names the defaulted
+// schema itself, and moving it would rename the `$defs` entry and strip the
+// identifier from the decoded node.
+
+pattern decoding_default() {
+  or {
+    `$ns.$member($...)`,
+    `$member($...)`
+  } where { $member <: r"^withDecodingDefault(?:Type)?(?:Key)?$" }
+}
+
+pattern annotation_call() {
+  or {
+    `$ns.annotate($...)`,
+    `$ns.annotate<$...>($...)`,
+    `$ns.annotateKey($...)`,
+    `$ns.annotateKey<$...>($...)`,
+    `$ns.annoteKey($...)`,
+    `$ns.annoteKey<$...>($...)`,
+    `annotate($...)`,
+    `annotateKey($...)`
+  }
+}
+
+pattern annotation_method() { r"^(?:annotate|annotateKey)$" }
+
+or {
+  `$receiver.pipe($args)` as $call where {
+    $args <: [..., decoding_default(), ..., annotation_call(), ...],
+    register_diagnostic(span=$call, message="Rule: annotate a field before `withDecodingDefault*`, not after it. Why: the default wraps the field in a transformation, and an annotation applied after it sits on the decoded side only, so `toJsonSchemaDocument` drops its description and title. Fix: move the `annotateKey`, `annotate` or `$I.annoteKey` call ahead of the default in the same pipe; a key annotation on the value-level `withDecodingDefaultType` is dropped in either position, so use `withDecodingDefaultTypeKey`.", severity="error")
+  },
+  `pipe($args)` as $call where {
+    $args <: [..., decoding_default(), ..., annotation_call(), ...],
+    register_diagnostic(span=$call, message="Rule: annotate a field before `withDecodingDefault*`, not after it. Why: the default wraps the field in a transformation, and an annotation applied after it sits on the decoded side only, so `toJsonSchemaDocument` drops its description and title. Fix: move the annotation ahead of the default in the same `pipe(...)` call.", severity="error")
+  },
+  `$receiver.pipe($args).$method($...)` as $call where {
+    $method <: annotation_method(),
+    $args <: [..., decoding_default(), ...],
+    register_diagnostic(span=$call, message="Rule: annotate a field before `withDecodingDefault*`, not after it. Why: `.annotate`/`.annotateKey` on the defaulted pipe sits on the decoded side only, so `toJsonSchemaDocument` drops its description and title. Fix: move it into the pipe ahead of the default as `S.annotateKey({...})` or `S.annotate({...})`.", severity="error")
+  },
+  `$receiver.pipe($args).pipe($after)` as $call where {
+    $args <: [..., decoding_default(), ...],
+    $after <: [..., annotation_call(), ...],
+    register_diagnostic(span=$call, message="Rule: annotate a field before `withDecodingDefault*`, not after it. Why: an annotation in a later `.pipe(...)` sits on the decoded side only, so `toJsonSchemaDocument` drops its description and title. Fix: move it ahead of the default in the first pipe.", severity="error")
+  },
+  `$default($schema).$method($...)` as $call where {
+    $default <: decoding_default(),
+    $method <: annotation_method(),
+    register_diagnostic(span=$call, message="Rule: annotate a field before `withDecodingDefault*`, not after it. Why: an annotation on the defaulted schema sits on the decoded side only, so `toJsonSchemaDocument` drops its description and title. Fix: annotate the schema before passing it to the default.", severity="error")
+  },
+  `$default($schema).pipe($after)` as $call where {
+    $default <: decoding_default(),
+    $after <: [..., annotation_call(), ...],
+    register_diagnostic(span=$call, message="Rule: annotate a field before `withDecodingDefault*`, not after it. Why: an annotation on the defaulted schema sits on the decoded side only, so `toJsonSchemaDocument` drops its description and title. Fix: annotate the schema before passing it to the default.", severity="error")
+  }
+}

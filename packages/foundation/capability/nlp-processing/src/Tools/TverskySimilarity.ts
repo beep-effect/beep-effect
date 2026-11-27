@@ -21,16 +21,18 @@ class TverskySimilarityParameters extends S.Opaque<TverskySimilarityParameters, 
   S.Struct({
     alpha: UnitInterval.pipe(
       S.withConstructorDefault(Effect.succeed(tverskySimilarityParametersAlphaDefault)),
+      S.annotateKey({
+        description: "Weight for terms present in text1 but absent in text2 (default: 0.5)",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(tverskySimilarityParametersAlphaDefault))
-    ).annotateKey({
-      description: "Weight for terms present in text1 but absent in text2 (default: 0.5)",
-    }),
+    ),
     beta: UnitInterval.pipe(
       S.withConstructorDefault(Effect.succeed(tverskySimilarityParametersBetaDefault)),
+      S.annotateKey({
+        description: "Weight for terms present in text2 but absent in text1 (default: 0.5)",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(tverskySimilarityParametersBetaDefault))
-    ).annotateKey({
-      description: "Weight for terms present in text2 but absent in text1 (default: 0.5)",
-    }),
+    ),
     text1: S.String.annotateKey({
       description: "First text to compare",
       examples: ["alpha beta gamma"],

@@ -492,24 +492,24 @@ export class FFmpegConfigInput extends S.Opaque<FFmpegConfigInput, { readonly br
   S.Struct({
     ffmpegPath: S.String.pipe(
       S.withConstructorDefault(Effect.succeed("ffmpeg")),
-      S.withDecodingDefaultTypeKey(Effect.succeed("ffmpeg")),
       $I.annoteKey("FFmpegConfigInput.ffmpegPath", {
         description: "Executable path or command name used for ffmpeg.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed("ffmpeg"))
     ),
     ffprobePath: S.String.pipe(
       S.withConstructorDefault(Effect.succeed("ffprobe")),
-      S.withDecodingDefaultTypeKey(Effect.succeed("ffprobe")),
       $I.annoteKey("FFmpegConfigInput.ffprobePath", {
         description: "Executable path or command name used for ffprobe.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed("ffprobe"))
     ),
     forceKillAfterMillis: PositiveMilliseconds.pipe(
       S.withConstructorDefault(Effect.succeed(2000)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(2000)),
       $I.annoteKey("FFmpegConfigInput.forceKillAfterMillis", {
         description: "Timeout in milliseconds before an interrupted native process is force-killed.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(2000))
     ),
   }).pipe(
     $I.annoteSchema("FFmpegConfigInput", {
@@ -688,10 +688,10 @@ export class ExtractFramesRequest extends S.Opaque<ExtractFramesRequest, { reado
     ),
     manifestPath: S.Option(S.String).pipe(
       S.withConstructorDefault(Effect.succeed(O.none<string>())),
-      S.withDecodingDefaultKey(Effect.succeed(O.none<string>())),
       $I.annoteKey("ExtractFramesRequest.manifestPath", {
         description: "Optional manifest path; defaults inside the output directory when absent.",
-      })
+      }),
+      S.withDecodingDefaultKey(Effect.succeed(O.none<string>()))
     ),
     outDir: S.String.pipe(
       $I.annoteKey("ExtractFramesRequest.outDir", {
@@ -700,17 +700,17 @@ export class ExtractFramesRequest extends S.Opaque<ExtractFramesRequest, { reado
     ),
     overwrite: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(false)),
-      S.withDecodingDefaultKey(Effect.succeed(false)),
       $I.annoteKey("ExtractFramesRequest.overwrite", {
         description: "Whether existing frame and manifest outputs may be overwritten.",
-      })
+      }),
+      S.withDecodingDefaultKey(Effect.succeed(false))
     ),
     prefix: S.Option(SafeFramePrefix).pipe(
       S.withConstructorDefault(Effect.succeed(O.none<SafeFramePrefix>())),
-      S.withDecodingDefaultKey(Effect.succeed(O.none<SafeFramePrefix>())),
       $I.annoteKey("ExtractFramesRequest.prefix", {
         description: "Optional safe filename prefix for generated PNG frames.",
-      })
+      }),
+      S.withDecodingDefaultKey(Effect.succeed(O.none<SafeFramePrefix>()))
     ),
     videoPath: S.String.pipe(
       $I.annoteKey("ExtractFramesRequest.videoPath", {

@@ -6,7 +6,7 @@ import { CsvRead } from "@beep/csv/CsvRead.schema";
 import { CsvHeaderRow, CsvRecordSlice, CsvTable } from "@beep/csv/CsvTable.schema";
 import { MachineConfig, MachineModeName, MachineState } from "@beep/csv/internal/machine";
 import { Prepared, Start } from "@beep/csv/internal/start";
-import { describe, it } from "@effect/vitest";
+import { describe, expect, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as R from "effect/Record";
@@ -44,4 +44,14 @@ describe("each listed schema generates only valid values (SF-7): the roots, whos
       runs
     );
   }
+});
+
+describe("CsvReadOptions JSON Schema key annotations", () => {
+  it("emits the limits key annotation in toJsonSchemaDocument because annotateKey runs before withDecodingDefaultTypeKey", () => {
+    expect(S.toJsonSchemaDocument(CsvReadOptions).definitions).toMatchObject({
+      "@beep/csv/CsvOptions/CsvReadOptions": {
+        properties: { limits: { allOf: expect.arrayContaining([{ description: "The caps" }]) } },
+      },
+    });
+  });
 });

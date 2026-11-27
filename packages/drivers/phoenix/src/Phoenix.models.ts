@@ -413,11 +413,13 @@ export class PhoenixDatasetExample extends S.Opaque<PhoenixDatasetExample, { rea
     input: S.Record(S.String, S.Unknown).annotateKey({
       description: "Phoenix dataset example input payload.",
     }),
-    metadata: S.Record(S.String, S.Unknown)
-      .pipe(S.withConstructorDefault(Effect.succeed({})), S.withDecodingDefaultKey(Effect.succeed({})))
-      .annotateKey({
+    metadata: S.Record(S.String, S.Unknown).pipe(
+      S.withConstructorDefault(Effect.succeed({})),
+      S.annotateKey({
         description: "Phoenix dataset example metadata payload.",
       }),
+      S.withDecodingDefaultKey(Effect.succeed({}))
+    ),
     output: S.Record(S.String, S.Unknown).pipe(S.NullOr, S.optionalKey).annotateKey({
       description: "Optional nullable Phoenix dataset example output payload.",
     }),
@@ -580,19 +582,20 @@ export class PhoenixDatasetInfoResult extends S.Opaque<PhoenixDatasetInfoResult,
     datasetId: S.String.annotateKey({
       description: "Phoenix dataset identifier.",
     }),
-    description: S.NullOr(S.String)
-      .pipe(S.withConstructorDefault(Effect.succeed(null)), S.withDecodingDefaultTypeKey(Effect.succeed(null)))
-      .annotateKey({
+    description: S.NullOr(S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(null)),
+      S.annotateKey({
         description: "Nullable Phoenix dataset description.",
       }),
-    metadata: S.Record(S.String, S.Unknown)
-      .pipe(
-        S.withConstructorDefault(Effect.succeed(phoenixDatasetInfoResultMetadataDefault)),
-        S.withDecodingDefaultTypeKey(Effect.succeed(phoenixDatasetInfoResultMetadataDefault))
-      )
-      .annotateKey({
+      S.withDecodingDefaultTypeKey(Effect.succeed(null))
+    ),
+    metadata: S.Record(S.String, S.Unknown).pipe(
+      S.withConstructorDefault(Effect.succeed(phoenixDatasetInfoResultMetadataDefault)),
+      S.annotateKey({
         description: "Phoenix dataset metadata payload.",
       }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(phoenixDatasetInfoResultMetadataDefault))
+    ),
     name: S.String.annotateKey({
       description: "Phoenix dataset name.",
     }),
@@ -686,23 +689,23 @@ export class PhoenixPromptCreateInput extends S.Opaque<PhoenixPromptCreateInput,
     description: S.optionalKey(S.String).annotateKey({
       description: "Optional Phoenix prompt description.",
     }),
-    metadata: S.Record(S.String, S.Unknown)
-      .pipe(
-        S.withConstructorDefault(Effect.succeed(phoenixPromptCreateInputMetadataDefault)),
-        S.withDecodingDefaultTypeKey(Effect.succeed(phoenixPromptCreateInputMetadataDefault))
-      )
-      .annotateKey({
+    metadata: S.Record(S.String, S.Unknown).pipe(
+      S.withConstructorDefault(Effect.succeed(phoenixPromptCreateInputMetadataDefault)),
+      S.annotateKey({
         description: "Phoenix prompt metadata payload.",
       }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(phoenixPromptCreateInputMetadataDefault))
+    ),
     modelName: S.String.annotateKey({
       description: "Provider model name used by the Phoenix prompt version.",
     }),
     modelProvider: PhoenixPromptModelProvider.pipe(
       S.withConstructorDefault(Effect.succeed(PhoenixPromptModelProvider.Enum.OPENAI)),
+      S.annotateKey({
+        description: "Prompt model provider used by the Phoenix SDK prompt helper.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(PhoenixPromptModelProvider.Enum.OPENAI))
-    ).annotateKey({
-      description: "Prompt model provider used by the Phoenix SDK prompt helper.",
-    }),
+    ),
     name: S.String.annotateKey({
       description: "Phoenix prompt name.",
     }),
@@ -711,10 +714,11 @@ export class PhoenixPromptCreateInput extends S.Opaque<PhoenixPromptCreateInput,
     }),
     templateFormat: PhoenixPromptTemplateFormat.pipe(
       S.withConstructorDefault(Effect.succeed(PhoenixPromptTemplateFormat.Enum.MUSTACHE)),
+      S.annotateKey({
+        description: "Phoenix prompt template format.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(PhoenixPromptTemplateFormat.Enum.MUSTACHE))
-    ).annotateKey({
-      description: "Phoenix prompt template format.",
-    }),
+    ),
     versionDescription: S.optionalKey(S.String).annotateKey({
       description: "Optional Phoenix prompt version description.",
     }),
@@ -846,23 +850,23 @@ export class PhoenixExperimentCreateInput extends S.Opaque<
     experimentDescription: S.optionalKey(S.String).annotateKey({
       description: "Optional Phoenix experiment description.",
     }),
-    experimentMetadata: S.Record(S.String, S.Unknown)
-      .pipe(
-        S.withConstructorDefault(Effect.succeed(phoenixExperimentCreateInputExperimentMetadataDefault)),
-        S.withDecodingDefaultTypeKey(Effect.succeed(phoenixExperimentCreateInputExperimentMetadataDefault))
-      )
-      .annotateKey({
+    experimentMetadata: S.Record(S.String, S.Unknown).pipe(
+      S.withConstructorDefault(Effect.succeed(phoenixExperimentCreateInputExperimentMetadataDefault)),
+      S.annotateKey({
         description: "Phoenix experiment metadata payload.",
       }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(phoenixExperimentCreateInputExperimentMetadataDefault))
+    ),
     experimentName: S.optionalKey(S.String).annotateKey({
       description: "Optional Phoenix experiment name.",
     }),
     repetitions: PhoenixPositiveCount.pipe(
       S.withConstructorDefault(Effect.succeed(1)),
+      S.annotateKey({
+        description: "Positive integer number of repetitions requested for the experiment.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(1))
-    ).annotateKey({
-      description: "Positive integer number of repetitions requested for the experiment.",
-    }),
+    ),
     splits: S.Array(S.String).pipe(S.optionalKey).annotateKey({
       description: "Optional Phoenix dataset splits used by the experiment.",
     }),
@@ -916,22 +920,23 @@ export class PhoenixExperimentInfoResult extends S.Opaque<
     failedRunCount: PhoenixCount.annotateKey({
       description: "Non-negative count of failed experiment runs.",
     }),
-    metadata: S.Record(S.String, S.Unknown)
-      .pipe(
-        S.withConstructorDefault(Effect.succeed(phoenixExperimentInfoResultMetadataDefault)),
-        S.withDecodingDefaultTypeKey(Effect.succeed(phoenixExperimentInfoResultMetadataDefault))
-      )
-      .annotateKey({
+    metadata: S.Record(S.String, S.Unknown).pipe(
+      S.withConstructorDefault(Effect.succeed(phoenixExperimentInfoResultMetadataDefault)),
+      S.annotateKey({
         description: "Phoenix experiment metadata payload.",
       }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(phoenixExperimentInfoResultMetadataDefault))
+    ),
     missingRunCount: PhoenixCount.annotateKey({
       description: "Non-negative count of missing experiment runs.",
     }),
-    projectName: S.NullOr(S.String)
-      .pipe(S.withConstructorDefault(Effect.succeed(null)), S.withDecodingDefaultTypeKey(Effect.succeed(null)))
-      .annotateKey({
+    projectName: S.NullOr(S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(null)),
+      S.annotateKey({
         description: "Nullable Phoenix project name for the experiment.",
       }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(null))
+    ),
     repetitions: PhoenixPositiveCount.annotateKey({
       description: "Positive integer repetition count configured for the experiment.",
     }),
@@ -968,10 +973,11 @@ export class PhoenixAnnotationInput extends S.Opaque<PhoenixAnnotationInput, { r
   S.Struct({
     annotatorKind: PhoenixAnnotatorKind.pipe(
       S.withConstructorDefault(Effect.succeed(PhoenixAnnotatorKind.Enum.CODE)),
+      S.annotateKey({
+        description: "Phoenix annotator kind for the annotation.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(PhoenixAnnotatorKind.Enum.CODE))
-    ).annotateKey({
-      description: "Phoenix annotator kind for the annotation.",
-    }),
+    ),
     explanation: S.optionalKey(S.String).annotateKey({
       description: "Optional Phoenix annotation explanation.",
     }),
@@ -981,14 +987,13 @@ export class PhoenixAnnotationInput extends S.Opaque<PhoenixAnnotationInput, { r
     label: S.optionalKey(S.String).annotateKey({
       description: "Optional Phoenix annotation label value.",
     }),
-    metadata: S.Record(S.String, S.Unknown)
-      .pipe(
-        S.withConstructorDefault(Effect.succeed(phoenixAnnotationInputMetadataDefault)),
-        S.withDecodingDefaultTypeKey(Effect.succeed(phoenixAnnotationInputMetadataDefault))
-      )
-      .annotateKey({
+    metadata: S.Record(S.String, S.Unknown).pipe(
+      S.withConstructorDefault(Effect.succeed(phoenixAnnotationInputMetadataDefault)),
+      S.annotateKey({
         description: "Phoenix annotation metadata payload.",
       }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(phoenixAnnotationInputMetadataDefault))
+    ),
     name: S.String.annotateKey({
       description: "Phoenix annotation name.",
     }),
@@ -997,10 +1002,11 @@ export class PhoenixAnnotationInput extends S.Opaque<PhoenixAnnotationInput, { r
     }),
     sync: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(true)),
+      S.annotateKey({
+        description: "Whether the Phoenix SDK should synchronously write the annotation.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(true))
-    ).annotateKey({
-      description: "Whether the Phoenix SDK should synchronously write the annotation.",
-    }),
+    ),
     targetId: S.String.annotateKey({
       description: "Phoenix span, session, or trace identifier targeted by the annotation.",
     }),

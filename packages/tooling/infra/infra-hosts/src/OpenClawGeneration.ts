@@ -271,28 +271,32 @@ export class OpenClawWorkstationPaths extends S.Opaque<OpenClawWorkstationPaths,
   S.Struct({
     configRoot: OpenclawAbsolutePath.pipe(
       S.withConstructorDefault(Effect.succeed(defaultConfigRoot)),
+      S.annotateKey({
+        description: "Root-owned directory holding every content-addressed generation and the `current` pointer.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(defaultConfigRoot))
-    ).annotateKey({
-      description: "Root-owned directory holding every content-addressed generation and the `current` pointer.",
-    }),
+    ),
     nodeBinDir: OpenclawAbsolutePath.pipe(
       S.withConstructorDefault(Effect.succeed(defaultNodeBinDir)),
+      S.annotateKey({
+        description: "Directory containing the pinned Node binaries prepended to the unit's hermetic PATH.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(defaultNodeBinDir))
-    ).annotateKey({
-      description: "Directory containing the pinned Node binaries prepended to the unit's hermetic PATH.",
-    }),
+    ),
     stateDir: OpenclawAbsolutePath.pipe(
       S.withConstructorDefault(Effect.succeed(defaultStateDir)),
+      S.annotateKey({
+        description: "OpenClaw state root snapshotted before every generation switch.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(defaultStateDir))
-    ).annotateKey({
-      description: "OpenClaw state root snapshotted before every generation switch.",
-    }),
+    ),
     unitName: S.NonEmptyString.pipe(
       S.withConstructorDefault(Effect.succeed(defaultUnitName)),
+      S.annotateKey({
+        description: "Name of the stack-owned `systemd --user` unit.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(defaultUnitName))
-    ).annotateKey({
-      description: "Name of the stack-owned `systemd --user` unit.",
-    }),
+    ),
   }).pipe(
     $I.annoteSchema("OpenClawWorkstationPaths", {
       description: "Filesystem layout the OpenClaw workstation applicator owns.",
@@ -420,60 +424,69 @@ export class OpenClawDeploymentConfig extends S.Opaque<OpenClawDeploymentConfig,
   S.Struct({
     agentId: S.NonEmptyString.pipe(
       S.withConstructorDefault(Effect.succeed(defaultAgentId)),
+      S.annotateKey({
+        description: "Slug identifying the agent in config and state paths.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(defaultAgentId))
-    ).annotateKey({
-      description: "Slug identifying the agent in config and state paths.",
-    }),
+    ),
     agentName: S.NonEmptyString.pipe(
       S.withConstructorDefault(Effect.succeed(defaultAgentName)),
+      S.annotateKey({
+        description: "Human-readable agent display name.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(defaultAgentName))
-    ).annotateKey({
-      description: "Human-readable agent display name.",
-    }),
+    ),
     gatewayAuthTokenRef: OpenclawSecretReference.pipe(
       S.withConstructorDefault(Effect.succeed(openClawDeploymentConfigGatewayAuthTokenRefDefault)),
+      S.annotateKey({
+        description: "op:// reference resolved at runtime into the gateway auth token.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(openClawDeploymentConfigGatewayAuthTokenRefDefault))
-    ).annotateKey({
-      description: "op:// reference resolved at runtime into the gateway auth token.",
-    }),
+    ),
     gatewayPort: OpenclawGatewayPort.pipe(
       S.withConstructorDefault(Effect.succeed(defaultGatewayPort)),
+      S.annotateKey({
+        description: "Loopback TCP port the gateway listens on.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(defaultGatewayPort))
-    ).annotateKey({
-      description: "Loopback TCP port the gateway listens on.",
-    }),
+    ),
     hostedProvider: OpenClawHostedProviderConfig,
     localProvider: OpenClawLocalProviderConfig,
     logFilePath: OpenclawAbsolutePath.pipe(
       S.withConstructorDefault(Effect.succeed(defaultLogFilePath)),
+      S.annotateKey({
+        description: "Absolute path of the gateway log file.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(defaultLogFilePath))
-    ).annotateKey({
-      description: "Absolute path of the gateway log file.",
-    }),
+    ),
     openclawVersion: OpenclawTargetVersion.pipe(
       S.withConstructorDefault(Effect.succeed(OPENCLAW_COMPATIBILITY_SET.openclawVersion)),
+      S.annotateKey({
+        description: "Pinned OpenClaw version staged into each generation.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(OPENCLAW_COMPATIBILITY_SET.openclawVersion))
-    ).annotateKey({
-      description: "Pinned OpenClaw version staged into each generation.",
-    }),
+    ),
     resolverCommandPath: OpenclawAbsolutePath.pipe(
       S.withConstructorDefault(Effect.succeed(defaultResolverCommandPath)),
+      S.annotateKey({
+        description: "Absolute path of the exec-provider secret resolver command.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(defaultResolverCommandPath))
-    ).annotateKey({
-      description: "Absolute path of the exec-provider secret resolver command.",
-    }),
+    ),
     resolverOpBinaryPath: OpenclawAbsolutePath.pipe(
       S.withConstructorDefault(Effect.succeed(defaultResolverOpBinaryPath)),
+      S.annotateKey({
+        description: "Absolute path of the pinned 1Password CLI binary.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(defaultResolverOpBinaryPath))
-    ).annotateKey({
-      description: "Absolute path of the pinned 1Password CLI binary.",
-    }),
+    ),
     resolverTrustedDir: OpenclawAbsolutePath.pipe(
       S.withConstructorDefault(Effect.succeed(defaultResolverTrustedDir)),
+      S.annotateKey({
+        description: "Directory OpenClaw trusts to contain the resolver command.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(defaultResolverTrustedDir))
-    ).annotateKey({
-      description: "Directory OpenClaw trusts to contain the resolver command.",
-    }),
+    ),
     telegramBotTokenRef: OpenclawSecretReference,
     telegramDefaultTo: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
     telegramDmPolicy: S.Literals(["pairing", "disabled", "open"]).pipe(
@@ -2370,10 +2383,11 @@ export class OpenClawStackArgs extends S.Opaque<OpenClawStackArgs, { readonly br
     }),
     paths: OpenClawWorkstationPaths.pipe(
       S.withConstructorDefault(Effect.succeed(OpenClawWorkstationPaths.make({}))),
+      S.annotateKey({
+        description: "Filesystem layout the workstation applicator owns.",
+      }),
       S.withDecodingDefaultKey(Effect.succeed({}))
-    ).annotateKey({
-      description: "Filesystem layout the workstation applicator owns.",
-    }),
+    ),
   }).pipe(
     $I.annoteSchema("OpenClawStackArgs", {
       description: "OpenClaw workstation arguments decoded from configuration before the stack renders a generation.",

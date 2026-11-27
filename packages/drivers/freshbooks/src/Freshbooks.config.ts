@@ -285,24 +285,25 @@ export class FreshbooksConfigInput extends S.Opaque<FreshbooksConfigInput, { rea
     }),
     apiUrl: FreshbooksBaseUrl.pipe(
       S.withConstructorDefault(Effect.succeed(FRESHBOOKS_API_URL)),
+      S.annotateKey({
+        description: "Base URL for FreshBooks REST API requests.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(FRESHBOOKS_API_URL))
-    ).annotateKey({
-      description: "Base URL for FreshBooks REST API requests.",
-    }),
+    ),
     authUrl: FreshbooksBaseUrl.pipe(
       S.withConstructorDefault(Effect.succeed(FRESHBOOKS_AUTH_URL)),
+      S.annotateKey({
+        description: "Base URL for FreshBooks OAuth authorization.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(FRESHBOOKS_AUTH_URL))
-    ).annotateKey({
-      description: "Base URL for FreshBooks OAuth authorization.",
-    }),
-    headers: S.Record(S.String, S.String)
-      .pipe(
-        S.withConstructorDefault(Effect.succeed(freshbooksConfigInputHeadersDefault)),
-        S.withDecodingDefaultTypeKey(Effect.succeed(freshbooksConfigInputHeadersDefault))
-      )
-      .annotateKey({
+    ),
+    headers: S.Record(S.String, S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(freshbooksConfigInputHeadersDefault)),
+      S.annotateKey({
         description: "Additional HTTP headers merged into FreshBooks API requests.",
       }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(freshbooksConfigInputHeadersDefault))
+    ),
   }).pipe(
     $I.annoteSchema("FreshbooksConfigInput", {
       description: "Runtime configuration accepted by the FreshBooks API driver layer.",

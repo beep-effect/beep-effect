@@ -293,31 +293,35 @@ class AnnotationOptions extends S.Opaque<AnnotationOptions, { readonly brand: un
     includeDependencies: S.Boolean.pipe(
       S.optionalKey,
       S.withConstructorDefault(Effect.succeed(false)),
+      S.annotateKey({
+        description: "Add syntactic-dependency annotations (default `false`; expensive).",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(false))
-    ).annotateKey({
-      description: "Add syntactic-dependency annotations (default `false`; expensive).",
-    }),
+    ),
     includeEntities: S.Boolean.pipe(
       S.optionalKey,
       S.withConstructorDefault(Effect.succeed(true)),
+      S.annotateKey({
+        description: "Add named-entity annotations (default `true`).",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(true))
-    ).annotateKey({
-      description: "Add named-entity annotations (default `true`).",
-    }),
+    ),
     includeLemmas: S.Boolean.pipe(
       S.optionalKey,
       S.withConstructorDefault(Effect.succeed(true)),
+      S.annotateKey({
+        description: "Add lemma annotations (default `true`).",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(true))
-    ).annotateKey({
-      description: "Add lemma annotations (default `true`).",
-    }),
+    ),
     includePOS: S.Boolean.pipe(
       S.optionalKey,
       S.withConstructorDefault(Effect.succeed(true)),
+      S.annotateKey({
+        description: "Add part-of-speech annotations (default `true`).",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(true))
-    ).annotateKey({
-      description: "Add part-of-speech annotations (default `true`).",
-    }),
+    ),
   }).pipe(
     $I.annoteSchema("AnnotationOptions", {
       description: "Options controlling which annotation strata `fromDocumentAnnotated` adds.",

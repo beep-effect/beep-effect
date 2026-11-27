@@ -220,30 +220,32 @@ export class M365ConfigInput extends S.Opaque<M365ConfigInput, { readonly brand:
     }),
     graphBaseUrl: M365ConfigUrl.pipe(
       S.withConstructorDefault(Effect.succeed(m365ConfigInputGraphBaseUrlDefault)),
+      S.annotateKey({
+        description: "Graph base URL override; defaults to the pinned v1.0 endpoint.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(m365ConfigInputGraphBaseUrlDefault))
-    ).annotateKey({
-      description: "Graph base URL override; defaults to the pinned v1.0 endpoint.",
-    }),
+    ),
     maxRetries: S.Natural.pipe(
       S.withConstructorDefault(Effect.succeed(m365ConfigInputMaxRetriesDefault)),
+      S.annotateKey({
+        description: "Throttle-retry budget honored on 429/503; defaults to DEFAULT_MAX_RETRIES.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(m365ConfigInputMaxRetriesDefault))
-    ).annotateKey({
-      description: "Throttle-retry budget honored on 429/503; defaults to DEFAULT_MAX_RETRIES.",
-    }),
+    ),
     redirectUri: M365ConfigUrl.pipe(
       S.withConstructorDefault(Effect.succeed(m365ConfigInputRedirectUriDefault)),
+      S.annotateKey({
+        description: "Loopback redirect URI base for the interactive authorizer; defaults to http://localhost.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(m365ConfigInputRedirectUriDefault))
-    ).annotateKey({
-      description: "Loopback redirect URI base for the interactive authorizer; defaults to http://localhost.",
-    }),
-    scopes: S.Array(M365DelegatedReadScope)
-      .pipe(
-        S.withConstructorDefault(Effect.succeed(M365_READ_SCOPES)),
-        S.withDecodingDefaultTypeKey(Effect.succeed(M365_READ_SCOPES))
-      )
-      .annotateKey({
+    ),
+    scopes: S.Array(M365DelegatedReadScope).pipe(
+      S.withConstructorDefault(Effect.succeed(M365_READ_SCOPES)),
+      S.annotateKey({
         description: "Requested delegated scopes; defaults to M365_READ_SCOPES. Unapproved scopes are rejected.",
       }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(M365_READ_SCOPES))
+    ),
     tokenCachePath: S.OptionFromOptionalKey(S.NonEmptyString)
       .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({
@@ -477,16 +479,18 @@ export class M365AppOnlyConfigInput extends S.Opaque<M365AppOnlyConfigInput, { r
     }),
     graphBaseUrl: M365ConfigUrl.pipe(
       S.withConstructorDefault(Effect.succeed(m365ConfigInputGraphBaseUrlDefault)),
+      S.annotateKey({
+        description: "Graph base URL override; defaults to the pinned v1.0 endpoint.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(m365ConfigInputGraphBaseUrlDefault))
-    ).annotateKey({
-      description: "Graph base URL override; defaults to the pinned v1.0 endpoint.",
-    }),
+    ),
     maxRetries: S.Natural.pipe(
       S.withConstructorDefault(Effect.succeed(m365ConfigInputMaxRetriesDefault)),
+      S.annotateKey({
+        description: "Throttle-retry budget honored on 429/503; defaults to DEFAULT_MAX_RETRIES.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(m365ConfigInputMaxRetriesDefault))
-    ).annotateKey({
-      description: "Throttle-retry budget honored on 429/503; defaults to DEFAULT_MAX_RETRIES.",
-    }),
+    ),
   }).pipe(
     $I.annoteSchema("M365AppOnlyConfigInput", {
       description: "Runtime configuration for the Microsoft 365 app-only (confidential client) lane.",

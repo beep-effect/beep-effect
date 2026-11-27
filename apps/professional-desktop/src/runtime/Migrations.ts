@@ -92,10 +92,11 @@ export class ProfessionalDesktopMigrationOptions extends S.Opaque<
   S.Struct({
     migrationsSchema: PostgresSchemaName.pipe(
       S.withConstructorDefault(Effect.succeed(migrationsSchema)),
+      S.annotateKey({
+        description: "Drizzle migration journal schema used by the Professional Desktop sidecar database.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(migrationsSchema))
-    ).annotateKey({
-      description: "Drizzle migration journal schema used by the Professional Desktop sidecar database.",
-    }),
+    ),
   }).pipe(
     $I.annoteSchema("ProfessionalDesktopMigrationOptions", {
       description: "Options accepted when applying the Professional Desktop runtime migrations.",

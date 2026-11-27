@@ -48,12 +48,14 @@ export class VaultSyncStatus extends S.Opaque<VaultSyncStatus, { readonly brand:
     connected: S.Boolean.annotateKey({
       description: "Whether the DMS mirror adapter can reach the provider.",
     }),
-    disconnectReason: S.OptionFromNullOr(DmsMirrorDisconnectReason)
-      .pipe(S.withDecodingDefaultKey(Effect.succeed(null)), S.withConstructorDefault(Effect.succeedNone))
-      .annotateKey({
+    disconnectReason: S.OptionFromNullOr(DmsMirrorDisconnectReason).pipe(
+      S.annotateKey({
         description:
           "Why the provider is disconnected; none while the mirror probe reports connected. A missing encoded key decodes as none, so a status from an older sidecar that predates the field stays decodable.",
       }),
+      S.withDecodingDefaultKey(Effect.succeed(null)),
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
     currentItems: S.Natural.annotateKey({
       description: "Number of tracked items in the current reconciliation state.",
     }),
@@ -74,12 +76,14 @@ export class VaultSyncStatus extends S.Opaque<VaultSyncStatus, { readonly brand:
     pendingItems: S.Natural.annotateKey({
       description: "Number of tracked items in the pending reconciliation state.",
     }),
-    probedAt: S.OptionFromNullOr(S.DateTimeUtcFromString)
-      .pipe(S.withDecodingDefaultKey(Effect.succeed(null)), S.withConstructorDefault(Effect.succeedNone))
-      .annotateKey({
+    probedAt: S.OptionFromNullOr(S.DateTimeUtcFromString).pipe(
+      S.annotateKey({
         description:
           "When the mirror probe last actually asked the provider; none when no probe has contacted it. A missing encoded key decodes as none, so a status from an older sidecar that predates the field stays decodable.",
       }),
+      S.withDecodingDefaultKey(Effect.succeed(null)),
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
     provider: DmsProvider.annotateKey({
       description: "DMS provider the status describes.",
     }),

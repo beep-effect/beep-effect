@@ -525,10 +525,10 @@ export class ExtractFrameAtRequest extends S.Opaque<ExtractFrameAtRequest, { rea
     ),
     overwrite: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(false)),
-      S.withDecodingDefaultKey(Effect.succeed(false)),
       $I.annoteKey("ExtractFrameAtRequest.overwrite", {
         description: "Whether an existing frame output may be overwritten.",
-      })
+      }),
+      S.withDecodingDefaultKey(Effect.succeed(false))
     ),
     timestampSeconds: NonNegativeSeconds.pipe(
       $I.annoteKey("ExtractFrameAtRequest.timestampSeconds", {
@@ -628,17 +628,17 @@ export class ExtractFramesAtRequest extends S.Opaque<ExtractFramesAtRequest, { r
   S.Struct({
     manifestPath: S.Option(S.String).pipe(
       S.withConstructorDefault(Effect.succeed(O.none<string>())),
-      S.withDecodingDefaultKey(Effect.succeed(O.none<string>())),
       $I.annoteKey("ExtractFramesAtRequest.manifestPath", {
         description: "Optional manifest path; defaults inside the output directory when absent.",
-      })
+      }),
+      S.withDecodingDefaultKey(Effect.succeed(O.none<string>()))
     ),
     maxWidth: S.Option(VideoDimension).pipe(
       S.withConstructorDefault(Effect.succeed(O.none<VideoDimension>())),
-      S.withDecodingDefaultKey(Effect.succeed(O.none<VideoDimension>())),
       $I.annoteKey("ExtractFramesAtRequest.maxWidth", {
         description: "Optional maximum frame width in pixels; wider sources are scaled down, narrower ones untouched.",
-      })
+      }),
+      S.withDecodingDefaultKey(Effect.succeed(O.none<VideoDimension>()))
     ),
     outDir: S.String.pipe(
       $I.annoteKey("ExtractFramesAtRequest.outDir", {
@@ -647,17 +647,17 @@ export class ExtractFramesAtRequest extends S.Opaque<ExtractFramesAtRequest, { r
     ),
     overwrite: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(false)),
-      S.withDecodingDefaultKey(Effect.succeed(false)),
       $I.annoteKey("ExtractFramesAtRequest.overwrite", {
         description: "Whether existing frame and manifest outputs may be overwritten.",
-      })
+      }),
+      S.withDecodingDefaultKey(Effect.succeed(false))
     ),
     prefix: S.Option(SafeFramePrefix).pipe(
       S.withConstructorDefault(Effect.succeed(O.none<SafeFramePrefix>())),
-      S.withDecodingDefaultKey(Effect.succeed(O.none<SafeFramePrefix>())),
       $I.annoteKey("ExtractFramesAtRequest.prefix", {
         description: "Optional safe filename prefix for generated PNG frames.",
-      })
+      }),
+      S.withDecodingDefaultKey(Effect.succeed(O.none<SafeFramePrefix>()))
     ),
     timestampsSeconds: S.Array(NonNegativeSeconds)
       .check(
@@ -900,18 +900,18 @@ export class ExtractClipRequest extends S.Opaque<ExtractClipRequest, { readonly 
   S.Struct({
     codec: ClipCodec.pipe(
       S.withConstructorDefault(Effect.succeed(ClipCodec.Enum.h264)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(ClipCodec.Enum.h264)),
       $I.annoteKey("ExtractClipRequest.codec", {
         description: "Encoder preset; h264 targets mp4 outputs, vp9 targets webm outputs.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(ClipCodec.Enum.h264))
     ),
     durationSeconds: S.Option(PositiveSeconds).pipe(
       S.withConstructorDefault(Effect.succeed(O.none<PositiveSeconds>())),
-      S.withDecodingDefaultKey(Effect.succeed(O.none<PositiveSeconds>())),
       $I.annoteKey("ExtractClipRequest.durationSeconds", {
         description:
           "Optional clip duration in seconds passed as output-side -t; absent, the clip runs to the end of the source.",
-      })
+      }),
+      S.withDecodingDefaultKey(Effect.succeed(O.none<PositiveSeconds>()))
     ),
     outPath: S.String.pipe(
       $I.annoteKey("ExtractClipRequest.outPath", {
@@ -920,10 +920,10 @@ export class ExtractClipRequest extends S.Opaque<ExtractClipRequest, { readonly 
     ),
     overwrite: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(false)),
-      S.withDecodingDefaultKey(Effect.succeed(false)),
       $I.annoteKey("ExtractClipRequest.overwrite", {
         description: "Whether an existing clip output may be overwritten.",
-      })
+      }),
+      S.withDecodingDefaultKey(Effect.succeed(false))
     ),
     startSeconds: NonNegativeSeconds.pipe(
       $I.annoteKey("ExtractClipRequest.startSeconds", {
@@ -968,10 +968,10 @@ export class ExtractClipResult extends S.Opaque<ExtractClipResult, { readonly br
   S.Struct({
     durationSeconds: S.Option(PositiveSeconds).pipe(
       S.withConstructorDefault(Effect.succeed(O.none<PositiveSeconds>())),
-      S.withDecodingDefaultKey(Effect.succeed(O.none<PositiveSeconds>())),
       $I.annoteKey("ExtractClipResult.durationSeconds", {
         description: "Requested clip duration in seconds, when the request carried one.",
-      })
+      }),
+      S.withDecodingDefaultKey(Effect.succeed(O.none<PositiveSeconds>()))
     ),
     fileSizeBytes: FileSizeBytes.pipe(
       $I.annoteKey("ExtractClipResult.fileSizeBytes", {
@@ -1026,10 +1026,10 @@ export class RenderGifRequest extends S.Opaque<RenderGifRequest, { readonly bran
   S.Struct({
     dither: GifDither.pipe(
       S.withConstructorDefault(Effect.succeed(GifDither.Enum.bayer)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(GifDither.Enum.bayer)),
       $I.annoteKey("RenderGifRequest.dither", {
         description: "paletteuse dithering mode; bayer adds bayer_scale=5.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(GifDither.Enum.bayer))
     ),
     durationSeconds: PositiveSeconds.pipe(
       $I.annoteKey("RenderGifRequest.durationSeconds", {
@@ -1038,10 +1038,10 @@ export class RenderGifRequest extends S.Opaque<RenderGifRequest, { readonly bran
     ),
     fps: PositiveFrameRate.pipe(
       S.withConstructorDefault(Effect.succeed(10)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(10)),
       $I.annoteKey("RenderGifRequest.fps", {
         description: "GIF frame rate applied by the fps video filter.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(10))
     ),
     outPath: S.String.pipe(
       $I.annoteKey("RenderGifRequest.outPath", {
@@ -1050,10 +1050,10 @@ export class RenderGifRequest extends S.Opaque<RenderGifRequest, { readonly bran
     ),
     overwrite: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(false)),
-      S.withDecodingDefaultKey(Effect.succeed(false)),
       $I.annoteKey("RenderGifRequest.overwrite", {
         description: "Whether an existing GIF output may be overwritten.",
-      })
+      }),
+      S.withDecodingDefaultKey(Effect.succeed(false))
     ),
     startSeconds: NonNegativeSeconds.pipe(
       $I.annoteKey("RenderGifRequest.startSeconds", {
@@ -1067,10 +1067,10 @@ export class RenderGifRequest extends S.Opaque<RenderGifRequest, { readonly bran
     ),
     width: VideoDimension.pipe(
       S.withConstructorDefault(Effect.succeed(640)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(640)),
       $I.annoteKey("RenderGifRequest.width", {
         description: "GIF pixel width; height follows the source aspect ratio.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(640))
     ),
   }).pipe(
     $I.annoteSchema("RenderGifRequest", {
@@ -1157,10 +1157,10 @@ export class RenderContactSheetRequest extends S.Opaque<RenderContactSheetReques
   S.Struct({
     columns: TileCount.pipe(
       S.withConstructorDefault(Effect.succeed(4)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(4)),
       $I.annoteKey("RenderContactSheetRequest.columns", {
         description: "Number of tile columns in the sheet grid.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(4))
     ),
     outPath: S.String.pipe(
       $I.annoteKey("RenderContactSheetRequest.outPath", {
@@ -1169,31 +1169,31 @@ export class RenderContactSheetRequest extends S.Opaque<RenderContactSheetReques
     ),
     overwrite: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(false)),
-      S.withDecodingDefaultKey(Effect.succeed(false)),
       $I.annoteKey("RenderContactSheetRequest.overwrite", {
         description: "Whether an existing sheet output may be overwritten.",
-      })
+      }),
+      S.withDecodingDefaultKey(Effect.succeed(false))
     ),
     quality: JpegQuality.pipe(
       S.withConstructorDefault(Effect.succeed(5)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(5)),
       $I.annoteKey("RenderContactSheetRequest.quality", {
         description: "JPEG quantizer passed as -q:v (1 best, 31 worst).",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(5))
     ),
     rows: TileCount.pipe(
       S.withConstructorDefault(Effect.succeed(4)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(4)),
       $I.annoteKey("RenderContactSheetRequest.rows", {
         description: "Number of tile rows in the sheet grid.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(4))
     ),
     tileWidth: VideoDimension.pipe(
       S.withConstructorDefault(Effect.succeed(320)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(320)),
       $I.annoteKey("RenderContactSheetRequest.tileWidth", {
         description: "Pixel width of each tile; height follows the source aspect ratio.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(320))
     ),
     videoPath: S.String.pipe(
       $I.annoteKey("RenderContactSheetRequest.videoPath", {
@@ -1313,10 +1313,10 @@ export class WriteContainerMetadataRequest extends S.Opaque<
     ),
     overwrite: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(false)),
-      S.withDecodingDefaultKey(Effect.succeed(false)),
       $I.annoteKey("WriteContainerMetadataRequest.overwrite", {
         description: "Whether an existing remux output may be overwritten.",
-      })
+      }),
+      S.withDecodingDefaultKey(Effect.succeed(false))
     ),
     videoPath: S.String.pipe(
       $I.annoteKey("WriteContainerMetadataRequest.videoPath", {

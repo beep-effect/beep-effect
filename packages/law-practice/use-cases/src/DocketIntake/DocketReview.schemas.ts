@@ -394,13 +394,15 @@ export class DeterministicCheck extends S.Opaque<DeterministicCheck, { readonly 
     field: opt(ReviewField, "The disputed field whose quoted text was checked, on per-field rows."),
     provenance: DeterministicCheckProvenance.pipe(
       S.withConstructorDefault(Effect.succeed(deterministicCheckProvenanceDefault)),
+      S.annotateKey({ description: "Whether the result was run now or read back from a docket-check/v1 Boolean." }),
       S.withDecodingDefaultTypeKey(Effect.succeed(deterministicCheckProvenanceDefault))
-    ).annotateKey({ description: "Whether the result was run now or read back from a docket-check/v1 Boolean." }),
+    ),
     result: DeterministicCheckResult.annotateKey({ description: "Passed, failed, or unknown with its reason." }),
     side: ReviewSide.pipe(
       S.withConstructorDefault(Effect.succeed(deterministicCheckSideDefault)),
+      S.annotateKey({ description: "Whose reading was checked; the extractor's unless stated." }),
       S.withDecodingDefaultTypeKey(Effect.succeed(deterministicCheckSideDefault))
-    ).annotateKey({ description: "Whose reading was checked; the extractor's unless stated." }),
+    ),
   }).pipe($I.annoteSchema("DeterministicCheck", { description: "Result of one deterministic check on a reading." }))
 ) {}
 
@@ -608,8 +610,9 @@ export class ReviewSourceText extends S.Opaque<ReviewSourceText, { readonly bran
     documentText: opt(S.String, "Text of the attached documents, when the adapter supplies it (never logged)."),
     hasDocuments: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(false)),
+      S.annotateKey({ description: "Whether a source document was attached to the message." }),
       S.withDecodingDefaultTypeKey(Effect.succeed(false))
-    ).annotateKey({ description: "Whether a source document was attached to the message." }),
+    ),
     messageText: S.String.annotateKey({ description: "Subject and body of the message (never logged)." }),
   }).pipe($I.annoteSchema("ReviewSourceText", { description: "The text a citation is checked against." }))
 ) {}
@@ -737,12 +740,11 @@ export class ReviewFindingTrace extends S.Opaque<ReviewFindingTrace, { readonly 
 const emptyFields: ReadonlyArray<ReviewField> = [];
 
 const fieldList = (description: string) =>
-  S.Array(ReviewField)
-    .pipe(
-      S.withConstructorDefault(Effect.succeed(emptyFields)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(emptyFields))
-    )
-    .annotateKey({ description });
+  S.Array(ReviewField).pipe(
+    S.withConstructorDefault(Effect.succeed(emptyFields)),
+    S.annotateKey({ description }),
+    S.withDecodingDefaultTypeKey(Effect.succeed(emptyFields))
+  );
 
 /**
  * What each side decided in one review round, in ids and enums only.
@@ -830,12 +832,11 @@ export class ReviewVerdict extends S.Opaque<ReviewVerdict, { readonly brand: uni
     rounds: S.Natural.annotateKey({ description: "How many rounds were used." }),
     status: ReviewTerminalStatus.annotateKey({ description: "How the review ended." }),
     threshold: UnitInterval.annotateKey({ description: "Score the review had to reach to be accepted." }),
-    trace: S.Array(ReviewRoundTrace)
-      .pipe(
-        S.withConstructorDefault(Effect.succeed(emptyTrace)),
-        S.withDecodingDefaultTypeKey(Effect.succeed(emptyTrace))
-      )
-      .annotateKey({ description: "Every round, oldest first, in ids and enums only; empty in older records." }),
+    trace: S.Array(ReviewRoundTrace).pipe(
+      S.withConstructorDefault(Effect.succeed(emptyTrace)),
+      S.annotateKey({ description: "Every round, oldest first, in ids and enums only; empty in older records." }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(emptyTrace))
+    ),
   }).pipe($I.annoteSchema("ReviewVerdict", { description: "The result of a finished docket review." }))
 ) {}
 
@@ -859,11 +860,13 @@ export class DocketReviewConfig extends S.Opaque<DocketReviewConfig, { readonly 
   S.Struct({
     acceptThreshold: UnitInterval.pipe(
       S.withConstructorDefault(Effect.succeed(docketReviewConfigAcceptThresholdDefault)),
+      S.annotateKey({ description: "Score a round must reach for the item to be accepted; 0.85 by default." }),
       S.withDecodingDefaultTypeKey(Effect.succeed(docketReviewConfigAcceptThresholdDefault))
-    ).annotateKey({ description: "Score a round must reach for the item to be accepted; 0.85 by default." }),
+    ),
     maxRounds: ReviewMaxRounds.pipe(
       S.withConstructorDefault(Effect.succeed(docketReviewConfigMaxRoundsDefault)),
+      S.annotateKey({ description: "Rounds after which an item that was not accepted is flagged; 3 by default." }),
       S.withDecodingDefaultTypeKey(Effect.succeed(docketReviewConfigMaxRoundsDefault))
-    ).annotateKey({ description: "Rounds after which an item that was not accepted is flagged; 3 by default." }),
+    ),
   }).pipe($I.annoteSchema("DocketReviewConfig", { description: "Settings of the docket review loop." }))
 ) {}

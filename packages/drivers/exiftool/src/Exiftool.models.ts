@@ -289,17 +289,17 @@ export class ExiftoolConfigInput extends S.Opaque<ExiftoolConfigInput, { readonl
   S.Struct({
     exiftoolPath: S.String.pipe(
       S.withConstructorDefault(Effect.succeed("exiftool")),
-      S.withDecodingDefaultTypeKey(Effect.succeed("exiftool")),
       $I.annoteKey("ExiftoolConfigInput.exiftoolPath", {
         description: "Executable path or command name used for exiftool.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed("exiftool"))
     ),
     forceKillAfterMillis: PositiveMilliseconds.pipe(
       S.withConstructorDefault(Effect.succeed(2000)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(2000)),
       $I.annoteKey("ExiftoolConfigInput.forceKillAfterMillis", {
         description: "Timeout in milliseconds before an interrupted native process is force-killed.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(2000))
     ),
   }).pipe(
     $I.annoteSchema("ExiftoolConfigInput", {
@@ -493,10 +493,10 @@ export class ReadTagsRequest extends S.Opaque<ReadTagsRequest, { readonly brand:
     ),
     numeric: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(false)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(false)),
       $I.annoteKey("ReadTagsRequest.numeric", {
         description: "Whether to request numeric tag values via exiftool's -n flag.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
     ),
   }).pipe(
     $I.annoteSchema("ReadTagsRequest", {

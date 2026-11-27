@@ -9,9 +9,11 @@ import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
 const listField = <Sch extends S.Top>(schema: Sch, description: string) =>
-  S.Array(schema)
-    .pipe(S.withConstructorDefault(Effect.succeed([])), S.withDecodingDefaultTypeKey(Effect.succeed([])))
-    .annotateKey({ description });
+  S.Array(schema).pipe(
+    S.withConstructorDefault(Effect.succeed([])),
+    S.annotateKey({ description }),
+    S.withDecodingDefaultTypeKey(Effect.succeed([]))
+  );
 
 /**
  * An array field that is empty when its key is missing.

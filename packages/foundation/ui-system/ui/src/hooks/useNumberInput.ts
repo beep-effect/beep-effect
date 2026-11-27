@@ -348,17 +348,17 @@ export class BoundaryParams extends S.Class<BoundaryParams, { readonly brand: un
     ),
     min: S.Finite.pipe(
       S.withConstructorDefault(Effect.succeed(minSafeInteger)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(minSafeInteger)),
       $I.annoteKey("BoundaryParams.min", {
         description: "Minimum value allowed by the number input.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(minSafeInteger))
     ),
     max: S.Finite.pipe(
       S.withConstructorDefault(Effect.succeed(maxSafeInteger)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(maxSafeInteger)),
       $I.annoteKey("BoundaryParams.max", {
         description: "Maximum value allowed by the number input.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(maxSafeInteger))
     ),
   },
   $I.annote("BoundaryParams", {
@@ -390,17 +390,17 @@ export class SpinParams extends S.Class<SpinParams, { readonly brand: unique sym
   {
     precision: NonNegativePrecision.pipe(
       S.withConstructorDefault(Effect.succeed(0)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(0)),
       $I.annoteKey("SpinParams.precision", {
         description: "Decimal precision used while formatting spinner results.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0))
     ),
     step: PositiveFiniteStep.pipe(
       S.withConstructorDefault(Effect.succeed(1)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(1)),
       $I.annoteKey("SpinParams.step", {
         description: "Positive increment or decrement amount for spinner changes.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(1))
     ),
   },
   $I.annote("SpinParams", {

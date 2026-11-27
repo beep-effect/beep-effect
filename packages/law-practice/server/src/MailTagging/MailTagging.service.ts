@@ -76,11 +76,13 @@ export class MailTaggingServiceConfig extends S.Opaque<MailTaggingServiceConfig,
     mailboxUserId: S.NonEmptyString.annotateKey({
       description: "Mailbox address or object id the run tags.",
     }),
-    excludedFolderIds: S.Array(S.String)
-      .pipe(S.withDecodingDefaultKey(Effect.succeed([])), S.withConstructorDefault(Effect.succeed([])))
-      .annotateKey({
+    excludedFolderIds: S.Array(S.String).pipe(
+      S.annotateKey({
         description: "Graph ids of extra mail folders to leave out, besides Deleted Items and Junk.",
       }),
+      S.withDecodingDefaultKey(Effect.succeed([])),
+      S.withConstructorDefault(Effect.succeed([]))
+    ),
     folderMapPath: S.NonEmptyString.annotateKey({
       description: "Full path of the matter folder-id map JSON file.",
     }),
@@ -91,24 +93,27 @@ export class MailTaggingServiceConfig extends S.Opaque<MailTaggingServiceConfig,
       description: "Full path of the shared Box API-call JSONL ledger.",
     }),
     pageSize: PosInt.pipe(
+      S.annotateKey({
+        description: "Messages requested per mailbox listing page; defaults to 50.",
+      }),
       S.withDecodingDefaultKey(Effect.succeed(defaultPageSize)),
       S.withConstructorDefault(Effect.succeed(defaultPageSize))
-    ).annotateKey({
-      description: "Messages requested per mailbox listing page; defaults to 50.",
-    }),
+    ),
     runLabel: S.NonEmptyString.pipe(
+      S.annotateKey({
+        description: "Label of the run in the Box API-call ledger; defaults to the service name.",
+      }),
       S.withDecodingDefaultKey(Effect.succeed(defaultRunLabel)),
       S.withConstructorDefault(Effect.succeed(defaultRunLabel))
-    ).annotateKey({
-      description: "Label of the run in the Box API-call ledger; defaults to the service name.",
-    }),
+    ),
     contactEvidence: MatterContactEvidence.pipe(
+      S.annotateKey({
+        description:
+          "Where matter contact addresses come from: nowhere, or the knowledge graph and its overlay; defaults to off.",
+      }),
       S.withDecodingDefaultKey(Effect.succeed(MatterContactEvidence.Enum.off)),
       S.withConstructorDefault(Effect.succeed(MatterContactEvidence.Enum.off))
-    ).annotateKey({
-      description:
-        "Where matter contact addresses come from: nowhere, or the knowledge graph and its overlay; defaults to off.",
-    }),
+    ),
   }).pipe(
     $I.annoteSchema("MailTaggingServiceConfig", {
       description: "Every setting of one mail-tagging run.",

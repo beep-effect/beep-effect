@@ -91,12 +91,14 @@ export class RecallBudget extends S.Opaque<RecallBudget, { readonly brand: uniqu
   S.Struct({
     maxCandidates: S.Natural.pipe(
       S.withConstructorDefault(Effect.succeed(50)),
+      S.annotateKey({ description: "Most candidates fusion may pass to the reranker; defaults to 50." }),
       S.withDecodingDefaultKey(Effect.succeed(50))
-    ).annotateKey({ description: "Most candidates fusion may pass to the reranker; defaults to 50." }),
+    ),
     maxAccepted: S.Natural.pipe(
       S.withConstructorDefault(Effect.succeed(5)),
+      S.annotateKey({ description: "Most candidates recall may accept; defaults to 5." }),
       S.withDecodingDefaultKey(Effect.succeed(5))
-    ).annotateKey({ description: "Most candidates recall may accept; defaults to 5." }),
+    ),
     maxTokens: S.Natural.annotateKey({ description: "Token budget for the accepted candidates' text." }),
   }).pipe(
     $I.annoteSchema("RecallBudget", {

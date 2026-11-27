@@ -268,3 +268,15 @@ describe("streaming schema laws", () => {
     ).toEqual({ maxLines: 3, skipEmpty: true, stopOnError: false });
   });
 });
+
+describe("DatasetLoadTextOptions JSON Schema key annotations", () => {
+  it("emits the timeout key annotation in toJsonSchemaDocument because annotateKey runs before withDecodingDefaultTypeKey", () => {
+    expect(S.toJsonSchemaDocument(DatasetLoadTextOptions).definitions).toMatchObject({
+      "@beep/nlp-mcp/Streaming/DatasetLoader/DatasetLoadTextOptions": {
+        properties: {
+          timeout: { allOf: expect.arrayContaining([{ description: "Remote URL load timeout in milliseconds." }]) },
+        },
+      },
+    });
+  });
+});
