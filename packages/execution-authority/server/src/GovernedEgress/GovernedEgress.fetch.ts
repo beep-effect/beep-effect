@@ -207,6 +207,7 @@ const coveredBy = (entry: string, requested: string): boolean =>
  * @category constructors
  * @since 0.0.0
  */
+// decision: decision-append-advances-chain-atomically
 export const makeGovernedEgressFetch = Effect.fn("ExecutionAuthority.GovernedEgress.make")(function* (
   options: GovernedEgressOptions,
   baseFetch?: typeof globalThis.fetch
@@ -306,7 +307,6 @@ export const makeGovernedEgressFetch = Effect.fn("ExecutionAuthority.GovernedEgr
             denied: ({ reason }) => ({ ...common, reason, verdict: "denied" as const }),
           })
         );
-        // decision: decision-append-advances-chain-atomically
         const appended = yield* Effect.uninterruptible(
           ledger.appendDecision(record).pipe(
             Effect.andThen(Ref.set(chain, { lastHash: O.some(record.hash), nextSeq: state.nextSeq + 1 })),

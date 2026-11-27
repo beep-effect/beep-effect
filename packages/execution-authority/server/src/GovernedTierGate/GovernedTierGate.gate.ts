@@ -248,6 +248,7 @@ const currentDispatchId: Effect.Effect<number> = Effect.withFiber((fiber) => Eff
  * @category constructors
  * @since 0.0.0
  */
+// decision: decision-append-advances-chain-atomically
 export const makeGovernedTierGate = Effect.fn("ExecutionAuthority.GovernedTierGate.make")(function* (
   options: GovernedTierGateOptions
 ) {
@@ -383,7 +384,6 @@ export const makeGovernedTierGate = Effect.fn("ExecutionAuthority.GovernedTierGa
             denied: ({ reason }) => ({ ...common, reason, verdict: "denied" as const }),
           })
         );
-        // decision: decision-append-advances-chain-atomically
         const appended = yield* Effect.uninterruptible(
           ledger.appendDecision(record).pipe(
             Effect.andThen(commitDecision(runId, dispatchId, record)),
