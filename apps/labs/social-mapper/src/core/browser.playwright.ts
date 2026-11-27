@@ -4,33 +4,32 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import { chromium, Playwright } from "@beep/playwright";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import { constVoid } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import * as Queue from "effect/Queue";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
-import { chromium } from "playwright";
 import { Browser, BrowserFailed } from "./browser.ts";
-import type { Response } from "playwright";
+import type { ResponseShape } from "@beep/playwright/Common";
+import type { PlaywrightError } from "@beep/playwright/PlaywrightError";
 import type { Exchange } from "./browser.ts";
 
-const attempt = <A>(run: () => Promise<A>): Effect.Effect<A, BrowserFailed> =>
-  Effect.tryPromise({
-    try: run,
-    catch: (cause) => BrowserFailed.make({ detail: P.isError(cause) ? cause.message : "the browser gave no reason" }),
-  });
+const failed = ({ cause }: PlaywrightError): BrowserFailed =>
+  BrowserFailed.make({ detail: P.isError(cause) ? cause.message : "the browser gave no reason" });
 
 const seconds = S.decodeUnknownOption(S.FiniteFromString);
 
-const exchange = (response: Response): O.Option<Exchange> => {
+const exchange = (response: ResponseShape): O.Option<Exchange> => {
   const headers = response.headers();
   return R.get(headers, "content-type").pipe(
     O.filter(Str.includes("json")),
@@ -38,7 +37,7 @@ const exchange = (response: Response): O.Option<Exchange> => {
       url: new URL(response.url()),
       status: response.status(),
       retryAfter: R.get(headers, "retry-after").pipe(O.flatMap(seconds), O.map(Duration.seconds)),
-      body: attempt(() => response.json()),
+      body: Effect.mapError(response.json, failed),
     }))
   );
 };
@@ -68,52 +67,52 @@ const advance =
  * @since 0.0.0
  */
 export const layerWith = (executable: O.Option<string>): Layer.Layer<Browser> =>
-  Layer.succeed(Browser, {
-    open: Effect.fn("Browser.open")(function* ({
-      directory,
-      visible,
-    }: {
-      readonly directory: string;
-      readonly visible: boolean;
-    }) {
-      const context = yield* Effect.acquireRelease(
-        attempt(() =>
-          chromium.launchPersistentContext(directory, {
-            headless: !visible,
-            ...R.getSomes({ executablePath: executable }),
-          })
-        ),
-        (opened) => Effect.ignore(attempt(() => opened.close()))
-      );
-      const page = yield* O.match(A.head(context.pages()), {
-        onNone: () => attempt(() => context.newPage()),
-        onSome: Effect.succeed,
-      });
+  Layer.effect(
+    Browser,
+    Effect.gen(function* () {
+      const playwright = yield* Playwright;
       return {
-        visit: (url: URL) =>
-          Stream.callback<Exchange, BrowserFailed>(
-            Effect.fnUntraced(function* (queue) {
-              const heard = (response: Response) => {
-                O.map(exchange(response), (answer) => Queue.offerUnsafe(queue, answer));
-              };
-              yield* Effect.acquireRelease(
-                Effect.sync(() => page.on("response", heard)),
-                () => Effect.sync(() => page.off("response", heard))
-              );
-              yield* attempt(() => page.goto(url.href, { waitUntil: "domcontentloaded" }));
+        open: Effect.fn("Browser.open")(function* ({
+          directory,
+          visible,
+        }: {
+          readonly directory: string;
+          readonly visible: boolean;
+        }) {
+          const context = yield* playwright
+            .launchPersistentContextScoped(chromium, directory, {
+              headless: !visible,
+              ...R.getSomes({ executablePath: executable }),
             })
-          ),
-        scroll: attempt(() => page.evaluate<boolean>(advance)),
-        cookies: (origin: URL) =>
-          attempt(() => context.cookies(origin.href)).pipe(
-            Effect.map((cookies) => HashSet.fromIterable(A.map(cookies, ({ name }) => name)))
-          ),
-        closed: Effect.callback<void>((resume) => {
-          context.once("close", () => resume(Effect.void));
+            .pipe(Effect.mapError(failed));
+          const page = yield* O.match(A.head(context.pages()), {
+            onNone: () => Effect.mapError(context.newPage, failed),
+            onSome: Effect.succeed,
+          });
+          return {
+            visit: (url: URL) =>
+              page.eventStream("response").pipe(
+                Stream.filterMap((response) => Result.fromOption(exchange(response), constVoid)),
+                Stream.merge(
+                  page
+                    .goto(url.href, { waitUntil: "domcontentloaded" })
+                    .pipe(Effect.mapError(failed), Stream.fromEffect, Stream.drain)
+                )
+              ),
+            scroll: Effect.mapError(page.evaluate<boolean>(advance), failed),
+            cookies: (origin: URL) =>
+              context.cookies(origin.href).pipe(
+                Effect.mapBoth({
+                  onFailure: failed,
+                  onSuccess: (cookies) => HashSet.fromIterable(A.map(cookies, ({ name }) => name)),
+                })
+              ),
+            closed: context.eventStream("close").pipe(Stream.take(1), Stream.runDrain),
+          };
         }),
       };
-    }),
-  });
+    })
+  ).pipe(Layer.provide(Playwright.layer));
 
 /**
  * Drives the Chromium named by `SOCIAL_MAPPER_CHROMIUM`, or the one Playwright

@@ -3,6 +3,9 @@
   "extends": "./tsconfig.json",
   "references": [
     {
+      "path": "../../../packages/drivers/playwright/tsconfig.json"
+    },
+    {
       "path": "../../../packages/foundation/modeling/identity/tsconfig.json"
     },
     {

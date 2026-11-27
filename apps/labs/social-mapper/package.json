@@ -38,6 +38,7 @@
   "dependencies": {
     "@beep/brand": "workspace:^",
     "@beep/identity": "workspace:^",
+    "@beep/playwright": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/ui": "workspace:^",
     "@effect/atom-react": "catalog:",
@@ -46,7 +47,6 @@
     "@fontsource-variable/jetbrains-mono": "catalog:",
     "@tauri-apps/api": "catalog:",
     "effect": "catalog:",
-    "playwright": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
   },
