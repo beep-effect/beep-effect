@@ -426,10 +426,6 @@ const NOT_CONFIGURED =
  * console.log(Layer.isLayer(layer))
  * ```
  *
- * **Gotchas**
- *
- * Prefer the authorizer’s recorded plain-language reason when present; the driver’s error is technical.
- *
  * @category services
  * @since 0.0.0
  */
@@ -447,6 +443,12 @@ export class M365SignIn extends Context.Service<M365SignIn, M365SignInShape>()($
    * connection reports "not configured"; without the Windows secret store
    * (anywhere but Windows) sign-in is refused, so tokens never reach a file
    * unprotected.
+   *
+   * **Gotchas**
+   *
+   * Use the sign-in failure message for attorney-facing feedback: when the
+   * authorizer recorded a plain-language reason, the live layer preserves it
+   * instead of the driver’s technical error.
    *
    * **Example** (Compose the live sign-in)
    *

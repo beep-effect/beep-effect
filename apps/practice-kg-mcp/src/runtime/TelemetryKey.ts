@@ -49,6 +49,8 @@ const ownerOnlyDirectory = 0o700;
 const dpapiEntropy = "beep/practice-kg/telemetry/v1";
 const cryptprotectUiForbidden = 0x1;
 const dataBlobBytes = 16;
+const dataBlobLengthOffset = 0;
+const dataBlobPointerOffset = 8;
 const textEncoder = new TextEncoder();
 
 const keyFailure =
@@ -131,8 +133,8 @@ const layerDevPlaintextDpapi: Layer.Layer<DpapiPort> = Layer.succeed(
 const dataBlob = (pointerOf: (bytes: Uint8Array) => number, bytes: Uint8Array): Uint8Array => {
   const blob = new Uint8Array(dataBlobBytes);
   const view = new DataView(blob.buffer);
-  view.setUint32(0, bytes.byteLength, true);
-  view.setBigUint64(8, BigInt(pointerOf(bytes)), true);
+  view.setUint32(dataBlobLengthOffset, bytes.byteLength, true);
+  view.setBigUint64(dataBlobPointerOffset, BigInt(pointerOf(bytes)), true);
   return blob;
 };
 
@@ -181,9 +183,9 @@ const loadCrypt32 = Effect.tryPromise({
             return O.none<Uint8Array>();
           }
           const view = new DataView(output.buffer);
-          const pointer = view.getBigUint64(8, true);
+          const pointer = view.getBigUint64(dataBlobPointerOffset, true);
 
-          const native = new Uint8Array(ffi.toArrayBuffer(pointer, 0, view.getUint32(0, true)));
+          const native = new Uint8Array(ffi.toArrayBuffer(pointer, 0, view.getUint32(dataBlobLengthOffset, true)));
           const copy = native.slice();
           native.fill(0);
           kernel32.symbols.LocalFree(pointer);
@@ -365,7 +367,6 @@ const layerDpapiProduction: Layer.Layer<DpapiPort, TelemetryKeyFailure, ChildPro
  * **Gotchas**
  *
  * DPAPI wrapping and unwrapping require identical optional entropy. The FFI and PowerShell paths therefore share beep/practice-kg/telemetry/v1.
- * The x64 DATA_BLOB layout is a 32-bit length, four padding bytes, then a pointer.
  *
  * @param platform - `process.platform` of the host.
  * @category layers

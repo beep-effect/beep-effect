@@ -122,10 +122,6 @@ const collectText = <E>(stream: Stream.Stream<Uint8Array, E>) =>
  * console.log(Layer.isLayer(fake))
  * ```
  *
- * **Gotchas**
- *
- * reg.exe exits 1 when the per-user uninstall key is absent.
- *
  * @category services
  * @since 0.0.0
  */
@@ -140,6 +136,11 @@ export class SetupHost extends Context.Service<SetupHost, SetupHostShape>()($I`S
    *
    * console.log(typeof SetupHost.layer)
    * ```
+   *
+   * **Gotchas**
+   *
+   * A missing per-user uninstall key does not fail the layer: reg.exe exits 1
+   * for absence, and installation detection continues to the MSIX probe.
    *
    * @category layers
    * @since 0.0.0

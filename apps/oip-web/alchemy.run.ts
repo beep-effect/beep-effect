@@ -14,7 +14,6 @@ import * as Effect from "effect/Effect";
 import { configForStage } from "./stack/OipWebConfig.ts";
 import { oipWebProviders, oipWebResources, requireCiForLiveStage } from "./stack/OipWebStack.ts";
 
-// decision: encrypted-shared-stack-state
 const state = AWS.state({
   backend: "s3",
   encryption: { sseAlgorithm: "aws:kms", bucketKeyEnabled: true, blockedEncryptionTypes: ["SSE-C"] },
@@ -25,6 +24,15 @@ const state = AWS.state({
  * deploy only from CI (`.github/workflows/deploy-oip-web-infra.yml`); a
  * personal stage (`dev_$USER`) owns a new, stage-named project and bucket
  * and nothing live.
+ *
+ * **Details**
+ *
+ * Supply account, region and credentials through the environment: an aws-vault
+ * export on a workstation or the GitHub OIDC state role in CI. This stack uses
+ * the shared account-regional S3 backend governed by the
+ * [shared-state bootstrap decision](../../goals/infra-alchemy-rebuild/decisions/2026-11-09-shared-s3-state-store-bootstrap.md).
+ * Follow that authority for the AWS-managed versus customer-managed KMS
+ * bootstrap choice and for state teardown after every stack is destroyed.
  *
  * **Example** (Plan a personal stage)
  *

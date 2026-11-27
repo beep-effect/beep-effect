@@ -17,7 +17,6 @@ const apexHost = new URL(PublicOrigin.literal).hostname;
 
 const siteDir = "site";
 
-// decision: encrypted-shared-stack-state
 const state = AWS.state({
   backend: "s3",
   encryption: { sseAlgorithm: "aws:kms", bucketKeyEnabled: true, blockedEncryptionTypes: ["SSE-C"] },
@@ -39,9 +38,6 @@ const state = AWS.state({
  * that starts with the reserved slug, which the public route map already
  * denies the apex app. A request for a file the build did not produce is a
  * 404 from the asset layer and never falls through to the apex app.
- * **Gotchas**
- *
- * Production deploys run in CI under alchemy-storybook-prod concurrency, with the S3 stage lease as the second guard. Local production plans or deploys fail on CI configuration.
  */
 export const Storybook = Cloudflare.Website.StaticSite(
   "Storybook",
@@ -60,6 +56,24 @@ export const Storybook = Cloudflare.Website.StaticSite(
   }))
 );
 
+/**
+ * The Storybook deployment stack.
+ *
+ * **Details**
+ *
+ * Supply account, region and credentials through the environment: an aws-vault
+ * export on a workstation or the GitHub OIDC state role in CI. This stack uses
+ * the shared account-regional S3 backend governed by the
+ * [shared-state bootstrap decision](../../goals/infra-alchemy-rebuild/decisions/2026-11-09-shared-s3-state-store-bootstrap.md).
+ * Follow that authority for the AWS-managed versus customer-managed KMS
+ * bootstrap choice and for state teardown after every stack is destroyed.
+ *
+ * **Gotchas**
+ *
+ * Run production plans and deploys in CI under the alchemy-storybook-prod
+ * concurrency group; the shared S3 store’s stage lease is the second guard.
+ * Local production plans and deploys fail with a ConfigError on CI.
+ */
 export default Alchemy.Stack(
   "Storybook",
   {

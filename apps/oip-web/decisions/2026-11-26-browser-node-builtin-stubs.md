@@ -3,7 +3,7 @@ title: browser node builtin stubs
 date: 2026-11-26
 reversal: Let webpack resolve node builtin modules in the browser graph.
 governs:
-  - next.config.ts#browserConfig
+  - next.config.ts#nextConfig
 enforcedBy: []
 ---
 

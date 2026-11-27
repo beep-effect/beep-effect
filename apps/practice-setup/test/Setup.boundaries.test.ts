@@ -98,10 +98,7 @@ it.layer(platform, { concurrent: false, timeout: "5 seconds" })(
       Effect.fnUntraced(function* (host, calls) {
         const claudeInstall3 = yield* host.claudeInstall;
         expect(claudeInstall3).toBe("per-user");
-        expect(
-          A.map(calls, (call) => call.command),
-          "Without the per-user executable, Explorer may open the file despite its nonzero exit."
-        ).toEqual(["reg.exe"]);
+        expect(A.map(calls, (call) => call.command)).toEqual(["reg.exe"]);
       })
     );
     for (const msix of [true, false]) {
@@ -161,12 +158,10 @@ it.layer(platform, { concurrent: false, timeout: "5 seconds" })(
         const text = "text with 'quotes'; $(not a command)";
         expect((yield* host.openLink(text).pipe(Effect.result))._tag).toBe("Failure");
         expect((yield* host.copyToClipboard(text).pipe(Effect.result))._tag).toBe("Failure");
-        expect(A.map(calls, (call) => call.command)).toEqual([
-          "/fixture/setup.exe",
-          "explorer.exe",
-          "powershell.exe",
-          "powershell.exe",
-        ]);
+        expect(
+          A.map(calls, (call) => call.command),
+          "openInClaude tolerates Explorer’s nonzero exit: Explorer may already have opened the file."
+        ).toEqual(["/fixture/setup.exe", "explorer.exe", "powershell.exe", "powershell.exe"]);
         expect(calls[0]?.args).toEqual(["/S"]);
         expect(calls[2]?.options.env).toMatchObject({ BEEP_SETUP_TEXT: text });
         expect(calls[2]?.args).not.toContain(text);

@@ -46,8 +46,7 @@ const securityHeaders = [
   },
 ];
 
-// decision: browser-node-builtin-stubs
-const browserConfig = defineBeepNextConfig({
+const nextConfig = defineBeepNextConfig({
   repoRoot,
   allowedDevOrigins: ["oip-web.beep.localhost", "dankstation.tailc7c348.ts.net"],
   additionalTranspilePackages: ["@beep/hubspot", "@beep/sanity"],
@@ -57,6 +56,7 @@ const browserConfig = defineBeepNextConfig({
       qualities: [50, 60, 75],
     },
     redirects: () => Promise.resolve(oipRedirects()),
+    // decision: browser-node-builtin-stubs
     webpack: (config, { isServer, webpack }) => {
       if (!isServer) {
         config.plugins = config.plugins ?? [];
@@ -87,4 +87,4 @@ const browserConfig = defineBeepNextConfig({
   env: process.env,
 });
 
-export default browserConfig;
+export default nextConfig;

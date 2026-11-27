@@ -10,3 +10,4 @@ enforcedBy: []
 Remove --js-float16array from the parent execArgv before Next can spawn build workers.
 Reason: Next copies parent flags into worker NODE_OPTIONS, where V8 rejects this feature flag.
 Rejected: forwarding the complete parent argument list and failing worker startup.
+Accepted limit: this is a transitional CI-wrapper guard; remove the filter when no CI wrapper injects --js-float16array into Node processes.

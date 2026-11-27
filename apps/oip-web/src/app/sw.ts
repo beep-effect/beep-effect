@@ -1,4 +1,4 @@
-// fallow-ignore-file unused-file -- Serwist compiles this service-worker entry outside the app import graph. Owner: @beep/oip-web. Exit: remove when fallow's Next plugin recognizes Serwist service-worker entries.
+// fallow-ignore-file unused-file -- Serwist compiles this service-worker entry outside the app import graph and the app’s tsgo projects because WebWorker globals conflict with the app’s DOM library. Owner: @beep/oip-web. Exit: remove when fallow's Next plugin recognizes Serwist service-worker entries.
 /// <reference lib="webworker" />
 import { defaultCache } from "@serwist/next/worker";
 import { Serwist } from "serwist";

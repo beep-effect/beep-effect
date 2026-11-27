@@ -180,7 +180,7 @@ const startOf = Effect.fnUntraced(function* (config: DocketIntakeAppConfig, flag
  *
  * **Gotchas**
  *
- * Pipeline and adapter failures preserve their own exit codes, including 3 for Graph throttling. Reports use one JSON line on stdout and logs use stderr. Undo builds the file store before writing so its state lock covers journal changes.
+ * Pipeline and adapter failures preserve their own exit codes, including 3 for Graph throttling. Reports use one JSON line on stdout and logs use stderr.
  *
  * @category utilities
  * @since 0.0.0
@@ -197,7 +197,7 @@ export const makeHandlers = <E1, R1, E2, R2, E3, R3>(wiring: DocketIntakeWiring<
     );
   });
 
-  const lockedJournal = (config: DocketIntakeAppConfig) => {
+  const journalUnderStoreLock = (config: DocketIntakeAppConfig) => {
     const options = DocketFileStoreOptions.make({ directory: config.stateDirectory });
     return makeDocketFileJournalLayer(options).pipe(Layer.provideMerge(makeDocketFileStoreLayer(options)));
   };
@@ -283,7 +283,7 @@ export const makeHandlers = <E1, R1, E2, R2, E3, R3>(wiring: DocketIntakeWiring<
       const report = yield* asCommandError(
         flags.dryRun
           ? runWith(undoDryRun(config, flags.run), graph)
-          : runWith(undoRun(config, flags.run), Layer.merge(graph, lockedJournal(config)))
+          : runWith(undoRun(config, flags.run), Layer.merge(graph, journalUnderStoreLock(config)))
       );
       yield* printUndoReport(report);
     }),

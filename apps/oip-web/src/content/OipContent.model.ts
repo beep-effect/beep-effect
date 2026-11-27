@@ -95,7 +95,6 @@ export const ReviewStatus = ReviewStatusBase.pipe(
  */
 
 // fallow-ignore-next-line unused-type -- the schema-annotation policy requires the type companion although only the ReviewStatus value is consumed. Owner: @beep/oip-web. Exit: remove when the policy stops requiring a type alias per schema value or a consumer imports the type.
-// fallow-ignore-next-line unused-type -- the schema-annotation policy requires the type companion although only the ReviewStatus value is consumed. Owner: @beep/oip-web. Exit: remove when the policy stops requiring a type alias per schema value or a consumer imports the type.
 export type ReviewStatus = typeof ReviewStatus.Type;
 
 /**

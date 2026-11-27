@@ -4,7 +4,6 @@ date: 2026-11-26
 reversal: Inherit live provider variables and share the coverage worker module graph.
 governs:
   - vitest.config.ts#browserTestEnv
-  - vitest.config.ts#isolateBrowserTests
 enforcedBy: []
 ---
 

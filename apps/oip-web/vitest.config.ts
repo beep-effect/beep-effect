@@ -17,9 +17,6 @@ const browserTestEnv = {
   SANITY_API_TOKEN: "",
 };
 
-// decision: isolated-browser-test-environment
-const isolateBrowserTests = true;
-
 export default mergeConfig(
   shared,
   defineConfig({
@@ -30,7 +27,7 @@ export default mergeConfig(
     },
     test: {
       env: browserTestEnv,
-      isolate: isolateBrowserTests,
+      isolate: true,
       environment: "jsdom",
       include: vitestDoctestActive ? [] : ["test/**/*.test.{ts,tsx}"],
       setupFiles: [NodeURL.fileURLToPath(new URL("./test/setup.dom.ts", import.meta.url))],
