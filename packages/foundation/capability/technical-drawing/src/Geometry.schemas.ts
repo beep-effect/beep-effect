@@ -177,7 +177,6 @@ export const PartLineStyle = PartLineStyleBase.pipe(
  */
 export type PartLineStyle = typeof PartLineStyle.Type;
 
-// Fields every primitive shares: its placement and the line style of its own faces.
 const primitiveFields = {
   rotate: S.Array(Rotation).pipe(
     S.withConstructorDefault(Effect.succeed([])),
@@ -723,7 +722,7 @@ export const HiddenLinePassAbout = HiddenLinePassAboutBase.pipe(
  */
 export type HiddenLinePassAbout = typeof HiddenLinePassAbout.Type;
 
-// Encoded only when it is not `origin`, so cameras written before the field existed encode byte for byte as before.
+// decision: additions-keep-earlier-output-byte-identical
 const hiddenLinePassAboutKey = S.optionalKey(HiddenLinePassAbout).pipe(
   S.decodeTo(
     HiddenLinePassAbout,
@@ -852,6 +851,9 @@ const ShadingSkipReasonBase = LiteralKit([
  * `lit`: above the uniform style's lit threshold.
  * `no-straight-edge`: the hatch axis needs a straight edge the face lacks.
  * `edge-on`: the hatch step is too foreshortened to keep lines apart.
+ * `narrow`: graded, with room for exactly one line; a band of one line reads
+ * as a doubled outline, never as shading, so this is a planned skip rather
+ * than a face that later loses its line.
  *
  * **Example** (Read the reasons)
  *

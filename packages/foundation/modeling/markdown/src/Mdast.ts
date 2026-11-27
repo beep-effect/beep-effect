@@ -119,7 +119,6 @@ export class MdastDecodeError extends S.TaggedError<MdastDecodeError, { readonly
   }
 }
 
-/** The zero-width sentinel position synthesized for foreign nodes. */
 const sentinelPosition = {
   start: { line: 1, column: 1, offset: 0 },
   end: { line: 1, column: 1, offset: 0 },
@@ -135,33 +134,14 @@ type AnyNode = Root | Frontmatter | FlowContent | PhrasingContent | MarkdownNode
 const projectChildren = (children: ReadonlyArray<AnyNode>): Array<Record<string, unknown>> =>
   A.map(children, (child) => projectNode(child));
 
-// This package's Code.value carries its final line terminator (the engine's
-// convention); mdast-util-from-markdown stores the value
-// without it and lets renderers re-add it. The projection translates: strip
-// one carried LF going out, restore it coming back in. A preceding CR is
-// content and must survive both projection and stringify.
 const stripFinalLineEnding = (value: string): string => (Str.endsWith("\n")(value) ? Str.slice(0, -1)(value) : value);
 
-// mdast's Association rules that `label` is a *parsed* value — character
-// escapes and character references decoded — while this package's nodes keep
-// the label as written in source (the stringify layer depends on that). The
-// projection decodes at the boundary; identifiers stay source-form per the
-// same mixin.
 const projectLabel = (label: string | undefined): Record<string, unknown> =>
   label === undefined ? {} : { label: unescapeString(label) };
 
-// mdast's List.spread means "a blank line separates two of the list's
-// items" — narrower than this package's List.spread fidelity field, which
-// records CommonMark looseness (a blank line between items OR between the
-// blocks inside one item; the rendering contract). The between-items reading
-// is recomputable from item positions, so the projection derives it instead
-// of forwarding the looseness bit. Synthetic item positions cannot encode
-// those gaps, so foreign positionless lists keep their admitted spread bit.
 const equivalentPosition = S.toEquivalence(Position);
 const listSpread = (node: List): boolean => {
   const positioned = A.filter(node.children, (item) => !equivalentPosition(item.position, Position.synthetic));
-  // A fully positioned singleton still has no between-item gap, even when
-  // its internal blocks make it loose. Only missing positions need fallback.
   if (positioned.length === 0 || (positioned.length < 2 && positioned.length < node.children.length)) {
     return node.spread ?? false;
   }
@@ -173,8 +153,6 @@ const listSpread = (node: List): boolean => {
   return false;
 };
 
-// One arm per node type. Field order mirrors mdast-util-from-markdown's
-// emission for readability of test diffs; deep equality does not depend on it.
 const projectNode: (node: AnyNode) => MdastNode = Match.type<AnyNode>()
   .pipe(
     Match.discriminator("type")("root", (node) => ({
@@ -318,10 +296,6 @@ const projectNode: (node: AnyNode) => MdastNode = Match.type<AnyNode>()
     Match.exhaustive
   );
 
-// mdast-util-mdx spells a bare attribute's value as explicit `null` (its
-// parser writes it, "as it serializes in JSON"), and puts NO position on an
-// attribute value expression — both mirrored here so the output deep-equals
-// the reference utilities' trees.
 const projectMdxAttribute = (attribute: MdxJsxAttributeContent): Record<string, unknown> => {
   if (attribute.type === "mdxJsxExpressionAttribute") {
     return {
@@ -344,15 +318,8 @@ const projectMdxAttribute = (attribute: MdxJsxAttributeContent): Record<string, 
   };
 };
 
-/** Membership follows the format schema rather than a second vocabulary. */
 const isFrontmatterFormat = S.is(FrontmatterFormat);
 
-/**
- * Fields admitted per foreign node type, beyond `type`/`position`/`children`.
- * Unknown fields (`data`, custom extensions) are dropped at the boundary;
- * `null` values on optional fields normalize to absence per unist's
- * null-equals-absent convention.
- */
 const admittedFields: Readonly<Record<string, ReadonlyArray<string>>> = {
   root: [],
   paragraph: [],
@@ -364,10 +331,6 @@ const admittedFields: Readonly<Record<string, ReadonlyArray<string>>> = {
   tableCell: [],
   break: [],
   thematicBreak: [],
-  // `escapeStyle` is this package's emitter instruction, not spec mdast,
-  // but it is the one extra a plain tree must be able to carry in: a
-  // consumer building mdast for `Markdown.stringify` has no decoded node to
-  // set it on until after admission.
   text: ["value", "escapeStyle"],
   html: ["value"],
   inlineCode: ["value"],
@@ -408,13 +371,9 @@ const normalizePosition = (value: unknown): Record<string, unknown> => {
   return sentinelPosition;
 };
 
-// Root depth is zero. This admission budget protects both recursive
-// normalization and Schema decoding; it is deliberately independent of the
-// visitor's 256-level traversal guard, so deeper foreign trees remain usable.
 const maxForeignTreeDepth = 512;
 
-/** One pending admission step: a foreign value, its depth and its ancestor chain. */
-type AdmissionFrame = readonly [unknown, number, ReadonlyArray<object>];
+type AdmissionFrame = readonly [value: unknown, depth: number, ancestors: ReadonlyArray<object>];
 
 const depthLimitExceeded = (depth: number): MdastDecodeError =>
   MdastDecodeError.make({
@@ -427,13 +386,9 @@ const depthLimitExceeded = (depth: number): MdastDecodeError =>
 
 const isJsxElementType = (type: string): boolean => type === "mdxJsxFlowElement" || type === "mdxJsxTextElement";
 
-// Follow exactly the child edges normalization recurses into. Literal
-// frontmatter and unknown kinds are shallow admissions; their foreign
-// extension fields cannot increase the normalized tree's depth.
-const followsChildren = (type: string): boolean =>
+const normalizationRecursesInto = (type: string): boolean =>
   !isFrontmatterFormat(type) && (R.has(admittedFields, type) || isJsxElementType(type));
 
-/** Check one frame, queueing its children; `Some` carries the failure that ends admission. */
 const admitFrame = (
   frame: AdmissionFrame,
   pending: MutableList.MutableList<AdmissionFrame>
@@ -453,7 +408,7 @@ const admitFrame = (
       })
     );
   }
-  if (followsChildren(value.type) && A.isArray(value.children)) {
+  if (normalizationRecursesInto(value.type) && A.isArray(value.children)) {
     const stack = A.append(ancestors, value);
     MutableList.prependAll(
       pending,
@@ -478,12 +433,9 @@ const admitForeignTree = (input: unknown): Result.Result<unknown, MdastDecodeErr
 const normalizeChildren = (children: unknown): Result.Result<unknown, MdastDecodeError> =>
   A.isArray(children) ? Result.all(A.map(children, normalizeNode)) : Result.succeed(children);
 
-// Association labels arrive decoded; shield literal escapes and entities
-// before storing the source spelling consumed once by projectLabel.
 const admitField = (field: string, raw: unknown): unknown =>
   field === "label" && P.isString(raw) ? Str.replaceAll(/[\\&]/g, "\\$&")(raw) : raw;
 
-// The whitelisted fields of one node, dropping nulls on optional ones.
 const admittedEntries = (value: Record<string, unknown>, admitted: ReadonlyArray<string>): Record<string, unknown> => {
   const normalized: Record<string, unknown> = {};
   for (const field of admitted) {
@@ -495,8 +447,6 @@ const admittedEntries = (value: Record<string, unknown>, admitted: ReadonlyArray
   return normalized;
 };
 
-// Restore the engine's carried-terminator convention on code values (the
-// inverse of toMdast's strip).
 const restoreCodeTerminator = (type: string, value: unknown): unknown =>
   type === "code" && P.isString(value) && value !== "" ? `${value}\n` : value;
 
@@ -513,16 +463,6 @@ const normalizeAdmitted = (
     : Result.succeed({ type, ...withValue, position });
 };
 
-// The JSX elements need their own admission: a `null` name is meaningful
-// (a fragment) so the null-equals-absent normalization must not touch it,
-// and the attributes array carries nested attribute nodes whose positions
-// (and value-expression positions) need the same sentinel synthesis as
-// tree nodes. `data.estree` is dropped like every foreign `data` field.
-// `name`, `attributes` and `children` pass through verbatim when they do
-// not match the oracle contract (`string | null`, an array, an array) —
-// a number name, an `attributes: {}`, a string `children` all reach the
-// schema and fail the decode typed rather than being coerced and
-// silently losing input, like every other malformed recognized field.
 const normalizeJsxElement = (type: string, value: Record<string, unknown>): Result.Result<unknown, MdastDecodeError> =>
   Result.map(normalizeChildren(value.children), (children) => ({
     type,
@@ -532,11 +472,6 @@ const normalizeJsxElement = (type: string, value: Record<string, unknown>): Resu
     position: normalizePosition(value.position),
   }));
 
-// Normalize one foreign node: admit whitelisted fields (dropping nulls on
-// optional ones), synthesize sentinel positions, map frontmatter literal
-// types onto the Frontmatter capture shape, and recurse into children.
-// Unrecognized types pass through shallowly so schema decoding reports them
-// as typed failures rather than this walk throwing.
 const normalizeNode = (value: unknown): Result.Result<unknown, MdastDecodeError> => {
   if (!isRecord(value) || !P.isString(value.type)) {
     return Result.succeed(value);
@@ -559,14 +494,11 @@ const normalizeNode = (value: unknown): Result.Result<unknown, MdastDecodeError>
   });
 };
 
-// A value-expression attribute value rebuilt with only its contract fields;
-// a string or null value passes through (both spellings are the contract).
 const normalizeAttributeValue = (raw: unknown): unknown =>
   isRecord(raw) && raw.type === "mdxJsxAttributeValueExpression"
     ? { type: "mdxJsxAttributeValueExpression", value: raw.value, position: normalizePosition(raw.position) }
     : raw;
 
-// One foreign JSX attribute node: positions synthesized like tree nodes.
 const normalizeMdxAttribute = (value: unknown): unknown => {
   if (!isRecord(value)) {
     return value;
@@ -645,6 +577,18 @@ export class Mdast {
    * (the vendored interop corpus pins this). The frontmatter capture
    * projects to a `yaml`/`toml`/`json` literal node.
    *
+   * Four engine conventions are translated rather than forwarded. A `code`
+   * value drops the one final line feed this package's nodes carry, as
+   * `mdast-util-from-markdown` stores it, and `fromMdast` restores it; a
+   * carriage return before it is content and stays. A `label` is decoded of
+   * character escapes and references, as mdast's Association requires, while
+   * `identifier` stays as written. `list.spread` is mdast's narrower reading,
+   * a blank line between two items, derived from item positions instead of
+   * this package's looseness bit; when items carry synthetic positions the
+   * admitted bit is kept, and a fully positioned single item is never spread.
+   * A bare JSX attribute's value is explicit `null` and an attribute value
+   * expression has no position, as `mdast-util-mdx` writes them.
+   *
    * **Example** (Project a positionless foreign root)
    *
    * ```ts
@@ -681,7 +625,14 @@ export class Mdast {
    * null-equals-absent convention; foreign `data` and other unrecognized
    * fields are dropped at the boundary; `yaml`/`toml`/`json` literal nodes
    * decode into the {@link Frontmatter} capture. Unknown node types fail
-   * typed.
+   * typed. A `label` arrives decoded, so its backslashes and `&` are
+   * re-escaped into the source spelling the nodes keep.
+   *
+   * JSX elements keep a `null` name, which marks a fragment, and their
+   * attributes get the same sentinel positions as tree nodes. A `name`,
+   * `attributes` or `children` outside the oracle contract (`string | null`,
+   * an array, an array) reaches the schema unchanged and fails typed instead
+   * of being coerced.
    *
    * Admission first checks child edges iteratively, rejecting ancestor cycles
    * and depths above 512 (root depth 0) with a structured

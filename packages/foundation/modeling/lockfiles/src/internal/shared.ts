@@ -330,8 +330,6 @@ const recordedVersion = (version: string | undefined): { readonly version?: stri
     : { version: resolved.plain, ...O.getSomesStruct({ peerSuffix: O.fromUndefinedOr(resolved.peerSuffix) }) };
 };
 
-// An `ImporterDependency`'s fields without the brand: plain constructor input
-// that `LockfileImporter.make` admits once.
 type ImporterDependencyInput = Omit<ImporterDependency, "brand">;
 
 /**
@@ -614,7 +612,6 @@ export const peerDeclarations: {
  */
 export const MINIMUM_LOCKFILE_VERSION = { pnpm: 9, npm: 3 } as const;
 
-// Render finite version scalars through the same JSON codec as string versions.
 const VersionMessage = S.fromJsonString(S.Union([S.String, S.Finite])).pipe(
   $I.annoteSchema("VersionMessage", {
     description: "JSON scalar rendering of a recorded string or finite number",
@@ -658,9 +655,7 @@ export const requireLockfileVersion: {
     const minimum = MINIMUM_LOCKFILE_VERSION[format];
     const parsed = P.isNumber(raw) ? raw : Number.parseFloat(raw);
     if (Number.isFinite(parsed) && parsed >= minimum) return Effect.void;
-    // Typed as the exported public shape, so the record a consumer narrows to
-    // with `isUnsupportedLockfileVersion` and the record built here cannot
-    // drift apart silently.
+    // decision: version-cause-leaf-module
     const cause: UnsupportedLockfileVersion = {
       _tag: "UnsupportedLockfileVersion",
       format,
@@ -686,10 +681,10 @@ export const requireLockfileVersion: {
  * @internal
  */
 const PnpmVersionProbe = S.Struct({
-  // Reject non-finite numbers at the version boundary before gating supported versions.
   lockfileVersion: S.Union([S.String, S.Finite]).pipe(
     $I.annoteKey("PnpmVersionProbe.lockfileVersion", {
-      description: "Recorded format version, preserved verbatim before gating or string conversion",
+      description:
+        "Recorded format version, preserved verbatim; a non-finite number fails boundary validation before the gate",
     })
   ),
 }).pipe(

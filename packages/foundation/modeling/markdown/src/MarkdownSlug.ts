@@ -70,22 +70,16 @@ export const HeadingSlug = S.String.pipe(
  */
 export type HeadingSlug = typeof HeadingSlug.Type;
 
-// A heading that opens with a markdown link: its text stands in for the whole heading.
 const LEADING_LINK = /^\[([^\]]+)\]\(/;
 const HTML_TAG = /<\/?[^>]+>/g;
 const SPACE_RUN = /[ \t]+/g;
-// A multi-line setext heading's soft line break with the spaces and tabs around it.
-const LINE_BREAK = /[ \t]*(?:\r\n?|\n)[ \t]*/g;
-// `markdown-toc`'s two deletion lists, verbatim (the ASCII list names `=` twice; the CJK list carries an ASCII space).
-const ASCII_PUNCTUATION = /[|$&`~=\\/@+*!?({[\]})<>=.,;:'"^]/g;
-const CJK_PUNCTUATION = /[。？！，、；：“”【】（）〔〕［］﹃﹄“ ”‘’﹁﹂—…－～《》〈〉「」]/g;
-// The fold runs over Latin-1 Supplement letters and Latin Extended-A only (U+00C0..U+017E), as `diacritics-map` is applied.
-const FOLDED_RANGE_START = 0xc0;
-const FOLDED_RANGE_END = 0x17e;
+const SETEXT_SOFT_BREAK = /[ \t]*(?:\r\n?|\n)[ \t]*/g;
+const TOC_ASCII_DELETIONS = /[|$&`~=\\/@+*!?({[\]})<>=.,;:'"^]/g;
+const TOC_CJK_DELETIONS = /[。？！，、；：“”【】（）〔〕［］﹃﹄“ ”‘’﹁﹂—…－～《》〈〉「」]/g;
+const DIACRITICS_MAP_FIRST = 0xc0;
+const DIACRITICS_MAP_LAST = 0x17e;
 const COMBINING_MARKS = /[̀-ͯ]/g;
-// The letters in that range whose `diacritics-map` entry is not their NFD base letter. The fold
-// runs after lower-casing, so only the lower-case rows of the map are reachable.
-const FOLD_EXCEPTIONS = HashMap.fromIterable<string, string>([
+const NON_NFD_LOWER_FOLDS = HashMap.fromIterable<string, string>([
   ["ß", "ss"],
   ["æ", "ae"],
   ["ð", "d"],
@@ -105,11 +99,11 @@ const FOLD_EXCEPTIONS = HashMap.fromIterable<string, string>([
 ]);
 
 const isFoldedLetter = (character: string): boolean =>
-  O.exists(Str.codePointAt(0)(character), (code) => code >= FOLDED_RANGE_START && code <= FOLDED_RANGE_END);
+  O.exists(Str.codePointAt(0)(character), (code) => code >= DIACRITICS_MAP_FIRST && code <= DIACRITICS_MAP_LAST);
 
 const foldLetter = (character: string): string =>
   isFoldedLetter(character)
-    ? O.getOrElse(HashMap.get(FOLD_EXCEPTIONS, character), () =>
+    ? O.getOrElse(HashMap.get(NON_NFD_LOWER_FOLDS, character), () =>
         Str.replace(COMBINING_MARKS, "")(Str.normalize("NFD")(character))
       )
     : character;
@@ -164,7 +158,7 @@ export abstract class MarkdownSlug {
    * @category utilities
    * @since 0.0.0
    */
-  static readonly headingLine = (text: string): string => Str.replace(LINE_BREAK, " ")(text);
+  static readonly headingLine = (text: string): string => Str.replace(SETEXT_SOFT_BREAK, " ")(text);
 
   /**
    * The text a heading contributes to its slug and title: when the heading
@@ -223,9 +217,9 @@ export abstract class MarkdownSlug {
     const base = Str.toLowerCase(MarkdownSlug.linkText(MarkdownSlug.headingLine(text)));
     const hyphenated = Str.replaceAll("\t", "--")(Str.replaceAll(" ", "-")(base));
     const stripped = Str.replace(
-      CJK_PUNCTUATION,
+      TOC_CJK_DELETIONS,
       ""
-    )(Str.replace(ASCII_PUNCTUATION, "")(Str.replace(HTML_TAG, "")(hyphenated)));
+    )(Str.replace(TOC_ASCII_DELETIONS, "")(Str.replace(HTML_TAG, "")(hyphenated)));
     const folded = foldDiacritics(stripped);
     return occurrence > 0 ? `${folded}-${occurrence}` : folded;
   };
