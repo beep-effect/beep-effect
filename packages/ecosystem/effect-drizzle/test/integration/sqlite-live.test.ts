@@ -99,7 +99,6 @@ const invokeFindMany = (query: unknown, config: unknown): Promise<unknown> => {
 
 const repositoryRoot = NodeURL.fileURLToPath(new URL("../../../../../", import.meta.url));
 const schemaPath = "packages/ecosystem/effect-drizzle/test/integration/sqlite-drizzle-schema.ts";
-const preloadPath = NodeURL.fileURLToPath(new URL("./drizzle-kit-sqlite-rc-compat.cjs", import.meta.url));
 
 const isNodeNotBunShim = (candidate: string): boolean => {
   const probe = Bun.spawnSync([candidate, "--print", "process.isBun ? 1 : 0"]);
@@ -129,9 +128,6 @@ const runPush = (databasePath: string) =>
   acquireUseRelease(
     tryPromise({
       try: () => {
-        const inheritedOptions = Bun.env.NODE_OPTIONS;
-        const nodeOptions =
-          inheritedOptions === undefined ? `--require=${preloadPath}` : `${inheritedOptions} --require=${preloadPath}`;
         const process = Bun.spawn(
           [
             realNodeForDrizzleKit,
@@ -148,7 +144,7 @@ const runPush = (databasePath: string) =>
           ],
           {
             cwd: repositoryRoot,
-            env: { ...Bun.env, NODE_OPTIONS: nodeOptions },
+            env: Bun.env,
             stdin: "ignore",
             stdout: "pipe",
             stderr: "pipe",
@@ -253,18 +249,6 @@ it.layer(SqliteHarnessLayer, { timeout: 90_000 })("@beep/effect-drizzle live SQL
       expect(migrationOutput).toContain("shared_user_status_enum_check");
       expect(migrationOutput).toContain("Changes applied");
       expect(noOpOutput).toContain("No changes detected");
-    })
-  );
-
-  it.effect(
-    "keeps the SQLite RC preload only while the upstream export is absent",
-    fnUntraced(function* () {
-      const sqliteCore = yield* tryPromise({
-        try: () => import("drizzle-orm/sqlite-core"),
-        catch: (cause) => SqliteLiveTestOperationError.make({ cause }),
-      });
-      expect(hasProperty(sqliteCore, "SQLiteSyncDialect")).toBe(false);
-      expect(hasProperty(sqliteCore, "SQLiteDialect")).toBe(true);
     })
   );
 
