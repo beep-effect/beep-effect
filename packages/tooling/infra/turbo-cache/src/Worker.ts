@@ -46,13 +46,17 @@ export const retentionDays = 30;
  *
  * **Details**
  *
- * One team, `beep`. `ci-main` writes from protected `main` pushes (its token
- * lives only in the `turbo-cache-write` GitHub environment); `ci-pr` reads
- * from same-repository pull requests (a repository secret, which GitHub never
- * exposes to fork pull requests, so forks stay local-only). `dankstation` and
- * `beep-worker` are the named trusted workstations that write. Adding a holder
- * is one entry here and a `main` deploy; raising a `rotation` replaces that
- * holder's token.
+ * Two teams, each a repository whose results no other team's token can read
+ * or write. `beep`, this repository: `ci-main` writes from protected `main`
+ * pushes (its token lives only in the `turbo-cache-write` GitHub environment);
+ * `ci-pr` reads from same-repository pull requests (a repository secret, which
+ * GitHub never exposes to fork pull requests, so forks stay local-only).
+ * `dankstation` and `beep-worker` are the named trusted workstations that
+ * write. `inventory`, the inventory-import repository: the same `ci-main` and
+ * `ci-pr`, and `dankstation`, which writes there too by the owner's choice
+ * (that repository's `goals/ci-speed/PLAN.md` says what keeps it honest).
+ * Adding a holder is one entry here and a `main` deploy; raising a `rotation`
+ * replaces that holder's token.
  *
  * **Example** (List the writers)
  *
@@ -75,6 +79,14 @@ export const cachePolicy = CachePolicy.make({
         Principal.make({ name: "ci-pr", access: "read", rotation: 1 }),
         Principal.make({ name: "dankstation", access: "write", rotation: 1 }),
         Principal.make({ name: "beep-worker", access: "write", rotation: 1 }),
+      ],
+    }),
+    Team.make({
+      slug: "inventory",
+      principals: [
+        Principal.make({ name: "ci-main", access: "write", rotation: 1 }),
+        Principal.make({ name: "ci-pr", access: "read", rotation: 1 }),
+        Principal.make({ name: "dankstation", access: "write", rotation: 1 }),
       ],
     }),
   ],
