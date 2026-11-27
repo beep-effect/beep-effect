@@ -1,33 +1,3 @@
-// Codec round-trips: the model is API for serialization consumers (workspaces
-// snapshots), so encode∘decode identity is contract, not incidental.
-//
-// The `integrity` and `specifier` leaves are NOT schema-derivable as
-// arbitraries (re-probed against effect@4.0.0-rc.115's native
-// `effect/Arbitrary`, which replaced the fast-check bridge):
-//   - `ResolvedPackage.integrity` is the `@effected/npm` `IntegrityHash` brand,
-//     a `makeFilter` predicate over three grammars. The filter carries no
-//     `arbitraryConstraint` pattern, so the native compiler cannot generate it
-//     constructively and falls back to rejecting random printable-ASCII strings
-//     — none of which is ever an SRI/corepack/yarn hash. That no longer hangs
-//     (discards are budgeted): `Arbitrary.sampleEffect(Arbitrary.schema(
-//     IntegrityHash))` fails with `SampleError { generated: 0, discards: 2001 }`
-//     in ~4ms, and inside `ResolvedPackage` the optional key is simply never
-//     populated, so a schema-derived arbitrary would never exercise it.
-//   - `ImporterDependency.specifier` is the `DependencySpecifier.FromString`
-//     codec. Its Type is a union of tagged classes carrying a free-form `raw`,
-//     so a schema-derived arbitrary generates tag/raw mismatches (probed:
-//     `{ _tag: "range", raw: "0" }`) whose encode∘decode does *not* round-trip
-//     (the codec re-classifies `raw`).
-// So these leaves are `Schema.Literals` of real values, the same pattern
-// `@effected/npm`'s own DependencySpecifier round-trip suite uses. The
-// plain-union fields (`WorkspaceDependency`, `LockfileIntegrity`) stay
-// schema-derived, which works.
-//
-// Dictionaries over a small key set are generated as a struct of optional
-// keys: `Schema.Record` over a literal key union always emits every key, and
-// `isUniqueKey` over tuples collapses to the empty array, so neither samples
-// the "some keys present" shapes a lockfile actually carries.
-
 import { ImporterDependency } from "@beep/lockfiles/ImporterDependency";
 import { Lockfile } from "@beep/lockfiles/Lockfile";
 import { LockfileImporter } from "@beep/lockfiles/LockfileImporter";
@@ -54,12 +24,7 @@ const roundTrip = Effect.fn("roundTrip")(function* <S extends Schema.Codec<unkno
   assert.deepStrictEqual(decoded, value);
 });
 
-// ── Explicit arbitraries for the non-schema-derivable leaves ─────────────────
-
-/**
- * A dictionary over a fixed key set, each key independently present or absent,
- * so the empty, partial and full maps all get sampled.
- */
+// decision: roundtrip-literal-leaf-arbitraries
 const dictionary = <V extends Schema.Top>(
   keys: ReadonlyArray<string>,
   value: V
@@ -71,18 +36,17 @@ const dictionary = <V extends Schema.Top>(
     })
   );
 
-/** Present or absent with equal odds — an optional key read back as a value. */
 const optional = <S extends Schema.Top>(schema: S): Arbitrary.Arbitrary<S["Type"] | undefined> =>
   Arbitrary.schema(Schema.Struct({ value: Schema.optionalKey(schema) })).pipe(
     Arbitrary.map((entries: { readonly value?: S["Type"] }) => entries.value)
   );
 
-/** Up to `maxLength` draws from an Arbitrary — `Schema.Array` only composes Schemas. */
 const arrayOf = <A>(item: Arbitrary.Arbitrary<A>, maxLength: number): Arbitrary.Arbitrary<Array<A>> =>
   Arbitrary.schema(Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: maxLength }))).pipe(
     Arbitrary.flatMap((length) => Arbitrary.all(Array.from({ length }, () => item)))
   );
 
+// decision: roundtrip-literal-leaf-arbitraries
 const Integrity = Schema.Literals([
   "sha512-LgVTMpQtIopCi79SJeDiP0TfWi5CNEc/L/aRdTh3yIvmZXTnheWpKjSZhnvMl8iXbC1tFg9gdHHDMLoV7CnG+w==",
   "sha1-Zm9vYmFy",
@@ -109,14 +73,11 @@ const specifierArb = Arbitrary.schema(
 
 const DepField = Schema.Literals(["dependencies", "devDependencies", "peerDependencies", "optionalDependencies"]);
 
+// decision: roundtrip-literal-leaf-arbitraries
 const importerDependencyArb: Arbitrary.Arbitrary<ImporterDependency> = Arbitrary.all({
   name: Arbitrary.schema(Schema.Literals(["lodash", "chalk", "@scope/x", "typescript"])),
   specifier: specifierArb,
   depType: Arbitrary.schema(DepField),
-  // A suffix only ever splits off a concrete version, so it is generated as part
-  // of the version rather than beside it: an entry with a peerSuffix and no
-  // version is a state the parser cannot emit, and sampling it would spend cases
-  // on unreachable shapes.
   resolution: optional(
     Schema.Struct({
       version: Schema.Literals(["1.0.0", "5.9.3"]),
@@ -183,7 +144,7 @@ const lockfileArb: Arbitrary.Arbitrary<Lockfile> = Arbitrary.all({
   importers: arrayOf(lockfileImporterArb, 3),
 }).pipe(Arbitrary.map((r) => Lockfile.make(r)));
 
-describe("codec round-trips", () => {
+describe("codec round-trips: encode ∘ decode identity is contract for serialization consumers", () => {
   it.effect.prop("ResolvedPackage: decode ∘ encode is identity", [resolvedPackageArb], ([pkg]) =>
     roundTrip(ResolvedPackage, pkg)
   );
