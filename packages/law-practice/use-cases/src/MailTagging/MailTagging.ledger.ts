@@ -22,7 +22,6 @@ import type {
   TagLedgerEntry,
 } from "@beep/law-practice-domain/values/MailTagging";
 
-// Run and message ids are whitespace-free tokens, so a space cannot collide.
 const undoKey = (runId: TaggingRunId, messageId: MailMessageId): string => `${runId} ${messageId}`;
 
 const undoneKeys = (records: ReadonlyArray<TagLedgerRecord>): HashSet.HashSet<string> =>

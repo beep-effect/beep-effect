@@ -13,11 +13,9 @@ import type { AudienceKind } from "@beep/runtime-env";
 
 const ESC = String.fromCharCode(0x1b);
 const BEL = String.fromCharCode(7);
-/** A glyph built from data: a hyperlink, a cursor move up two lines, and a bell around a plain mark. */
-const HOSTILE = `${ESC}]8;;https://evil.example${BEL}!${ESC}]8;;${BEL}${ESC}[2A${BEL}`;
-const vocab = Status.extend({ evil: { glyph: HOSTILE, ascii: HOSTILE, token: "failure", rank: 95 } });
+const HOSTILE_GLYPH = `${ESC}]8;;https://evil.example${BEL}!${ESC}]8;;${BEL}${ESC}[2A${BEL}`;
+const vocab = Status.extend({ evil: { glyph: HOSTILE_GLYPH, ascii: HOSTILE_GLYPH, token: "failure", rank: 95 } });
 
-/** What is left of a line once the kit's own SGR colour (ESC [ … m) is removed: nothing else may be an escape. */
 const withoutColour = (line: string): string => Str.replace(new RegExp(`${ESC}\\[[0-9;]*m`, "g"), "")(line);
 
 const assertNeutralised = (line: string, label: string): void => {

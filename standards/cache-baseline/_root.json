@@ -8,11 +8,11 @@
     "@beep/types#lint"
   ],
   "review": {
-    "reviewer": "Claude Opus 5.5 (infra-alchemy-rebuild P6 retire lane)",
-    "reason": "Re-record the subjects whose Turbo inputs named the deleted infra/ workspace, after merging origin/main (#3561-#3563); configuration review only, no qualification granted.",
+    "reviewer": "Claude Opus 5.5 (route-soundness-repair cross-package reads lane)",
+    "reason": "Re-record the root subject and @beep/repo-cli after its turbo.json declared law-practice-server's test files, which ci-partitions.test.ts globs, as test, test:property and coverage inputs. Configuration review only; no qualification is granted.",
     "basis": {
-      "path": "docs/reports/infra-alchemy-p6-retire-cache-review-2026-11-25.md",
-      "sha256": "449a682ef1c70c6d316f5b30da98056bcfab1aad7ba0cd2f2987ed10acc9c466"
+      "path": "docs/reports/cross-package-reads-root-reference-cache-review-2026-11-27.md",
+      "sha256": "cb0ad15eaf31ae01c877936ef9f7100e8540f47e87a9db4e8c7e227d4e5f13ba"
     }
   },
   "globalConfiguration": {
@@ -108,7 +108,7 @@
     },
     {
       "path": "apps/labs/ciops/turbo.json",
-      "sha256": "40ef226ef5a9f848acaa681a85277eb7a2b08393245a6852fe14ae71441ca596"
+      "sha256": "b84924c622fd31035408d090526a1d3f82e630695e12bd76c3cba4883b841817"
     },
     {
       "path": "apps/labs/lane-cockpit/turbo.json",
@@ -120,7 +120,7 @@
     },
     {
       "path": "apps/labs/semantica/turbo.json",
-      "sha256": "e1e69476682284d53a7c3890f5217632986699fd77460a5cc52a1d11e01faca7"
+      "sha256": "aa88b6297bcb8a0f3803bbc99122ef1f22bc235ded6c3436952ca4011f663259"
     },
     {
       "path": "apps/labs/trustgraph-workbench/turbo.json",
@@ -167,16 +167,48 @@
       "sha256": "55c9d20436eb20929b07ff8059f825fcddbc94ffd344d03786f55c4e58d83af2"
     },
     {
+      "path": "packages/architecture-lab/server/turbo.json",
+      "sha256": "fc74b48512cc954d7a2085385688d7e95eed307165f7a680d247275b0e919063"
+    },
+    {
+      "path": "packages/documents/server/turbo.json",
+      "sha256": "fc74b48512cc954d7a2085385688d7e95eed307165f7a680d247275b0e919063"
+    },
+    {
       "path": "packages/drivers/eyecite/turbo.json",
-      "sha256": "4740cf7df445f262fdf6d05dbeb931cc00f0121d5411138578689f2b84c12b50"
+      "sha256": "43c890bca8a83ab00613725a2311dc11a71d2325da9883aa19eff7c6ca04cfe8"
+    },
+    {
+      "path": "packages/epistemic/server/turbo.json",
+      "sha256": "fc74b48512cc954d7a2085385688d7e95eed307165f7a680d247275b0e919063"
+    },
+    {
+      "path": "packages/execution-authority/server/turbo.json",
+      "sha256": "8d49bff251566f281d857b60ff8056f1975171577f434c7fa2166de2c8d6cf70"
+    },
+    {
+      "path": "packages/foundation/modeling/github-reporting/turbo.json",
+      "sha256": "02cb17d362dcc5759c0afdfb515d030f73787d688e896b31845497c936b794f5"
     },
     {
       "path": "packages/foundation/modeling/identity/turbo.json",
       "sha256": "012a0ac557334250b98e2256f25022b1b254cb713b9a19e25dca6dbcd85da30e"
     },
     {
+      "path": "packages/foundation/modeling/ontology/turbo.json",
+      "sha256": "7b91a930d87ce0134a5fae768673628efc8459aaa19e9398bc886db3f4f72948"
+    },
+    {
       "path": "packages/foundation/primitive/types/turbo.json",
       "sha256": "56950453c8693f0ee5e4e361f9ec859bbe95141053932fa44db2febd87fef94e"
+    },
+    {
+      "path": "packages/law-practice/server/turbo.json",
+      "sha256": "27ace9370aec52ebba099c6966c82df447311d16179ec8a502db3f9e6f4f2c60"
+    },
+    {
+      "path": "packages/tooling/infra/ci-runners/turbo.json",
+      "sha256": "e75842c0f65b006b1c813bf724d45a895cabe811ea86e7d31cee041ca451862a"
     },
     {
       "path": "packages/tooling/library/ai-sync/turbo.json",
@@ -196,7 +228,11 @@
     },
     {
       "path": "packages/tooling/tool/cli/turbo.json",
-      "sha256": "5808eed2f64e81ca545adac5e48b92b21f5744364b49e80d2c32eb278b99a402"
+      "sha256": "b110b2b5b7950cf0100424edab44d36eafde2baa3b62b15f5d6612c9682bcb6d"
+    },
+    {
+      "path": "packages/workspace/server/turbo.json",
+      "sha256": "fc74b48512cc954d7a2085385688d7e95eed307165f7a680d247275b0e919063"
     },
     {
       "path": "turbo.json",

@@ -11,7 +11,6 @@ import * as S from "effect/Schema";
 import * as SchemaAST from "effect/SchemaAST";
 import type { Counter } from "@beep/cli-kit/Doc";
 
-// Target the optional callback directly so union-member selection cannot omit it.
 const blockAst = SchemaAST.isSuspend(Block.ast) ? Block.ast.thunk() : Block.ast;
 const overflowField = O.getOrUndefined(
   SchemaAST.isUnion(blockAst)
@@ -26,7 +25,7 @@ const overflowSchema = S.make<S.Codec<(hidden: number) => ReadonlyArray<Inline>>
 const InlineContent = S.Array(Inline);
 
 it.effect.prop(
-  "generated overflow callbacks retain valid inline content through a Block round trip",
+  "overflow callbacks, generated past union-member selection, keep valid inline content through a Block round trip",
   [Arbitrary.schema(overflowSchema)],
   ([overflow]) =>
     Effect.gen(function* () {
@@ -72,10 +71,7 @@ it.effect("strong and emphasis flatten array inputs without losing inline order"
   })
 );
 
-// The union property can omit an optional total on every generated Counts
-// node. Derive that declaration directly from the public AST so its generator
-// and callback behavior are exercised regardless of union-member selection.
-it.effect("Block's generated total callback survives encoding and controls the observed total", () =>
+it.effect("Block's total callback, generated past union-member selection, survives encoding and sets the total", () =>
   Effect.gen(function* () {
     const ast = SchemaAST.isSuspend(Block.ast) ? Block.ast.thunk() : Block.ast;
     const field = SchemaAST.isUnion(ast)

@@ -217,13 +217,11 @@ export const GRAPHQL_ONLY_SETTINGS: Readonly<Record<string, string>> = {
   has_discussions: "hasDiscussionsEnabled",
 };
 
-/** The bare security-feature status a caller may supply. */
 const SecurityStatus = LiteralKit(["enabled", "disabled"]).pipe(
   $I.annoteSchema("SecurityStatus", { description: "Whether a security feature is enabled or disabled." })
 );
 const isSecurityStatus = S.is(SecurityStatus);
 
-/** `{ status: "enabled" | "disabled" }` — the form GitHub accepts and the type declares. */
 const StatusObject = S.Struct({
   status: SecurityStatus.pipe(
     $I.annoteKey("StatusObject.status", { description: "Whether the security feature is enabled or disabled." })
@@ -235,24 +233,16 @@ const StatusObject = S.Struct({
 );
 const isStatusObject = S.is(StatusObject);
 
-/** A status field, wrapped when bare and passed through when already wrapped. */
 const statusEntry = (key: string, raw: unknown): O.Option<readonly [string, unknown]> => {
   if (isSecurityStatus(raw)) return O.some([key, { status: raw }]);
-  // Already the shape GitHub wants, which is also the shape `RepositoryPatch`
-  // types. Passing it through is not a convenience: without this branch a
-  // type-correct caller has the block silently dropped, because the wrapping
-  // branch above only matches a bare string. That is data loss on the input
-  // the type asks for.
   return isStatusObject(raw) ? O.some([key, raw]) : O.none();
 };
 
-/** Non-empty reviewer entries, moved under the key the PATCH reads them from. */
 const reviewersEntry = (raw: unknown): O.Option<readonly [string, unknown]> =>
   A.isArray(raw) && A.isArrayNonEmpty(raw)
     ? O.some(["secret_scanning_delegated_bypass_options", { reviewers: raw }])
     : O.none();
 
-/** The PATCH entry for one caller entry, or none when GitHub has no use for it. */
 const securityEntry = (key: string, raw: unknown): O.Option<readonly [string, unknown]> => {
   if (HashSet.has(SECURITY_ANALYSIS_STATUS_FIELDS, key)) return statusEntry(key, raw);
   return key === "delegated_bypass_reviewers" ? reviewersEntry(raw) : O.none();
@@ -307,21 +297,12 @@ export const transformSecurityAndAnalysis = (value: unknown): O.Option<Record<st
   );
 };
 
-/** The mutation's answer. Only its shape matters — the id is never read. */
 const UpdateRepositoryResponse = S.Struct({
   updateRepository: S.Struct({
     repository: S.Struct({ id: S.String }),
   }),
 });
 
-/**
- * The `updateRepository` mutation, as an owned document.
- *
- * **Details**
- *
- * Named `UpdateRepository`; {@link GitHubClient.layerFixture} keys its GraphQL
- * fixtures by that name.
- */
 const UpdateRepository = GraphQLDocument.make({
   name: "UpdateRepository",
   document: `mutation UpdateRepository($input: UpdateRepositoryInput!) {
@@ -332,29 +313,11 @@ const UpdateRepository = GraphQLDocument.make({
   response: UpdateRepositoryResponse,
 })<{ readonly input: Record<string, unknown> }>();
 
-/**
- * Keys GitHub rejects when the strategy that owns them is being turned off.
- *
- * **Gotchas**
- *
- * Sending `merge_commit_title` in the same request that sets
- * `allow_merge_commit: false` is a 422, so the dependent keys go out with the
- * strategy that owns them rather than alone.
- */
 const DEPENDENT_MERGE_KEYS = {
   allow_merge_commit: ["merge_commit_title", "merge_commit_message"],
   allow_squash_merge: ["squash_merge_commit_title", "squash_merge_commit_message"],
 } as const;
 
-/**
- * Everything both write paths owe the API before a patch is sent.
- *
- * **Details**
- *
- * Shared by `updateSettings` and `applySettings` deliberately: a caller should
- * not get a different `security_and_analysis` shape depending on which one they
- * reached for.
- */
 const preparePatch = (patch: Record<string, unknown>): Record<string, unknown> => {
   const out: Record<string, unknown> = { ...patch };
 
@@ -454,6 +417,17 @@ export interface GitHubRepositoryShape {
    * and a closed type here would date the package — but it also means a typo is
    * forwarded rather than rejected, so a caller that owns a schema should
    * validate before calling.
+   *
+   * **Gotchas**
+   *
+   * Disabling a merge strategy drops that strategy's title and message keys
+   * from the same patch: GitHub answers 422 to `merge_commit_title` sent with
+   * `allow_merge_commit: false`. `updateSettings` prepares its patch the same
+   * way, so both paths send the same `security_and_analysis` shape.
+   *
+   * No REST `PATCH` is sent when preparation leaves the REST body empty, even
+   * if the map held REST keys. A key such as `toString` or `constructor` is an
+   * ordinary REST key, never a GraphQL field.
    */
   readonly applySettings: (
     settings: Record<string, unknown>
@@ -594,15 +568,9 @@ export class GitHubRepository extends Context.Service<GitHubRepository, GitHubRe
 
 const unstubbed = unstubbedFor({ service: "GitHubRepository", access: "read" });
 
-/** The GraphQL input field for a caller key, when only GraphQL can set it. */
 const graphqlFieldOf = (key: string): O.Option<string> =>
-  // `R.has` checks own keys: the map is open by design, so a caller key of
-  // `toString` or `constructor` would otherwise resolve through the prototype
-  // chain to a FUNCTION, and that function would be sent as a GraphQL input
-  // field name and reported as applied.
   R.has(GRAPHQL_ONLY_SETTINGS, key) ? O.fromUndefinedOr(GRAPHQL_ONLY_SETTINGS[key]) : O.none();
 
-/** Split an open settings map into the REST body and the GraphQL input. */
 const routeSettings = (
   input: Record<string, unknown>
 ): {
@@ -612,8 +580,6 @@ const routeSettings = (
 } => {
   const rest: Record<string, unknown> = {};
   const graphql: Record<string, unknown> = {};
-  // The caller's key for each GraphQL field, so the report speaks their
-  // vocabulary rather than the wire's.
   const graphqlKeys: Array<string> = [];
   for (const [key, value] of R.toEntries(input)) {
     if (P.isUndefined(value)) continue;
@@ -658,16 +624,7 @@ const make = (client: GitHubClient["Service"]): GitHubRepositoryShape => {
 
       const { rest, graphql, graphqlKeys } = routeSettings(input);
 
-      // Prepared ONCE, and the report is taken from the result: reporting
-      // `rest` here would name fields that preparation then drops, which is a
-      // dry run that lies in the direction of looking successful.
       const prepared = preparePatch(rest);
-      // Gate on the PREPARED body, never the raw keys. Preparation can drop
-      // every key it was given — a `security_and_analysis` block whose fields
-      // are all unrecognised normalises to nothing — and gating on `rest`
-      // then fires a PATCH carrying only `owner` and `repo`, while the report
-      // below truthfully says nothing was sent. The report contradicting the
-      // wire is the one failure `AppliedSettings` exists to prevent.
       const restKeys = R.keys(prepared);
 
       if (restKeys.length > 0) {
@@ -679,7 +636,6 @@ const make = (client: GitHubClient["Service"]): GitHubRepositoryShape => {
       }
 
       if (R.keys(graphql).length > 0) {
-        // Only now is the node id worth a round trip.
         const repository = yield* client.request("GET /repos/{owner}/{repo}", { owner, repo });
         yield* client.graphql(UpdateRepository, {
           input: { repositoryId: repository.node_id, ...graphql },

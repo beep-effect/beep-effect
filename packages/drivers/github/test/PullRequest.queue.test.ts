@@ -23,9 +23,7 @@ const info = PullRequestInfo.make({
   mergedAt: O.none(),
 });
 
-// Shapes recorded from the merge-queue lab (goals/merge-queue-lab): a fresh
-// entry has no group commits yet, a building one has both.
-const queuedWire = {
+const labQueuedWire = {
   id: "MQE_1",
   state: "QUEUED",
   position: 1,
@@ -37,8 +35,8 @@ const queuedWire = {
   headCommit: null,
   baseCommit: null,
 };
-const buildingWire = {
-  ...queuedWire,
+const labBuildingWire = {
+  ...labQueuedWire,
   state: "AWAITING_CHECKS",
   estimatedTimeToMerge: 42,
   headCommit: { oid: "01ad0c0" },
@@ -63,9 +61,9 @@ const JsonObject = S.fromJsonString(S.Record(S.String, S.Unknown));
 
 describe("PullRequest merge queue", () => {
   const { base, script } = harness([
-    { status: 200, body: { data: { enqueuePullRequest: { mergeQueueEntry: queuedWire } } } },
+    { status: 200, body: { data: { enqueuePullRequest: { mergeQueueEntry: labQueuedWire } } } },
     { status: 200, body: { data: { enqueuePullRequest: { mergeQueueEntry: null } } } },
-    { status: 200, body: { data: { repository: { pullRequest: { mergeQueueEntry: buildingWire } } } } },
+    { status: 200, body: { data: { repository: { pullRequest: { mergeQueueEntry: labBuildingWire } } } } },
     { status: 200, body: { data: { repository: { pullRequest: { mergeQueueEntry: null } } } } },
     {
       status: 200,
@@ -80,10 +78,10 @@ describe("PullRequest merge queue", () => {
         ],
       },
     },
-    { status: 200, body: { data: { dequeuePullRequest: { mergeQueueEntry: queuedWire } } } },
+    { status: 200, body: { data: { dequeuePullRequest: { mergeQueueEntry: labQueuedWire } } } },
     {
       status: 200,
-      body: { data: { repository: { pullRequest: { mergeQueueEntry: { ...queuedWire, state: "SOON" } } } } },
+      body: { data: { repository: { pullRequest: { mergeQueueEntry: { ...labQueuedWire, state: "SOON" } } } } },
     },
     {
       status: 200,

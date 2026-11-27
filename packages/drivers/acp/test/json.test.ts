@@ -13,8 +13,7 @@ import * as Struct from "effect/Struct";
 
 const JsonArbitrary = Arbitrary.schema(Schema.Json);
 const encodeJsonText = Schema.encodeEffect(Schema.fromJsonString(Schema.Json));
-// The host parser is only used to materialise object shapes (map transitions) before a reader test.
-const decodeWithHostParser = Schema.decodeUnknownEffect(Schema.fromJsonString(Schema.Json));
+const materialiseShapeWithHostParser = Schema.decodeUnknownEffect(Schema.fromJsonString(Schema.Json));
 const decodeJson = Schema.decodeUnknownEffect(Schema.Json);
 const decodeJsonObject = Schema.decodeUnknownEffect(Schema.JsonObject);
 const isJsonArray = Schema.is(Schema.Array(Schema.Json));
@@ -90,9 +89,7 @@ it.effect.prop(
 it.effect(
   "keeps escaped one-character keys distinct from a materialised backslash key at the same position",
   Effect.fnUntraced(function* () {
-    // V8 12.8 through 13.7 resolves `{"beep-acp-json":0,"\n":1}` to a "\\" key once this shape exists
-    // (see the readJsonText Gotchas); the reader must not depend on the host parser for such keys.
-    const decodedWithHostParser = yield* decodeWithHostParser('{"beep-acp-json":0,"\\\\":0}');
+    const decodedWithHostParser = yield* materialiseShapeWithHostParser('{"beep-acp-json":0,"\\\\":0}');
     assert.deepEqual(decodedWithHostParser, { "beep-acp-json": 0, "\\": 0 });
     const cases: ReadonlyArray<readonly [escaped: string, decoded: string]> = [
       ["\\n", "\n"],
@@ -102,7 +99,11 @@ it.effect(
       ["\\u0041", "A"],
     ];
     for (const [escaped, decoded] of cases) {
-      assert.deepEqual(read(`{"beep-acp-json":0,"${escaped}":1}`), { "beep-acp-json": 0, [decoded]: 1 });
+      assert.deepEqual(
+        read(`{"beep-acp-json":0,"${escaped}":1}`),
+        { "beep-acp-json": 0, [decoded]: 1 },
+        "V8 12.8-13.7 resolves such a key to a backslash once this shape exists; the reader must not use the host parser"
+      );
     }
   })
 );

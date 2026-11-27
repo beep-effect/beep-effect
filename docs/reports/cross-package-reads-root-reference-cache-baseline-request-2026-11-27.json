@@ -1,0 +1,18 @@
+{
+  "previous": {
+    "//": "c612eb33c13073f6c22755282665a3310fa5b66d85c0b1db39867cc967b131e3",
+    "@beep/repo-cli": "cd4db3301c88f9bef71de9c8d33a4159b281aea31368bbeb7191907a88345b58"
+  },
+  "review": {
+    "reviewer": "Claude Opus 5.5 (route-soundness-repair cross-package reads lane)",
+    "reason": "Re-record the root subject and @beep/repo-cli after its turbo.json declared law-practice-server's test files, which ci-partitions.test.ts globs, as test, test:property and coverage inputs. Configuration review only; no qualification is granted.",
+    "basis": {
+      "path": "docs/reports/cross-package-reads-root-reference-cache-review-2026-11-27.md",
+      "sha256": "cb0ad15eaf31ae01c877936ef9f7100e8540f47e87a9db4e8c7e227d4e5f13ba"
+    }
+  },
+  "subjects": ["//", "@beep/repo-cli"],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.5",
+  "epoch": "qualification-v3"
+}

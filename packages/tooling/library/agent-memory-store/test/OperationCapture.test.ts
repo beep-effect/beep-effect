@@ -59,7 +59,6 @@ const fileOf = (base: BaseExport, at = path): BaseFile =>
 
 const nodeAt = (base: BaseExport, index: number, at = path) => A.getUnsafe(fileOf(base, at).nodes, index);
 
-// The op tag of each operation, with the base node index it names (or -1).
 const shapeOf = (base: BaseExport, operations: ReadonlyArray<NodeOperation>, at = path) => {
   const ids = A.map(fileOf(base, at).nodes, (node) => node.nodeId);
   return A.map(
@@ -116,8 +115,8 @@ describe("captureBatch", () => {
     const [first, second] = operations;
     assertTrue(NodeOperation.guards.insert(first) && NodeOperation.guards.insert(second));
     if (NodeOperation.guards.insert(first) && NodeOperation.guards.insert(second)) {
-      // The run "- new", "\n" follows the separator after "- one".
-      assertSome(first.afterNodeId, nodeAt(base, 3).nodeId);
+      const separatorAfterOne = nodeAt(base, 3);
+      assertSome(first.afterNodeId, separatorAfterOne.nodeId);
       assertSome(second.afterNodeId, first.nodeId);
       deepStrictEqual([first.kind, first.text, second.kind, second.text], ["listItem", "- new", "gap", "\n"]);
       expect(first.filePath).toBe(path);
@@ -153,14 +152,17 @@ describe("captureBatch", () => {
 
   it("captures an edit that changes how its neighbours parse as an unpaired run", () => {
     const paragraphs = baseOf([[path, "one\n\ntwo\n"]]);
-    // Without the blank line the two paragraphs are one.
     const operations = assertRoundTrip(paragraphs, "one\ntwo\n");
-    deepStrictEqual(shapeOf(paragraphs, operations), [
-      ["delete", 0],
-      ["delete", 1],
-      ["delete", 2],
-      ["insert", -1],
-    ]);
+    deepStrictEqual(
+      shapeOf(paragraphs, operations),
+      [
+        ["delete", 0],
+        ["delete", 1],
+        ["delete", 2],
+        ["insert", -1],
+      ],
+      "without the blank line the two paragraphs are one"
+    );
     const [, , , insert] = operations;
     assertTrue(insert !== undefined && NodeOperation.guards.insert(insert) && O.isNone(insert.afterNodeId));
   });
@@ -221,27 +223,32 @@ describe("captureBatch", () => {
   it("matches nodes by text alone when the base partition does not cut the base nodes", () => {
     const counter = { value: 0 };
     const mint = seededNodeIdMinter(11);
-    // Two nodes where the partition cuts three, and three nodes the partition cuts differently.
     const fewer = BaseExport.make({
       folderDigest: base.folderDigest,
       files: [baseFileOfNodes({ path, texts: ["a\n", "\nb"], mint, counter })],
       cursor: LogCursor.make(0),
     });
     const operations = assertRoundTrip(fewer, "a\n\nc");
-    expect(A.every(operations, (operation) => operation.op !== "replace")).toBe(true);
+    expect(
+      A.every(operations, (operation) => operation.op !== "replace"),
+      "two base nodes where the partition cuts three"
+    ).toBe(true);
     const shifted = BaseExport.make({
       folderDigest: base.folderDigest,
       files: [baseFileOfNodes({ path, texts: ["a", "\n", "\nb"], mint, counter })],
       cursor: LogCursor.make(0),
     });
     const kept = assertRoundTrip(shifted, "a\n\nc");
-    // Equal-count run, unknown kinds: each pair is a delete and an insert.
-    deepStrictEqual(shapeOf(shifted, kept), [
-      ["delete", 1],
-      ["insert", -1],
-      ["delete", 2],
-      ["insert", -1],
-    ]);
+    deepStrictEqual(
+      shapeOf(shifted, kept),
+      [
+        ["delete", 1],
+        ["insert", -1],
+        ["delete", 2],
+        ["insert", -1],
+      ],
+      "three base nodes the partition cuts differently: an equal-count run of unknown kinds pairs as delete and insert"
+    );
   });
 });
 
@@ -310,9 +317,8 @@ describe("captureBatch refusals", () => {
       ),
       refusal("anchorOutOfSequence")
     );
-    // An anchor wider than its quote, which only an unchecked construction can build.
     const wide = baseNodeOf({ path, nodeId: node.nodeId, revisionId: node.revisionId, offset: 0, text: "- one" });
-    const unchecked = BaseNode.make(
+    const anchorWiderThanQuote = BaseNode.make(
       {
         ...wide,
         anchor: OccurrenceAnchor.make(
@@ -325,7 +331,7 @@ describe("captureBatch refusals", () => {
       },
       { disableChecks: true }
     );
-    deepStrictEqual(capture([edited("x")], withNodes([unchecked])), refusal("anchorOutOfSequence"));
+    deepStrictEqual(capture([edited("x")], withNodes([anchorWiderThanQuote])), refusal("anchorOutOfSequence"));
   });
 
   it("refuses a minted id the base or the batch already holds", () => {
@@ -372,14 +378,16 @@ layer(Digest.layerWebCrypto)("captureBatchVerified", (it) => {
   it.effect(
     "captures against a base whose named files hash to their digests",
     Effect.fnUntraced(function* () {
-      // `other.md` keeps a wrong digest; no edit names it, so it is not checked.
       const verified = yield* withDigest(baseOf([[path, "- one\n"]]));
       const base = BaseExport.make({
         ...verified,
         files: [...verified.files, fileOf(seededBaseOf(2)([["other.md", "x\n"]]), "other.md")],
       });
       const batch = yield* captureBatchVerified(base, [edited("- uno\n")], author, seededNodeIdMinter(1));
-      expect(operationsOfBatch(batch)).toEqual(["replace"]);
+      expect(
+        operationsOfBatch(batch),
+        "`other.md` keeps a wrong digest; no edit names it, so it is not checked"
+      ).toEqual(["replace"]);
     })
   );
 

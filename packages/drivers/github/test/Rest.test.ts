@@ -27,9 +27,7 @@ describe("PageOptions", () => {
     assert.strictEqual(PageOptions.make({ perPage: 100 }).perPage, 100);
   });
 
-  it("refuses a page size above GitHub's ceiling", () => {
-    // GitHub silently caps at 100, so a caller asking for 250 already has
-    // arithmetic that is wrong. Failing here is cheaper than in production.
+  it("refuses a page size above the 100 GitHub silently caps at", () => {
     assert.throws(() => PageOptions.make({ perPage: 250 }));
   });
 

@@ -61,14 +61,10 @@ const FreeMailDomain = LiteralKit([
 const isFreeMailDomain = S.is(FreeMailDomain);
 const decodeEvidenceToken = S.decodeUnknownOption(MatterEvidenceToken);
 
-// `16/123,456`, `16/123456`, and `16123456` all read as the application 16123456.
 const applicationNumberPattern = /(?<!\d)(\d{2})\/?(\d{3}),?(\d{3})(?!\d)/gu;
-// `US 10,123,456 B2` and `10123456` both read as the patent 10123456. The
-// lookbehind keeps the serial half of `16/123,456` from reading as a patent.
-const patentNumberPattern = /(?<![\d/])(\d{1,2}),?(\d{3}),?(\d{3})(?!\d)/gu;
+const patentNumberOutsideSerialPattern = /(?<![\d/])(\d{1,2}),?(\d{3}),?(\d{3})(?!\d)/gu;
 const wordSeparatorPattern = /[\s,;:()[\]<>"'!?]+/u;
 const trailingDotsPattern = /\.+$/u;
-// The digits a docket reference opens with: `<client>.<family>` or a bare `<family>`.
 const referenceFamilyPattern = /^(?:\d+\.)?\d+/u;
 const nonDigitPattern = /\D/gu;
 
@@ -145,7 +141,7 @@ const mailSignals = (context: MatterTaggerContext, envelope: MailEnvelope): Mail
       referencedNumbers(references, isApplicationReference)
     ),
     patentNumbers: HashSet.union(
-      numbersIn(patentNumberPattern)(text),
+      numbersIn(patentNumberOutsideSerialPattern)(text),
       referencedNumbers(references, isPatentReference)
     ),
     words: HashSet.union(wordsIn(text), HashSet.fromIterable(dockets)),
@@ -180,7 +176,6 @@ const carriedConversation = (signals: MailSignals, entry: MatterIndexEntry): Rea
     O.toArray
   );
 
-// A family key counts only against the family of an extracted docket reference, never a loose word.
 const identifierEvidence = (
   signals: MailSignals,
   matter: MatterIdentifiers,
@@ -193,7 +188,6 @@ const identifierEvidence = (
     hits("docket-number", familyKeys, flow(Str.toLowerCase, within(signals.referencedFamilies))),
   ]);
 
-// The strongest identifier hit on a matter that cannot be tagged; 0 when none.
 const unattributedStrength = (context: MatterTaggerContext, signals: MailSignals): number =>
   A.reduce(context.index.unattributed, 0, (strongest, matter) =>
     N.max(strongest, matterEvidenceConfidence(identifierEvidence(signals, matter, matter.familyKeys)))
@@ -252,7 +246,6 @@ const practiceCategoriesOf = (context: MatterTaggerContext, signals: MailSignals
     A.appendAll(ruleCategories(MailTaxonomy.make(context.taxonomy), signals), clientCategories(context, signals))
   );
 
-// A hit on an unattributed matter turns every unmatched outcome into `needs-attorney`.
 const escalated =
   (rival: number) =>
   (reason: UnmatchedReason): UnmatchedReason =>

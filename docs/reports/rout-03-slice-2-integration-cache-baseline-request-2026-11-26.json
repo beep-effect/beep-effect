@@ -1,0 +1,25 @@
+{
+  "previous": {
+    "//": "7ba32df4c0bcc6668b1b8fd2db0447065d0300b4516788c70b38a2aaebfddef4",
+    "@beep/eyecite": "90e7b158a5f1c829a69eadf2cb04ff96205e95a8a002cf77be81f4dfaa7c4047",
+    "@beep/law-practice-server": "3aa534f87293f208fb4e81ad41ef69f89d175c6a33fa8e3bb93159a8b9071ed5",
+    "@beep/ontology": "84e646b2a44831ac4580795e3fd0ef5d93134efa624fc826a79049754aec25dc"
+  },
+  "review": {
+    "reviewer": "Claude Opus 5.5 (route-soundness-repair ROUT-03 slice 2 lane)",
+    "reason": "Re-record the root subject and three packages after their turbo.json files declared the goal-data and fixture inputs on the integration test tasks as well. Configuration review only; no qualification is granted.",
+    "basis": {
+      "path": "docs/reports/rout-03-slice-2-integration-cache-review-2026-11-26.md",
+      "sha256": "a2f3263d1a19ea8ec0a7fc85945c7d981a13dc039dd2a90a54fdcca2dd16b2ed"
+    }
+  },
+  "subjects": [
+    "//",
+    "@beep/eyecite",
+    "@beep/law-practice-server",
+    "@beep/ontology"
+  ],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.5",
+  "epoch": "qualification-v3"
+}

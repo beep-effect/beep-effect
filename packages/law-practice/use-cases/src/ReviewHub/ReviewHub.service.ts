@@ -49,7 +49,6 @@ type HubFailure =
 const storeUnavailable = ({ _tag, operation }: AnswerLogError | ReviewItemStoreError | VerdictLogError) =>
   ReviewHubToolError.make({ code: "store-unavailable", message: `The review store failed to ${operation} (${_tag}).` });
 
-// Every typed failure of the queues and the store, as the code the client branches on.
 const toolError = (failure: HubFailure): ReviewHubToolError =>
   Match.valueTags(failure, {
     AnswerLogError: storeUnavailable,

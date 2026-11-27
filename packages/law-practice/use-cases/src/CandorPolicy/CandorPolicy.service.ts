@@ -53,25 +53,11 @@ const encodeCitationLineageKey = S.encodeEffect(S.fromJsonString(CitationLineage
 const sameIdentifiedPatentReference = (head: PatentReference, candidate: PatentReference): boolean =>
   isIdentifiedPatentReference(head) && samePatentReference(head, candidate);
 
-/**
- * Every disposition id that some other recorded disposition retires.
- *
- * This is deliberately computed over the WHOLE recorded set, never over a
- * subset already filtered to one event. A superseding record is free to carry a
- * different `disposes` binding than the record it retires, so filtering first
- * would drop the retiring row before its `supersedes` reference was ever read
- * and leave a retired judgment looking effective — a fail-open hole in a gate
- * whose entire purpose is to fail closed.
- */
+// decision: candor-retirement-reads-every-disposition
 const retiredDispositionIds = (dispositions: ReadonlyArray<CandorDisposition>): HashSet.HashSet<number> =>
   HashSet.fromIterable(A.getSomes(A.map(dispositions, (disposition) => disposition.supersedes)));
 
-/**
- * A disposition is effective only if it declares itself live and nothing later
- * retires it. Both halves matter: a `superseded` or `withdrawn` record removes
- * its own coverage, and an appended superseding record removes the coverage of
- * the record it names.
- */
+// decision: candor-retirement-reads-every-disposition
 const effectiveDispositions = (
   candidates: ReadonlyArray<CandorDisposition>,
   retired: HashSet.HashSet<number>
@@ -82,17 +68,7 @@ const effectiveDispositions = (
       CandorDispositionLifecycle.is.active(disposition.lifecycle) && !HashSet.has(retired, disposition.id)
   );
 
-/**
- * Derive which events of one source group have been superseded.
- *
- * **Details**
- *
- * A supersession link is honoured only when the named event is present, its
- * observation carries the named digest, and both events have equal parsed
- * patent references whose head carries a publication number. Empty references,
- * dangling links, and mismatches do not move the head, leaving lineage
- * ambiguous rather than releasing an obligation.
- */
+// decision: candor-lineage-needs-a-verified-link
 const supersededEventIds = (group: ReadonlyArray<PatentCitationEvent>) =>
   HashSet.fromIterable(
     A.getSomes(
@@ -116,12 +92,7 @@ const supersededEventIds = (group: ReadonlyArray<PatentCitationEvent>) =>
     )
   );
 
-/**
- * Why the current observation of one source is not covered, or `O.none()` when
- * it is. Every failure path returns a reason rather than raising, because a
- * source that will not resolve or an anchor that will not re-verify must block
- * promotion rather than skip the check.
- */
+// decision: candor-gaps-are-reasons-not-errors
 const coverageReason = Effect.fn("CandorPolicy.coverageReason")(function* (
   head: PatentCitationEvent,
   dispositions: ReadonlyArray<CandorDisposition>
@@ -155,18 +126,12 @@ const coverageReason = Effect.fn("CandorPolicy.coverageReason")(function* (
   });
 });
 
-/**
- * Why no recorded judgment covers this exact observation, or `O.none()` when
- * one does. The order of the checks is the order in which a reader would want
- * the answer: is there a judgment at all, does it still stand, did a human make
- * it, and did that human record a Rule 56 decision.
- */
+// decision: candor-gaps-are-reasons-not-errors
+// decision: candor-retirement-reads-every-disposition
 const dispositionReason = (
   head: PatentCitationEvent,
   dispositions: ReadonlyArray<CandorDisposition>
 ): O.Option<UncoveredReason> => {
-  // Retirement is derived before the binding filter, so a superseding record
-  // that names a different observation still retires what it points at.
   const retired = retiredDispositionIds(dispositions);
   const bound = A.filter(
     dispositions,
@@ -191,22 +156,7 @@ const dispositionReason = (
   return A.isReadonlyArrayNonEmpty(judged) ? O.none() : O.some("no-rule56-judgment");
 };
 
-/**
- * Evaluate one source group, returning every recorded event it leaves
- * uncovered.
- *
- * Currency is derived from declared supersession alone. A group with exactly
- * one head is answered by that head's coverage, and every recorded event in
- * the group shares that answer — which is why superseding an observation
- * never releases the gate and disposing the newer observation releases the
- * whole group at once. A group without exactly one head is ambiguous, and
- * ambiguity blocks.
- *
- * Discovery provenance records how the event entered the system; it no longer
- * decides whether the event participates. An examiner-observed event therefore
- * initiates gating in its own right and remains clearable only by a human
- * disposition bound to the current observation.
- */
+// decision: candor-lineage-needs-a-verified-link
 const evaluateGroup = Effect.fn("CandorPolicy.evaluateGroup")(function* (
   group: ReadonlyArray<PatentCitationEvent>,
   dispositions: ReadonlyArray<CandorDisposition>

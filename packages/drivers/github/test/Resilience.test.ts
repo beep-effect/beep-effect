@@ -117,9 +117,10 @@ describe("RetryPolicy.retries", () => {
   });
 
   it("refuses a server-advised delay beyond the ceiling", () => {
-    // A primary rate-limit window can be 45 minutes out. Sleeping through it
-    // turns a failure into a hang, so the policy declines and the caller decides.
-    assert.isFalse(policy.retries(failure({ retryable: true, retryAfterMillis: 45 * 60 * 1000 })));
+    assert.isFalse(
+      policy.retries(failure({ retryable: true, retryAfterMillis: 45 * 60 * 1000 })),
+      "sleeping through a 45-minute rate-limit window turns a failure into a hang"
+    );
   });
 
   it("accepts a server-advised delay at exactly the ceiling", () => {
@@ -141,8 +142,11 @@ describe("RetryPolicy.delayFor", () => {
   });
 
   it("draws full jitter from the exponential window", () => {
-    // attempt 1 -> [0, 1000]; the draw scales it linearly.
-    assert.strictEqual(Duration.toMillis(policy.delayFor(failure({ retryable: true }), 1, 1)), 1_000);
+    assert.strictEqual(
+      Duration.toMillis(policy.delayFor(failure({ retryable: true }), 1, 1)),
+      1_000,
+      "attempt 1 draws from [0, 1000], scaled linearly"
+    );
     assert.strictEqual(Duration.toMillis(policy.delayFor(failure({ retryable: true }), 1, 0.5)), 500);
     assert.strictEqual(Duration.toMillis(policy.delayFor(failure({ retryable: true }), 1, 0)), 0);
   });
@@ -168,12 +172,7 @@ describe("RetryPolicy.delayFor", () => {
   });
 });
 
-describe("RetryPolicy.schedule under Effect.retry", () => {
-  /**
-   * Every case here pins `retryAfterMillis`, which makes the delay exact and
-   * removes the jitter draw from the test. The jitter arithmetic is covered
-   * above, purely.
-   */
+describe("RetryPolicy.schedule under Effect.retry with a pinned retryAfterMillis and no jitter draw", () => {
   const policy = RetryPolicy.make({ ...RetryPolicy.default, maxRetries: 3 });
   const rateLimited = GitHubError.make({
     kind: "rateLimited",
@@ -191,12 +190,11 @@ describe("RetryPolicy.schedule under Effect.retry", () => {
         Effect.flip,
         Effect.forkChild
       );
-      // Four attempts, three 1s sleeps between them.
       yield* TestClock.adjust(Duration.seconds(10));
       const error = yield* Fiber.join(fiber);
       assert.strictEqual(error.kind, "rateLimited");
       const got = yield* Ref.get(attempts);
-      assert.strictEqual(got, 4);
+      assert.strictEqual(got, 4, "four attempts, three 1s sleeps between them");
     })
   );
 
