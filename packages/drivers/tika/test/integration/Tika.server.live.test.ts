@@ -35,8 +35,6 @@ const decodeTikaServerEngineConfig = S.decodeEffect(TikaServerEngineConfig);
 const BEEP_TEST_TIKA_URL_ENV = "BEEP_TEST_TIKA_URL";
 const liveMarker = "hello live tika corpus";
 
-// Resolve the opt-in lane key through Config. Absent and empty values produce
-// explicit skipped registrations; configured values retain real HTTP execution.
 const liveTikaUrl = Config.String(BEEP_TEST_TIKA_URL_ENV).pipe(Config.option, Effect.map(O.filter(Str.isNonEmpty)));
 const skipNotice = `Live Tika Server requires ${BEEP_TEST_TIKA_URL_ENV}.`;
 
@@ -89,8 +87,6 @@ const textFixtures: ReadonlyArray<{
   { bytes: liveHtml, extension: "html", format: "html" },
   { bytes: liveXhtml, extension: "xhtml", format: "xhtml" },
   { bytes: liveRtf, extension: "rtf", format: "rtf" },
-  // Word extraction failures are silent (HTTP 200, empty text), so the
-  // liveMarker toContain assertion below is the load-bearing check.
   { bytes: makeLiveDoc(), extension: "doc", format: "doc" },
   { bytes: makeLiveDocx(), extension: "docx", format: "docx" },
 ];
@@ -127,7 +123,10 @@ it.layer(Layer.merge(FetchHttpClient.layer, NodeServices.layer), { excludeTestSe
           const result = yield* engine.extract(liveOperation1);
 
           expect(result.engine).toBe("apache-tika");
-          expect(result.text).toContain(liveMarker);
+          expect(
+            result.text,
+            "Word extraction fails silently (HTTP 200, empty text), so this marker check is what proves extraction"
+          ).toContain(liveMarker);
           expect(result.metadata["Content-Type"]).toBeDefined();
         })
       );
@@ -180,10 +179,11 @@ it.layer(Layer.merge(FetchHttpClient.layer, NodeServices.layer), { excludeTestSe
         const operation = yield* liveOperation("doc", "doc", new Uint8Array([0x00, 0x01, 0x02, 0x03, 0x04]));
         const outcome = yield* Effect.result(engine.extract(operation));
 
-        // Tika may answer 415, 422, or parse the junk as an empty document; the
-        // load-bearing invariant is that no HTTP error escapes as itself.
         if (Result.isFailure(outcome)) {
-          expect(outcome.failure._tag).toBe("FileProcessingOperationError");
+          expect(
+            outcome.failure._tag,
+            "Tika may answer 415 or 422 or parse the junk as an empty document; no HTTP error may escape as itself"
+          ).toBe("FileProcessingOperationError");
         }
       })
     );

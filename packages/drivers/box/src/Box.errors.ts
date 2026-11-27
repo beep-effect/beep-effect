@@ -591,11 +591,6 @@ const decodeApiFailureConflict = S.decodeUnknownResult(BoxApiFailureConflict);
 const isBoxContentSha1 = S.is(BoxContentSha1);
 const isNatural = S.is(S.Natural);
 
-/**
- * Copies only the approved conflict fields, so a provider name, etag, or any
- * other key can never reach the decoder. An unusable `sha1` or `size` drops
- * that field alone; an unusable `id` or `type` drops the whole entry.
- */
 const readApiFailureConflict = (conflict: unknown) =>
   decodeApiFailureConflict({
     ...O.getSomesStruct({
@@ -608,7 +603,6 @@ const readApiFailureConflict = (conflict: unknown) =>
     }),
   });
 
-/** Folder-create conflicts arrive as an array, upload conflicts as one object; anything else is no conflict list. */
 const conflictEntries = (conflicts: unknown): O.Option<ReadonlyArray<unknown>> =>
   A.isArray(conflicts) ? O.some(conflicts) : P.isObject(conflicts) ? O.some(A.of(conflicts)) : O.none();
 

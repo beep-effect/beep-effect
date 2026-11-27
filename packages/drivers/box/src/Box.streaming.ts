@@ -675,6 +675,17 @@ export class BoxDownloadZipPayload extends S.Opaque<BoxDownloadZipPayload, { rea
 /**
  * Hand-written streaming operation groups for the Box SDK.
  *
+ * **Gotchas**
+ *
+ * `chunkedUploads.uploadFilePartByUrl` and `zipDownloads.getZipDownloadContent`
+ * pass a full caller-supplied URL to the SDK, so both fail closed with a
+ * `transport` `BoxError` before any outbound request when the URL targets
+ * loopback, link-local, RFC1918/ULA private or cloud-metadata space (IPv4-mapped
+ * IPv6 forms included), or when its hostname resolves there or cannot be
+ * resolved. The hostname goes through the OS resolver, the one the SDK's own
+ * connection uses. The remaining DNS-rebinding window between that check and the
+ * connection is documented on the `@beep/schema` `SafeRemoteHost` guard.
+ *
  * **Example** (Streaming managers keys)
  *
  * ```ts
@@ -801,14 +812,7 @@ const mergeCancellation = <A>(
   return { cancellationToken };
 };
 
-/**
- * Fail-closed DNS resolver injected into the SSRF guard so a by-URL target whose
- * hostname resolves to internal space is rejected before the SDK connects. Uses
- * the OS resolver (`getaddrinfo` via `dns.lookup`) to match what the SDK's own
- * connection will resolve. A resolution failure surfaces a `BlockedHostError` so
- * the guard never proceeds on a name it could not evaluate.
- */
-const resolveRemoteHost = (hostname: string): Effect.Effect<ReadonlyArray<string>, BlockedHostError> =>
+const resolveWithOsResolver = (hostname: string): Effect.Effect<ReadonlyArray<string>, BlockedHostError> =>
   Effect.tryPromise({
     catch: (cause) =>
       BlockedHostError.make({
@@ -820,23 +824,8 @@ const resolveRemoteHost = (hostname: string): Effect.Effect<ReadonlyArray<string
     try: () => NodeDns.promises.lookup(hostname, { all: true }),
   }).pipe(Effect.map((records) => A.map(records, (record) => record.address)));
 
-/**
- * Fail-closed SSRF guard for caller-supplied Box by-URL parameters.
- *
- * The `chunkedUploads.uploadFilePartByUrl` and `zipDownloads.getZipDownloadContent`
- * operations forward a full URL string straight to the Box SDK, turning the
- * driver into an SSRF/readable-SSRF primitive if attacker-influenced. This guard
- * parses the URL and rejects loopback, link-local, RFC1918/ULA private, and
- * cloud-metadata destinations (including IPv4-mapped IPv6 forms) before any
- * outbound request is issued. It additionally resolves the hostname through
- * {@link resolveRemoteHost} and rejects any name that resolves to internal space,
- * translating the typed `BlockedHostError` into a redacted `BoxError` so the
- * failure stays on the driver's `BoxError` channel. The residual DNS-rebinding
- * TOCTOU window (resolve public, connect internal) is documented on the
- * `@beep/schema` `SafeRemoteHost` guard.
- */
-const assertBoxUrlAllowed = (method: BoxMethodName, url: string): Effect.Effect<void, BoxError> =>
-  assertAllowedRemoteUrl(url, { resolve: resolveRemoteHost }).pipe(
+const rejectInternalBoxUrl = (method: BoxMethodName, url: string): Effect.Effect<void, BoxError> =>
+  assertAllowedRemoteUrl(url, { resolve: resolveWithOsResolver }).pipe(
     Effect.mapError((error: BlockedHostError) =>
       BoxError.fromReason(
         "transport",
@@ -1138,7 +1127,7 @@ export const makeStreamingOperations = (client: unknown): BoxStreamingOperations
         M.UploadedPart,
         payload,
         (decoded, signal) =>
-          assertBoxUrlAllowed("chunkedUploads.uploadFilePartByUrl", decoded.url).pipe(
+          rejectInternalBoxUrl("chunkedUploads.uploadFilePartByUrl", decoded.url).pipe(
             Effect.andThen(byteInputToReadable("chunkedUploads.uploadFilePartByUrl", decoded.requestBody)),
             Effect.flatMap((requestBody) =>
               invokeSdkPromise(client, "chunkedUploads", "uploadFilePartByUrl", "chunkedUploads.uploadFilePartByUrl", [
@@ -1234,7 +1223,7 @@ export const makeStreamingOperations = (client: unknown): BoxStreamingOperations
         BoxGetZipDownloadContentPayload,
         payload,
         (decoded, signal) =>
-          assertBoxUrlAllowed("zipDownloads.getZipDownloadContent", decoded.downloadUrl).pipe(
+          rejectInternalBoxUrl("zipDownloads.getZipDownloadContent", decoded.downloadUrl).pipe(
             Effect.andThen(
               invokeSdkPromise(client, "zipDownloads", "getZipDownloadContent", "zipDownloads.getZipDownloadContent", [
                 decoded.downloadUrl,

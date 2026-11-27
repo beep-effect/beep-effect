@@ -270,13 +270,11 @@ export const listObservedWebhooks = (box: B.Box["Service"]) =>
     )
   );
 
-/** Authenticated enterprise and subject identifiers read from `users.getUserMe`. */
 type BoxLiveIdentity = {
   readonly enterpriseId: BoxProviderId;
   readonly subjectId: BoxProviderId;
 };
 
-/** Tenant and service-identity fingerprint pinned by a secure-runner document. */
 type BoxExpectedIdentity = {
   readonly expectedEnterpriseId: BoxProviderId;
   readonly expectedSubjectId: BoxProviderId;

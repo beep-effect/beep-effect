@@ -7,7 +7,6 @@ import * as Effect from "effect/Effect";
 import * as Redacted from "effect/Redacted";
 import * as Str from "effect/String";
 
-// Synthetic values only; none of these is a real tenant, application or key.
 const complete = {
   LANE_TEST_TENANT_ID: "00000000-0000-0000-0000-000000000001",
   LANE_TEST_CLIENT_ID: "00000000-0000-0000-0000-000000000002",

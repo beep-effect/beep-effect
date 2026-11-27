@@ -7,25 +7,19 @@ import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 
-const boxToken = pipe(
-  Bun.env.CLOUD_BOX_TOKEN,
-  O.fromUndefinedOr,
-  // Skip the live call when the token is absent, blank, or an unresolved
-  // 1Password `op://` reference (present when secrets are not resolved, e.g. no
-  // local `op` session). Mirrors the repo's isUnresolvedSecretReference guard so
-  // the suite runs the real API only when a resolved token is available (CI).
-  O.filter((value) => {
-    const trimmed = Str.trim(value);
-    return trimmed.length > 0 && !Str.startsWith("op://")(trimmed);
-  })
-);
+const isResolvedNonBlankToken = (value: string): boolean => {
+  const trimmed = Str.trim(value);
+  return trimmed.length > 0 && !Str.startsWith("op://")(trimmed);
+};
+
+const boxToken = pipe(Bun.env.CLOUD_BOX_TOKEN, O.fromUndefinedOr, O.filter(isResolvedNonBlankToken));
 
 pipe(
   boxToken,
   O.match({
     onNone: () =>
       describe("@beep/box live integration (CLOUD_BOX_TOKEN)", () => {
-        it("skips live API calls when CLOUD_BOX_TOKEN is absent", () => {
+        it("skips live API calls when CLOUD_BOX_TOKEN is absent, blank or an unresolved 1Password op:// reference", () => {
           assertNone(boxToken);
         });
       }),

@@ -15,20 +15,6 @@ const isPlainObject = (value: unknown): value is Record<string, unknown> => {
   return prototype === Object.prototype || prototype === null;
 };
 
-// The Box SDK deserializers materialize absent response fields as
-// present-but-undefined keys (e.g. `nextMarker: undefined` on the final
-// marker-paginated page), which exact-optional schema keys reject. JSON has no
-// `undefined`, so dropping those keys before decoding restores wire semantics.
-//
-// Copy-on-write: a branch with nothing to prune is returned by identity, so an
-// unchanged listing costs a traversal and no allocation. Keys are written with
-// `defineProperty` because plain assignment of an own `__proto__` key invokes
-// the legacy prototype setter — mutating the normalized object's prototype and
-// dropping the field rather than copying it.
-//
-// Only plain objects and arrays are rebuilt; streams, buffers, and every other
-// non-plain value pass through untouched, so recursion stays confined to
-// JSON-shaped SDK payloads, which cannot be cyclic.
 const pruneUndefined = (value: unknown): unknown => {
   if (A.isArray(value)) {
     const pruned = A.map(value, pruneUndefined);
@@ -38,14 +24,16 @@ const pruneUndefined = (value: unknown): unknown => {
     const entries = Struct.entries(value);
     const kept = A.filter(entries, ([, entry]) => entry !== undefined);
     const prunedEntries = A.map(kept, ([key, entry]) => [key, pruneUndefined(entry)] as const);
-    if (kept.length === entries.length && A.every(prunedEntries, ([key, entry]) => entry === value[key])) {
+    const nothingPruned =
+      kept.length === entries.length && A.every(prunedEntries, ([key, entry]) => entry === value[key]);
+    if (nothingPruned) {
       return value;
     }
-    const pruned: Record<string, unknown> = {};
+    const protoSafeCopy: Record<string, unknown> = {};
     for (const [key, entry] of prunedEntries) {
-      Object.defineProperty(pruned, key, { configurable: true, enumerable: true, value: entry, writable: true });
+      Object.defineProperty(protoSafeCopy, key, { configurable: true, enumerable: true, value: entry, writable: true });
     }
-    return pruned;
+    return protoSafeCopy;
   }
   return value;
 };
@@ -53,9 +41,15 @@ const pruneUndefined = (value: unknown): unknown => {
 /**
  * Decode a Box driver boundary value into a typed request or response model.
  *
+ * **Details**
+ *
  * Response values are normalized first: SDK-materialized
- * present-but-undefined keys are pruned so exact-optional schema keys decode
- * the same payload the Box API actually sent.
+ * present-but-undefined keys (such as `nextMarker: undefined` on the final
+ * marker-paginated page) are pruned so exact-optional schema keys decode
+ * the same payload the Box API actually sent. Only plain objects and arrays are
+ * rebuilt, and only when a key below them is pruned; streams, buffers and other
+ * values pass through untouched. A rebuilt object keeps a raw `__proto__` key as
+ * an ordinary own field.
  *
  * @category utilities
  * @since 0.0.0
@@ -125,12 +119,6 @@ export const acquireSdkCallController = <Payload, Out>(spec: {
     spec.release
   );
 
-/**
- * Build sanitized Box driver diagnostics for debug logging.
- *
- * @category utilities
- * @since 0.0.0
- */
 const diagnosticsFor: {
   (error: BoxError, event: string): Readonly<Record<string, unknown>>;
   (event: string): (error: BoxError) => Readonly<Record<string, unknown>>;

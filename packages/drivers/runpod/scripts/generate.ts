@@ -11,9 +11,7 @@ import { closedObjectPatch } from "./openapi.lowering.ts";
 import { renderRunpodOperations } from "./operations.renderer.ts";
 
 const packageRoot = `${import.meta.dirname}/..`;
-// The extra renderer decodes this input as an Effect and fails before writes.
-// This fallback only keeps synchronous GenerateConfig construction total.
-const patchDocument: OpenApiPatch.JsonPatchDocument = pipe(
+const patchDocumentOrEmpty: OpenApiPatch.JsonPatchDocument = pipe(
   S.decodeUnknownOption(OpenApiPatch.JsonPatchDocument)(openApiPatchInput),
   O.getOrElse(() => [])
 );
@@ -29,11 +27,8 @@ const config = GenerateConfig.make({
     path: `${packageRoot}/openapi.json`,
   },
   dialect: "openapi-3.1",
-  // Hand-authored fixes first, then the derived `unevaluatedProperties`
-  // lowering. The renderer applies the same list and fails when a closure
-  // survives it.
   patches: [
-    { source: "openapi.patch.json", patch: patchDocument },
+    { source: "openapi.patch.json", patch: patchDocumentOrEmpty },
     { source: "openapi.lowering.ts", patch: closedObjectPatch(openApiSource) },
   ],
   transforms: ["stripExamples"],

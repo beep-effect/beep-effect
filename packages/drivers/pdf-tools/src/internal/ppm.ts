@@ -27,8 +27,7 @@ const skipComment = (bytes: Uint8Array, start: number): number => {
   return offset;
 };
 
-// Advance past whitespace and `#` comments; return the first byte of the next token.
-const skipBlank = (bytes: Uint8Array, start: number): number => {
+const skipWhitespaceAndComments = (bytes: Uint8Array, start: number): number => {
   let offset = start;
   while (offset < bytes.length) {
     const byte = bytes[offset] ?? 0;
@@ -65,13 +64,12 @@ export const parseP6Header = (
   if (bytes[0] !== 0x50 || bytes[1] !== 0x36) {
     throw parseError("Expected a binary PPM (P6) header.");
   }
-  const width = readNumber(bytes, skipBlank(bytes, 2));
-  const height = readNumber(bytes, skipBlank(bytes, width.next));
-  const maxval = readNumber(bytes, skipBlank(bytes, height.next));
+  const width = readNumber(bytes, skipWhitespaceAndComments(bytes, 2));
+  const height = readNumber(bytes, skipWhitespaceAndComments(bytes, width.next));
+  const maxval = readNumber(bytes, skipWhitespaceAndComments(bytes, height.next));
   if (maxval.value !== 255) {
     throw parseError(`Unsupported PPM maxval ${maxval.value}; expected 255.`);
   }
-  // Exactly one whitespace byte separates the header from the raster.
   const offset = maxval.next + 1;
   if (bytes.length < offset + width.value * height.value * 3) {
     throw parseError("PPM raster is shorter than its header declares.");
@@ -79,10 +77,8 @@ export const parseP6Header = (
   return { width: width.value, height: height.value, offset };
 };
 
-// Rec. 601 luma, integer arithmetic.
-const luma = (r: number, g: number, b: number): number => (r * 299 + g * 587 + b * 114) / 1000;
+const rec601Luma = (r: number, g: number, b: number): number => (r * 299 + g * 587 + b * 114) / 1000;
 
-// Running measurements over one raster; mutated per pixel for speed.
 class Tally {
   minX: number;
   minY: number;
@@ -117,18 +113,16 @@ class Tally {
   }
 }
 
-// Side of the largest all-ink square ending at column x, from the previous row's values.
-const squareSide = (previous: Uint16Array, current: Uint16Array, x: number): number =>
+const largestInkSquareSideAt = (previous: Uint16Array, current: Uint16Array, x: number): number =>
   Math.min(previous[x] ?? 0, previous[x + 1] ?? 0, current[x] ?? 0) + 1;
 
-// Measure one pixel: purity always, ink bounds and square when dark enough.
 const measurePixel = (row: RowScan, x: number): void => {
   const i = row.rowStart + x * 3;
   const r = row.bytes[i] ?? 0;
   const g = row.bytes[i + 1] ?? 0;
   const b = row.bytes[i + 2] ?? 0;
   row.tally.purity(r, g, b);
-  const side = luma(r, g, b) <= row.blackThreshold ? squareSide(row.previous, row.current, x) : 0;
+  const side = rec601Luma(r, g, b) <= row.blackThreshold ? largestInkSquareSideAt(row.previous, row.current, x) : 0;
   row.current[x + 1] = side;
   if (side > 0) {
     row.tally.ink(x, row.y, side);
