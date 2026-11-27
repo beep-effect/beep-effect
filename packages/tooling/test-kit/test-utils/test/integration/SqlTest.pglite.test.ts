@@ -32,17 +32,11 @@ const sharedConnectionUri = Bun.env.BEEP_TEST_DATABASE_URL;
 const hasSharedConnectionUri = sharedConnectionUri !== undefined && sharedConnectionUri !== "";
 let pgliteTestcontainersAvailable = false;
 const ContainerInspectTimeout = Duration.seconds(5);
-// The availability probe builds the PGLite image from its Dockerfile, which
-// pulls node:22-bookworm-slim and installs pglite on a cold runner; under a
-// slow registry that exceeds the old 45 s budget and every Testcontainers test
-// silently skipped. Give the probe the same budget as the tests it gates and
-// report why it gave up so the skip note is attributable.
-const PgliteProbeStartupTimeoutMs = 90_000;
-const PgliteProbeTimeoutMs = 120_000;
-// The shared external PGLite lane accepts one connection at a time, so under
-// CI load a scoped-layer provision can queue well past a minute.
-const SharedPgliteIntegrationTimeoutMs = 180_000;
+const ColdImageBuildStartupTimeoutMs = 90_000;
 const PgliteTestcontainersIntegrationTimeoutMs = 120_000;
+const PgliteProbeTimeoutMs = PgliteTestcontainersIntegrationTimeoutMs;
+const SingleConnectionProvisionQueueMs = 180_000;
+const SharedPgliteIntegrationTimeoutMs = SingleConnectionProvisionQueueMs;
 const PostCloseConnectRetryPolicy = Schedule.spaced(Duration.seconds(1)).pipe(
   Schedule.upTo({ duration: Duration.seconds(60) })
 );
@@ -54,7 +48,7 @@ beforeAll(() => {
   }
 
   return makePgliteTestcontainerResource({
-    startupTimeoutMs: PgliteProbeStartupTimeoutMs,
+    startupTimeoutMs: ColdImageBuildStartupTimeoutMs,
   })
     .pipe(
       Effect.timeoutOption(Duration.millis(PgliteProbeTimeoutMs)),
@@ -210,9 +204,7 @@ it.effect("recognizes only verified container absence during inspection", () =>
   })
 );
 
-// The docker-free in-process driver is the default the gate selects; it needs no
-// env or container, so this block always runs and proves the default path.
-describe("PGLite in-process SQL test driver", () => {
+describe("PGLite in-process SQL test driver, the gate's docker-free default", () => {
   it.effect(
     "runs select 1 and CRUD through the in-process driver",
     Effect.fnUntraced(function* () {
@@ -251,12 +243,9 @@ describe("PGLite in-process SQL test driver", () => {
   );
 });
 
-// Sequential (overriding the global `sequence.concurrent: true`): every test in this block opens
-// its own connection to the single shared external database. PGLite executes one query at a time;
-// its socket bridge permits a small handler overlap only so a new scope cannot race the prior
-// socket's asynchronous close. The provisioning lane still enforces one-at-a-time test and client
-// concurrency with `--concurrency=1` and `BEEP_TEST_DATABASE_MAX_CONNECTIONS=1`.
-describe("PGLite shared external SQL test driver", { concurrent: false }, () => {
+describe("PGLite shared external SQL test driver, run sequentially against the one shared database", {
+  concurrent: false,
+}, () => {
   it.effect(
     "creates, inserts, and queries PostgreSQL tables inside the generated schema",
 

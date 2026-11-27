@@ -66,9 +66,6 @@ export const Printable = S.Union([
  */
 export type Printable = typeof Printable.Type;
 
-// Symbol names and JSDoc-derived prose are trusted markdown already; the
-// rawMarkdown lane keeps them byte-verbatim where Md.text would escape
-// punctuation such as `_` and `.`.
 const raw = Md.rawMarkdown;
 
 const rawBlock = (value: string): Block => Md.p(raw(value));
@@ -460,7 +457,9 @@ const sortByName: <
  * **Details**
  *
  * Printables are sorted by category and then by symbol name. Symbols with no
- * `@category` are grouped under the legacy `utils` fallback.
+ * `@category` are grouped under the legacy `utils` fallback. Symbol names and
+ * JSDoc-derived prose are trusted markdown and are emitted byte-verbatim, never
+ * escaped, so punctuation such as `_` and `.` survives.
  *
  * **Example** (Render module by category)
  *

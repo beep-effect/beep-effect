@@ -327,10 +327,8 @@ const isTypeScriptFence = (metadata: string): boolean =>
 const unterminatedFenceWarning = (content: string): string =>
   `Code block does not have a matching closing fence:\n${content}`;
 
-// A fence needs a run of three backticks or tildes; a text without one is not parsed.
 const fenceRunPattern = /`{3}|~{3}/u;
 
-// Every fence of the text, read as CommonMark by `@beep/markdown`, and one warning per unterminated fence.
 const codeFences = (content: string): [fences: ReadonlyArray<CodeFence>, warnings: Array<string>] =>
   !fenceRunPattern.test(content)
     ? [A.empty(), []]

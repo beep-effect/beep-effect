@@ -22,11 +22,10 @@ import * as Str from "effect/String";
 
 describe("fcRuns (one-round-loop P1 env-max helper)", () => {
   it("keeps the inline value as a floor and defaults to the helper's run count", () => {
-    // Effect's default ConfigProvider snapshots the environment at boot, so
-    // in this test process the inline value and the default rule the
-    // outcome; the raised-floor path is proven end to end by the fresh
-    // subprocess probe below.
-    expect(fcRuns(40).runs).toBeGreaterThanOrEqual(40);
+    expect(
+      fcRuns(40).runs,
+      "at least the inline value: this process's boot environment may hold a floor, so the raise is proven in a fresh subprocess"
+    ).toBeGreaterThanOrEqual(40);
     expect(fcRuns().runs).toBeGreaterThanOrEqual(DEFAULT_FC_NUM_RUNS);
   });
 
@@ -40,10 +39,7 @@ describe("fcRuns (one-round-loop P1 env-max helper)", () => {
     expect(parseFcNumRunsFloor(undefined)).toBe(0);
   });
 
-  it("raises to the environment floor in a fresh process (boot snapshot)", () => {
-    // The floor is read once at process boot (CI exports it before vitest
-    // starts), so the end-to-end raise/never-lower semantics need a fresh
-    // subprocess with the variable present at spawn.
+  it("raises to the environment floor read once at boot, in a fresh process spawned with the variable set", () => {
     const probe = A.join(
       [
         'const { fcRuns } = await import("@beep/fc-runs");',
@@ -138,7 +134,6 @@ describe("fcRunsCapped (fixed runs for I/O-heavy properties)", () => {
   });
 });
 
-// The deep sweep's log carries the seed and the run count a property built with fcRuns drew.
 const drawn = Ref.makeUnsafe(0);
 describe("a property built with fcRuns", { concurrent: false }, () => {
   it.effect.prop("draws", [S.Int], () => Ref.update(drawn, (count) => count + 1), { arbitrary: fcRuns(5) });
@@ -158,7 +153,6 @@ describe("a property built with fcRuns", { concurrent: false }, () => {
 });
 
 describe("the deep sweep's reporters", () => {
-  // Each process reads the shared configuration under its own environment.
   const reportersUnder = (env: Record<string, string>) => {
     const { BEEP_FC_NUM_RUNS: _floor, ...inherited } = Bun.env;
     const result = Bun.spawnSync({
@@ -188,7 +182,6 @@ describe("the deep sweep's reporters", () => {
 
 describe("seeds between runs", () => {
   const PINNING = ["BEEP_FC_SEED", "BEEP_FC_NUM_RUNS", "VITEST_COVERAGE_RATCHET", "VITEST_COVERAGE_REPORT_ONLY"];
-  // One Vitest run of the seed suite, and the line it reports.
   const reportOf = (env: Record<string, string>) => {
     const inherited = R.filter(Bun.env as Record<string, string>, (_, name) => !A.contains(PINNING, name));
     const result = Bun.spawnSync({

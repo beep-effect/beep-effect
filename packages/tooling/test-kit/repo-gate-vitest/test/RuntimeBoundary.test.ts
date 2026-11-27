@@ -1,7 +1,3 @@
-// The reporter runs in Vitest's main process, which is Bun under
-// `bunx --bun vitest` and Node under plain `bunx vitest`. Node must load the
-// registered module and the implementation it loads with every module they
-// reach, which it cannot when any `bun:` module is reachable.
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, it } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -21,7 +17,7 @@ const PROBE = A.join(
 );
 
 it.layer(NodeServices.layer, { timeout: "60 seconds" })("runtime boundary", (it) => {
-  it.effect("Node loads the reporter and its implementation with every module they reach", () =>
+  it.effect("Node loads the reporter and its implementation with every module they reach, none from bun:", () =>
     Effect.gen(function* () {
       const path = yield* Path.Path;
       const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
@@ -30,7 +26,11 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("runtime boundary", (it)
           cwd: path.resolve(import.meta.dirname, ".."),
         })
       );
-      assert.strictEqual(Str.trim(output), "function function function");
+      assert.strictEqual(
+        Str.trim(output),
+        "function function function",
+        "Node, which runs Vitest's main process under plain bunx vitest, loaded all three"
+      );
     })
   );
 });

@@ -1,5 +1,3 @@
-// The seed the shared Vitest setup pins reaches every property in a worker, whether or not the
-// property passes options of its own; without a pinned seed, properties draw random seeds.
 import { envFcSeed } from "@beep/fc-runs";
 import { describe, it } from "@effect/vitest";
 import { assertFalse, deepStrictEqual } from "@effect/vitest/utils";
@@ -17,18 +15,15 @@ const runs = 20;
 const sampled = (options: { readonly seed?: number }) =>
   Arbitrary.sampleEffect(Arbitrary.schema(S.Int), { count: runs, ...options });
 
-// What the two properties below draw, in order.
 const unseeded = Ref.makeUnsafe<ReadonlyArray<number>>([]);
 const seeded = Ref.makeUnsafe<ReadonlyArray<number>>([]);
 const keep = (drawn: Ref.Ref<ReadonlyArray<number>>) => (value: number) =>
   Effect.asVoid(Ref.update(drawn, A.append(value)));
 
-// The line the run's log carries; the test console would keep it.
-const report = (line: string) =>
+const logToProcessConsole = (line: string) =>
   Effect.provideService(Console.log(`[property-seed] worker seed ${line}`), Console.Console, globalThis.console);
 
-// The last test reads what the properties drew, so the three run in order.
-describe("the pinned property seed", { concurrent: false }, () => {
+describe("the pinned property seed reaches every property in a worker", { concurrent: false }, () => {
   it.effect.prop("draws for a property that passes no seed", [S.Int], ([value]) => keep(unseeded)(value), {
     arbitrary: { runs },
   });
@@ -45,13 +40,17 @@ describe("the pinned property seed", { concurrent: false }, () => {
       const second = yield* sampled({});
       const explicit = yield* sampled({ seed: O.getOrElse(seed, () => 1) + 1 });
       const pinned = O.match(seed, { onNone: () => "random", onSome: (value) => `${value}` });
-      yield* report(
+      yield* logToProcessConsole(
         `${pinned}, ${drawn.length} runs without fcRuns, drew ${A.join(
           A.map(drawn, (value) => `${value}`),
           " "
         )}`
       );
-      deepStrictEqual([drawn.length, expected.length], [runs, runs]);
+      deepStrictEqual(
+        [drawn.length, expected.length],
+        [runs, runs],
+        "both properties above ran first, in order, and each drew its runs"
+      );
       deepStrictEqual(Equal.equals(drawn, expected), O.isSome(seed));
       deepStrictEqual(Equal.equals(first, second), O.isSome(seed));
       assertFalse(Equal.equals(explicit, first));

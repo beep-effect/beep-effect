@@ -31,9 +31,6 @@ const decodeThread = S.decodeEffect(Thread);
 const migrationsFolder = NodeURL.fileURLToPath(new URL("../../../../_internal/db-admin/drizzle", import.meta.url));
 const { shouldRunPgliteIntegration, pgliteIntegrationTimeoutMillis } = makePgliteIntegrationGate();
 
-// The db-admin drizzle folder now contains `CREATE EXTENSION btree_gist`, which
-// the shared external pglite-socket lane cannot load, so suites that apply it
-// are pinned to the in-process driver with the bundled extension registered.
 const makeMigrationCapableLayer = () =>
   Layer.fresh(makePgliteSqlTestLayer({ inProcess: { extensions: { btree_gist } }, mode: "in-process" }));
 
@@ -93,9 +90,11 @@ if (!shouldRunPgliteIntegration) {
           const threads = yield* store.listThreads(workspaceId);
           expect(A.map(threads, (t) => t.id)).toEqual([thread.id]);
           expect(A.map(threads, (thread) => thread.title)).toEqual(["Matter intake"]);
-          // The rename advanced the row version; the no-op replacement did not.
           expect(thread.rowVersion).toBe(1);
-          expect(A.map(threads, (thread) => thread.rowVersion)).toEqual([2]);
+          expect(
+            A.map(threads, (thread) => thread.rowVersion),
+            "the rename advanced the row version; the no-op replacement did not"
+          ).toEqual([2]);
 
           const first = yield* store.appendTurn(
             AppendTurnInput.make({
@@ -106,8 +105,9 @@ if (!shouldRunPgliteIntegration) {
             })
           );
           expect(first.turn.turnIndex).toBe(0);
-          // Insert plus same-transaction reconciliation commit as the first version.
-          expect(first.turn.rowVersion).toBe(1);
+          expect(first.turn.rowVersion, "insert plus same-transaction reconciliation commit as the first version").toBe(
+            1
+          );
           expect(S.is(TurnPublicId)(first.turn.publicId)).toBe(true);
           expect(S.is(MessagePublicId)(first.message.publicId)).toBe(true);
 

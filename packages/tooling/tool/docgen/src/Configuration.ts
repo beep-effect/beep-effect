@@ -463,9 +463,6 @@ const readJsoncFile = Effect.fn("readJsonCFile")(function* <A, I>(
     Effect.catchTags({
       ConfigFileReadError: (error) => fail("read", String(error.cause)),
       ConfigCodecError: (error) => fail("parse", String(error.cause)),
-      // A schema-only read always carries a `SchemaIssue`; anything else breaks
-      // the `ConfigFile.read` contract, so it is a defect. The detail is the
-      // `SchemaError` text the old `S.decodeUnknownEffect` path produced.
       ConfigValidationError: (error) =>
         Effect.fromOption(error.schemaIssue).pipe(
           Effect.orDie,
@@ -588,8 +585,6 @@ const readTSConfig = Effect.fn("Configuration.readTSConfig")(function* (
     Domain.DocgenError.make({
       message: `[Configuration.readTSConfig] Failed to ${step} TSConfig file '${resolved}'\n${detail}`,
     });
-  // The named file passes the strict closed check, then its whole `extends`
-  // chain is merged with tsc semantics and the merged options pass it too.
   const strict = yield* TsconfigValidator.compilerOptions(resolved).pipe(
     Effect.catchTags({
       TsconfigValidationError: (error) => fail("decode", error.message),
@@ -669,7 +664,8 @@ const resolveString = (fromCLI: O.Option<string>, fromDocgenJson: O.Option<strin
  * **Details**
  *
  * CLI options win over `docgen.json`; missing values fall back to package metadata and repo defaults.
- * Example compiler options are post-processed to allow generated imports and to disable unused checks.
+ * Example compiler options are post-processed to allow generated imports and to disable
+ * unused checks, since examples commonly bind illustrative values they never use.
  *
  * **Example** (Load config from CLI)
  *
@@ -743,8 +739,6 @@ export const load = Effect.fn("load")(function* (args: LoadArgs) {
     args.examplesCompilerOptions,
     O.fromNullishOr(docgenConfig.examplesCompilerOptions)
   );
-  // Examples commonly include illustrative bindings that are intentionally unused.
-  // Force-disable unused checks to keep docs validation focused on type correctness.
   const configuredExampleTypes: ReadonlyArray<string> = isStringArray(resolvedExamplesCompilerOptions.types)
     ? resolvedExamplesCompilerOptions.types
     : A.empty<string>();

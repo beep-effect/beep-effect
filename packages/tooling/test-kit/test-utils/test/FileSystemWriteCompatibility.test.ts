@@ -4,9 +4,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Fs from "effect/FileSystem";
 
-// Exercise the shared platform implementation under both actual Node and Bun.
-// The layer is shared; each test owns its temporary file and open descriptor.
-it.layer(NodeFileSystem.layer)("FileSystem write compatibility", (it) => {
+it.layer(NodeFileSystem.layer)("FileSystem write compatibility under Node and Bun", (it) => {
   it.effect(
     "writeAll honors a backward seek and advances by the full payload",
     Effect.fnUntraced(function* () {
