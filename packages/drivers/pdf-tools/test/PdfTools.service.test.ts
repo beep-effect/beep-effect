@@ -150,7 +150,7 @@ const concatBytes = (...parts: ReadonlyArray<Uint8Array>): Uint8Array => {
 const streamBody = (dict: string, data: Uint8Array): Uint8Array =>
   concatBytes(encoder.encode(`${dict}\nstream\n`), data, encoder.encode("\nendstream"));
 
-const craftPdfWithXrefTable = (catalogPagesPageThenBodies: ReadonlyArray<Uint8Array | string>): Uint8Array => {
+const craftPdf = (catalogPagesPageThenBodies: ReadonlyArray<Uint8Array | string>): Uint8Array => {
   const header = encoder.encode("%PDF-1.6\n");
   const objects = A.map(catalogPagesPageThenBodies, (body, index) =>
     concatBytes(
@@ -721,18 +721,15 @@ describe("@beep/pdf-tools service", () => {
             encoder.encode("4142>")
           );
           const valid = NodeZlib.deflateSync(encoder.encode("q 0 0 m 100 100 l S Q\n"));
-          const payloadIntactChecksumCut = NodeZlib.deflateSync(
+          const checksumCutOnly = NodeZlib.deflateSync(
             encoder.encode(Str.repeat(8)("BT /F1 12 Tf (FIG. 1) Tj ET\n"))
           ).subarray(0, -1);
           yield* fs.writeFile(
             file,
-            craftPdfWithXrefTable([
+            craftPdf([
               ...pageObjects,
               streamBody(`<< /Length ${valid.length} /Filter /FlateDecode >>`, valid),
-              streamBody(
-                `<< /Length ${payloadIntactChecksumCut.length} /Filter [/FlateDecode] >>`,
-                payloadIntactChecksumCut
-              ),
+              streamBody(`<< /Length ${checksumCutOnly.length} /Filter [/FlateDecode] >>`, checksumCutOnly),
               hexTextNotZlibUnchecked,
             ])
           );
@@ -752,7 +749,7 @@ describe("@beep/pdf-tools service", () => {
           const file = path.join(dir, "indirect-length.pdf");
           const data = NodeZlib.deflateSync(encoder.encode("q  Q\n"));
           expect(data.at(-1), 'Adler-32 of "q  Q\\n" ends in 0x0D, so the zlib stream does too').toBe(0x0d);
-          const bytes = craftPdfWithXrefTable([
+          const bytes = craftPdf([
             ...pageObjects,
             streamBody("<< /Length 5 0 R /Filter /FlateDecode >>", data),
             `${data.length}`,
@@ -783,7 +780,7 @@ describe("@beep/pdf-tools service", () => {
           const lengthStopsShortOfEndstream = streamBody("<< /Length 7 0 R /Filter /FlateDecode >>", valid);
           yield* fs.writeFile(
             file,
-            craftPdfWithXrefTable([
+            craftPdf([
               ...pageObjects,
               lengthRunsIntoEndstream,
               `${truncated.length + 5}`,
@@ -818,7 +815,7 @@ describe("@beep/pdf-tools service", () => {
           yield* fs.writeFile(
             updated,
             appendIncrementalUpdate(
-              craftPdfWithXrefTable([
+              craftPdf([
                 ...pageObjects,
                 streamBody("<< /Length 5 0 R /Filter /FlateDecode >>", staleSharesPdfLibPrefix),
                 `${data.length}`,
@@ -840,7 +837,7 @@ describe("@beep/pdf-tools service", () => {
           const quoting = path.join(dir, "quoting.pdf");
           yield* fs.writeFile(
             quoting,
-            craftPdfWithXrefTable([
+            craftPdf([
               ...pageObjects,
               streamBody("<< /Length 5 0 R /Filter /FlateDecode >>", data),
               `${data.length}`,
@@ -864,10 +861,7 @@ describe("@beep/pdf-tools service", () => {
           for (const marker of ["/ObjStm", "/XRef"]) {
             const file = path.join(dir, marker === "/XRef" ? "xref-markers.pdf" : "object-markers.pdf");
             const data = encoder.encode(A.join(A.replicate(`% 1 0 obj ${marker}`, 16_000), "\n"));
-            yield* fs.writeFile(
-              file,
-              craftPdfWithXrefTable([...pageObjects, streamBody(`<< /Length ${data.length} >>`, data)])
-            );
+            yield* fs.writeFile(file, craftPdf([...pageObjects, streamBody(`<< /Length ${data.length} >>`, data)]));
             const structure = yield* tools.inspect(file);
             expect(structure.streamCheck).toBe("complete");
             expect(structure.containerDiscovery).toBe("limit-reached");
@@ -885,7 +879,7 @@ describe("@beep/pdf-tools service", () => {
           const dir = yield* fs.makeTempDirectoryScoped();
           const tools = yield* PdfTools;
           const data = encoder.encode(A.join(A.replicate("/ObjStm /XRef /XRefStm", 129), "\n"));
-          const bytes = craftPdfWithXrefTable([...pageObjects, streamBody(`<< /Length ${data.length} >>`, data)]);
+          const bytes = craftPdf([...pageObjects, streamBody(`<< /Length ${data.length} >>`, data)]);
           expect((yield* Effect.promise(() => PDFDocument.load(bytes))).getPageCount()).toBe(1);
           const file = path.join(dir, "mixed-markers.pdf");
           yield* fs.writeFile(file, bytes);
@@ -908,10 +902,7 @@ describe("@beep/pdf-tools service", () => {
             A.join([Str.repeat("9", 200_000), Str.repeat(" ", 200_000), "0 nope /ObjStm /XRef"], "")
           );
           const file = path.join(dir, "failed-long-header.pdf");
-          yield* fs.writeFile(
-            file,
-            craftPdfWithXrefTable([...pageObjects, streamBody(`<< /Length ${data.length} >>`, data)])
-          );
+          yield* fs.writeFile(file, craftPdf([...pageObjects, streamBody(`<< /Length ${data.length} >>`, data)]));
           const structure = yield* tools.inspect(file);
           expect(structure.streamCheck).toBe("complete");
           expect(structure.undecodableStreams).toEqual([]);
@@ -949,10 +940,7 @@ describe("@beep/pdf-tools service", () => {
               A.join(A.appendAll(A.replicate("/ObjStm", count), A.replicate("/XRef", 64)), "\n")
             );
             const file = path.join(dir, `boundary-${count}.pdf`);
-            yield* fs.writeFile(
-              file,
-              craftPdfWithXrefTable([...pageObjects, streamBody(`<< /Length ${data.length} >>`, data)])
-            );
+            yield* fs.writeFile(file, craftPdf([...pageObjects, streamBody(`<< /Length ${data.length} >>`, data)]));
             const structure = yield* tools.inspect(file);
             expect(structure.containerDiscovery).toBe(count === 64 ? "complete" : "limit-reached");
             expect(structure.streamCheck).toBe("complete");
@@ -1101,7 +1089,7 @@ describe("@beep/pdf-tools service", () => {
             );
             yield* fs.writeFile(
               file,
-              craftPdfWithXrefTable([
+              craftPdf([
                 ...pageObjects,
                 streamBody(`<< /Length ${content.length} /Filter /FlateDecode >>`, content),
                 validStreamPastLimitAlone,
@@ -1134,7 +1122,7 @@ describe("@beep/pdf-tools service", () => {
             ).toBeLessThan(1024 * 1024);
             yield* fs.writeFile(
               file,
-              craftPdfWithXrefTable([
+              craftPdf([
                 ...pageObjects,
                 streamBody(`<< /Length ${content.length} /Filter /FlateDecode >>`, content),
                 streamBody(`<< /Length ${zeroMiBChecksumCut.length} /Filter /FlateDecode >>`, zeroMiBChecksumCut),
@@ -1155,37 +1143,40 @@ describe("@beep/pdf-tools service", () => {
 
   describe("inspect under an inflate limit above the runtime's buffer limit", () => {
     const commands: Array<ChildProcess.StandardCommand> = [];
-    const pastBunInflateCeiling = 2 ** 33;
-    it.layer(makeLayer(commands, 0, [], PdfToolsConfig.make({ maxInflatedBytes: pastBunInflateCeiling })), {
-      timeout: "30 seconds",
-    })((it) => {
-      it.effect(
-        "checks every stream, flagging only the truncated one",
-        Effect.fnUntraced(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const dir = yield* fs.makeTempDirectoryScoped();
-          const file = path.join(dir, "large-limit.pdf");
-          const valid = NodeZlib.deflateSync(encoder.encode("q 0 0 m 100 100 l S Q\n"));
-          const truncated = NodeZlib.deflateSync(
-            encoder.encode(Str.repeat(8)("BT /F1 12 Tf (FIG. 1) Tj ET\n"))
-          ).subarray(0, -1);
-          yield* fs.writeFile(
-            file,
-            craftPdfWithXrefTable([
-              ...pageObjects,
-              streamBody(`<< /Length ${valid.length} /Filter /FlateDecode >>`, valid),
-              streamBody(`<< /Length ${truncated.length} /Filter /FlateDecode >>`, truncated),
-            ])
-          );
-          const structure = yield* (yield* PdfTools).inspect(file);
-          expect(structure.undecodableStreams).toEqual([
-            UndecodableStream.make({ objectNumber: 5, generation: 0, reason: "unexpected end of file" }),
-          ]);
-          expect(structure.streamCheck).toBe("complete");
-        })
-      );
-    });
+    const limit = 2 ** 33;
+    it.layer(makeLayer(commands, 0, [], PdfToolsConfig.make({ maxInflatedBytes: limit })), { timeout: "30 seconds" })(
+      (it) => {
+        it.effect(
+          "checks every stream, flagging only the truncated one",
+          Effect.fnUntraced(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const dir = yield* fs.makeTempDirectoryScoped();
+            const file = path.join(dir, "large-limit.pdf");
+            const valid = NodeZlib.deflateSync(encoder.encode("q 0 0 m 100 100 l S Q\n"));
+            const truncated = NodeZlib.deflateSync(
+              encoder.encode(Str.repeat(8)("BT /F1 12 Tf (FIG. 1) Tj ET\n"))
+            ).subarray(0, -1);
+            yield* fs.writeFile(
+              file,
+              craftPdf([
+                ...pageObjects,
+                streamBody(`<< /Length ${valid.length} /Filter /FlateDecode >>`, valid),
+                streamBody(`<< /Length ${truncated.length} /Filter /FlateDecode >>`, truncated),
+              ])
+            );
+            const structure = yield* (yield* PdfTools).inspect(file);
+            expect(structure.undecodableStreams).toEqual([
+              UndecodableStream.make({ objectNumber: 5, generation: 0, reason: "unexpected end of file" }),
+            ]);
+            expect(
+              structure.streamCheck,
+              "the limit sits past the 4 GiB inflate Bun refuses, so no stream is skipped"
+            ).toBe("complete");
+          })
+        );
+      }
+    );
   });
 
   describe("pageWords", () => {

@@ -113,7 +113,7 @@ type CosmosGraphUsedMembers = {
   readonly setPointColors?: (pointColors: Float32Array) => void;
   readonly setPointPositions: (positions: Float32Array) => void;
   readonly setPointSizes?: (pointSizes: Float32Array) => void;
-  readonly spaceToScreenPosition?: (spacePosition: [number, number]) => [number, number];
+  readonly spaceToScreenPosition?: (this: CosmosGraphUsedMembers, spacePosition: [number, number]) => [number, number];
   readonly getPointPositions?: () => ReadonlyArray<number>;
   readonly stop?: () => void;
 };
@@ -516,11 +516,6 @@ const renderWithCosmos = Effect.fn("Cosmos.renderWithCosmos")(function* (
       O.match({
         onNone: () => undefined,
         onSome: (current) => {
-          // Called ON the graph, never lifted off it. Holding the method in a local
-          // (`const toScreen = graph.spaceToScreenPosition`) detaches it from its
-          // instance, so `this` is undefined and every call throws — inside an
-          // animation frame, where the throw goes nowhere anyone will see it. The
-          // labels simply never moved, and nothing said why.
           const positions = graph.getPointPositions?.() ?? [];
           const occupied = graphPointObstacles(graph, positions, current.count);
           let suppressedCount = 0;

@@ -652,7 +652,10 @@ describe("@beep/box", () => {
         const box = yield* B.Box;
         const response = yield* box.users.getUserMe(B.UsersGetUserMePayload.make({}));
 
-        expect(response.id).toBe("user-id");
+        expect(
+          response.id,
+          "decoding ignores the unknown key either way, so this does not observe the defineProperty copy"
+        ).toBe("user-id");
       })
     );
   });

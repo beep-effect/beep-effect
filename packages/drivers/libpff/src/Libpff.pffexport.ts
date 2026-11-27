@@ -1107,8 +1107,8 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
         LibpffErrorOptions.make({ cause: "export tree contains a symbolic link" })
       );
     }
-    // decision: backslash-paths-resolve-parent-only
-    if (Str.includes("\\")(absolutePath)) {
+    const bunRealPathWouldRewrite = Str.includes("\\")(absolutePath);
+    if (bunRealPathWouldRewrite) {
       const parent = yield* resolveExportEntry(path.dirname(absolutePath));
       return path.join(parent, path.basename(absolutePath));
     }

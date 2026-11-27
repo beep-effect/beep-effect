@@ -2403,6 +2403,8 @@ const executeWrite = Effect.fnUntraced(function* (
       isRetryable
     );
 
+  const replayableFinalStateFailure = isThrottled;
+
   return yield* M365WriteMethod.is.POST(call.method)
     ? execute(isRejectedBeforeProcessing).pipe(
         Effect.mapError((error) =>
@@ -2416,7 +2418,7 @@ const executeWrite = Effect.fnUntraced(function* (
             : error
         )
       )
-    : execute(isThrottled);
+    : execute(replayableFinalStateFailure);
 });
 
 const executeBodilessWrite = (

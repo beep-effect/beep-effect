@@ -3,6 +3,7 @@ title: A multi-page conversion runs at unversioned pdf and stamps the requested 
 date: 2026-11-26
 reversal: Pass `pdf${request.pdfVersion}` for every request in rsvgFormatOf and delete stampHeader in src/PdfTools.service.ts.
 governs:
+  - src/PdfTools.service.ts#pdfHeader
   - src/PdfTools.service.ts#rsvgFormatOf
   - src/PdfTools.service.ts#stampHeader
 enforcedBy: []

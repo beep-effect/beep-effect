@@ -74,7 +74,7 @@ type Harness = {
   readonly failJournalAt: Ref.Ref<O.Option<number>>;
   readonly fake: FakeBox;
   readonly journal: Ref.Ref<ReadonlyArray<BoxContentJournalEntry>>;
-  readonly beforeJournalAppend: Ref.Ref<(entry: BoxContentJournalEntry) => Effect.Effect<void>>;
+  readonly onAppend: Ref.Ref<(entry: BoxContentJournalEntry) => Effect.Effect<void>>;
 };
 
 class MigrationHarness extends Context.Service<MigrationHarness, Harness>()(
@@ -91,23 +91,21 @@ const makeTestLayer = (options: FakeBoxOptions, recordJournal = true): Layer.Lay
         failJournalAt: yield* Ref.make(O.none<number>()),
         fake: makeFakeBox(options),
         journal: yield* Ref.make<ReadonlyArray<BoxContentJournalEntry>>(A.empty()),
-        beforeJournalAppend: yield* Ref.make<Harness["beforeJournalAppend"] extends Ref.Ref<infer Hook> ? Hook : never>(
-          () => Effect.void
-        ),
+        onAppend: yield* Ref.make<Harness["onAppend"] extends Ref.Ref<infer Hook> ? Hook : never>(() => Effect.void),
       });
     })
   );
   const box = Layer.unwrap(Effect.map(MigrationHarness, ({ fake }) => B.Box.makeLayerFromClient(fake.client)));
   const journal = Layer.effect(
     BoxContentMigrationJournal,
-    Effect.map(MigrationHarness, ({ failJournalAt, journal: entries, beforeJournalAppend }) =>
+    Effect.map(MigrationHarness, ({ failJournalAt, journal: entries, onAppend }) =>
       BoxContentMigrationJournal.of({
         append: Effect.fn("BoxContentMigrationTest.append")(function* (entry) {
           const got = yield* Ref.get(failJournalAt);
           if (O.contains(got, entry.sequence)) {
             return yield* BoxProvisioningApplyJournalError.make({ operation: "append" });
           }
-          yield* (yield* Ref.get(beforeJournalAppend))(entry);
+          yield* (yield* Ref.get(onAppend))(entry);
           yield* Ref.update(entries, A.append(entry));
         }),
       })
@@ -676,7 +674,7 @@ scenario(
   "@beep/box-provisioning content migration refuses swapped chunked source before upload",
   { entries: [] },
   Effect.fnUntraced(function* () {
-    const { fake, beforeJournalAppend } = yield* MigrationHarness;
+    const { fake, onAppend } = yield* MigrationHarness;
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const large: SourceSpec = {
@@ -687,7 +685,7 @@ scenario(
       ruleId: "bulk",
     };
     const { mapInput, sourceRoot } = yield* prepare([large]);
-    yield* Ref.set(beforeJournalAppend, (entry) =>
+    yield* Ref.set(onAppend, (entry) =>
       entry.phase === "Started" && entry.actionKind === "folder"
         ? Effect.orDie(fs.writeFile(path.join(sourceRoot, "large.bin"), new Uint8Array(20 * mebibyte).fill(8)))
         : Effect.void
@@ -859,10 +857,10 @@ scenario(
   "@beep/box-provisioning content migration reports a failed re-list after a folder conflict",
   {},
   Effect.fnUntraced(function* () {
-    const { fake, beforeJournalAppend } = yield* MigrationHarness;
+    const { fake, onAppend } = yield* MigrationHarness;
     const { mapInput } = yield* prepare(inboxFile);
     fake.raceFolder("Inbox");
-    yield* Ref.set(beforeJournalAppend, (entry) =>
+    yield* Ref.set(onAppend, (entry) =>
       Effect.sync(() => {
         if (entry.phase === "Started" && entry.actionKind === "folder") {
           fake.failListingOnce(rootFolderId);
@@ -994,11 +992,11 @@ scenario(
   "@beep/box-provisioning content migration fails an upload whose source vanishes mid-run",
   { entries: [folder("200", "Inbox")] },
   Effect.fnUntraced(function* () {
-    const { fake, beforeJournalAppend } = yield* MigrationHarness;
+    const { fake, onAppend } = yield* MigrationHarness;
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const { mapInput, sourceRoot } = yield* prepare(inboxFile);
-    yield* Ref.set(beforeJournalAppend, (entry) =>
+    yield* Ref.set(onAppend, (entry) =>
       entry.phase === "Started" ? Effect.orDie(fs.remove(path.join(sourceRoot, "a.txt"))) : Effect.void
     );
 

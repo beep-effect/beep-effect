@@ -24,8 +24,7 @@ import type * as AST from "effect/SchemaAST";
 
 const $I = $LibpffId.create("Libpff.messages");
 
-// decision: json-encode-overloads-data-last-first
-type JsonEncodeEffect<Input> = {
+type JsonEncodeDataLastFirst<Input> = {
   (options?: AST.ParseOptions): (input: Input) => Effect.Effect<string, S.SchemaError>;
   (input: Input, options?: AST.ParseOptions): Effect.Effect<string, S.SchemaError>;
 };
@@ -97,7 +96,7 @@ export class PffexportMessageRecord extends S.Opaque<PffexportMessageRecord, { r
     })
   )
 ) {
-  static readonly encodeJson: JsonEncodeEffect<PffexportMessageRecord> = dual(
+  static readonly encodeJson: JsonEncodeDataLastFirst<PffexportMessageRecord> = dual(
     SchemaUtils.isCodecDataFirst,
     S.encodeUnknownEffect(S.fromJsonString(PffexportMessageRecord))
   );

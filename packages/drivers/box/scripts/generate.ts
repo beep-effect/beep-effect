@@ -30,7 +30,7 @@ const scriptDir = import.meta.dirname;
 
 const STREAMING_MODULE_SIGNATURE_PATTERN = /\b(?:ByteStream|EventStream)\b/;
 
-const SCHEMA_FOR_REFERENCE_SUSPEND_PATTERN = /S\.suspend\(\(\) => ([A-Za-z_$][A-Za-z0-9_$]*)\)/g;
+const SCHEMA_REF_SUSPEND_PATTERN = /S\.suspend\(\(\) => ([A-Za-z_$][A-Za-z0-9_$]*)\)/g;
 
 const GENERATED_MODELS_MODULE = "Box.models.gen";
 
@@ -689,9 +689,7 @@ const sortDeclarations = (declarations: ReadonlyArray<GeneratedDeclaration>): Re
 
 const referencedDeclarationNames = (expression: string): ReadonlyArray<string> =>
   A.getSomes(
-    A.map(A.fromIterable(Str.matchAll(SCHEMA_FOR_REFERENCE_SUSPEND_PATTERN)(expression)), (match) =>
-      O.fromNullishOr(match[1])
-    )
+    A.map(A.fromIterable(Str.matchAll(SCHEMA_REF_SUSPEND_PATTERN)(expression)), (match) => O.fromNullishOr(match[1]))
   );
 
 const declarationExpressions = (declaration: GeneratedDeclaration): ReadonlyArray<string> => {

@@ -317,14 +317,14 @@ const renderOperations: ExtraRenderer = Effect.fn("RunpodGenerator.renderOperati
     const patch = yield* decodePatch(openApiPatchInput).pipe(
       Effect.mapError((cause) => postProcessError("Could not decode openapi.patch.json", cause))
     );
-    const modelsGeneratorPatches = [
-      { source: "openapi.patch.json", patch },
-      { source: "openapi.lowering.ts", patch: closedObjectPatch(source) },
-    ];
-    const patched = yield* OpenApiPatch.applyPatches(modelsGeneratorPatches, source).pipe(
-      Effect.mapError((cause) => postProcessError("Could not apply the Runpod OpenAPI patches", cause))
-    );
-    const document = yield* OpenApiDocument.decodeUnknownEffect(patched).pipe(
+    const patchedLikeModelsGenerator = yield* OpenApiPatch.applyPatches(
+      [
+        { source: "openapi.patch.json", patch },
+        { source: "openapi.lowering.ts", patch: closedObjectPatch(source) },
+      ],
+      source
+    ).pipe(Effect.mapError((cause) => postProcessError("Could not apply the Runpod OpenAPI patches", cause)));
+    const document = yield* OpenApiDocument.decodeUnknownEffect(patchedLikeModelsGenerator).pipe(
       Effect.mapError((cause) => postProcessError("Could not decode the patched Runpod OpenAPI document", cause))
     );
     yield* ensureNoUnevaluatedClosures(document);
