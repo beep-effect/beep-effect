@@ -344,7 +344,7 @@ export class PlanCheckFailed extends S.TaggedError<PlanCheckFailed, { readonly b
 const ansi = /\u001b\[[0-9;]*m/gu;
 const logPrefix = /^\[\d{2}:\d{2}:\d{2}\.\d{3}\] [A-Z]+: ?/u;
 const resourceLine = /^\[([^\]]+)\] ([a-z]+)\b(?! \[action\])/u;
-const changeLine = /^ {2}([+-]) ([^:]+)(:?)/u;
+const changeLine = /^ {2}([+-]) ([^:]+)(:(?=\s|$))?/u;
 const propertyName = /^[A-Za-z_$][\w$.-]*$/u;
 
 const safePropertyName = (raw: string, keyed: boolean): string => {
@@ -394,9 +394,10 @@ const emptyParse: ParseState = { entries: [], unreadable: [], latestReadable: tr
  * entry, so they never land on the readable resource before it. Lines that are not resource
  * lines (the summary, `Done:` and other log output) never match.
  *
- * A change line names a property only when it carries a key colon: the text
- * before that colon, minus any YAML list marker, when it is identifier-shaped.
- * Every other change line, a bare list scalar such as `- token123` included,
+ * A change line names a property only when it carries a key colon, one followed
+ * by whitespace or the line end: the text before that colon, minus any YAML
+ * list marker, when it is identifier-shaped. Every other change line, a bare
+ * list scalar such as `- token123` or `- https://hooks.example.com/x` included,
  * reports `(value)`, so no declared value reaches the job log.
  *
  * **Example** (Parse one adopted resource)

@@ -92,9 +92,18 @@ describe("parsePlanLog", () => {
     expect(A.join(entries[0]?.changedProperties ?? [], ",")).not.toContain("@");
   });
 
-  it("reports an identifier-shaped bare scalar as (value), because only a keyed line names a property", () => {
+  it("reports a bare scalar as (value), a URL or an identifier-shaped one included, because only a key colon names a property", () => {
     const { entries } = parsePlanLog(
-      A.join([colored("ApiKey", "update"), line("  + tokens:"), line("  +   - token123"), line("  + rotation")], "\n")
+      A.join(
+        [
+          colored("ApiKey", "update"),
+          line("  + tokens:"),
+          line("  +   - token123"),
+          line("  +   - https://hooks.example.com/x"),
+          line("  + rotation"),
+        ],
+        "\n"
+      )
     );
     expect(entries[0]?.changedProperties).toEqual(["tokens", "(value)"]);
   });
