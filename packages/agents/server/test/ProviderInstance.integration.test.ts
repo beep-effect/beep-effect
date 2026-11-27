@@ -64,8 +64,6 @@ const TestActorScopeLayer = Layer.succeed(ProviderInstanceActorContext, primaryA
 
 const runnerRequests = Ref.makeUnsafe<ReadonlyArray<Parameters<AiProviderCliRunner>[0]>>([]);
 
-// A test can arm one write that lands while the next probe's CLI call runs:
-// after the probe read the instance and before it saves the snapshot.
 const writeDuringNextProbe = Ref.makeUnsafe<O.Option<Effect.Effect<void>>>(O.none());
 
 const runner: AiProviderCliRunner = (request) =>
@@ -231,9 +229,10 @@ describe("ProviderInstance PGLite integration", { concurrent: false }, () => {
         const useCases = yield* ProviderInstanceUseCases;
         const repository = yield* ProviderInstanceRepository;
         const added = yield* useCases.add(makeAddCommand("Before the race"));
-        // The table has no DEFAULT (it predates the kit default), so this proves
-        // the insert writes the first version itself.
-        expect(added.rowVersion).toBe(1);
+        expect(
+          added.rowVersion,
+          "the table predates the kit's SQL default, so the insert writes the first version"
+        ).toBe(1);
 
         yield* Ref.set(
           writeDuringNextProbe,
@@ -260,9 +259,11 @@ describe("ProviderInstance PGLite integration", { concurrent: false }, () => {
           providerInstanceId: added.id,
         });
 
-        // The configuration update survived; the stale probe did not revert it.
         const stored = yield* useCases.get(GetProviderInstanceQuery.make({ id: added.id }));
-        expect([stored.label, stored.rowVersion]).toEqual(["Renamed mid-probe", 2]);
+        expect([stored.label, stored.rowVersion], "the stale probe did not revert the configuration update").toEqual([
+          "Renamed mid-probe",
+          2,
+        ]);
         assertNone(stored.lastProbe);
 
         const stale = yield* Effect.flip(repository.save(added));

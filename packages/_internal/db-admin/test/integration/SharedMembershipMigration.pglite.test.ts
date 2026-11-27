@@ -48,10 +48,9 @@ describe("db-admin shared membership migration", () => {
         const reversed = yield* tableExists;
         expect(reversed).toBe(false);
 
-        // The journal entry is gone too, so the forward migration runs again.
         yield* migrateAll;
         const reapplied = yield* tableExists;
-        expect(reapplied).toBe(true);
+        expect(reapplied, "the rollback removed the journal entry too, so the forward migration runs again").toBe(true);
       })
     );
   });

@@ -49,7 +49,6 @@ export interface LaneSourceShape {
  */
 export class LaneSource extends Context.Service<LaneSource, LaneSourceShape>()($I`LaneSource`) {}
 
-// How long one `session open --json` read may take before it counts as failed.
 const readTimeout = Duration.seconds(20);
 
 /**

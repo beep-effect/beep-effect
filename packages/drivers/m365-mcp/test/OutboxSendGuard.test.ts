@@ -22,8 +22,7 @@ import type { OutboxSendMismatch, OutboxSendMismatchField } from "@beep/m365-mcp
 const Local = S.Literals(["ada", "ben", "cy", "dee"]);
 const Addresses = S.Array(Local).check(S.isMaxLength(4));
 
-// Few names, sizes and digests on purpose: duplicates must be counted, not collapsed.
-const GuardCase = S.Struct({
+const DuplicateProneGuardCase = S.Struct({
   bcc: Addresses,
   cc: Addresses,
   files: S.Array(
@@ -36,16 +35,15 @@ const GuardCase = S.Struct({
   subject: S.String,
   to: Addresses,
 });
-type GuardCase = typeof GuardCase.Type;
+type DuplicateProneGuardCase = typeof DuplicateProneGuardCase.Type;
 
 const address = (local: string): string => `${local}@example.test`;
 const addresses = A.map(address);
 
-const worldOf = (input: GuardCase) => {
+const worldOf = (input: DuplicateProneGuardCase) => {
   const stored = A.map(input.files, (file) =>
     OutboxAttachmentDigest.make({ name: file.name, sha256: digestOf(file.seed), size: file.size })
   );
-  // The draft as Graph might store it: other letter case, other order, padded subject.
   const draft = GraphMessage.make({
     bccRecipients: O.some(recipients(A.reverse(A.map(addresses(input.bcc), Str.toUpperCase)))),
     ccRecipients: O.some(recipients(A.reverse(addresses(input.cc)))),
@@ -54,7 +52,6 @@ const worldOf = (input: GuardCase) => {
     subject: O.some(`  ${input.subject} `),
     toRecipients: O.some(recipients(A.map(addresses(input.to), (value) => ` ${value}`))),
   });
-  // What a caller restates after get_draft: another order, one address repeated.
   const expect = OutboxSendExpectation.make({
     attachments: A.reverse(stored),
     bcc: addresses(input.bcc),
@@ -95,7 +92,7 @@ const options = { arbitrary: fcRuns(200) };
 describe("@beep/m365-mcp outbox send guard", () => {
   it.prop(
     "accepts a faithful restatement regardless of attachment order, address case, order, repeats or subject padding",
-    [Arbitrary.schema(GuardCase)],
+    [Arbitrary.schema(DuplicateProneGuardCase)],
     ([input]) => {
       const world = worldOf(input);
 
@@ -107,7 +104,7 @@ describe("@beep/m365-mcp outbox send guard", () => {
 
   it.prop(
     "names exactly the field that was perturbed",
-    [Arbitrary.schema(GuardCase)],
+    [Arbitrary.schema(DuplicateProneGuardCase)],
     ([input]) => {
       const world = worldOf(input);
       const extra = "zed@example.test";
@@ -119,11 +116,15 @@ describe("@beep/m365-mcp outbox send guard", () => {
       assert.deepStrictEqual(fieldsOf(check(world, withExpect(world, { subject: `${world.expect.subject}!` }))), [
         "subject",
       ]);
-      // An attachment the caller did not restate, and one the draft does not hold.
-      assert.deepStrictEqual(fieldsOf(check(world, { stored: [...world.stored, extraFile] })), ["attachments"]);
+      assert.deepStrictEqual(
+        fieldsOf(check(world, { stored: [...world.stored, extraFile] })),
+        ["attachments"],
+        "an attachment the draft holds but the caller did not restate"
+      );
       assert.deepStrictEqual(
         fieldsOf(check(world, withExpect(world, { attachments: [...world.expect.attachments, extraFile] }))),
-        ["attachments"]
+        ["attachments"],
+        "a restated attachment the draft does not hold"
       );
       assert.deepStrictEqual(
         fieldsOf(check(world, { draft: GraphMessage.make({ ...world.draft, isDraft: O.some(false) }) })),
@@ -139,7 +140,7 @@ describe("@beep/m365-mcp outbox send guard", () => {
 
   it.prop(
     "reports a stored attachment whose bytes changed as a digest mismatch, and a changed size as an attachment mismatch",
-    [Arbitrary.schema(GuardCase)],
+    [Arbitrary.schema(DuplicateProneGuardCase)],
     ([input]) => {
       const world = worldOf(input);
       const swapFirst = (swap: (attachment: OutboxAttachmentDigest) => OutboxAttachmentDigest) =>
@@ -180,7 +181,6 @@ describe("@beep/m365-mcp outbox send guard", () => {
     assert.deepStrictEqual(fieldsOf(check(world, withExpect(world, { attachments: A.take(world.stored, 1) }))), [
       "attachments",
     ]);
-    // Same names and sizes, but only one of the two digests restated correctly.
     assert.deepStrictEqual(
       fieldsOf(
         check(
@@ -190,7 +190,8 @@ describe("@beep/m365-mcp outbox send guard", () => {
           })
         )
       ),
-      ["attachment-digest"]
+      ["attachment-digest"],
+      "same names and sizes, but only one of the two digests restated correctly"
     );
   });
 

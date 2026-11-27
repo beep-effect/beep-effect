@@ -12,8 +12,7 @@ import * as Stream from "effect/Stream";
 const runs = { arbitrary: fcRuns(100) };
 const encoder = new TextEncoder();
 
-// Single-byte chunks put boundaries inside every multibyte UTF-8 character.
-const byteChunks = (bytes: Uint8Array): ReadonlyArray<Uint8Array> =>
+const singleByteChunks = (bytes: Uint8Array): ReadonlyArray<Uint8Array> =>
   A.map(A.fromIterable(bytes), (byte) => Uint8Array.of(byte));
 
 describe("capture property floor", () => {
@@ -37,14 +36,16 @@ describe("capture property floor", () => {
     ([text]) =>
       Effect.gen(function* () {
         const bytes = encoder.encode(text);
-        // TextEncoder replaces unpaired surrogates; TextDecoder consumes a leading BOM.
         const expected = new TextDecoder().decode(bytes);
-        const parsed = yield* collectBounded(Stream.fromIterable(byteChunks(bytes)), bytes.length);
-        assert.strictEqual(parsed, expected);
-        // Restore the consumed transport BOM so a payload BOM stays payload.
+        const parsed = yield* collectBounded(Stream.fromIterable(singleByteChunks(bytes)), bytes.length);
+        assert.strictEqual(
+          parsed,
+          expected,
+          "TextEncoder replaces unpaired surrogates and TextDecoder consumes a leading BOM"
+        );
         const rendered = encoder.encode(`\uFEFF${parsed}`);
         const reparsed = yield* collectBounded(Stream.make(rendered), rendered.length);
-        assert.strictEqual(reparsed, parsed);
+        assert.strictEqual(reparsed, parsed, "the restored transport BOM is consumed, so a payload BOM stays payload");
         const value2 = yield* collectBounded(rendered.length)(Stream.make(rendered));
         assert.strictEqual(value2, parsed);
       }),
@@ -81,7 +82,7 @@ describe("capture property floor", () => {
     ([text]) =>
       Effect.gen(function* () {
         const bytes = encoder.encode(text);
-        const chunks = [new Uint8Array(), ...byteChunks(bytes), new Uint8Array()];
+        const chunks = [new Uint8Array(), ...singleByteChunks(bytes), new Uint8Array()];
         const collectBounded3 = yield* collectBounded(Stream.fromIterable(chunks), bytes.length);
         assert.strictEqual(collectBounded3, new TextDecoder().decode(bytes));
       }),

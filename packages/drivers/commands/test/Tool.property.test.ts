@@ -74,9 +74,11 @@ describe("Tool constructor defaults", () => {
         });
         assert.isTrue(S.toEquivalence(Tool)(made, value));
         assert.isTrue(S.toEquivalence(Tool)(named, value));
-        // Opaque constructors rebuild nested plain data, so the override is
-        // carried by value (every field, exactly), not by reference.
-        assert.deepStrictEqual(made.version, value.version);
+        assert.deepStrictEqual(
+          made.version,
+          value.version,
+          "opaque constructors rebuild nested plain data, so the override is carried by value, not by reference"
+        );
         assert.deepStrictEqual(named.version, value.version);
       }),
     runs

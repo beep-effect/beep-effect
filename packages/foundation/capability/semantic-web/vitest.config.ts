@@ -5,9 +5,6 @@ export default mergeConfig(
   shared,
   defineConfig({
     test: {
-      // The rdf-canonize-backed tests load the real module (vi.importActual) and
-      // canonicalize schema-derived datasets; cold-cache CI runs exceed the 5000ms
-      // default per-test timeout, so widen the budget package-wide.
       testTimeout: packageTestTimeout(30_000),
     },
   })

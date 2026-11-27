@@ -10,8 +10,6 @@ import { sanitizedToolkit } from "@beep/mcp-kit";
 import * as Layer from "effect/Layer";
 import { VaultSyncDeliveryClient } from "./VaultSyncApi.ts";
 
-// A fixed projection of the same API, not another Domain.Api. Ai.toToolkit
-// receives an explicit get/snapshot/list allowlist for these four View entries.
 const readSurface = {
   apiName: VaultSyncApi.apiName,
   serves: [V.VaultSyncStatus, V.OpenConflicts, V.DestinationList, V.OperationQueue],

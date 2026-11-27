@@ -1,9 +1,3 @@
-// The public scripted-spawner fixture is itself load-bearing test machinery —
-// every unit suite in this package (and downstream consumers stubbing the
-// spawner seam) leans on it — so its contract is tested directly: script
-// routing, spawn recording (options, extendEnv), the PlatformError failure
-// path, hang, unref observation, and the loud pipeline refusal.
-
 import { CommandFailedError, Run } from "@beep/commands/Run";
 import { ScriptCompletion, ScriptedSpawner, ScriptResult, SpawnRecord } from "@beep/commands/ScriptedSpawner";
 import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
@@ -22,7 +16,6 @@ import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as TestClock from "effect/testing/TestClock";
 
-/** Builds each test layer under the program's scope, with fresh per-invocation state. */
 const withLayer =
   <R, E2, R2>(layer: Layer.Layer<R, E2, R2>) =>
   <A, E, R3>(program: Effect.Effect<A, E, R3>) =>
@@ -32,7 +25,7 @@ const withLayer =
 
 const cmd = (executable = "tool", args: ReadonlyArray<string> = []) => ChildProcess.make(executable, args);
 
-describe("ScriptedSpawner.make", () => {
+describe("ScriptedSpawner.make, the fixture every unit suite and downstream spawner stub leans on", () => {
   it.effect("routes by executable and argv", () =>
     Effect.gen(function* () {
       const spawner = ScriptedSpawner.make((command, args) =>
@@ -66,8 +59,11 @@ describe("ScriptedSpawner.make", () => {
       assert.strictEqual(record?.cwd, "/repo");
       assert.deepStrictEqual(record?.env, { CI: "1" });
       assert.strictEqual(record?.extendEnv, true);
-      // The conveniences are lifted from the full options, which stay readable.
-      assert.strictEqual(record?.options.cwd, "/repo");
+      assert.strictEqual(
+        record?.options.cwd,
+        "/repo",
+        "the conveniences are lifted from the full options, which stay readable"
+      );
       assert.deepStrictEqual(record?.options.env, { CI: "1" });
     })
   );
@@ -76,8 +72,7 @@ describe("ScriptedSpawner.make", () => {
     Effect.gen(function* () {
       const spawner = ScriptedSpawner.make(() => ({}));
       const program = Run.collect(cmd("first")).pipe(withLayer(spawner.layer));
-      // Constructed but not yet run: nothing may be recorded.
-      assert.lengthOf(spawner.spawns, 0);
+      assert.lengthOf(spawner.spawns, 0, "constructed but not yet run: nothing may be recorded");
       yield* program;
       yield* Run.collect(cmd("second")).pipe(withLayer(spawner.layer));
       assert.deepStrictEqual(

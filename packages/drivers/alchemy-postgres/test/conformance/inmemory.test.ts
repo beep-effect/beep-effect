@@ -14,12 +14,9 @@ import { consumers } from "./consumers.ts";
 import { conformance } from "./scenarios.ts";
 import type { ScenarioClock } from "./scenarios.ts";
 
-/** The explicit clock's time, in epoch milliseconds, from a fixed start; every built platform reads it. */
 let clockMillis = DateTime.toEpochMillis(DateTime.makeUnsafe("2026-01-01T00:00:00Z"));
-/** Every platform built on the clock: a scenario may build a second one, and `advance` drains them all. */
 const controls: Array<InMemory.Control> = [];
 
-/** Builds a fresh in-memory platform on the explicit clock, as `Domain.InMemory` does on the wall clock. */
 const platform = Layer.suspend(() => {
   const built = InMemory.make({ now: () => clockMillis });
   controls.push(built.control);

@@ -33,7 +33,6 @@ const terminal = (columns: number) =>
     })
   );
 
-/** Build each snapshot in the runner's shared fixture scope. */
 const snapshot = (
   name: string,
   env: Env,
@@ -149,8 +148,11 @@ describe("TerminalEnv.layer", () => {
     it.layer(stderrOff.layer, { timeout: "30 seconds" })((it) => {
       it.effect("stderrIsTerminal false gives stderr no colour while stdout keeps it", () =>
         Effect.map(stderrOff.key, (t) => {
-          // Node's table reads TERM_PROGRAM (iTerm 3.5 → truecolor) before TERM.
-          assert.strictEqual(t.stdout.color, "truecolor");
+          assert.strictEqual(
+            t.stdout.color,
+            "truecolor",
+            "Node's table reads TERM_PROGRAM (iTerm 3.5 → truecolor) before TERM"
+          );
           assert.strictEqual(t.stderr.isTerminal, false);
           assert.strictEqual(t.stderr.color, "none");
           assert.strictEqual(t.stderr.hyperlinks, false);
@@ -435,8 +437,6 @@ describe("TerminalEnv.layerTest", () => {
     return Effect.void;
   });
 
-  // No Stdio, no Terminal, no ConfigProvider is provided: this compiling is the type-level check that the layer
-  // has no requirements, and running is the behavioural one.
   it.layer(TerminalEnv.layerTest(), { timeout: "30 seconds" })((it) => {
     it.effect("is quiet by default and needs no platform services", () =>
       Effect.gen(function* () {
@@ -496,8 +496,13 @@ describe("TerminalEnv.colorLevel", () => {
   )((it) => {
     it.effect("needs only Stdio: it is assignable to Effect<ColorLevel, never, Stdio> (no Terminal in R)", () => {
       const program = TerminalEnv.colorLevel("stdout") satisfies Effect.Effect<ColorLevel, never, Stdio.Stdio>;
-      // A TTY stdout with no colour variables: the terminal table, not the TTY gate, decides.
-      return Effect.map(program, (level) => assert.strictEqual(level, "256"));
+      return Effect.map(program, (level) =>
+        assert.strictEqual(
+          level,
+          "256",
+          "a TTY stdout with no colour variables: the terminal table, not the TTY gate, decides"
+        )
+      );
     });
   });
 

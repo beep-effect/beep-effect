@@ -75,8 +75,7 @@ const binding = Layer.effect(
     (request) => VaultSyncSessionBinding.of({ request, token: Redacted.make(TOKEN) })
   )
 );
-// The desktop composition: the RPC adapter over the Api sessions over the hosted Model.
-const runtimeFor = (root: string) =>
+const desktopRuntimeFor = (root: string) =>
   VaultSyncRpcsApiLive.pipe(
     Layer.provideMerge(
       VaultSyncSessionLive.pipe(
@@ -184,7 +183,7 @@ describe("documents vault sync runtime", () => {
         yield* fs.writeFileString(path.join(root, "fresh.txt"), "fresh synthetic content");
 
         const scope = yield* Scope.make();
-        const context = yield* Layer.buildWithScope(runtimeFor(root), scope);
+        const context = yield* Layer.buildWithScope(desktopRuntimeFor(root), scope);
         const client = yield* RpcTest.makeClient(VaultSyncRpcs).pipe(Effect.provideContext(context));
         const epoch = yield* readSyncWriterEpoch;
         assertSome(
@@ -192,23 +191,26 @@ describe("documents vault sync runtime", () => {
           "model"
         );
 
-        // Fail closed until the desktop seeds its owner membership; the seed is idempotent.
         const denied = yield* Effect.flip(client.GetVaultSyncStatus({ workspaceId, forceProbe: false }, auth));
-        expect(denied._tag).toBe("VaultSyncActionError");
+        expect(denied._tag, "the API fails closed until the desktop seeds its owner membership").toBe(
+          "VaultSyncActionError"
+        );
         yield* ensureVaultSyncOwnerMembership(7, 1);
         yield* ensureVaultSyncOwnerMembership(7, 1);
         const memberships = yield* sql`SELECT count(*)::int AS n FROM shared_membership`;
-        expect(memberships).toEqual([{ n: 1 }]);
+        expect(memberships, "seeding the owner membership is idempotent").toEqual([{ n: 1 }]);
 
-        // The imported conflict is listed with its D14 numeric identities. The
-        // cursor is projected by a separate pass, so wait for both before reading.
         const status = yield* eventually(
           client.GetVaultSyncStatus({ workspaceId, forceProbe: false }, auth),
           (current) => current.openConflicts === 1 && O.isSome(current.cursorPosition)
         );
-        assertSome(status.cursorPosition, "0");
+        const cursorFromSeparatePass = status.cursorPosition;
+        assertSome(cursorFromSeparatePass, "0");
         const open = yield* client.ListVaultSyncConflicts({ workspaceId }, auth);
-        expect(A.map(open, (row) => row.id)).toEqual([88]);
+        expect(
+          A.map(open, (row) => row.id),
+          "the imported conflict is listed with its D14 numeric identities"
+        ).toEqual([88]);
         assertSome(
           O.flatMap(A.head(open), (conflict) => conflict.syncItemId),
           Documents.SyncItemId.make(57)
@@ -227,18 +229,19 @@ describe("documents vault sync runtime", () => {
           (rows) => rows[0]?.resolution_status === "reviewed"
         );
 
-        // Trigger answers at acceptance; the saga's pass writes rows that join through D14 ids.
         yield* client.TriggerVaultSync({ workspaceId }, auth);
         const joined = yield* eventually(
           sql`SELECT i.id AS item_id, i.sync_state, o.status FROM documents_sync_item i
             JOIN documents_sync_operation o ON o.sync_item_id = i.id WHERE i.local_rel_path = 'fresh.txt'`,
           (rows) => rows[0]?.status === "succeeded" && rows[0]?.sync_state === "current"
         );
-        expect(Number(joined[0]?.item_id)).toBeGreaterThan(57);
+        expect(
+          Number(joined[0]?.item_id),
+          "Trigger answers at acceptance and the saga's pass writes rows that join through D14 ids"
+        ).toBeGreaterThan(57);
         const counts = yield* Context.get(context, DmsMirrorFixtureHandle).counts;
         expect(counts.uploadFile).toBe(1);
 
-        // The read model serves every legacy reader over the projected rows.
         const reads = Context.get(context, LegacySyncReadModel);
         const items = yield* reads.items(workspaceId);
         expect(A.map(items, (item) => item.localRelPath).sort()).toEqual(["fresh.txt", "legacy.txt"]);
@@ -259,37 +262,36 @@ describe("documents vault sync runtime", () => {
         const noCursor = yield* reads.cursor(WorkspaceIdentity.WorkspaceId.make(4));
         assertNone(noCursor);
 
-        // The bootstrap registers a workspace destination once; the imported one is kept.
         const bootstrap = Effect.provide(Layer.merge(hostingFor(root), Layer.succeedContext(context)));
         const imported = yield* ensureLegacyBoxDestination(3).pipe(bootstrap);
         const binding = yield* workspaceDestinationId(3).pipe(bootstrap);
-        expect(imported).toBe(binding);
+        expect(imported, "the bootstrap keeps the imported workspace destination").toBe(binding);
         expect(imported).not.toContain("workspace");
         const created = yield* ensureLegacyBoxDestination(5).pipe(bootstrap);
         const recreated = yield* ensureLegacyBoxDestination(5).pipe(bootstrap);
-        expect(recreated).toBe(created);
+        expect(recreated, "the bootstrap registers a workspace destination once").toBe(created);
 
-        // The legacy writer is fenced while the Model owns the store.
         const legacy = yield* sql`UPDATE documents_sync_item SET last_error = 'old build'`.pipe(Effect.flip);
-        expect(legacy._tag).toBe("SqlError");
+        expect(legacy._tag, "the legacy writer is fenced while the Model owns the store").toBe("SqlError");
 
-        // A restart re-hosts the same store without another genesis import.
         const eventsBefore = yield* sql`SELECT count(*)::int AS n FROM alchemy_aggregate_event
           WHERE tag LIKE '%GenesisImported'`;
         yield* Scope.close(scope, Exit.void);
-        const restarted = yield* Layer.build(runtimeFor(root));
+        const restarted = yield* Layer.build(desktopRuntimeFor(root));
         const again = yield* RpcTest.makeClient(VaultSyncRpcs).pipe(Effect.provideContext(restarted));
         const afterRestart = yield* eventually(
           again.GetVaultSyncStatus({ workspaceId, forceProbe: false }, auth),
           (current) => current.openConflicts === 0
         );
-        // The review heals legacy.txt, absent from the synthetic vault: a local stale input, never a held Box intent.
         const unsettled = yield* sql`SELECT count(*)::int AS n FROM documents_sync_box_receipt WHERE result IS NULL`;
-        expect(unsettled).toEqual([{ n: 0 }]);
+        expect(
+          unsettled,
+          "the review heals legacy.txt, absent from the synthetic vault: a local stale input, never a held Box intent"
+        ).toEqual([{ n: 0 }]);
         expect(afterRestart.openConflicts).toBe(0);
         const eventsAfter = yield* sql`SELECT count(*)::int AS n FROM alchemy_aggregate_event
           WHERE tag LIKE '%GenesisImported'`;
-        expect(eventsAfter).toEqual(eventsBefore);
+        expect(eventsAfter, "a restart re-hosts the same store without another genesis import").toEqual(eventsBefore);
       })
     );
   });

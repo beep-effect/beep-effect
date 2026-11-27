@@ -38,12 +38,11 @@ export class DmsMirrorUnavailable extends S.TaggedError<DmsMirrorUnavailable, { 
 )(
   "DmsMirrorUnavailable",
   {
-    // Optional-key so encodings from peers that predate the field still decode
-    // (missing key -> none) and older peers never see an unknown key for none.
     disconnectReason: S.OptionFromOptionalKey(DmsMirrorDisconnectReason)
       .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({
-        description: "Probe-facing classification of the failure; none when the adapter cannot classify it.",
+        description:
+          "Probe-facing classification of the failure; none when the adapter cannot classify it. The key is optional on the wire: an encoding from a peer that predates the field decodes as none, and none encodes as a missing key.",
       }),
     provider: DmsProvider.annotateKey({
       description: "DMS provider whose mirror adapter failed.",

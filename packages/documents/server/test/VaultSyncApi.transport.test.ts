@@ -68,7 +68,6 @@ const cliPlatform = BunChildProcessSpawner.layer.pipe(
   Layer.provideMerge(Layer.mergeAll(FileSystem.layerNoop({}), Path.layer, Stdio.layerTest({}), BunTerminal.layer))
 );
 
-// A model with the public initiators' durable routing and a pass that only records its starts.
 class InitiatorModel extends Domain.Model("VaultSync", {
   aggregates: VaultSyncPassModel.aggregates,
   views: VaultSyncPassModel.views,
@@ -132,9 +131,8 @@ const revoke = Effect.flatMap(
   (sql) => sql`UPDATE shared_membership SET deleted_at = 1 WHERE user_id = 7`
 );
 
-// One hosted model over PGlite membership; each entrypoint adds its own session adapter.
-// Open subscriptions re-read grants only when `pause` completes: never, unless a test signals it.
-const hosted = (kind: V.TransportKind, pause: Effect.Effect<void> = Effect.never) => {
+const grantsNeverRecheck: Effect.Effect<void> = Effect.never;
+const hosted = (kind: V.TransportKind, pause: Effect.Effect<void> = grantsNeverRecheck) => {
   const model = VaultSyncModel.layer(VaultSyncPolicies).pipe(
     Layer.provide(SecureRandom.layerWebCrypto),
     Layer.provide(Domain.InMemory)
@@ -149,13 +147,12 @@ const hosted = (kind: V.TransportKind, pause: Effect.Effect<void> = Effect.never
   );
 };
 
-// Views are projected asynchronously: re-read until the destination appears.
+const projectionRoundTrips = 5000;
 const settled = <E>(get: Effect.Effect<{ readonly destination: { readonly _tag: string } } | null, E>) =>
-  // No clock wait: each read is an in-process RPC round trip that lets projection fibers run.
   get.pipe(
     Effect.repeat({
       until: (state) => state?.destination._tag === "Registered",
-      times: 5000,
+      times: projectionRoundTrips,
     })
   );
 
@@ -166,7 +163,6 @@ const expectDenied = Effect.fn("expectDenied")(function* <A, E extends { readonl
   expect(denied._tag).toBe("ScopeDenied");
 });
 
-// Views are projected asynchronously; registration returns once both status Views caught up.
 const register = Effect.gen(function* () {
   const destinations = yield* V.SyncDestination;
   const own1 = yield* destinations.send(own, V.RegisterDestination.make({ orgId: 1, workspaceId: 1, name: "own" }));
@@ -203,7 +199,6 @@ const webApp = Effect.fn("webApp")(function* (
 
 const decoder = new TextDecoder();
 
-// Reads SSE frames from a live response; null once the server ends the stream.
 const sseReader = (response: Response) => {
   const reader = response.body!.getReader();
   const buffer = { text: "" };
@@ -258,11 +253,13 @@ describe("vault-sync production session adapters", () => {
       expect(request.correlationId).toBe("corr-1");
       expect(request.principal).toEqual({ kind: "User", userId: 7 });
       expect(request.principalKey).toBe("User:7");
-      // D17 F6: a header that is not a bounded token is replaced by a minted one.
       const unbounded = yield* resolver.resolve(
         Headers.fromInput({ ...bearer, "x-correlation-id": "clients/acme/matter brief.docx" })
       );
-      expect(unbounded.correlationId).not.toContain("acme");
+      expect(
+        unbounded.correlationId,
+        "a correlation header that is not a bounded token is replaced by a minted one"
+      ).not.toContain("acme");
       expect(S.is(V.RequestToken)(unbounded.correlationId)).toBe(true);
     }).pipe(TestClock.withLive)
   );
@@ -377,27 +374,30 @@ describe("revocation barrier over real transports", () => {
       );
       expect(response.status).toBe(200);
       const sse = sseReader(response);
-      // The first frames may precede the projection; wait for the registered state.
       const first = yield* sse.next.pipe(
         Effect.repeat({ until: (frame) => frame === null || Str.includes("Registered")(frame) })
       );
-      expect(first).toContain("Registered");
+      expect(
+        first,
+        "the first frames may precede the projection, so the stream is read up to the registered state"
+      ).toContain("Registered");
       yield* revoke.pipe(Effect.provideContext(context));
-      // A commit right after the barrier must not reach the client.
       const destinations = Context.get(context, V.SyncDestination);
       yield* destinations.send(
         own,
         V.ResolveDestinationRoot.make({ rootId: V.RemoteItemId.make("root-after-barrier") })
       );
       const after = yield* drain(sse.next);
-      expect(A.filter(after, Str.includes("root-after-barrier"))).toEqual([]);
+      expect(
+        A.filter(after, Str.includes("root-after-barrier")),
+        "a commit right after the revocation barrier never reaches the client"
+      ).toEqual([]);
       expect(A.join(after, "\n")).toContain("ScopeDenied");
     }).pipe(TestClock.withLive)
   );
 
   it.effect("HTTP SSE watch: an idle subscription closes with a typed denial after revocation", () =>
     Effect.gen(function* () {
-      // The idle stream has no frame to check, so only the grant re-read can end it; signal it explicitly.
       const membershipChanged = yield* Deferred.make<void>();
       const { app, context } = yield* webApp("http", Deferred.await(membershipChanged));
       yield* grant("member").pipe(Effect.provideContext(context));
@@ -409,7 +409,10 @@ describe("revocation barrier over real transports", () => {
       yield* revoke.pipe(Effect.provideContext(context));
       yield* Deferred.succeed(membershipChanged, undefined);
       const rest = yield* drain(sse.next);
-      expect(A.join(rest, "\n")).toContain("ScopeDenied");
+      expect(
+        A.join(rest, "\n"),
+        "an idle stream has no frame to check, so only the explicitly signalled grant re-read ends it"
+      ).toContain("ScopeDenied");
     }).pipe(TestClock.withLive)
   );
 
@@ -443,7 +446,6 @@ describe("revocation barrier over real transports", () => {
       const client = yield* VaultSyncApi.clientHttp(`http://test${VAULT_SYNC_RPC_PATH}`).pipe(
         Effect.provideContext(http)
       );
-      // Subscribe once the projection settled, so the only later change is the post-barrier commit.
       yield* settled(client.VaultSyncStatus.get(own, { headers: bearer }));
       const frames = yield* Ref.make(0);
       const afterBarrier = yield* Ref.make(0);
@@ -471,7 +473,9 @@ describe("revocation barrier over real transports", () => {
       const delivered = yield* Ref.get(frames);
       const leaked = yield* Ref.get(afterBarrier);
       expect(delivered).toBe(1);
-      expect(leaked).toBe(0);
+      expect(leaked, "subscribed once the projection settled, the post-barrier commit is the only later change").toBe(
+        0
+      );
     }).pipe(TestClock.withLive)
   );
 
@@ -514,7 +518,6 @@ describe("revocation barrier over real transports", () => {
 
 const encodeJsonBody = S.encodeEffect(S.fromJsonString(S.Unknown));
 
-// Records every span a runtime starts, in start order.
 const recordingTracer = () => {
   const spans: Array<Tracer.NativeSpan> = [];
   const tracer = Tracer.make({
@@ -527,7 +530,6 @@ const recordingTracer = () => {
   return { spans, tracer };
 };
 
-// Span ids from a span up to its root, following parents by id (kernel parents are external spans).
 const ancestorIds = (spans: ReadonlyArray<Tracer.NativeSpan>, span: Tracer.NativeSpan): ReadonlyArray<string> => {
   const byId = R.fromEntries(A.map(spans, (each) => [each.spanId, each] as const));
   const up = (current: Tracer.NativeSpan): ReadonlyArray<string> =>
@@ -580,10 +582,15 @@ describe("vault-sync boundary spans (D17)", () => {
         A.findFirst(spans, (span) => Str.startsWith("Domain.decide SyncDestination.PauseDestination")(span.name))
       );
       expect(decide.traceId).toBe(command.traceId);
-      expect(ancestorIds(spans, decide)).toContain(command.spanId);
-      // The Session runs inside the boundary span, so its spans are its descendants too.
+      expect(
+        ancestorIds(spans, decide),
+        "the kernel decide span descends from the boundary span by parent id, since kernel parents are external spans"
+      ).toContain(command.spanId);
       const resolve = yield* Effect.fromOption(A.findFirst(spans, (span) => span.name === "VaultSyncSession.resolve"));
-      expect(ancestorIds(spans, resolve)).toContain(command.spanId);
+      expect(
+        ancestorIds(spans, resolve),
+        "the Session runs inside the boundary span, so its spans are descendants too"
+      ).toContain(command.spanId);
       expect(resolve.attributes.get("documents.vault_sync.transport")).toBe("http");
     }).pipe(TestClock.withLive)
   );
@@ -596,11 +603,14 @@ describe("vault-sync boundary spans (D17)", () => {
       const http = yield* Layer.build(
         FetchHttpClient.layer.pipe(Layer.provide(Layer.succeed(FetchHttpClient.Fetch, fetch)))
       );
-      // The generated remote CLI's protocol: the RPC client over the sidecar's gated endpoint.
-      const client = yield* VaultSyncApi.clientHttp(`http://test${VAULT_SYNC_RPC_PATH}`).pipe(
+      const remoteCliRpcClient = yield* VaultSyncApi.clientHttp(`http://test${VAULT_SYNC_RPC_PATH}`).pipe(
         Effect.provideContext(http)
       );
-      yield* client.PauseDestination(own, {}, { headers: { ...bearer, "x-correlation-id": "corr-remote-1" } });
+      yield* remoteCliRpcClient.PauseDestination(
+        own,
+        {},
+        { headers: { ...bearer, "x-correlation-id": "corr-remote-1" } }
+      );
       const commands = A.filter(spans, (span) => span.name === "VaultSyncApi.command");
       expect(A.map(commands, (span) => R.fromEntries(A.fromIterable(span.attributes)))).toEqual([
         {

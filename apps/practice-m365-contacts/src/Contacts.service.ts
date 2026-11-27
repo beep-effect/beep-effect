@@ -112,6 +112,13 @@ export class ContactSeeding extends Context.Service<
 >()($I`ContactSeeding`) {}
 
 /** Bind workflow dependencies to a checkout boundary used for export refusal.
+ * **Gotchas**
+ *
+ * Within one `apply`, an ambiguous create is reconciled from inventory and
+ * never retried as a second create; only a uniquely attributable result is
+ * journaled. An unresolved ambiguous create leaves no journal entry, so a later
+ * `apply` plans it again while the contact is not yet visible in inventory: do
+ * not reapply until that result is resolved.
  * **Example** (Inspect a workflow layer)
  * ```ts
  * import { contactSeedingLayer } from "@/Contacts.service"
@@ -240,7 +247,6 @@ export const contactSeedingLayer = (checkoutRoot: string) =>
                       Effect.catchIf(
                         (error) => error.reason === "ambiguous write",
                         Effect.fnUntraced(function* () {
-                          // Reconcile only; never create again. Persist any uniquely attributable result.
                           const snapshot = yield* port.inventory;
                           const candidates = A.filter(
                             snapshot.contacts,

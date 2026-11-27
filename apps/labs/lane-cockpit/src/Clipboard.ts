@@ -13,7 +13,6 @@ import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Stdio from "effect/Stdio";
 import * as Stream from "effect/Stream";
 
-// The OSC 52 sequence that asks the terminal to set the clipboard.
 const osc52 = (text: string): string => `\u001b]52;c;${Base64.encode(text)}\u0007`;
 
 /**

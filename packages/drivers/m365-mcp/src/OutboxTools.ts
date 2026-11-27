@@ -35,7 +35,6 @@ const $I = $M365McpId.create("OutboxTools");
 
 const draftId = GraphPathSegment.annotateKey({ description: "Graph id of the draft, as create_draft returned it." });
 
-// A write that adds or changes one item and deletes nothing.
 const additiveWriteToolHints = FourHintAnnotations.make({
   destructive: false,
   idempotent: false,
@@ -446,9 +445,8 @@ export const OutboxDraftMarkOutcome = LiteralKit([
  */
 export type OutboxDraftMarkOutcome = typeof OutboxDraftMarkOutcome.Type;
 
-// A draft id as the audit log recorded it; check_drafts reports it even when it is not a valid Graph path.
 const recordedDraftId = S.NonEmptyString.annotateKey({
-  description: "Graph id of the draft, as create_draft returned it.",
+  description: "Graph id of the draft as the audit log recorded it, reported even when it is not a valid Graph path.",
 });
 
 const recordedSubject = S.String.annotateKey({

@@ -21,7 +21,6 @@ import { annotateVaultSyncOutcome, VaultSyncAttribute } from "./VaultSync.instru
 import { VaultSyncSessionLive } from "./VaultSyncApi.ts";
 import { VaultSyncMembership } from "./VaultSyncSession.repository.ts";
 
-// Minted correlation ids are random opaque tokens, never derived from caller text.
 const mintCorrelationId = Effect.zipWith(
   Clock.currentTimeMillis,
   Random.nextIntBetween(0, 2_147_483_647),
@@ -113,18 +112,18 @@ const makeResolver = Effect.fnUntraced(function* (sourceKind: V.TransportKind, b
   const destinations = yield* V.SyncDestination;
   const conflicts = yield* V.SyncConflict;
   const pause = yield* VaultSyncRevocationPause;
-  // Every Session span records the entrypoint's fixed transport and its own outcome.
-  const traced = { attributes: { [VaultSyncAttribute.transport]: sourceKind } };
-  const grants = Effect.fn("VaultSyncSession.grants", traced)(function* (request: V.VaultSyncRequest) {
+  const transportSpanAttributes = { attributes: { [VaultSyncAttribute.transport]: sourceKind } };
+  const grants = Effect.fn("VaultSyncSession.grants", transportSpanAttributes)(function* (request: V.VaultSyncRequest) {
     if (request.principal.kind !== "User") return yield* V.ScopeDenied.make({});
     return yield* memberships.read(request.principal.userId, V.VaultSyncScope.make(request));
   }, annotateVaultSyncOutcome);
-  const registered = Effect.fn("VaultSyncSession.registered", traced)(function* (destinationId: V.DestinationId) {
+  const registered = Effect.fn("VaultSyncSession.registered", transportSpanAttributes)(function* (
+    destinationId: V.DestinationId
+  ) {
     const state = yield* destinations.get(destinationId);
     if (state._tag !== "Registered") return yield* V.ScopeDenied.make({});
     return V.VaultSyncScope.make(state);
   }, annotateVaultSyncOutcome);
-  // A conflict's scope is its destination's, and the two must agree on the workspace.
   const conflictScope = Effect.fn("VaultSyncSession.conflictScope")(function* (id: string) {
     const conflictId = yield* decode(V.ConflictId, id);
     const conflict = yield* conflicts.get(conflictId);
@@ -133,13 +132,12 @@ const makeResolver = Effect.fnUntraced(function* (sourceKind: V.TransportKind, b
     if (owner.workspaceId !== conflict.workspaceId) return yield* V.ScopeDenied.make({});
     return owner;
   });
-  const scope = Effect.fn("VaultSyncSession.scope", traced)(function* (rpc: string, payload: unknown) {
+  const scope = Effect.fn("VaultSyncSession.scope", transportSpanAttributes)(function* (rpc: string, payload: unknown) {
     if (rpc === "ClaimDestinationName") {
       const {
-        input: { claim },
+        input: { claim: claimedWorkspace },
       } = yield* decode(NameInput, payload);
-      // Registration has no existing destination; membership of the claimed workspace is still checked live.
-      return V.VaultSyncScope.make(claim);
+      return V.VaultSyncScope.make(claimedWorkspace);
     }
     if (rpc === "RecordConflict") {
       const {
@@ -160,14 +158,12 @@ const makeResolver = Effect.fnUntraced(function* (sourceKind: V.TransportKind, b
   }, annotateVaultSyncOutcome);
   const expected = `Bearer ${Redacted.value(binding.token)}`;
   return V.SessionResolver.of({
-    resolve: Effect.fn("VaultSyncSession.resolve", traced)(function* (headers) {
-      // The transport kind is fixed by the entrypoint; headers can only prove the launch token.
+    resolve: Effect.fn("VaultSyncSession.resolve", transportSpanAttributes)(function* (headers) {
       if (by === "launch-token" && !O.contains(Headers.get(headers, "authorization"), expected)) {
         return yield* V.ScopeDenied.make({});
       }
-      // A caller correlation id is kept only when it is a bounded opaque token (D17 F6).
-      const supplied = O.filter(Headers.get(headers, "x-correlation-id"), S.is(V.RequestToken));
-      const correlationId = O.isSome(supplied) ? supplied.value : yield* mintCorrelationId;
+      const callerRequestToken = O.filter(Headers.get(headers, "x-correlation-id"), S.is(V.RequestToken));
+      const correlationId = O.isSome(callerRequestToken) ? callerRequestToken.value : yield* mintCorrelationId;
       return V.VaultSyncRequest.make({
         ...binding.request,
         principalKey: V.principalKeyOf(binding.request.principal),
@@ -177,7 +173,7 @@ const makeResolver = Effect.fnUntraced(function* (sourceKind: V.TransportKind, b
     }, annotateVaultSyncOutcome),
     grants,
     scope,
-    revoked: Effect.fn("VaultSyncSession.revoked", traced)(
+    revoked: Effect.fn("VaultSyncSession.revoked", transportSpanAttributes)(
       (request) =>
         grants(request).pipe(
           Effect.flatMap((current) => (A.isReadonlyArrayEmpty(current) ? V.ScopeDenied.make({}) : pause)),

@@ -22,7 +22,6 @@ import type { ProvenanceMapping } from "../AlchemyPostgres.config.ts";
 import type { ScheduleStatus } from "../AlchemyPostgres.schema.ts";
 import type { HostContext } from "./host.ts";
 
-/** A command the kernel rejected: fails the commit's transaction so it writes nothing. */
 class RejectedCommand extends S.TaggedError<RejectedCommand, { readonly brand: unique symbol }>()("RejectedCommand", {
   rejection: S.Unknown,
 }) {}
@@ -35,7 +34,6 @@ const decodeReceipts = rowsOf(S.Struct({ result: AcceptedResult }));
 const decodeSchedules = rowsOf(ScheduleRow);
 const decodeScheduleRefs = rowsOf(S.Struct({ id: S.String, command_id: S.String }));
 
-/** An event class's current schema version and how it lifts older stored JSON. */
 interface EventVersion {
   readonly upcast: O.Option<(fromVersion: number, json: unknown) => unknown>;
   readonly version: number;
@@ -85,7 +83,6 @@ export const upcastRow =
     return { event: lifted, envelope: row.envelope };
   };
 
-/** The `principal` and `source_kind` column values of one event row. */
 interface Provenance {
   readonly principal: string | null;
   readonly sourceKind: string | null;
@@ -93,7 +90,6 @@ interface Provenance {
 
 const noProvenance: Provenance = { principal: null, sourceKind: null };
 
-/** A string field of an encoded context value; any other JSON value is NULL. */
 const stringField = (value: unknown, field: string): string | null =>
   pipe(
     O.some(value),
@@ -103,10 +99,6 @@ const stringField = (value: unknown, field: string): string | null =>
     O.getOrNull
   );
 
-/**
- * The provenance of a stored context: the first mapping whose context key holds
- * an object decides both columns, and no match leaves them NULL.
- */
 const provenanceOf = (
   mappings: ReadonlyArray<ProvenanceMapping>,
   context: Readonly<Record<string, unknown>>
@@ -149,7 +141,6 @@ export const makeAggregateStore = (ctx: HostContext) => (definition: Aggregate.A
     const lift = upcastRow(versions);
     MutableHashMap.set(ctx.delivers, name, kit.deliver);
     const stream = (id: string) => `${name}/${id}`;
-    /** One lock per instance: commits and the instance's backfill role hold it. */
     const lockOf = (id: string) => `source:${name}/${id}`;
 
     const eventsAfter = (id: string, after: number, limit: number) =>
@@ -207,7 +198,6 @@ export const makeAggregateStore = (ctx: HostContext) => (definition: Aggregate.A
       });
     MutableHashMap.set(ctx.sourceRoles, name, sourceRole);
 
-    /** Lock an instance for this transaction, creating its row when it has never committed. */
     const lock = Effect.fnUntraced(function* (id: string) {
       yield* sql`SELECT pg_advisory_xact_lock(hashtext(${ctx.lockKey(lockOf(id))}))`;
       yield* sql`INSERT INTO ${sql(tables.aggregateInstance)} (model, aggregate, id, state, version)
@@ -245,7 +235,6 @@ export const makeAggregateStore = (ctx: HostContext) => (definition: Aggregate.A
           ${principal}, ${sourceKind}, ${encodedContext}::jsonb, ${stored.envelope.at})`;
     });
 
-    /** Persist a decided or seeded change: listing, events, state, cursors and the live deliveries. */
     const persist = Effect.fnUntraced(function* (
       id: string,
       before: InstanceRow,
@@ -258,7 +247,6 @@ export const makeAggregateStore = (ctx: HostContext) => (definition: Aggregate.A
       context: Readonly<Record<string, unknown>>,
       at: number
     ) {
-      // An instance is listed in the directory before its first commit lands.
       if (before.version === 0) yield* ctx.register({ source: name, id });
       const live = yield* Backfill.routeCommit(
         sourceRole(id),
@@ -280,7 +268,6 @@ export const makeAggregateStore = (ctx: HostContext) => (definition: Aggregate.A
       yield* ctx.outbox(name, live.send, at);
     });
 
-    /** Decide a command on a locked instance and persist it; a rejection fails with {@link RejectedCommand}. */
     const commitLocked = Effect.fnUntraced(function* (
       id: string,
       current: InstanceRow,
@@ -392,7 +379,6 @@ export const makeAggregateStore = (ctx: HostContext) => (definition: Aggregate.A
         )
         .pipe(orDieAs("unschedule")(tables.aggregateSchedule));
 
-    /** Fire one due scheduled command under the instance lock, unless it was cancelled or already ran. */
     const fire = (id: string, commandId: string) =>
       sql
         .withTransaction(
@@ -402,10 +388,8 @@ export const makeAggregateStore = (ctx: HostContext) => (definition: Aggregate.A
             const pending = O.filter(row, ({ status }) => status === "pending");
             if (O.isNone(pending)) return;
             const { command, meta } = pending.value;
-            const alreadyRan = yield* executed(id, meta.commandId);
-            // Executed only with a receipt. A rejection writes none, so like InMemory the
-            // arming stays cancellable; scheduling the name again can replace it.
-            const status: ScheduleStatus = alreadyRan
+            const hasReceipt = yield* executed(id, meta.commandId);
+            const status: ScheduleStatus = hasReceipt
               ? "executed"
               : yield* commitLocked(id, current, command, meta).pipe(
                   Effect.as<ScheduleStatus>("executed"),

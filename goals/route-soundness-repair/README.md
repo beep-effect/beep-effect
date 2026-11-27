@@ -40,7 +40,7 @@ Use this command for execution-capable sessions:
 P1 Implement — slice 1 (ROUT-03 census, `fix(ci): keep goal ops scripts, fixtures and research inputs on the
 code route`) landed in #3064; slice 2 (COVE-02, bare coverage judges against its planned merge base) landed in #3115; slice 3 (YEET-08
 slice 1, final-check receipts versioned by gate set) landed in #3177 and completes the first wave; P0 re-checked lever status at
-`origin/main` 5e09d90a6da. Slice 4 (ROUT-03 slice 2) landed: per-package Turbo test inputs for every goal-data consumer and the ROUT-09 use-cases fixture row; slice 12 (PERIH-10) classifies pull requests against the base commit's CI patterns.
+`origin/main` 5e09d90a6da. Slice 4 (ROUT-03 slice 2) landed: per-package Turbo test inputs for every goal-data consumer and the ROUT-09 use-cases fixture row; slice 12 (PERIH-10) classifies pull requests against the base commit's CI patterns, and the four repo-wide test scans run as a Repo Sanity step.
 
 ## Latest Evidence
 

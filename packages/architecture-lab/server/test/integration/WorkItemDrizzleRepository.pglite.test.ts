@@ -23,10 +23,7 @@ const { shouldRunPgliteIntegration, pgliteIntegrationTimeoutMillis: PgliteIntegr
   makePgliteIntegrationGate();
 const migrationsFolder = NodeURL.fileURLToPath(new URL("../../../../_internal/db-admin/drizzle", import.meta.url));
 
-// The db-admin drizzle folder now contains `CREATE EXTENSION btree_gist`, which
-// the shared external pglite-socket lane cannot load, so suites that apply it
-// are pinned to the in-process driver with the bundled extension registered.
-const makeMigrationCapableLayer = () =>
+const makeInProcessBtreeGistLayer = () =>
   Layer.fresh(makePgliteSqlTestLayer({ inProcess: { extensions: { btree_gist } }, mode: "in-process" }));
 const decodeWorkItemId = S.decodeUnknownEffect(DomainWorkItem.WorkItemId);
 const decodeWorkItemTitle = S.decodeUnknownEffect(DomainWorkItem.WorkItemTitle);
@@ -52,7 +49,7 @@ const migrateArchitectureLab = Effect.fnUntraced(function* () {
 });
 
 const WorkItemDrizzleRepositoryLayer = Layer.mergeAll(ArchitectureLabConfigTest, makeDrizzleLayer()).pipe(
-  Layer.provideMerge(makeMigrationCapableLayer())
+  Layer.provideMerge(makeInProcessBtreeGistLayer())
 );
 
 it.effect.prop(

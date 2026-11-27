@@ -196,8 +196,7 @@ const renderRows = (rows: ReadonlyArray<Row>): string => {
   );
 };
 
-// One JSON line first, so `head -n 1` is machine-readable, then the table.
-const printer =
+const printJsonLineThenTable =
   <A>(encode: (value: A) => Effect.Effect<string, S.SchemaError>, rows: (value: A) => ReadonlyArray<Row>) =>
   (value: A): Effect.Effect<void> =>
     Effect.flatMap(Effect.orDie(encode(value)), (json) => Console.log(`${json}\n${renderRows(rows(value))}`));
@@ -231,7 +230,7 @@ const encodeStateSummary = S.encodeEffect(S.fromJsonString(MailTaggingStateSumma
  * @category formatting
  * @since 0.0.0
  */
-export const printRunReport: (report: TaggingRunReport) => Effect.Effect<void> = printer(
+export const printRunReport: (report: TaggingRunReport) => Effect.Effect<void> = printJsonLineThenTable(
   encodeRunReport,
   runReportRows
 );
@@ -266,7 +265,7 @@ export const printRunReport: (report: TaggingRunReport) => Effect.Effect<void> =
  * @category formatting
  * @since 0.0.0
  */
-export const printUndoReport: (report: TaggingUndoReport) => Effect.Effect<void> = printer(
+export const printUndoReport: (report: TaggingUndoReport) => Effect.Effect<void> = printJsonLineThenTable(
   encodeUndoReport,
   undoReportRows
 );
@@ -300,7 +299,7 @@ export const printUndoReport: (report: TaggingUndoReport) => Effect.Effect<void>
  * @category formatting
  * @since 0.0.0
  */
-export const printStateSummary: (summary: MailTaggingStateSummary) => Effect.Effect<void> = printer(
+export const printStateSummary: (summary: MailTaggingStateSummary) => Effect.Effect<void> = printJsonLineThenTable(
   encodeStateSummary,
   stateSummaryRows
 );

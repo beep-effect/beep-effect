@@ -294,8 +294,7 @@ type Observation = {
 
 const sameValue = O.makeEquivalence(Str.Equivalence);
 
-// Checked in order; the first that holds names the reason. None of them holding means a live writer.
-const staleChecks: ReadonlyArray<readonly [StaleLockReason, (observed: Observation) => boolean]> = [
+const staleChecksInPriorityOrder: ReadonlyArray<readonly [StaleLockReason, (observed: Observation) => boolean]> = [
   ["own-pid", (observed) => observed.holder.pid === observed.ownPid],
   [
     "identity-missing",
@@ -307,7 +306,7 @@ const staleChecks: ReadonlyArray<readonly [StaleLockReason, (observed: Observati
 
 const staleReason = (observed: Observation): O.Option<StaleLockReason> =>
   O.map(
-    A.findFirst(staleChecks, ([, holds]) => holds(observed)),
+    A.findFirst(staleChecksInPriorityOrder, ([, holds]) => holds(observed)),
     ([reason]) => reason
   );
 

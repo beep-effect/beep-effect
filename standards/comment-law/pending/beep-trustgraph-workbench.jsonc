@@ -1,6 +1,0 @@
-{
-  "schemaVersion": "comment-law-pending/v1",
-  "package": "@beep/trustgraph-workbench",
-  "root": "apps/labs/trustgraph-workbench",
-  "scopes": ["."]
-}

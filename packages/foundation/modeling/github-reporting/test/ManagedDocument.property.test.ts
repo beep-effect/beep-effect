@@ -68,14 +68,17 @@ it.effect.prop(
   [Arbitrary.schema(S.String)],
   ([human]) =>
     Effect.gen(function* () {
-      // A JSON string is one physical line and cannot contain an exact marker line.
       const text = yield* S.encodeEffect(JsonString)(human);
       const parsed = yield* ManagedDocument.parse({ namespace: "property", key: "adopt", text });
       const formatted = yield* parsed.withRegions([]);
       assert.strictEqual(formatted.text, `${text}\n${parsed.sentinel}\n`);
       assert.strictEqual((yield* formatted.withRegions([])).text, formatted.text);
       const reread = yield* ManagedDocument.parse({ namespace: "property", key: "adopt", text: formatted.text });
-      assert.deepStrictEqual(reread.regions, []);
+      assert.deepStrictEqual(
+        reread.regions,
+        [],
+        "a JSON string is one physical line and cannot contain an exact marker line"
+      );
       assert.strictEqual(reread.text, formatted.text);
     }),
   runs
