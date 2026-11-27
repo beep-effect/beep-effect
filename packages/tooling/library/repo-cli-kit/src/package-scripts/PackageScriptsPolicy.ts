@@ -401,9 +401,12 @@ const implementationDrift = (actual: ScriptsBlock, keepsOwnSourceCheck: boolean)
  *
  * **Details**
  *
- * Implementation scripts are package-owned: `write` rewrites one only when it
+ * Implementation scripts are package-owned: `write` rewrites one when it
  * exactly matches a retired generated value, and never the `beep:build` of a
- * manifest with a reviewed JavaScript-emit override.
+ * manifest with a reviewed JavaScript-emit override. Without a reviewed
+ * own-source check override, `write` also rewrites a `beep:check` whose first
+ * build segment differs from the package's declaration-only `beep:build`; the
+ * check's flags and later segments are kept.
  *
  * `check` also reports a no-emit `beep:build` (`tsrs -p tsconfig.check.json`)
  * whose `turbo.json` does not set `tasks.build.outputs` to `[]`, since Turbo
