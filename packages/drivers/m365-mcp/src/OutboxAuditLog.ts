@@ -958,7 +958,8 @@ export class OutboxAuditLog extends Context.Service<OutboxAuditLog, OutboxAuditL
    * append mode, writes a newline, the record's line and a newline, and
    * flushes them to disk before it returns. The leading newline keeps the
    * record on a line of its own when a crash left the file's last line
-   * unterminated; readers skip empty lines. Appends are serialized.
+   * unterminated; readers skip empty lines and any line that does not
+   * decode, so a torn write never blocks a later send. Appends are serialized.
    *
    * **Example** (Build the layer over a directory)
    *

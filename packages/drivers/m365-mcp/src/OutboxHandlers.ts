@@ -304,6 +304,16 @@ export class OutboxHandlerSettings extends S.Opaque<OutboxHandlerSettings, { rea
 /**
  * Build the handler layer of the outbox toolkit.
  *
+ * **Gotchas**
+ *
+ * check_drafts appends the mark record before it sets the stale-basis category and removes the
+ * category before it records the clear, so a failure leaves a record without a category (reconciled
+ * on the next call), never a category without a record. Graph gives a message a new id when it moves
+ * to another folder, so after a 404 a draft is found by the RFC 5322 message id recorded when it was
+ * created. send_draft refuses a draft this server did not record creating before it reads anything:
+ * the expectation guard proves only that the caller restated the draft, not that the draft is this
+ * server's own.
+ *
  * **Example** (Compose the handler layer)
  *
  * ```ts

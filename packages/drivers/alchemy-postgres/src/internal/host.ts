@@ -51,7 +51,7 @@ export const orDieAs =
 /** Decode the rows a statement returned. */
 export const rowsOf = <Schema extends S.Codec<unknown>>(row: Schema) => S.decodeUnknownEffect(S.Array(row));
 
-const trustUntypedBackfillValue = <A>(_: unknown): _ is A => true;
+const trustUntyped = <A>(_: unknown): _ is A => true;
 
 const KvRow = S.Struct({ key: S.String, value: S.Unknown });
 const decodeKv = rowsOf(KvRow);
@@ -164,9 +164,7 @@ export const makeContext = (deps: HostDeps) => {
           Effect.flatMap(decodeKv),
           Effect.map((rows) =>
             O.getOrUndefined(
-              O.flatMap(A.head(rows), ({ value }) =>
-                O.liftPredicate(value, (stored) => trustUntypedBackfillValue<A>(stored))
-              )
+              O.flatMap(A.head(rows), ({ value }) => O.liftPredicate(value, (stored) => trustUntyped<A>(stored)))
             )
           ),
           orDie
@@ -195,9 +193,7 @@ export const makeContext = (deps: HostDeps) => {
           Effect.flatMap(decodeKv),
           Effect.map(
             flow(
-              A.filter((row): row is { readonly key: string; readonly value: A } =>
-                trustUntypedBackfillValue<A>(row.value)
-              ),
+              A.filter((row): row is { readonly key: string; readonly value: A } => trustUntyped<A>(row.value)),
               A.map(({ key, value }) => Tuple.make(key, value))
             )
           ),

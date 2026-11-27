@@ -189,6 +189,10 @@ export class Redaction {
    * line break is **not** found; declare the encoded form as a secret too if that
    * is a real risk.
    *
+   * Secrets are replaced longest first, so a shorter secret that is a prefix of
+   * a longer one never leaves a fragment of it behind. An empty secret is
+   * ignored rather than inserting the placeholder between every character.
+   *
    * A secret composed only of the placeholder's own characters (`*`, `**`, `***`)
    * cannot be fully removed, because the replacement reintroduces it. That is a
    * documented limitation, not a defect.

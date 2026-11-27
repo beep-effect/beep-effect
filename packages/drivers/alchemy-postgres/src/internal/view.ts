@@ -193,14 +193,13 @@ export const makeViewStore = (ctx: HostContext) => (_definition: View.Any, kit: 
       });
     MutableHashMap.set(ctx.sourceRoles, name, (key) => {
       const role = sourceRole(key);
-      const ownHistoryFirst = catchUpFromAggregateOnce(key);
+      const first = catchUpFromAggregateOnce(key);
       return {
         ...role,
-        log: (after, limit) => Effect.andThen(ownHistoryFirst, role.log(after, limit)),
-        cursor: (routeTarget) => Effect.andThen(ownHistoryFirst, role.cursor(routeTarget)),
-        read: (routeTarget, at, after, limit) =>
-          Effect.andThen(ownHistoryFirst, role.read(routeTarget, at, after, limit)),
-        handoff: (routeTarget, at, through) => Effect.andThen(ownHistoryFirst, role.handoff(routeTarget, at, through)),
+        log: (after, limit) => Effect.andThen(first, role.log(after, limit)),
+        cursor: (routeTarget) => Effect.andThen(first, role.cursor(routeTarget)),
+        read: (routeTarget, at, after, limit) => Effect.andThen(first, role.read(routeTarget, at, after, limit)),
+        handoff: (routeTarget, at, through) => Effect.andThen(first, role.handoff(routeTarget, at, through)),
       };
     });
 

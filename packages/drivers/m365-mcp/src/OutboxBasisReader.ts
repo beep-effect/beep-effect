@@ -99,8 +99,8 @@ const callerObservation = (ref: OutboxBasisPinRef): OutboxBasisObservation =>
     message: ({ view }) => OutboxBasisObservation.cases.message.make({ view }),
   });
 
-const changedSinceRead = (kind: string, fields: ReadonlyArray<string>): string =>
-  `The pinned ${kind} changed since it was read (${A.join(fields, ", ")}). Read it again and redo the draft; no draft was created.`;
+const changedSinceRead = (kind: string, fieldNamesOnly: ReadonlyArray<string>): string =>
+  `The pinned ${kind} changed since it was read (${A.join(fieldNamesOnly, ", ")}). Read it again and redo the draft; no draft was created.`;
 
 const unreadableStatus = (reason: string): OutboxBasisStatus => OutboxBasisStatus.cases.Unreadable.make({ reason });
 

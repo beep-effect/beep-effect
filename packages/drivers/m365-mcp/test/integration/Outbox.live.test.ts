@@ -189,11 +189,12 @@ pipe(
               );
               const lines = pipe(texts, A.flatMap(Str.split("\n")), A.filter(Str.includes(`"${result.auditId}"`)));
 
-              yield* Effect.logInfo("M365 outbox live: send completed", {
+              const sendSummaryWithoutContent = {
                 auditId: result.auditId,
                 auditRecordCount: A.length(lines),
                 outcome: result.outcome,
-              });
+              };
+              yield* Effect.logInfo("M365 outbox live: send completed", sendSummaryWithoutContent);
               assert.strictEqual(result.outcome, "sent");
               assert.isTrue(result.auditRecorded);
               assert.lengthOf(lines, 2);
