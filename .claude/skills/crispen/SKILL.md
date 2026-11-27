@@ -58,8 +58,9 @@ Absorbing logic into the wrong schema is a second bug wearing a smaller diff.
    `MappedLiteralKit` for a named domain; `S.Literals` for an anonymous inline
    union never referenced by name).
 7. **Branching → a fold; passthrough → point-free.** Two flags, product tags
-   (`"video-locked"`) or `a.kind === x && a.status === y` → layered unions, one
-   question per layer, walked with nested `.match`.
+   (`"video-locked"`) or `a.kind === x && a.status === y` → factor the union: one
+   union per question, nested where the first answer decides the second
+   question, walked with one `.match` per union.
 8. **Split roles**: `.model.ts` / `.behavior.ts` / `.codec.ts` / `.render.ts` /
    `.escape.ts` — specialize per package, no package needs all five.
 

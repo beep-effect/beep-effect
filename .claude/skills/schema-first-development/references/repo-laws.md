@@ -309,27 +309,32 @@ S.makeFilter(Str.includes("/"), $I.annote("ContainsSlashCheck", {
   `S.tagDefaultOmit`, `S.Literals`, `LiteralKit`, brand chains and literals
   behind `S.suspend` are different shapes and stay as they are.
 
-## 9a. Layered Unions: One Question Per Layer
+## 9a. Nested Unions: One Question Per Union
 
-A tagged union answers one question about a value. A value that answers two
-questions holds two unions, the second as a field of the first one's members,
-never one union whose tags are the product of both domains and never one
-struct with two flags and a bag of optional fields.
+A tagged union answers one question about a value. A discriminator that
+answers two at once (`"video-locked"`), or two flags on one struct with a bag
+of optional fields, becomes one union per question.
 
-- Order the layers the way code chooses: the question whose answer selects a
-  service, renderer or table is the outer layer.
-- A field true of every answer sits on the layer above; a field true of one
-  answer sits in that answer's member. A member holding only its tag is normal.
-- Branch with nested schema-derived `.match` calls, one per layer. Do not
-  write `a.kind === "x" && a.status === "y"`.
+- Dependent questions nest: when the first answer decides which second
+  question is asked, each outer member holds its own inner union. The outer
+  union is the question code chooses by first, the one whose answer selects a
+  service, renderer or table.
+- Independent questions factor: when the second question is asked whatever
+  the first answer, it is one union reused as the same field. If the outer
+  members would differ only by tag, the value is a struct with two union or
+  `LiteralKit` fields.
+- A field true of one answer sits in that answer's member. A member holding
+  only its tag is normal.
+- Branch with one schema-derived `.match` per union. Do not write
+  `a.kind === "x" && a.status === "y"`.
 - A literal field that no answer attaches data to, and that code only stores,
   shows or compares, stays a `LiteralKit` field. Lift it into a union when an
   answer gains a field or a sibling field is meaningful only under some
   answers.
-- A tree has one nesting order. Read it in the other order with a typed
-  refinement (`Union.pipe(S.refine(guard, annotations))` over a type guard),
-  not a second parallel tree with conversions between the two.
-- Add a layer only for a question the domain asks.
+- A dependent nesting has one order. Read it across with a refined view
+  (`Union.pipe(S.refine(guard, annotations))` over a type guard), not a second
+  parallel tree with conversions between the two.
+- Add a union only for a question the domain asks.
 
 Construction, a worked example and the gotchas are in `pattern-catalog.md`
 section 6a.

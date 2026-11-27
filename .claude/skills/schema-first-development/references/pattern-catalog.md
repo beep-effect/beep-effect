@@ -157,34 +157,104 @@ discriminator-aware guards, and `.isAnyOf` for grouped case checks. For
 ordinary runtime unions that are not schema-derived, prefer
 `Match.tagsExhaustive` or `Match.tags` when they make the case set explicit.
 
-## 6a. Layer Unions: One Question Per Layer
+## 6a. Nested Unions: One Question Per Union
 
 A tagged union answers one question about a value ("which kind of media is
-this?"). When a value answers a second question ("what may the viewer
-fetch?"), the second answer is its own tagged union, held as a field of the
-first union's members. The result is a tree of small unions that code walks
-with nested `.match` calls, one layer per question.
+this?"). A discriminator that answers two questions at once, or two flags on
+one struct that between them answer one, is the smell. The idea is the old
+one, make illegal states unrepresentable; the rule that gets there is one
+question per union.
 
 Use it when any of these is true:
 
+- a union's tags are products of two domains (`"video-locked"`,
+  `"image-full"`)
 - a struct has two discriminating literal fields, or one literal field plus
   optional fields that only mean something under some of its values
-- a union's tags are products of two domains (`"video-locked"`,
-  `"image-full"`): the member count is the product, and every match repeats
-  the second question once per first answer
 - branch code reads `a.kind === "x" && a.status === "y"`
 
-How to build it:
+First write the questions the data answers. Then ask of each pair: does the
+first answer decide which second question is asked? That picks the shape.
 
-1. Write the questions the data answers, and order them the way code chooses:
-   the question whose answer picks a service, a renderer or a table comes
-   first.
-2. Give each question a `LiteralKit` and one member schema per answer.
-3. A field true of every answer sits on the layer above. A field true of one
-   answer sits in that answer's member. A member that carries nothing but its
-   tag is normal: it is what makes the match exhaustive.
-4. Close each layer with `mapMembers` and `S.toTaggedUnion("<field>")`, inner
-   layers first, and use the inner union as a field type of the outer members.
+### Dependent: the first answer decides the second question
+
+Each member of the outer union holds its own inner union. The inner unions
+differ, because the second question is a different question per answer. Put
+the question code chooses by first on the outside: the one whose answer
+selects a service, a renderer or a table.
+
+```ts
+import { $SchemaId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema";
+import * as S from "effect/Schema";
+import * as Tuple from "effect/Tuple";
+
+const $I = $SchemaId.create("examples");
+
+const VideoTargetKind = LiteralKit(["channel", "clip"]);
+const VideoTarget = VideoTargetKind.mapMembers(() =>
+  Tuple.make(
+    S.Struct({ kind: S.tag("channel"), handle: S.NonEmptyString }),
+    S.Struct({ kind: S.tag("clip"), id: S.NonEmptyString })
+  )
+).pipe(
+  S.toTaggedUnion("kind"),
+  $I.annoteSchema("VideoTarget", { description: "What a video site link points at." })
+);
+
+const ForumTargetKind = LiteralKit(["board", "thread"]);
+const ForumTarget = ForumTargetKind.mapMembers(() =>
+  Tuple.make(
+    S.Struct({ kind: S.tag("board"), name: S.NonEmptyString }),
+    S.Struct({ kind: S.tag("thread"), board: S.NonEmptyString, id: S.NonEmptyString })
+  )
+).pipe(
+  S.toTaggedUnion("kind"),
+  $I.annoteSchema("ForumTarget", { description: "What a forum link points at." })
+);
+
+const Site = LiteralKit(["video", "forum"]);
+
+class VideoLink extends S.Opaque<VideoLink, { readonly brand: unique symbol }>()(
+  S.Struct({
+    site: S.tag("video"),
+    target: VideoTarget,
+  }).pipe($I.annoteSchema("VideoLink", { description: "A link into the video site." }))
+) {}
+
+class ForumLink extends S.Opaque<ForumLink, { readonly brand: unique symbol }>()(
+  S.Struct({
+    site: S.tag("forum"),
+    target: ForumTarget,
+  }).pipe($I.annoteSchema("ForumLink", { description: "A link into the forum." }))
+) {}
+
+export const Link = Site.mapMembers(() => Tuple.make(VideoLink, ForumLink)).pipe(
+  S.toTaggedUnion("site"),
+  $I.annoteSchema("Link", { description: "A link, by site and then by what it points at." })
+);
+export type Link = typeof Link.Type;
+
+export const describeLink = Link.match({
+  video: ({ target }) =>
+    VideoTarget.match(target, {
+      channel: ({ handle }) => `channel ${handle}`,
+      clip: ({ id }) => `clip ${id}`,
+    }),
+  forum: ({ target }) =>
+    ForumTarget.match(target, {
+      board: ({ name }) => `board ${name}`,
+      thread: ({ board, id }) => `thread ${id} on ${board}`,
+    }),
+});
+```
+
+### Independent: the second question is asked whatever the first answer
+
+The flat form is a product multiplied out: two kinds times two access levels
+is four tags, and every match repeats the second question once per first
+answer. Factor it back into two unions. The second union is one schema,
+reused as the same field wherever the question applies.
 
 ```ts
 import { $SchemaId } from "@beep/identity/packages";
@@ -235,7 +305,7 @@ class MediaVideo extends S.Opaque<MediaVideo, { readonly brand: unique symbol }>
 
 export const Media = MediaKind.mapMembers(() => Tuple.make(MediaImage, MediaVideo)).pipe(
   S.toTaggedUnion("kind"),
-  $I.annoteSchema("Media", { description: "One gallery item, by kind and then by access." })
+  $I.annoteSchema("Media", { description: "One gallery item: its kind, and separately its access." })
 );
 export type Media = typeof Media.Type;
 
@@ -250,28 +320,37 @@ export const describeMedia = Media.match({
 });
 ```
 
-What this buys:
+Because the questions are independent, each has one matcher (`fetchable`
+never mentions kinds). When the members of the outer union would differ in
+nothing but their tag, there is no outer union to write: the value is one
+struct with two fields, each a union or a `LiteralKit`.
 
-- A locked item cannot hold a URL. In a flat struct with `locked: boolean` and
-  `urls: Array<string>` that state is one typo away.
-- Adding an access level is a compile error in `fetchable` and nowhere else.
-  Adding a media kind is a compile error in `describeMedia` and nowhere else.
-  A flat product union breaks every match for either change.
-- Each layer has its own `.cases`, `.guards` and `.isAnyOf`, so construction
+### Both shapes
+
+- A member that carries nothing but its tag is normal. It is what makes the
+  match exhaustive.
+- A field true of one answer sits in that answer's member. A field true of
+  every answer of a union sits on the struct that holds the union.
+- Each union has its own `.cases`, `.guards` and `.isAnyOf`, so construction
   reads `Media.cases.video.make({ access: Access.cases.locked.make({}), seconds: 12 })`.
+- Adding an answer is a compile error at the matches of that one union and
+  nowhere else. A product-tagged union breaks every match for either change.
+- A state the unions exclude cannot be built: a locked item has no field to
+  hold a URL.
 
-Where a literal field stays a literal:
+### Where a literal field stays a literal
 
-- A literal that no answer attaches data to and that code only stores, shows
-  or compares stays a `LiteralKit` field. `LiteralKit.match` is already
+- A literal that no answer attaches data to, and that code only stores, shows
+  or compares, stays a `LiteralKit` field. `LiteralKit.match` is already
   exhaustive over it.
 - Lift it into a union as soon as one answer gains a field, or a sibling field
   turns out to be meaningful only under some answers.
 
-Reading the tree in the other order:
+### A refined view for the cross-cut
 
-A tree has one nesting order. When code also needs "every locked item, of any
-kind", do not build a second tree: refine the first one with a typed guard.
+A dependent nesting has one order. When code also needs "every locked item,
+of any kind", or "every link to a single post, on any site", do not build a
+second tree: refine the first one with a type guard.
 
 ```ts
 import * as S from "effect/Schema";
@@ -300,7 +379,7 @@ The refined value is still a `Media`, so it encodes and prints with no
 conversion. A signature that takes `LockedMedia` turns a wrong argument into a
 compile error.
 
-Gotchas:
+### Gotchas
 
 - A union's own `.match` takes the wide union, so inside an arm a refined
   value's inner field is wide again. Narrow a refined value on its
@@ -310,8 +389,8 @@ Gotchas:
 - Decoding drops a key the matched member does not declare; it does not refuse
   it. Test that a forbidden field cannot survive a decode, not that the input
   is rejected.
-- Do not invent a question the domain does not ask in order to add a layer,
-  and do not keep two layers for one question.
+- Do not invent a question the domain does not ask in order to add a union,
+  and do not keep two unions for one question.
 
 ## 7. Reuse Schema-Derived Runtime Helpers
 
@@ -402,7 +481,7 @@ If the check is reusable, include:
   Replace with a tagged union, or decode the external bag into an internal
   tagged model at the boundary.
 - Product tags such as `"video-locked"`, or two flags on one struct
-  Replace with layered unions, one per question (section 6a)
+  Factor into one union per question (section 6a)
 - A second union tree that restates the first in another order
   Replace with a typed refinement of the first (section 6a)
 - `.annotate(...)` on a struct field

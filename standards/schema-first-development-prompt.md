@@ -274,18 +274,20 @@ complete. Report the exact commands and outcomes.
 - Use `S.toTaggedUnion("<field>")` for custom fields such as `kind`, `type`,
   `status`, `family`, or `profile`.
 - Use `S.TaggedUnion(...)` only for canonical `_tag` unions.
-- Layer unions, one question per layer. A value that answers two questions
-  (which kind, and what state) holds the second union as a field of the first
-  one's members. Never encode both answers in product tags such as
-  `"video-locked"`, and never as two flags on one struct.
-- Order the layers the way code chooses: the answer that selects a service,
-  renderer or table is the outer layer. A field true of every answer sits on
-  the layer above; a member holding only its tag is normal.
-- Read the tree in the other order with a typed `S.refine` over a type guard,
-  not a second parallel tree.
+- One question per union. A discriminator that answers two questions
+  (`"video-locked"`), or two flags on one struct, becomes one union per
+  question.
+- Dependent questions nest: when the first answer decides which second
+  question is asked, each outer member holds its own inner union. The outer
+  union is the question code chooses by first, the one whose answer selects a
+  service, renderer or table.
+- Independent questions factor: when the second question is asked whatever
+  the first answer, it is one union reused as the same field.
+- A member holding only its tag is normal. Read a nesting across with a
+  refined view (`S.refine` over a type guard), not a second parallel tree.
 - A literal that no answer attaches data to, and that code only stores, shows
-  or compares, stays a `LiteralKit` field. Add a layer only for a question the
-  domain asks.
+  or compares, stays a `LiteralKit` field. Add a union only for a question
+  the domain asks.
 - Branch exhaustively with the schema-derived matcher or Effect `Match`.
 
 ### Effect owns fallibility and runtime boundaries
@@ -561,13 +563,13 @@ then decode it into the internal tagged model.
 exercise the exhaustive matcher. Adding a case must create a compile-time
 obligation at every exhaustive match.
 
-### Pattern 5: Layer unions, one question per layer
+### Pattern 5: Nest unions, one question per union
 
 **Rationale:** A tagged union answers one question about a value. When a
-value answers two, two small unions (the second held as a field of the first
-one's members) keep each question's cases, constructors and matches separate.
-A new answer to either question is then a compile error at that question's
-matches only.
+value answers two, one union per question keeps each question's cases,
+constructors and matches separate. A new answer to either question is then a
+compile error at that question's matches only. The example below has two
+independent questions, so the second union is one schema reused as a field.
 
 **Smell:**
 
@@ -650,17 +652,19 @@ export const describeMedia = Media.match({
 });
 ```
 
-Order the layers the way code chooses: the answer that selects a service,
-renderer or table is the outer one. To read the tree in the other order
-("every locked item, of any kind"), refine it with a type guard
+When the first answer decides which second question is asked (a link's site
+decides what kinds of target it has), the questions are dependent: each outer
+member holds its own inner union, and the outer union is the question code
+chooses by first. To read a nesting across ("every locked item, of any
+kind"), take a refined view with a type guard
 (`Media.pipe(S.refine(isLocked, annotations))`); do not build a second tree.
 
 **Carve-out:** A literal that no answer attaches data to, and that code only
 stores, shows or compares, stays a `LiteralKit` field; `LiteralKit.match` is
-already exhaustive over it. Add a layer only for a question the domain asks.
+already exhaustive over it. Add a union only for a question the domain asks.
 
-**Proof:** Construct every case of every layer through `.cases`, exercise the
-nested matcher, and assert that a state the layers exclude (a locked item
+**Proof:** Construct every case of every union through `.cases`, exercise each
+matcher, and assert that a state the unions exclude (a locked item
 that lists URLs) cannot survive a decode. Decoding drops an undeclared key; it
 does not refuse the input.
 

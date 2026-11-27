@@ -208,8 +208,9 @@ the guard/decode/example call sites in the same change. For typed `Effect<A,E,R>
 skip the factory: declare at the consumer with a typed guard,
 `S.declare((u): u is Effect.Effect<A, E, R> => Effect.isEffect(u))`.
 
-**9. Two flags and a bag of optionals → layered unions.** One union per question; the
-second union is a field of the first one's members.
+**9. Two flags and a bag of optionals → factor the union.** One union per question. Here
+the questions are independent, so `Access` is one union reused as a field; when the first
+answer decides the second question, each member holds its own inner union instead.
 ```ts skip-type-checking
 // before: { kind: "image" | "video"; locked: boolean; urls?: string[]; seconds?: number }
 //         if (m.kind === "video" && !m.locked && m.urls) …            // repeated at every reader

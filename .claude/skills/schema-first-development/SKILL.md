@@ -108,13 +108,14 @@ Keep `Schema` as the source of truth for pure data models.
   payload bag.
 - Decode external optional/nullish case bags into internal tagged models when
   compatibility requires the wire shape.
-- Layer unions, one question per layer: a value that answers two questions
-  (which kind, and what state) holds the second union as a field of the first
-  one's members, never product tags (`"video-locked"`) or two flags on one
-  struct. Order layers the way code chooses, branch with nested `.match`, and
-  read the tree in the other order with a typed `S.refine`, not a second
-  tree. A literal no answer attaches data to stays a `LiteralKit` field. See
-  `references/pattern-catalog.md` section 6a.
+- Nest unions, one question per union: a discriminator that answers two
+  questions (`"video-locked"`), or two flags on one struct, becomes one union
+  per question. Dependent questions nest (each outer member holds its own
+  inner union, outer = the question code chooses by first); independent
+  questions factor into one union reused as a field. Branch with one `.match`
+  per union, and read a nesting across with a refined view (`S.refine` over a
+  type guard), not a second tree. A literal no answer attaches data to stays
+  a `LiteralKit` field. See `references/pattern-catalog.md` section 6a.
 - Use `S.toTaggedUnion("<field>")` for discriminators such as `kind`,
   `status`, `type`, `subtype`, `profile`, or `family`.
 - Use `S.TaggedUnion(...)` only for canonical `_tag` object unions.

@@ -133,7 +133,7 @@ Why it matters:
   domains that become tagged unions
 - it keeps the case set anchored to the literal domain instead of a raw union
 
-## 6. Layered Unions
+## 6. Nested Unions
 
 Files:
 
@@ -143,22 +143,23 @@ Files:
 Use these files when you need:
 
 - a union whose members hold another union as a field
-- nested schema-derived `.match` calls, one per layer
+- nested schema-derived `.match` calls, one per union
 - tag-only members beside members that carry data
 
 What to copy:
 
-- `ValueFormat` → `NumberFormat` → `DurationFormatStyle`, three layers each
-  closed with `mapMembers` and `S.toTaggedUnion`
-- `PropertyOrConstant`, one small union reused as a field by several members
-- `Locator`, discriminated by `platform`, whose members hold a per-site target
-  union discriminated by `kind`
+- dependent nesting: `ValueFormat` → `NumberFormat` → `DurationFormatStyle`,
+  each closed with `mapMembers` and `S.toTaggedUnion`
+- dependent nesting: `Locator`, discriminated by `platform`, whose members
+  each hold their own per-site target union discriminated by `kind`
+- an independent question: `PropertyOrConstant`, one small union reused as a
+  field by several members
 
 Why it matters:
 
-- each layer answers one question, so a new case is a compile error at the
-  matches of that layer only
-- the outer layer is the question code chooses by first
+- each union answers one question, so a new case is a compile error at the
+  matches of that union only
+- the outer union is the question code chooses by first
 
 ## 7. Test Proofs for Underused Schema Capabilities
 
