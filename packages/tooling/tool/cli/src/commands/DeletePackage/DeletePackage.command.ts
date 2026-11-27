@@ -878,10 +878,15 @@ const handler = Effect.fn("DeletePackage.handler")(function* (options: DeletePac
  * edge-matching or wrong-target entry refuses, and the doctor reads the same
  * file. No flag overrides an unacknowledged dependent.
  *
- * A directory below `apps/labs` whose `lab.manifest.json` is missing or corrupt warns and
- * proceeds with no lab facts in both check and apply modes, so a half-created lab can still be
- * deleted. Apply never drops a lab's Postgres schema: it prints the manual `DROP SCHEMA` step
- * whether or not consent was given.
+ * A registered workspace below `apps/labs` whose `lab.manifest.json` is missing or corrupt warns
+ * and proceeds with no lab facts in both check and apply modes, so a half-created lab can still be
+ * deleted. Apply refuses a directory that is not a registered workspace, with
+ * `No workspace matches`, before any manifest is read.
+ *
+ * Apply never drops a lab's Postgres schema. When the lab manifest loads and names a
+ * `postgresSchema`, apply prints the manual `DROP SCHEMA` step whether or not consent was given.
+ * With a missing or corrupt manifest it prints no step, and the manifest is deleted with the lab,
+ * so read the schema name from it before deleting and drop the schema by hand.
  *
  * **Example** (Preview a deletion)
  *
