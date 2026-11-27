@@ -114,17 +114,17 @@ Status checked against the live checkout at 6eb2e0588e2 and re-checked at c90929
 
 | Id | What | Status | Admission gate before landing | Depends on |
 | --- | --- | --- | --- | --- |
-| MEAS-01 | Nightly head-SHA scorecard: push to every required green, main verdict cohorts, runner-minutes, mergeable beside | slice 1 landed: `beep ci certainty` CLI (`Certainty.ts`, `Certainty.schemas.ts`), scoring fixed 2026-11-13 (decision `certainty-scoring-fixes`), landed over two unrecoverable replay anchors (decision `slice-1-gate-anchors`); fixture replay reproduces green-only p95 101.9 and the per-head cases, but not 4 of 30 under 10 min (1 code head under ten in the fixture) or about 315 runner-min per run (251.08 per head attempt; 315.3 is one head), membership unrecoverable (decision `fixture-corpus-real-captures`); slice 2, the nightly workflow (PLAN slice 4), is in review: `.github/workflows/certainty-nightly.yml` scores, from main's code, the UTC day before each run's `created_at` (kept by a GitHub re-run) or a dispatched `day`, within the token bucket less the 15% reserve and fails red on an uncertified report, and `--summary-out` renders the aggregates-only job summary (decision `certainty-nightly-workflow`) | Fixture replay: 4 of 30 under 10 min, green-only p95 101.9, about 315 runner-min per run, plus per-head cases (two producers, three attempts, docs-only, cancelled); monotonicity fixture (turning a green head red never lowers the statistic); an api-partial census refuses certification; the nightly fits the GITHUB_TOKEN budget or resumes | MEAS-04 |
+| MEAS-01 | Nightly head-SHA scorecard: push to every required green, main verdict cohorts, runner-minutes, mergeable beside | slice 1 landed: `beep ci certainty` CLI (`Certainty.ts`, `Certainty.schemas.ts`), scoring fixed 2026-11-13 (decision `certainty-scoring-fixes`), landed over two unrecoverable replay anchors (decision `slice-1-gate-anchors`); fixture replay reproduces green-only p95 101.9 and the per-head cases, but not 4 of 30 under 10 min (1 code head under ten in the fixture) or about 315 runner-min per run (251.08 per head attempt; 315.3 is one head), membership unrecoverable (decision `fixture-corpus-real-captures`); slice 2, the nightly workflow (PLAN slice 4), landed as #3266: `.github/workflows/certainty-nightly.yml` scores, from main's code, the UTC day before each run's `created_at` (kept by a GitHub re-run) or a dispatched `day`, within the token bucket less the 15% reserve and fails red on an uncertified report, and `--summary-out` renders the aggregates-only job summary (decision `certainty-nightly-workflow`) | Fixture replay: 4 of 30 under 10 min, green-only p95 101.9, about 315 runner-min per run, plus per-head cases (two producers, three attempts, docs-only, cancelled); monotonicity fixture (turning a green head red never lowers the statistic); an api-partial census refuses certification; the nightly fits the GITHUB_TOKEN budget or resumes | MEAS-04 |
 | MEAS-04 | lane-timings per-attempt job reads, partial-row stamping, filtered recent mode | partly landed: the window census and the certainty reader read jobs per attempt with a 30-job fallback and stamp partial reads (decision `per-attempt-page-fallback`); the recent mode still reads `filter=all` (`LaneTimings.ts:1131`) and has no filters | Fixtures for 502, exhaustion, duplicate and rerun; partial output reuses the `--window` preview stamp on both renderers; live union parity on run 42655574858; 180 jobs on run 42646019844 | none |
 | MEAS-02 | Attribute lock-bounce, stale-base and closeout refusals outside first-failure lanes (merges DEPS-10) | landed (slice 3, #3176, 0f7a40369eb: refusals attributed by failure kind inside `actionableLaneMix`, checkpoint `slice-3-refusal-attribution`) | Fixtures in `yeet-economics.test.ts`; `actionableLaneMix` total equals `redAttempts`; `gate-order-handoff.test.ts` stays green | none |
 | MEAS-03 | Separate terminations and type unlocated failures | slice 10 (decision `terminations-apart-from-reds`): terminated attempts count apart from reds in `yeet-economics/v3` (`classMix`, a restated `redAttempts`), `modeDurations` reports per-mode p50 and p95, a final-check moved tree is `refusal:moved-tree` and a verdict-less red `unrecorded`; slice 10b (#3342, decision `handler-errors-typed-and-located`) types the residual `unlocated` handler errors at the raise site (`YeetHandlerErrorKind`, the verdict's `handlerErrorKind`) and locates them as `refusal:publish-input`, `refusal:review-threads`, `github:rate-limit` and `github:transport`, with `unlocated` kept as the unknown bucket | Adjudicated fixtures; the denominator change is recorded | MEAS-02, MEAS-07 |
 | MEAS-07 | Journal final-check invocations and keep per-run history | landed in slice 6 (decision `final-check-attempt-journal`: each run is a `final-check` attempt in the branch attempt journal, carrying the receipt it wrote; `yeet ready` still reads only the head receipt); the per-mode duration row rides MEAS-03 (slice 10) | Journaling unit test plus a ready-gate regression fixture | none |
-| PERIL-11 | Keep attempt journals outside the reaped residue root; T3 lanes via `roots.json`; seat and host fields (merges MEAS-09) | partly landed: slice 1 (PLAN slice 7, decision `attempt-journal-store`) files a checkout's journals in the workstation store before any removal deletes it (a copy failure refuses the removal) and before residue-reap deletes a directory holding checkouts (a copy failure keeps it), and `yeet economics --fleet` reads the store as `(retained)` with live rows winning; slice 2 (PLAN slice 8, decision `peril-11-slice-2-t3-root-and-monitor-waits`) adds the T3 Code worktree root to the runbook's intended `roots.json` list, reads a checkout reachable through two roots once, and reports monitor waits apart from local work (`yeet-economics/v4`); the workstation's own `roots.json` is not written yet (its orphaned lanes' journals go to the store first); slice 3 (PLAN slice 9, decision `peril-11-slice-3-host-seat-fleet-hosts`) is open as #3349: attempt-started rows carry optional `host` and `seat` (older rows decode, `unrecorded` in the new `hostMix` and `seatMix`), and `yeet economics --fleet-hosts` reads the hosts in the fleet's `hosts.json` over their existing ordinary SSH wrappers with one read-only `find`/`tail` command each, reporting only per-host receipts (an unreachable host is a receipt with its reason); no `hosts.json` is written yet | Fixture: retire, simulate a copy failure, restore, import duplicates, run residue-reap with maxAgeDays=0, re-census; each (runId, attemptId) appears exactly once and a copy failure blocks deletion | MEAS-07 |
+| PERIL-11 | Keep attempt journals outside the reaped residue root; T3 lanes via `roots.json`; seat and host fields (merges MEAS-09) | partly landed: slice 1 (PLAN slice 7, decision `attempt-journal-store`) files a checkout's journals in the workstation store before any removal deletes it (a copy failure refuses the removal) and before residue-reap deletes a directory holding checkouts (a copy failure keeps it), and `yeet economics --fleet` reads the store as `(retained)` with live rows winning; slice 2 (PLAN slice 8, decision `peril-11-slice-2-t3-root-and-monitor-waits`) adds the T3 Code worktree root to the runbook's intended `roots.json` list, reads a checkout reachable through two roots once, and reports monitor waits apart from local work (`yeet-economics/v4`); the workstation's own `roots.json` is not written yet (its orphaned lanes' journals go to the store first); slice 3 (PLAN slice 9, decision `peril-11-slice-3-host-seat-fleet-hosts`) landed as #3349: attempt-started rows carry optional `host` and `seat` (older rows decode, `unrecorded` in the new `hostMix` and `seatMix`), and `yeet economics --fleet-hosts` reads the hosts in the fleet's `hosts.json` over their existing ordinary SSH wrappers with one read-only `find`/`tail` command each, reporting only per-host receipts (an unreachable host is a receipt with its reason); no `hosts.json` is written yet | Fixture: retire, simulate a copy failure, restore, import duplicates, run residue-reap with maxAgeDays=0, re-census; each (runId, attemptId) appears exactly once and a copy failure blocks deletion | MEAS-07 |
 | ROUT-05 | Route corpus with partition mapping, step classes and per-lane outcomes in one capture (merges ROUT-06) | partly landed (slice 1: partition and alias mapping with a lane, support or unknown conservation census, decision `job-attribution-classes`; guarded by literal per-class minutes from the fixture's raw timestamps, and the replay marks recall uncertain when a skipping head has a failed job no rule maps, decision `replay-unknown-reds`; slice 2 (#3257): failed jobs keep their steps and rows take optional per-task outcomes under v1, and aggregate, setup and harness reds are charged to no lane and reported as unknown, decision `step-classes-and-red-origins`; slice 3 (PLAN slice 12): the corpus is captured through 2026-11-17 by a background reader held at github-budget-ledger's `core` reserve, 10,435 runs, with census conservation holding and 0.84% unknown job time on the new window, decision `route-capture-reserve-gated`; slice 2b (PLAN slice 11b, decision `task-outcome-records`): lane jobs upload `task-outcomes/v1` records and the capture fills failed jobs' `tasks` from them, counting the reads in the receipt's `taskOutcomeReads`; the corpus slice 3 captured predates the producer, so its failed jobs keep `tasks` absent) | An old receipt restored to a scratch `--corpus` dir reproduces 242 skipped and 0 skippedReds; a post-#3043/#3046 fixture maps every job (conservation test: mapped plus unknown minutes equal total); aggregator and setup reds become unknown, never dropped | none |
 | MEAS-06 | Project the existing Vitest unit-results.json into per-file and per-package timing on every event | landed (PLAN slice 13, #3367, decision `unit-timings-every-event`): `beep ci unit-timings` projects each Test Unit shard's Vitest reports into `unit-timings/v1` rows, uploaded on every event as `unit-timings-<run>-<attempt>-<partition>` by two steps in `test-unit-shard` (and the mirrored overflow job); `unitTimingCensus` checks executed files against the sealed manifest's `expectedTestFiles` by event | Rows exist for every executed package and file counts equal expectedTestFiles, stratified by event | MEAS-01 |
 | MEAS-05 | Joined per-check cost ledger at (lane, partition) grain with asymmetric digests | slice 1 landed (PLAN slice 14, #3274, decision `lane-job-map`): `CI_LANE_DESCRIPTORS` is the one job-name map (`jobAliases`, `shardFamily`) and `CiLaneJobs.ts` derives the census, scorecard and admission joins from it, held by a conservation fixture of the replaced mappers; slice 2 (PLAN slice 15, #3347, decision `ledger-fold-absent-sources`) landed: `beep ci ledger` folds named runs into (lane, partition) rows with lane, support and unknown minutes summing to the total, judges every Test Unit and Test Integration partition leg against the run's Test Plan output for the empty-leg row, keeps separate never-compared hosted and local digest fields, and names the turbo-task, final-check, economics and PSI sources as absent rows; on Check runs 43604442987 (full matrix), 43585338714 (documentation only) and 43605277972 (an empty `int-rest` leg) it maps 100% of job-minutes (lane share 99.4%, 78.2%, 98.2%), and an umbrella, wrapper and rerun fixture shows no double count | At least 95% of job-minutes mapped on the three reference runs; an umbrella-plus-partition fixture shows no double count | ROUT-05, MEAS-04 |
-| MEAS-08 | Time-join PSI samples onto attempts (no hot-path stamps) | built (PLAN slice 16, decision `psi-join-onto-attempts`): `yeet economics` gains a `pressure` section that joins the PSI recorder samples (`safe-pressure.jsonl`) onto each local attempt by time window (sample count, boots, mean and max cpu, memory and io some avg10, minimum MemAvailable, each present only when every sample carries it) and the SCHE-09 slice 2 stamps on admitted and released rows by attempt id, grouped into leases by nonce; every missing field is absent with its reason, the `psi-recorder` and `admission-journal` source rows read `present` only when every line or row decoded, fleet-host attempts count as `remote-host` and are never listed, and the closeout summary reads neither source; the ledger's `psi` row stays `absent` because hosted runners are not the sampled host | None | MEAS-05 |
-| SCHE-09 | Retain admission history beyond the 200-row ring, with pressure fields | partly landed: slice 5 (#3227, decision `sche-09-admission-archive`) archives the rows the ring (`AdmissionJournal.ts:59`) trims and folds them in `quality scheduler history`; slice 5b (#3344, in review) stamps an optional capacity and host-pressure `pressure` key on admitted and v3 released rows behind the protocol's own `pressure` gate (decision `sche-09-pressure-stamps`) | Archive fold tests | none |
+| MEAS-08 | Time-join PSI samples onto attempts (no hot-path stamps) | landed (PLAN slice 16, #3351, decision `psi-join-onto-attempts`): `yeet economics` gains a `pressure` section that joins the PSI recorder samples (`safe-pressure.jsonl`) onto each local attempt by time window (sample count, boots, mean and max cpu, memory and io some avg10, minimum MemAvailable, each present only when every sample carries it) and the SCHE-09 slice 2 stamps on admitted and released rows by attempt id, grouped into leases by nonce; every missing field is absent with its reason, the `psi-recorder` and `admission-journal` source rows read `present` only when every line or row decoded, fleet-host attempts count as `remote-host` and are never listed, and the closeout summary reads neither source; the ledger's `psi` row stays `absent` because hosted runners are not the sampled host | None | MEAS-05 |
+| SCHE-09 | Retain admission history beyond the 200-row ring, with pressure fields | partly landed: slice 5 (#3227, decision `sche-09-admission-archive`) archives the rows the ring (`AdmissionJournal.ts:59`) trims and folds them in `quality scheduler history`; slice 5b (#3344) stamps an optional capacity and host-pressure `pressure` key on admitted and v3 released rows behind the protocol's own `pressure` gate (decision `sche-09-pressure-stamps`) | Archive fold tests | none |
 
 ### Numbers the scorecard reports
 
@@ -216,34 +216,75 @@ applies. "Reader" is the goal or gated candidate whose acceptance or gate is jud
       30 under 10 min, green-only p95 101.9, about 315 runner-min per run, and the named per-head cases. A
       monotonicity fixture shows that turning a green head red never lowers the SLO statistic, and an
       api-partial census refuses certification.
-- [ ] lane-timings reads jobs per attempt: the run 42646019844 read returns 180 jobs without a 502 failure,
+- [x] lane-timings reads jobs per attempt: the run 42646019844 read returns 180 jobs without a 502 failure,
       union parity holds on run 42655574858, and a partial read carries the preview stamp on both renderers.
+      Met (#3118, #3305; `history/closeout-evidence-2026-11-27.md`): on 2026-11-27 run 42646019844 read 60 + 60 + 60 jobs per attempt with no 502
+      and its `--window --preview` census carried no `partial-read` reason; 42655574858's per-attempt union
+      equals its `filter=all` listing (22 of 22 tuples). `ci-lane-timings.test.ts` "refuses a census with an
+      exhausted attempt read unless it is a preview, then stamps it" and "banners a CLI preview whose attempt
+      reads failed with every partial run" (100- then 30-job pages tried), with "stamps every preview of a
+      partial window as a preview" holding the one banner on the summary, Markdown and TSV renderers; Node and Bun.
 - [x] **7 consecutive nightly reports** uploaded by the nightly workflow on main, each certified (no
       api-partial certification), each with its runner-minute and request cost, recorded under `history/`
       with run ids and aggregates only. Met: UTC days 2026-11-14 to 2026-11-20 in
       `history/certainty-nightly.md`, with their summaries in `history/certainty-nightly/`.
 - [ ] Each report shows push to Yeet-mergeable beside push to every required green, the code and docs classes
       apart, superseded-head share, the main verdict rate, and every row in "Numbers the scorecard reports".
-- [ ] Each report carries a "Not covered" section naming at least: Vercel deployment statuses; per-task
+- [x] Each report carries a "Not covered" section naming at least: Vercel deployment statuses; per-task
       hosted Turbo durations; the hosted concurrent-job ceiling (no admin read); agent seats as admission
       demand; fleet hosts or T3 lanes not yet read; local figures censored before retention; Test Integration
       partition setup versus body and its 1,395-1,551 s outlier legs; Property Laws nightly verdicts
       (`.github/workflows/property-laws-nightly.yml`); runs the compute-profile refusal routed to hosted.
-- [ ] **Partition jobs fully mapped:** on a post-#3043/#3046 reference run (20 Test Integration partitions, 24 Test Unit
+      Met (`CI_CERTAINTY_NOT_COVERED` in `Certainty.ts`, rendered by every report): the 2026-11-26 nightly,
+      run 46015289067 on 75c299bf25 (after #3609), lists all nine with three more, and the 2026-11-14 to
+      2026-11-20 summaries under `history/certainty-nightly/` list them as well.
+- [x] **Partition jobs fully mapped:** on a post-#3043/#3046 reference run (20 Test Integration partitions, 24 Test Unit
       jobs, Test Plan, four Property Laws slices since #3056) every job maps to a lane or an
       explicit non-lane class (conservation test: mapped plus unknown minutes equal total), the old receipt
       reproduces 242 skipped and 0 skippedReds, and the MEAS-05 ledger maps at least 95% of job-minutes on its
-      three reference runs with no umbrella double count.
-- [ ] **Fleet journals retained across retirement:** the PERIL-11 retire fixture passes (each (runId,
+      three reference runs with no umbrella double count. Met (#3141, #3274, #3347; `history/closeout-evidence-2026-11-27.md`):
+      `ci-route-census.test.ts` "maps every job of a post-#3046 Check run and conserves its machine time" (run
+      43322847791, 80 jobs, 0 unknown, lane + support + unknown = 20,200,000 ms); the 2026-09-01..10-30 receipt
+      (sha256 `e840ea6d…`) restored to a scratch `--corpus` replays on 32db77c222f to 5,083 heads, 242 skipped
+      lane runs, 0 skipped reds, recall 1; `ci-cost-ledger.test.ts` "maps at least 95% of job-minutes on each
+      reference run and conserves every minute" (100% on all three) and "adds the umbrella beside its
+      partitions, measures a wrapper apart and drops rerun copies"; Node and Bun.
+- [x] **Fleet journals retained across retirement:** the PERIL-11 retire fixture passes (each (runId,
       attemptId) exactly once, a copy failure blocks deletion), `yeet economics --fleet` counts T3 lanes through
-      the `roots.json` row, and fleet-host journals are read read-only.
-- [ ] Refusal attribution: `actionableLaneMix` totals equal `redAttempts`, preflight first-reds drop from
+      the `roots.json` row, and fleet-host journals are read read-only. Met (#3263, #3273, #3349; `history/closeout-evidence-2026-11-27.md`):
+      `yeet-attempt-journal-store.test.ts` "retire, copy failure, restore, duplicate import and residue reap
+      count each (runId, attemptId) once"; `yeet-economics-fleet-roots.test.ts` "counts a T3 lane through its
+      roots.json row once, through every alias"; `yeet-economics-fleet-hosts.test.ts` "accepts only that command
+      and refuses every write, extra program or unsafe root". Live census 2026-11-27 with the runbook's list in a
+      `roots.json`: 62 checkouts, 18 T3 lanes (245 attempts), 3,157 attempts, 0 duplicates; the 34 runs the
+      2026-11-26 retirements filed into the store are all counted once through `(retained)`. The workstation has
+      no `roots.json` installed yet, so a plain `--fleet` run stays in derived mode; fleet hosts were not read
+      live.
+- [x] Refusal attribution: `actionableLaneMix` totals equal `redAttempts`, preflight first-reds drop from
       about 181 toward about 3 real failures on the recorded journal set, and terminations report apart from
-      reds (321 toward about 243) with the denominator change recorded.
-- [ ] Final-check attempts appear in economics (p50 6.3, p95 50 min at baseline); admission rows past the
-      200-row ring are archived and folded; unit-results timings exist for every executed package.
-- [ ] No raw journal, admission row, home path, session or machine id appears in any committed file.
-- [ ] No unrelated refactors or formatting churn.
+      reds (321 toward about 243) with the denominator change recorded. Met (#3176, #3262, #3342; `history/closeout-evidence-2026-11-27.md`): on
+      the 2026-11-27 fleet census `actionableLaneMix` totals 878 = `redAttempts`, no red is charged to
+      `publish:00-head-install-preflight` (the refusals sit in six `refusal:*` rows, 304 in all), and
+      terminations are their own class: v2's red-plus-terminated 1,192 becomes 878 red and 314 terminated, 26%
+      fewer against the baseline's 24% (decision `terminations-apart-from-reds` records the denominator).
+      The 2026-11-09 journal set itself is no longer whole (lanes retired before #3263 took their journals), so
+      the current set stands in for it; `yeet-economics.test.ts` keeps a real install failure on the preflight
+      row; Node and Bun.
+- [x] Final-check attempts appear in economics (p50 6.3, p95 50 min at baseline); admission rows past the
+      200-row ring are archived and folded; unit-results timings exist for every executed package. Met
+      (#3228, #3227, #3367; `history/closeout-evidence-2026-11-27.md`): the fleet census's `final-check` mode has 922 attempts, 778 measured, p50 8.6
+      and p95 21.9 min; `quality scheduler history` folds 1,435 archived rows from 13 day segments with 629
+      live, 0 duplicates; main Check run 45921347285 uploaded a `unit-timings-*` artifact for each of its 24
+      executed Test Unit partitions, 210 package invocations, 209 matching their sealed selection and
+      `@beep/storybook` with 0 files and no selection.
+- [x] No raw journal, admission row, home path, session or machine id appears in any committed file. Met:
+      a scan of this packet and the goal's fixture directories (`ci-certainty`, `ci-cost-ledger`,
+      `ci-lane-jobs`, `ci-route`, `yeet-economics`, `yeet-attempt-journal`) finds no home path, e-mail or
+      32-hex id; the only UUIDs are synthetic fixture ids with counter suffixes.
+- [x] No unrelated refactors or formatting churn. Met: across the 27 slice and record PRs, every file outside
+      `packages/tooling/tool/cli`, `.github/workflows`, `docs/runbooks` and this packet is a generated catalog,
+      inventory or fingerprint, a Turbo or Biome registration, a sibling packet's row note, or #3344's admission
+      journal consumer test in `apps/labs`; the closeout PR touches this packet only.
 
 ## Verification Matrix
 
@@ -786,6 +827,37 @@ Three goals read these rows: main-verdict-every-commit holds its slice 2 on them
 Lane docs/ci-goals-catchup-11-27
 
 Reverse: Delete this decision and record a descope decision that moves the rows to their reading goals
+
+### Criterion 2: build empty-leg runner-minutes and local publish and verify into the certainty report (slice 19), 2026-11-27
+
+Driver ruling 2026-11-27, option (b). The 2026-11-26 nightly (run 46015289067 on 75c299bf25, the first scored by #3609's code) certified and shows every row of SPEC "Numbers the scorecard reports" except two:
+
+- Empty-leg runner-minutes per run (ROUT-01, read by `hosted-setup-tax`). Only `beep ci ledger` computes it (slice 15, decision `ledger-fold-absent-sources`). `report.json` has no field for it.
+- Local publish p95 and verify p50 and p95 on the fleet census (read by `local-proof-under-ten`). The report names these figures under "Not covered" with the reason "censored until journal retention lands". That reason is stale, because #3263 shipped retention.
+
+Criterion 2 says each report shows every row. Slice 18 set the precedent (decision `build-the-missing-scorecard-rows-as-slice-18-instead-of-descoping-them`) of building missing rows rather than pointing at other commands or descoping them. Slice 19 therefore builds both rows into `beep ci certainty` and its summary:
+
+- Empty legs. The report joins the MEAS-05 (lane, partition) ledger to the run's `Test Plan` output by reusing the ledger fold's computation, not by copying it.
+- Local publish and verify. The row is always present and carries its censoring count. When fleet journals are readable, the figures come from them. In the hosted nightly they are not: the hosted runner cannot read workstation journals, and the source of record is `yeet economics --fleet`, on whose census `local-proof-under-ten` judges its bar. A hosted report therefore shows n=0, every run censored, and that reason. The row is never left out.
+- The stale "Not covered" retention reason is replaced.
+
+Until slice 19 merges, criterion 2 stays unticked and the goal is `active`. #3617 becomes an ordinary slice PR: it keeps the evidence for criteria 1 and 3 to 9, the replayInputs ruling and the 2026-11-26 night. The closeout PR follows the first nightly that shows every row, so this packet has at most two open PRs.
+
+Lane goals/certainty-scorecard-closeout · PR #3617
+
+Reverse: Tick criterion 2 on the separate commands instead (ci ledger, yeet economics --fleet), and drop slice 19 from PLAN.md.
+
+### replayInputs populations: main rows count every main push, the pull-request row counts code heads only, 2026-11-27
+
+Driver ruling 2026-11-27 on the `replayInputs` row that decision `sibling-row-definitions` defines for `main-verdict-every-commit`. `mainMerges` and `mainRunHostedJobs` count every main push in the window, docs commits included: every push to main starts a main `check.yml` run and loads the pool, and the merge-timestamp replay models that load, so leaving docs pushes out would under-count it. `pullRequestRunHostedJobs` and every other row of the report count code heads only, as `sibling-row-definitions` says ("docs heads never count").
+
+The code already does this on 32db77c222f. `mainMerges` is the length of `mainRows`, one row per first-parent commit in the window whether or not it is docs-only (`mainStatOf` filters docs commits out for the verdict rate, not for this count). `mainRunHostedJobs` reads `mainRuns`, the main push runs of those commits. `pullRequestRunHostedJobs` reads `codeAttempts`, the attempts of code heads. This decision records the population so a reader of the replay does not take the main rows for code-only counts; no code changes.
+
+A main push run that started no hosted job (one the concurrency queue replaced before it created jobs) adds no point to the `mainRunHostedJobs` distribution, since it put no load on the pool; it is still one of `mainMerges`.
+
+Lane goals/certainty-scorecard-closeout
+
+Reverse: Filter docs commits out of mainMerges and mainRunHostedJobs in Certainty.ts and delete this file; the slice 18 definition (decision sibling-row-definitions) then reads code heads everywhere.
 
 ### Two parts of the slice 18 rows cannot be read with the job token: VM boot and the explicit-cancel login, 2026-11-27
 
