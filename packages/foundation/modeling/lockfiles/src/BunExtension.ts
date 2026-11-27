@@ -11,7 +11,6 @@ import * as S from "effect/Schema";
 
 const $I = $LockfilesId.create("BunExtension");
 
-// Recursive annotation is required to tie the suspended schema's type knot.
 type OverrideValue = string | { readonly [dependency: string]: OverrideValue };
 
 const OverrideValue: S.Codec<OverrideValue> = S.Union([
