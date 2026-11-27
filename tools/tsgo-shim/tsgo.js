@@ -14,7 +14,9 @@ const executable = NodeChildProcess.execFileSync(process.execPath, [effectTsgoCl
 if (process.platform !== "win32" && typeof process.execve === "function") {
   try {
     process.execve(executable, [executable, ...process.argv.slice(2)]);
-  } catch {}
+  } catch {
+    // Fall back for runtimes that expose execve without supporting it here.
+  }
 }
 
 try {

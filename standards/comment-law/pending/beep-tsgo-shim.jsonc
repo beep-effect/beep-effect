@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "comment-law-pending/v1",
+  "package": "@beep/tsgo-shim",
+  "root": "tools/tsgo-shim",
+  "scopes": ["."]
+}

@@ -23,7 +23,7 @@ type Frame = {
   readonly column: number;
 };
 
-const NON_BACKTRACKING_FRAME_LINE = /^\s*at\s+(?:([\w$.<>[\] ]+?)\s+)?\(?([^\n)]+):(\d+):(\d+)\)?\s*$/u;
+const LINE_ANCHORED_FRAME_PATTERN = /^\s*at\s+(?:([\w$.<>[\] ]+?)\s+)?\(?([^\n)]+):(\d+):(\d+)\)?\s*$/u;
 
 const UNKNOWN_FILE = "<unknown>";
 
@@ -42,7 +42,7 @@ const positionOf = (digits: string | undefined): number =>
 
 const parseLine = (line: string): O.Option<Frame> =>
   pipe(
-    O.fromNullishOr(NON_BACKTRACKING_FRAME_LINE.exec(line)),
+    O.fromNullishOr(LINE_ANCHORED_FRAME_PATTERN.exec(line)),
     O.flatMap((match) =>
       O.map(
         O.fromNullishOr(match[2]),
