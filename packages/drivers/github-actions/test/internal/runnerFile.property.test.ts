@@ -7,8 +7,6 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 const runs = { arbitrary: fcRuns(100) };
-// Framing and delimiter selection are not endomorphisms: applying them to their
-// own output must choose a new delimiter. Canonical parse/reframe is the law.
 it.effect.prop(
   "heredoc framing recovers every value byte-for-byte and canonical reformatting is idempotent",
   [Arbitrary.schema(S.String)],
@@ -25,7 +23,11 @@ it.effect.prop(
       const parsed = Str.slice(header.length, -footer.length)(block);
       assert.strictEqual(parsed, value);
       const reformatted = heredocBlock({ name, value: parsed });
-      assert.strictEqual(reformatted, block);
+      assert.strictEqual(
+        reformatted,
+        block,
+        "parse-then-reframe is the law; framing a framed block is not an endomorphism and picks a new delimiter"
+      );
       assert.strictEqual(
         heredocBlock({ name, value: Str.slice(header.length, -footer.length)(reformatted) }),
         reformatted
