@@ -26,7 +26,6 @@ import * as S from "effect/Schema";
 
 const isSystemdUnitPath = S.is(SystemdUnitPath);
 
-// A scratch HOME with the user unit directory path precomputed; `touch` leaves an executable file.
 const fixture = Effect.fn("SystemdUnitTest.fixture")(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -35,54 +34,52 @@ const fixture = Effect.fn("SystemdUnitTest.fixture")(function* () {
   const home = path.join(directory, "home");
   yield* fs.makeDirectory(home, { recursive: true });
   const unitDir = path.join(home, ".config", "systemd", "user");
-  const touch = Effect.fn("SystemdUnitTest.touch")(function* (file: string) {
+  const touchExecutable = Effect.fn("SystemdUnitTest.touchExecutable")(function* (file: string) {
     yield* fs.makeDirectory(path.dirname(file), { recursive: true });
     yield* fs.writeFileString(file, "");
     yield* fs.chmod(file, 0o755);
   });
-  return { fs, path, home, unitDir, touch };
+  return { fs, path, home, unitDir, touchExecutable };
 });
 
-// The real clock, not the test clock: this suite drives filesystem work.
 layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })("systemd/SystemdUnit", (it) => {
   it.effect(
     "resolves the units' Bun through the mise shim, then a standalone Bun, then this executable",
     Effect.fn(function* () {
-      const { fs, path, home, touch } = yield* fixture();
+      const { fs, path, home, touchExecutable } = yield* fixture();
       const shim = path.join(home, ".local", "share", "mise", "shims", "bun");
       const standalone = path.join(home, ".bun", "bin", "bun");
       expect(SystemdBunCandidate.literals).toEqual([".local/share/mise/shims/bun", ".bun/bin/bun"]);
-      // Neither candidate: the running executable is the fallback.
       const resolved2 = yield* resolveSystemdBunPath(home);
-      expect(resolved2).toBe(process.execPath);
-      yield* Effect.forEach([shim, standalone], touch, { concurrency: 1 });
-      // Both executable: the shim wins because it follows the repo's pinned Bun.
+      expect(resolved2, "with neither candidate the running executable is the fallback").toBe(process.execPath);
+      yield* Effect.forEach([shim, standalone], touchExecutable, { concurrency: 1 });
       const resolved3 = yield* resolveSystemdBunPath(home);
-      expect(resolved3).toBe(shim);
-      // A leftover without execute permission is skipped, not pinned.
+      expect(resolved3, "with both executable the shim wins: it follows the repo's pinned Bun").toBe(shim);
       yield* fs.chmod(shim, 0o644);
       const resolved4 = yield* resolveSystemdBunPath(home);
-      expect(resolved4).toBe(standalone);
-      // So is a directory sitting where the executable should be.
+      expect(resolved4, "a leftover without execute permission is skipped, not pinned").toBe(standalone);
       yield* fs.remove(standalone);
       yield* fs.makeDirectory(standalone);
       const resolved5 = yield* resolveSystemdBunPath(home);
-      expect(resolved5).toBe(process.execPath);
-      // A candidate this user cannot even reach is skipped rather than failing
-      // the install, so an uninstall is never blocked by the probe either.
+      expect(resolved5, "a directory where the executable should be is skipped").toBe(process.execPath);
       yield* fs.remove(standalone, { recursive: true });
-      yield* touch(shim);
+      yield* touchExecutable(shim);
       yield* fs.chmod(path.dirname(shim), 0o000);
       const unreachable = yield* resolveSystemdBunPath(home).pipe(
         Effect.ensuring(Effect.orDie(fs.chmod(path.dirname(shim), 0o755)))
       );
-      expect(unreachable).toBe(process.execPath);
-      // Operator pins expand `~/` against HOME and otherwise resolve as typed.
-      expect(resolveOperatorPath("~/tools/bun", home, path.resolve)).toBe(path.join(home, "tools", "bun"));
+      expect(unreachable, "an unreachable candidate is skipped rather than failing the install or uninstall").toBe(
+        process.execPath
+      );
+      expect(resolveOperatorPath("~/tools/bun", home, path.resolve), "an operator pin expands ~/ against HOME").toBe(
+        path.join(home, "tools", "bun")
+      );
       expect(resolveOperatorPath("/usr/bin/bun", home, path.resolve)).toBe("/usr/bin/bun");
       expect(resolveOperatorPath("tools/bun", home, path.resolve)).toBe(path.resolve("tools/bun"));
-      // The data-last form takes the typed path alone, so it composes in a pipe.
-      expect(resolveOperatorPath(home, path.resolve)("~/tools/bun")).toBe(path.join(home, "tools", "bun"));
+      expect(
+        resolveOperatorPath(home, path.resolve)("~/tools/bun"),
+        "the data-last form takes the typed path alone"
+      ).toBe(path.join(home, "tools", "bun"));
       expect(pipe("/usr/bin/bun", resolveOperatorPath(home, path.resolve))).toBe("/usr/bin/bun");
     })
   );
@@ -151,13 +148,13 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
   it.effect(
     "resolves a pinned Bun path against HOME and probes the candidates when none is pinned",
     Effect.fn(function* () {
-      const { path, home, touch } = yield* fixture();
+      const { path, home, touchExecutable } = yield* fixture();
       const resolved8 = yield* resolveUnitBunPath({ home, pinned: O.some("~/tools/bun") });
       expect(resolved8).toBe(path.join(home, "tools", "bun"));
       const resolved9 = yield* resolveUnitBunPath({ home, pinned: O.none() });
       expect(resolved9).toBe(process.execPath);
       const standalone = path.join(home, ".bun", "bin", "bun");
-      yield* touch(standalone);
+      yield* touchExecutable(standalone);
       const resolved10 = yield* resolveUnitBunPath({ home, pinned: O.none() });
       expect(resolved10).toBe(standalone);
     })

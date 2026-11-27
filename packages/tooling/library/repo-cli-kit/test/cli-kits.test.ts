@@ -63,11 +63,9 @@ class FsGuardTestError extends S.TaggedError<FsGuardTestError, { readonly brand:
 
 const hashTestError = (_cause: unknown, filePath: string) => FsGuardTestError.make({ message: `hash: ${filePath}` });
 
-// The digest the previous whole-file implementation produced.
-const decodeSha256FromBytes = S.decodeUnknownEffect(Sha256HexFromBytes);
+const decodeWholeFileDigest = S.decodeUnknownEffect(Sha256HexFromBytes);
 
-// FIPS 180-4 / NIST CAVP SHA-256 example vectors.
-const sha256Vectors = [
+const fips180Sha256Vectors = [
   { digest: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", text: "" },
   { digest: "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad", text: "abc" },
   {
@@ -106,8 +104,9 @@ describe("cli/FailureRendering", () => {
   it("stays quiet for non-verbose levels and malformed flags", () => {
     expect(shouldRenderFailureCause(["--log-level", "info"])).toBe(false);
     expect(shouldRenderFailureCause(["--log-level=warn"])).toBe(false);
-    // Trailing `--log-level` with no value must not read past the end of argv.
-    expect(shouldRenderFailureCause(["run", "--log-level"])).toBe(false);
+    expect(shouldRenderFailureCause(["run", "--log-level"]), "a trailing --log-level reads nothing past argv").toBe(
+      false
+    );
     expect(shouldRenderFailureCause(["--log-levels=debug"])).toBe(false);
   });
 
@@ -362,7 +361,7 @@ describe("cli/FsGuards", () => {
         const path = yield* Path.Path;
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "fs-guards-hash-vectors-" });
         const digests = yield* Effect.forEach(
-          sha256Vectors,
+          fips180Sha256Vectors,
           ({ text }, index) => {
             const filePath = path.join(root, `vector-${index}.bin`);
             return fs.writeFileString(filePath, text).pipe(Effect.andThen(hashFileSha256(filePath, hashTestError)));
@@ -370,7 +369,7 @@ describe("cli/FsGuards", () => {
           { concurrency: 1 }
         );
 
-        expect(digests).toEqual(A.map(sha256Vectors, ({ digest }) => digest));
+        expect(digests).toEqual(A.map(fips180Sha256Vectors, ({ digest }) => digest));
       })
     );
 
@@ -399,7 +398,7 @@ describe("cli/FsGuards", () => {
             yield* fs.writeFile(filePath, bytes);
             return {
               streamed: yield* hashFileSha256(filePath, hashTestError),
-              wholeBuffer: yield* decodeSha256FromBytes(bytes),
+              wholeBuffer: yield* decodeWholeFileDigest(bytes),
             };
           }),
           { concurrency: 1 }
@@ -424,10 +423,8 @@ describe("cli/FsGuards", () => {
     );
   });
 
-  // Real streaming over a multi-chunk file: the in-memory filesystem appends are quadratic here,
-  // so this case stays on the platform filesystem it is meant to exercise.
   it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "120 seconds" })(
-    "hashFileSha256 over the platform filesystem",
+    "hashFileSha256 over the platform filesystem, whose multi-chunk appends are not quadratic like the in-memory one",
     (it) => {
       it.effect(
         "hashes a file far larger than one chunk without reading it whole",
@@ -440,19 +437,17 @@ describe("cli/FsGuards", () => {
           const chunkCount = 64;
           const totalBytes = chunkCount * hashFileChunkBytes;
 
-          // Independent oracle: the platform digest over the same bytes, built
-          // here once so the code under test never sees a whole-file buffer.
-          const whole = new Uint8Array(totalBytes);
+          const oracleBytes = new Uint8Array(totalBytes);
           yield* Effect.forEach(
             A.range(0, chunkCount - 1),
             (index) => {
               const chunk = patternedBytes(hashFileChunkBytes, index);
-              whole.set(chunk, index * hashFileChunkBytes);
+              oracleBytes.set(chunk, index * hashFileChunkBytes);
               return fs.writeFile(filePath, chunk, { flag: "a" });
             },
             { concurrency: 1, discard: true }
           );
-          const digest6 = yield* crypto.digest(Digest.sha256, whole);
+          const digest6 = yield* crypto.digest(Digest.sha256, oracleBytes);
           const expected = Hex.encode(digest6);
 
           const chunkSizes = MutableList.make<number>();

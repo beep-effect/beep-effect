@@ -30,12 +30,6 @@ const collectText = <E>(stream: Stream.Stream<Uint8Array, E>) =>
     Stream.runFold(thunkEmptyStr, (text: string, chunk) => `${text}${chunk}`)
   );
 
-// Biome reads the VCS ignore files (`.gitignore`, `.git/info/exclude`) for every
-// path it is handed. The staged file is ours by construction, so an ambient ignore
-// rule — a shared clone's `info/exclude` hiding leftover `beep-biome-json-*`
-// directories — must not turn it into "provided but ignored" and fail the render.
-// Turbo never hashes those files, so a render that depended on them would make a
-// cached lane's result depend on state outside its key (time-to-certainty ruling 83).
 const biomeFormatArguments = (biomeConfigPath: string, tempFilePath: string): ReadonlyArray<string> => [
   "format",
   "--write",
@@ -52,9 +46,11 @@ const biomeFormatArguments = (biomeConfigPath: string, tempFilePath: string): Re
  * The encoded value is written to a scoped `beep-biome-json-*` directory
  * beneath `repoRoot` and formatted with `<repoRoot>/biome.jsonc`. Biome runs
  * with `--vcs-use-ignore-file=false`, so neither the repository's ignore files
- * nor a clone's `.git/info/exclude` can suppress the staged file; the
- * configuration's own `files` rules still apply. Invalid JSON-compatible
- * values fail before the child process is spawned.
+ * nor a clone's `.git/info/exclude` can suppress the staged file: Turbo never
+ * hashes those files, so a render that read them would make a cached task
+ * depend on state outside its key. The configuration's own `files` rules still
+ * apply. Invalid JSON-compatible values fail before the child process is
+ * spawned.
  *
  * **Example** (Format JSON against an explicit root)
  *

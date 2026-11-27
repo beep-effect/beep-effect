@@ -12,6 +12,16 @@ const $I = $RepoUtilsId.create("JSDoc/models/Specification.model");
 /**
  * Enumerates canonical standards that define a documentation tag.
  *
+ * **Details**
+ *
+ * `jsdoc3` is the JSDoc 3.x standard (jsdoc.app). `tsdocCore` tags must be
+ * supported by every TSDoc tool, `tsdocExtended` tags are optional but
+ * standardized, and `tsdocDiscretionary` tags have standardized syntax but
+ * tool-specific semantics. `typescript` names the tags the TypeScript compiler
+ * recognizes in `.js` files, `closure` the Google Closure Compiler,
+ * `apiExtractor` Microsoft API Extractor (AEDoc) and `typedoc` TypeDoc's own
+ * extensions. `custom` marks a user-defined, non-standard tag.
+ *
  * **Example** (Check tsdocCore specification)
  *
  * ```ts
@@ -25,23 +35,14 @@ const $I = $RepoUtilsId.create("JSDoc/models/Specification.model");
  * @since 0.0.0
  */
 export const Specification = LiteralKit([
-  // JSDoc 3.x standard (jsdoc.app)
   "jsdoc3",
-  // TSDoc Core — must be supported by all TSDoc tools
   "tsdocCore",
-  // TSDoc Extended — optional but standardized
   "tsdocExtended",
-  // TSDoc Discretionary — syntax standardized, semantics vary
   "tsdocDiscretionary",
-  // Recognized by TypeScript compiler in .js files
   "typescript",
-  // Google Closure Compiler
   "closure",
-  // Microsoft API Extractor / AEDoc
   "apiExtractor",
-  // TypeDoc-specific extensions
   "typedoc",
-  // User-defined / non-standard
   "custom",
 ]).pipe(
   $I.annoteSchema("Specification", {

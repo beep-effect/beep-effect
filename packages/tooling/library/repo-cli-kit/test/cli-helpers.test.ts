@@ -34,7 +34,6 @@ import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 
-// Collects every chunk the command JSON sink would have written to stdout.
 const captureJsonOutput = <A, E, R>(effect: Effect.Effect<A, E, R>) => {
   const chunks = A.empty<string>();
   return Effect.as(

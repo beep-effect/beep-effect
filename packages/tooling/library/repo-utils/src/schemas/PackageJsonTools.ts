@@ -93,9 +93,6 @@ const canonicalizeUnknownValue = (value: unknown): unknown => {
   return value;
 };
 
-// Node matches `exports`/`imports` condition keys in object order (`default` last) and tries array targets in
-// order, so only specifier keys (`.`-prefixed subpaths, `#`-prefixed imports), whose resolution is
-// order-free, are sorted. Condition objects keep their insertion order at every depth.
 const canonicalizeEntryPointMap =
   (isSpecifierKey: (key: string) => boolean) =>
   (value: unknown): unknown => {
@@ -125,9 +122,6 @@ const canonicalizePublishConfigValue = (key: string, value: unknown): unknown =>
   return value;
 };
 
-// Lay out a JSON object with its documented keys first, in `keyOrder`, then every other key sorted, with
-// `canonicalizeKnown` applied to the documented values and `canonicalizeRest` (by default a recursive key sort)
-// applied to the other values.
 const orderObjectKeys = (
   value: Readonly<Record<string, unknown>>,
   keyOrder: ReadonlyArray<string>,
@@ -151,8 +145,6 @@ const orderObjectKeys = (
   return out;
 };
 
-// pnpm documents `typesVersions` as a publishConfig override; an `imports` value in publishConfig's open rest is
-// handled with the same order rules. Both keep the order rules of their top-level counterparts.
 const canonicalizePublishConfigRestValue = (key: string, value: unknown): unknown => {
   if (key === "imports") {
     return canonicalizeImportsValue(value);
@@ -181,8 +173,6 @@ const canonicalizePublishConfig = (
 
 const repositoryKeyOrder = A.make("type", "url", "directory");
 
-// The kit replays a repository object in its source key order; the canonical form orders the documented keys
-// (`type`, `url`, `directory`) first and sorts any others after them.
 const canonicalizeRepository = (
   value: NonNullable<PackageJson.Encoded["repository"]>
 ): NonNullable<PackageJson.Encoded["repository"]> =>
@@ -231,7 +221,6 @@ const canonicalizePackageJsonEncoded = (encoded: PackageJson.Encoded): PackageJs
           : Result.getOrThrow(S.decodeUnknownResult(BrowserField)(canonicalizeUnknownValue(browser)))
       ),
     }),
-    // The kit decodes a `bin` map to a HashMap, which keeps no source order, so the canonical form sorts it.
     ...O.getSomesStruct({
       bin: O.map(O.fromUndefinedOr(encoded.bin), (bin) => (P.isString(bin) ? bin : sortStringRecord(bin, identity))),
     }),
@@ -296,8 +285,6 @@ const canonicalizePackageJsonEncoded = (encoded: PackageJson.Encoded): PackageJs
     ...O.getSomesStruct({ devEngines: O.fromUndefinedOr(encoded.devEngines) }),
     ...O.getSomesStruct({ preferGlobal: O.fromUndefinedOr(encoded.preferGlobal) }),
     ...O.getSomesStruct({ readme: O.fromUndefinedOr(encoded.readme) }),
-    // TypeScript takes the first matching version range, resolves equal-prefix path patterns in key order and
-    // tries each substitution array in order, so typesVersions keeps its input order at every level.
     ...O.getSomesStruct({
       typesVersions: O.map(O.fromUndefinedOr(encoded.typesVersions), (typesVersions) =>
         Result.getOrThrow(S.decodeResult(TypesVersionsField)(typesVersions))
@@ -348,8 +335,6 @@ export class PackageJsonValidationIssue extends S.Opaque<
   )
 ) {}
 
-// `rest` is the closed model's guard (an optional key whose schema admits nothing), not a manifest field: drop it from
-// the emitted root definition so editors do not offer it in completion.
 const withoutClosedRest = (document: JsonSchema.Document<"draft-2020-12">): JsonSchema.Document<"draft-2020-12"> => {
   const rootName = pipe(
     O.liftPredicate(document.schema.$ref, P.isString),
@@ -405,6 +390,17 @@ export const packageJsonJsonSchema: JsonSchema.Document<"draft-2020-12"> = witho
  * Known record fields such as scripts and dependencies are sorted by key, while
  * unsupported package.json shapes still fail through {@link decodePackageJsonEffect}.
  * Unknown-but-schema-supported nested JSON is canonicalized recursively.
+ *
+ * Order that carries meaning is kept. Node matches `exports` and `imports`
+ * condition keys in object order (`default` last) and tries array targets in
+ * order, so only specifier keys (`.` subpaths, `#` imports) are sorted and
+ * every condition object keeps its insertion order. TypeScript takes the first
+ * matching `typesVersions` range, resolves equal-prefix patterns in key order
+ * and tries each substitution in order, so `typesVersions` keeps its input
+ * order at every level. The same rules hold for `imports` and `typesVersions`
+ * inside `publishConfig`. A `repository` object lists `type`, `url` and
+ * `directory` first and sorts any other key after them, and a `bin` map,
+ * decoded to a `HashMap` with no source order, is sorted by key.
  *
  * **Example** (Normalize dependency key order)
  *

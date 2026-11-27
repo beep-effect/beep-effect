@@ -67,8 +67,6 @@ const $I = $RepoCliKitId.create("CheckoutPrune");
  */
 export const CHECKOUT_PRUNE_DECLARATION_PATH = "standards/checkout-prune.jsonc";
 
-// The options under which the glob port matches as git's `:(glob)` magic does: wildcards match
-// dot files, and braces, extglobs, a leading `!` and a leading `#` are ordinary characters.
 const gitGlobOptions = {
   dot: true,
   nobrace: true,
@@ -177,7 +175,6 @@ export const CheckoutPrunePathspec = S.String.check(CheckoutPrunePathspecChecks)
  */
 export type CheckoutPrunePathspec = typeof CheckoutPrunePathspec.Type;
 
-// A source the glob port cannot compile is no literal path; the pathspec checks reject it anyway.
 const isLiteralPathspec = (source: string): boolean =>
   O.exists(Result.getSuccess(compileGitGlob(source)), (glob) => !glob.hasMagic);
 
@@ -263,7 +260,6 @@ export class CheckoutPruneEntry extends S.Class<CheckoutPruneEntry, { readonly b
       return true;
     }
     if (this.#glob === undefined) {
-      // The pathspec checks compiled this source already, so this cannot fail.
       this.#glob = Result.getOrThrow(compileGitGlob(this.path));
     }
     return this.#glob.matches(repoPath);
@@ -500,7 +496,6 @@ export const isCheckoutPathKept: {
   A.some(declaration.keep, (entry) => entry.matches(repoPath))
 );
 
-// Only entries without `packageName` declare repository paths.
 const declaresPath = (entries: ReadonlyArray<CheckoutPruneEntry>, repoPath: string): boolean =>
   A.some(entries, (entry) => entry.packageName === undefined && entry.matches(repoPath));
 
@@ -766,14 +761,9 @@ export const loadCheckoutPruneDeclaration = Effect.fn("CheckoutPrune.loadCheckou
   return yield* decodeCheckoutPruneDeclaration(text);
 });
 
-// A literal pathspec names a file or a directory, so its contents are read too; a glob matches
-// files only, as git's does.
 const expansionPatterns = (entry: CheckoutPruneEntry): ReadonlyArray<string> =>
   entry.isLiteral ? [entry.path, `${entry.path}/**`] : [entry.path];
 
-// The files of `files` git ignores: build output (dist, .turbo, *.tsbuildinfo) a clone keeps when
-// it pulls a commit that removes the tracked files around it. A tracked file is never ignored, and a
-// checkout that is not a git repository has no ignore rules.
 const ignoredFiles = Effect.fnUntraced(function* (repoRoot: string, files: ReadonlyArray<string>) {
   if (A.isReadonlyArrayEmpty(files)) {
     return HashSet.empty<string>();
@@ -792,6 +782,8 @@ const ignoredFiles = Effect.fnUntraced(function* (repoRoot: string, files: Reado
  *
  * Each prune entry is expanded against the working tree, files only, never
  * following symbolic links or descending into `node_modules` or `.git`. A
+ * literal entry names a file or a directory, so everything beneath it is read
+ * too; a glob entry matches files only, as git's pathspecs do. A
  * file git ignores is not checkout content, so build output left under a
  * pruned directory is no live file; a tracked file always is. The result
  * feeds {@link checkoutPruneFindings}; a checkout without prune entries reads

@@ -1,7 +1,3 @@
-// The option-bearing cases of the retired `@beep/utils/Glob` suite, retargeted
-// to `FsUtils.globFiles` and its `GlobOptions`: ignore filters, array patterns,
-// `absolute`, and the implicit cwd. The walker suite owns the pure matching cases.
-
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { FsUtils, FsUtilsLive, GlobOptions } from "@beep/repo-utils/FsUtils";
 import { it as rootIt } from "@beep/test-runner";
@@ -38,7 +34,7 @@ const makeFixture = Effect.fn("FsUtilsGlobTest.makeFixture")(function* () {
   return dir;
 });
 
-describe("FsUtils GlobOptions schema parity", () => {
+describe("FsUtils.globFiles options: ignore filters, array patterns, absolute and the implicit cwd", () => {
   rootIt("preserves representative encoded option shapes", () => {
     expect(encode(GlobOptions.make({}))).toEqual({});
     expect(

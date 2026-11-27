@@ -21,10 +21,6 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import { CyclicDependencyError } from "./errors/index.ts";
 
-// ---------------------------------------------------------------------------
-// Internal helpers
-// ---------------------------------------------------------------------------
-
 /**
  * Convert a `HashMap<string, HashSet<string>>` adjacency list into an
  * `G.DirectedGraph<string, void>` and a bidirectional lookup
@@ -45,8 +41,6 @@ const fromAdjacencyList = (
   const indexToName = MutableHashMap.empty<G.NodeIndex, string>();
 
   const graph = G.directed<string, void>((mutable) => {
-    // First pass: add all nodes (keys AND their deps, in case a dep
-    // appears only as a value and not as a key).
     const allNames = MutableHashSet.empty<string>();
     for (const [name, deps] of adjacencyList) {
       MutableHashSet.add(allNames, name);
@@ -61,7 +55,6 @@ const fromAdjacencyList = (
       MutableHashMap.set(indexToName, idx, name);
     }
 
-    // Second pass: add edges (package -> dependency)
     for (const [name, deps] of adjacencyList) {
       const sourceIdx = O.getOrThrow(MutableHashMap.get(nameToIndex, name));
       for (const dep of deps) {
@@ -73,10 +66,6 @@ const fromAdjacencyList = (
 
   return { graph, nameToIndex, indexToName };
 };
-
-// ---------------------------------------------------------------------------
-// Public API
-// ---------------------------------------------------------------------------
 
 /**
  * Compute a topological ordering (dependency-first build order) of packages
@@ -108,14 +97,12 @@ const fromAdjacencyList = (
 export const topologicalSort: (
   adjacencyList: HashMap.HashMap<string, HashSet.HashSet<string>>
 ) => Effect.Effect<ReadonlyArray<string>, CyclicDependencyError> = Effect.fn(function* (adjacencyList) {
-  // Empty graph – nothing to sort
   if (HashMap.size(adjacencyList) === 0) {
     return A.empty<string>();
   }
 
   const { graph } = fromAdjacencyList(adjacencyList);
 
-  // Check for cycles first (isAcyclic is cheap and cached)
   if (!G.isAcyclic(graph)) {
     const cycles = yield* detectCycles(adjacencyList);
     return yield* CyclicDependencyError.make({
@@ -124,12 +111,8 @@ export const topologicalSort: (
     });
   }
 
-  // Use the built-in topological sort.
-  // The topo sort outputs zero-in-degree nodes first. In our graph where
-  // edges go from package -> dependency, roots/dependents have zero
-  // in-degree. Reversing gives us dependency-first (build) order.
-  const walker = G.topo(graph);
-  return pipe(A.fromIterable(G.values(walker)), A.reverse);
+  const dependentsFirst = G.topo(graph);
+  return pipe(A.fromIterable(G.values(dependentsFirst)), A.reverse);
 });
 
 const cyclePathFromComponent = (
@@ -196,7 +179,6 @@ export const detectCycles: (
 
   const { graph, indexToName } = fromAdjacencyList(adjacencyList);
 
-  // Quick check – if acyclic, short-circuit
   if (G.isAcyclic(graph)) {
     return A.empty<ReadonlyArray<string>>();
   }
@@ -229,7 +211,6 @@ const buildCyclePath = (
 ): ReadonlyArray<string> => {
   type StackItem = { readonly node: G.NodeIndex; readonly path: ReadonlyArray<G.NodeIndex> };
 
-  // DFS within the SCC to find a cycle back to startIdx
   let stack: Array<StackItem> = A.of({ node: startIdx, path: A.of(startIdx) });
   const visited = MutableHashSet.empty<G.NodeIndex>();
 
@@ -237,13 +218,11 @@ const buildCyclePath = (
     const [current, remaining] = A.unprepend(stack);
     stack = remaining;
 
-    // Get outgoing neighbors that are within the SCC
     const neighbors = G.successors(graph, current.node);
     for (const neighbor of neighbors) {
       if (!MutableHashSet.has(memberSet, neighbor)) continue;
 
       if (neighbor === startIdx && A.length(current.path) > 1) {
-        // Found a cycle back to start – resolve names
         const pathNames = pipe(
           current.path,
           A.map((idx) => MutableHashMap.get(indexToName, idx)),
@@ -319,12 +298,10 @@ export const computeTransitiveClosure: {
       O.match({
         onNone: HashSet.empty<string>,
         onSome: (startIdx) => {
-          // BFS from the starting package, collecting all reachable nodes
           const walker = G.bfs(graph, { start: [startIdx] });
           let result = HashSet.empty<string>();
 
           for (const [idx, _value] of walker) {
-            // Skip the starting node itself
             if (idx === startIdx) continue;
             const nameOpt = MutableHashMap.get(indexToName, idx);
             if (O.isSome(nameOpt)) {

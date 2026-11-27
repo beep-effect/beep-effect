@@ -43,24 +43,13 @@ import type { TsconfigExtendsError } from "./TsconfigLoader.ts";
 
 const $I = $RepoTsconfigId.create("TsconfigValidator");
 
-/** Strict decoding: an unknown key at any level is a failure, never dropped, and every issue names the rejected value. */
 const STRICT = { onExcessProperty: "error", reportInput: true } as const satisfies SchemaAST.ParseOptions;
 
 const UNIQUE_ITEMS = "Array items must be unique.";
 const PROTO_KEY = 'Key must not be "__proto__".';
 
-/** tsc normalizes to forward slashes; errors name the config the way `TsconfigLoader` does. */
 const normalizeSlashes: (p: string) => string = Str.replace(/\\/g, "/");
 
-/**
- * One `{ path, issue }` when `values` holds a duplicate, judged by `equals`
- * (strict equality unless given), so every list rule reports at its own key.
- *
- * @param path - The issue path of the list within the validated record.
- * @param values - The list, or `undefined` when the key is absent.
- * @param equals - The item equivalence (defaults to `===`).
- * @returns The duplicate issue, if any.
- */
 const duplicateIssue = <T>(
   path: ReadonlyArray<PropertyKey>,
   values: ReadonlyArray<T> | undefined,
@@ -70,15 +59,6 @@ const duplicateIssue = <T>(
     ? O.some({ path, issue: UNIQUE_ITEMS })
     : O.none();
 
-/**
- * `__proto__` cannot be an ordinary own key once a record is rebuilt by a
- * runtime that assigns it, so the strict door rejects it wherever user keys
- * are free-form: `paths` aliases and plugin extras.
- *
- * @param path - The issue path of the record within the validated options.
- * @param keys - The record's keys.
- * @returns The prototype-key issue, if any.
- */
 const protoKeyIssue = (path: ReadonlyArray<PropertyKey>, keys: ReadonlyArray<string>): O.Option<S.FilterIssue> =>
   A.contains(keys, "__proto__") ? O.some({ path: [...path, "__proto__"], issue: PROTO_KEY }) : O.none();
 
@@ -177,6 +157,8 @@ const StrictCompilerOptionsChecks = S.makeFilterGroup(
  * is what {@link TsconfigValidator.validateCompilerOptions} does. Encoding a
  * decoded value gives the on-disk JSON shape, with every enum in its
  * canonical lower-case spelling.
+ * A `paths` alias or plugin extra keyed `__proto__` is refused: once a runtime
+ * rebuilds the record, that key is no ordinary own key.
  *
  * **Example** (Reject a cross-field violation)
  *
@@ -420,17 +402,14 @@ const validateCompilerOptionsAt = (path: string) => (input: unknown) =>
     Effect.mapError((cause) => TsconfigValidationError.make({ path, cause }))
   );
 
-// Implementation of TsconfigValidator.validate; the public contract lives on the static.
 const validate = Effect.fn("TsconfigValidator.validate")(function* (input: unknown) {
   return yield* validateAt("")(input);
 });
 
-// Implementation of TsconfigValidator.validateCompilerOptions; the public contract lives on the static.
 const validateCompilerOptions = Effect.fn("TsconfigValidator.validateCompilerOptions")(function* (input: unknown) {
   return yield* validateCompilerOptionsAt("")(input);
 });
 
-// Implementation of TsconfigValidator.load; the public contract lives on the static.
 const load = Effect.fn("TsconfigValidator.load")(function* (
   configPath: string
 ): Effect.fn.Return<
@@ -444,7 +423,6 @@ const load = Effect.fn("TsconfigValidator.load")(function* (
   return yield* validateAt(abs)(document);
 });
 
-// Implementation of TsconfigValidator.compilerOptions; the public contract lives on the static.
 const compilerOptions = Effect.fn("TsconfigValidator.compilerOptions")(function* (
   configPath: string
 ): Effect.fn.Return<
@@ -454,14 +432,11 @@ const compilerOptions = Effect.fn("TsconfigValidator.compilerOptions")(function*
 > {
   const path = yield* Path.Path;
   const abs = normalizeSlashes(path.resolve(configPath));
-  // One read of the named file: validate the own document, then resolve its
-  // extends chain from that same document (only the extended configs are read).
   const document = yield* TsconfigLoader.load(configPath);
   yield* validateAt(abs)(document);
   const resolved = yield* TsconfigLoader.resolveDocument(document, abs);
   const { compilerOptions: options, pathsBase } = resolved;
   const paths = options.paths;
-  // The options-only result cannot carry pathsBase to the consumer.
   if (options.baseUrl === undefined && paths !== undefined && pathsBase !== undefined) {
     return yield* validateCompilerOptionsAt(abs)({
       ...options,

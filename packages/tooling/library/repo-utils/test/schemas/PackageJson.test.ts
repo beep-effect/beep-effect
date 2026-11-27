@@ -49,7 +49,6 @@ const decodeUnknownJsonString = S.decodeUnknownEffect(UnknownJson);
 
 const objectKeys = (value: unknown): ReadonlyArray<string> => (P.isObject(value) ? Struct.keys(value) : A.empty());
 
-// Walk a decoded JSON value by object keys and array indexes; a missing step yields undefined.
 const childAt = (value: unknown, ...path: ReadonlyArray<string | number>): unknown =>
   A.reduce(path, value, (current, step) => (P.hasProperty(current, step) ? current[step] : undefined));
 const decodeJsonPointerSegment = (segment: string): string =>
@@ -61,8 +60,6 @@ const entriesOf = (map: HashMap.HashMap<string, string>): ReadonlyArray<readonly
     A.fromIterable(map),
     Order.mapInput(Order.String, ([key]: readonly [string, string]) => key)
   );
-// Retain the original non-recursive core law alongside the full production
-// schema law, which also generates bin, recursive exports and JSON-valued extras.
 const PublishConfigCoreArbitrary = Arbitrary.schema(
   S.Struct({
     access: S.optionalKey(S.Literals(["public", "restricted"] as const)),
@@ -201,9 +198,10 @@ describe("PackageJson schema", () => {
       expect(result.name).toBe("@beep/repo-utils");
       expect(`${result.version}`).toBe("1.0.0");
       expect(result.license).toBe("MIT");
-      // The kit Person keeps the email as written; the retired repo model lowercased it.
       expect(result.author?.name).toBe("Beep Maintainer");
-      expect(result.author?.email).toBe("MAINTAINER@EXAMPLE.COM");
+      expect(result.author?.email, "the kit Person keeps the email as written, never lowercased").toBe(
+        "MAINTAINER@EXAMPLE.COM"
+      );
       expect(result.bugs?.email).toBe("bugs@example.com");
       expect(result.browser).toEqual({
         "./src/server.ts": "./src/browser.ts",
@@ -374,8 +372,8 @@ describe("PackageJson schema", () => {
 
       expect(result.name).toBe("@beep/mixed-case");
       assertSome(HashMap.get(result.dependencies, "@beep/MixedCaseHelper"), "workspace:^");
-      // The kit PackageName rejects new mixed-case names; no tracked manifest has one (3-A3 parity).
-      decodePackageJsonExit({ name: "@beep/MixedCase" }).pipe(Exit.isFailure, assertTrue);
+      const newMixedCaseNameExit = decodePackageJsonExit({ name: "@beep/MixedCase" });
+      newMixedCaseNameExit.pipe(Exit.isFailure, assertTrue);
     });
 
     it("decodes Bun trusted dependencies", () => {
@@ -488,8 +486,8 @@ describe("PackageJson schema", () => {
       for (const fields of nested) {
         decodePackageJsonExit({ name: "pkg", ...fields }).pipe(Exit.isSuccess, assertTrue);
       }
-      // The top level stays closed.
-      decodePackageJsonExit({ name: "pkg", twitter: "@a" }).pipe(Exit.isFailure, assertTrue);
+      const unknownTopLevelKeyExit = decodePackageJsonExit({ name: "pkg", twitter: "@a" });
+      unknownTopLevelKeyExit.pipe(Exit.isFailure, assertTrue);
     });
 
     it("rejects an unknown key in a peerDependenciesMeta entry (kit closed entry)", () => {
@@ -826,8 +824,6 @@ describe("PackageJson schema", () => {
       })
     );
 
-    // Node matches export/import condition keys in object order ("default" last) and TypeScript takes the
-    // first matching typesVersions range, so canonicalization may sort only the order-free specifier keys.
     it.effect(
       "keeps export and import condition order while sorting only subpath and specifier keys",
       Effect.fn(function* () {
@@ -1122,16 +1118,17 @@ describe("PackageJson schema", () => {
       const packageJsonDefinitionName = decodeJsonPointerSegment(Str.slice("#/$defs/".length)(packageJsonSchema.$ref));
       const packageJsonDefinition = packageJsonJsonSchema.definitions[packageJsonDefinitionName];
 
-      // `Class.extend` annotates the encoding with the class identifier, so the root definition is
-      // `.../schemas/PackageJson/PackageJson` rather than the retired model's `.../PackageJsonEncoded`.
-      expect(packageJsonDefinitionName).toBe("@beep/repo-utils/schemas/PackageJson/PackageJson");
+      expect(
+        packageJsonDefinitionName,
+        "Class.extend annotates the encoding with the class identifier, so the root is the class, not an Encoded model"
+      ).toBe("@beep/repo-utils/schemas/PackageJson/PackageJson");
       expect(packageJsonDefinition?.additionalProperties).toBe(false);
       expect(packageJsonDefinition?.required).toEqual(["name"]);
 
-      // The kit's transformation codecs emit their encoded side. `author`, `repository` and `funding` decode from
-      // an open object (the kit keeps unknown person and repository keys), so their object branch carries no
-      // property shape; the decode still validates it (INTENDED in the 3-A3 parity op).
-      expect(packageJsonDefinition?.properties).toMatchObject({
+      expect(
+        packageJsonDefinition?.properties,
+        "codecs emit their encoded side; author, repository and funding decode from an open object, so that branch has no shape"
+      ).toMatchObject({
         version: { $ref: "#/$defs/@beep~1semver~1SemVer~1SemVerEncoded" },
         packageManager: { type: "string" },
         author: { anyOf: [{ type: "object" }, { type: "string" }] },
@@ -1139,8 +1136,10 @@ describe("PackageJson schema", () => {
         dependencies: { $ref: "#/$defs/@beep~1repo-utils~1schemas~1PackageJson~1RepoDependencyRecord" },
         scripts: { $ref: "#/$defs/@beep~1repo-utils~1schemas~1PackageJson~1NonEmptyStringRecord" },
       });
-      // The closed `rest` guard is not advertised; `additionalProperties: false` still rejects a literal key.
-      expect(packageJsonDefinition?.properties).not.toHaveProperty("rest");
+      expect(
+        packageJsonDefinition?.properties,
+        "the closed rest guard is not advertised; additionalProperties: false still rejects a literal key"
+      ).not.toHaveProperty("rest");
       expect(packageJsonDefinition?.properties).toHaveProperty("beep");
     });
 
@@ -1234,7 +1233,6 @@ describe("PackageJson schema", () => {
         );
         const manifest = yield* readPackageJsonFile(`${dir}/package.json`);
         expect(manifest.name).toBe("@mock/pkg-a");
-        // The dependency maps decode to HashMaps.
         const dependencies = manifest.dependencies ?? HashMap.empty<string, string>();
         assertSome(HashMap.get(dependencies, "@mock/pkg-b"), "workspace:*");
         assertSome(HashMap.get(dependencies, "effect"), "^3.0.0");

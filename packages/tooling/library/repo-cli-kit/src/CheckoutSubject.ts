@@ -428,11 +428,9 @@ export const workspaceSubject = (packageName: string): CheckoutSubject =>
 export const repositoryPathSubject = (path: string): CheckoutSubject =>
   CheckoutSubject.cases.RepositoryPathSubject.make({ path });
 
-// A keep entry protects a workspace by its package name or by matching its directory.
 const keepCoversWorkspace = (declaration: CheckoutPruneDeclaration, packageName: string, directory: string): boolean =>
   A.some(declaration.keep, (entry) => entry.packageName === packageName || entry.matches(directory));
 
-// The workspaces owned entries name, by package name and declared directory, that no keep entry covers.
 const ownedWorkspaces = (declaration: CheckoutPruneDeclaration): ReadonlyArray<readonly [string, string]> =>
   A.filterMap(declaration.owned, (entry) =>
     entry.packageName !== undefined && !keepCoversWorkspace(declaration, entry.packageName, entry.path)
@@ -631,8 +629,6 @@ export const checkoutWorkspaceOf: {
     )
 );
 
-// The workspaces the checkout declared away (pruned) or replaced (owned), by their declared
-// directory: a path under one belongs to that workspace although discovery no longer finds it.
 const declaredWorkspaceOf = (inventory: CheckoutInventory, repoPath: string): O.Option<string> =>
   pipe(
     A.sort(
@@ -790,7 +786,6 @@ export const describeCheckoutSubject = (subject: CheckoutSubject): string =>
 export const prunedCheckoutSubjectsNote = (subjects: ReadonlyArray<CheckoutSubject>): string =>
   `pruned from this checkout: ${A.join(A.map(subjects, describeCheckoutSubject), ", ")}`;
 
-// The workspaces the leaves and the declaration's prune entries name, each with its declared directory.
 const declaredWorkspaces = (
   leaves: PrunableLeaves,
   declaration: CheckoutPruneDeclaration
@@ -941,7 +936,6 @@ export const loadCheckoutInventory = Effect.fn("CheckoutSubject.loadCheckoutInve
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  // Workspaces are declared in the root manifest, so a checkout without one has none.
   const members = (yield* fs.exists(path.join(repoRoot, "package.json")))
     ? yield* workspaceMembers(repoRoot)
     : A.empty<WorkspacePackage>();
@@ -1018,7 +1012,6 @@ export const loadCheckoutInventoryWith = Effect.fn("CheckoutSubject.loadCheckout
     { concurrency: 1 }
   );
   const packets = packetRootsOf(A.flatten(packetDirectories));
-  // Only an undiscovered declared workspace's directory decides anything, so only those are probed.
   const directories = yield* Effect.filter(
     A.dedupe(
       A.map(

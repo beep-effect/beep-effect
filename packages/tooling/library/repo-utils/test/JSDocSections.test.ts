@@ -234,8 +234,6 @@ describe("parseJSDocSections", () => {
   });
 
   it("masks fence bodies by line when the markdown parser refuses the comment", () => {
-    // Nesting past the markdown parser's depth cap makes it refuse the text, so the
-    // line scanner masks the fence instead and the quoted section marker stays hidden.
     const deep = A.join(
       A.makeBy(300, () => ">"),
       ""
@@ -245,7 +243,10 @@ describe("parseJSDocSections", () => {
         commentText: lines("/**", ` * ${deep} quoted`, " *", " * ```ts", " * **Details**", " * ```", " */"),
       })
     );
-    expect(parsed.sections).toEqual([]);
+    expect(
+      parsed.sections,
+      "nesting past the parser depth cap makes it refuse the text, so the line scanner masks the fence and hides the marker"
+    ).toEqual([]);
   });
 
   it("parses a comment without sections or tags", () => {
