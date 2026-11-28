@@ -352,8 +352,6 @@ export const makeKnowledgeFindingId = Effect.fn("Knowledge.makeFindingId")(funct
   );
 });
 
-// Stage-1 enforcement scans the census scope narrowed twice: Markdown only, and never below an
-// archival directory segment.
 const isScannerMarkdownPath = (repoPath: string): boolean =>
   Str.endsWith(".md")(repoPath) && isKnowledgeScopedPath(repoPath) && !isKnowledgeArchivalPath(repoPath);
 
@@ -364,15 +362,6 @@ const trackedTreePathExists = (entries: ReadonlyArray<KnowledgeTrackedEntry>, re
   return A.some(entries, (entry) => entry.path === repoPath || Str.startsWith(directoryPrefix)(entry.path));
 };
 
-/**
- * One side's tracked entries plus the exact-path and directory-prefix sets that answer
- * {@link trackedTreePathExists} in constant time.
- *
- * `directories` holds every proper `/`-prefix of every entry path, so membership in `paths` or
- * `directories` is exactly "some entry equals the path or lies beneath it". Git tree paths never carry
- * empty segments, so no spelling with `//`, a trailing `/`, or an empty string can match either set,
- * which is also what the linear prefix scan answers for those spellings.
- */
 interface KnowledgeTrackedPathIndex {
   readonly directories: HashSet.HashSet<string>;
   readonly entries: ReadonlyArray<KnowledgeTrackedEntry>;
@@ -440,17 +429,6 @@ const decodeUtf8 = (bytes: Uint8Array, repoPath: string): Effect.Effect<string, 
 
 const documentIdForBase = (repoPath: string): string => nfc(`base:${repoPath}`);
 
-/**
- * Builds the HEAD document-identity function for one comparison.
- *
- * The rename lookups and the base path set are built once per comparison rather than once per HEAD
- * document. The first rename naming a target wins, exactly as a front-to-back search would pick it.
- *
- * @param baseEntries - Tracked entries of the base tree; only their paths are read.
- * @param renames - Renames between base and HEAD, in the order `git diff` reported them.
- * @returns The identity of a HEAD entry: its rename source's base identity, its own base identity
- *   when the path exists on both sides and was not renamed away, or a HEAD-only identity.
- */
 const makeHeadDocumentIdResolver = (
   baseEntries: ReadonlyArray<KnowledgeTrackedEntry>,
   renames: ReadonlyArray<KnowledgeRename>
@@ -536,14 +514,6 @@ export const knowledgeCommandWords = (span: string): ReadonlyArray<string> => {
   return Str.isEmpty(tail) ? A.empty<string>() : Str.split(/\s+/u)(tail);
 };
 
-/**
- * A tracked path that the paired archive does not contain, or `O.none()` when the spelling is fine.
- *
- * @param raw - Path spelling exactly as written inside the document.
- * @param documentPath - Containing document, which anchors `./` and `../` resolution.
- * @param entries - Tracked tree of the archive side currently being scanned.
- * @returns The normalized repository path when it is governed and absent from that tracked tree.
- */
 const brokenPathAt = (raw: string, documentPath: string, entries: KnowledgeTrackedPathIndex): O.Option<string> =>
   pipe(
     normalizeKnowledgeRepoPath(documentPath, raw),
@@ -575,24 +545,6 @@ const commandOccurrence = (
       })
     : O.none();
 
-/**
- * A broken tracked-path candidate from one inline code span.
- *
- * **Details**
- *
- * The verdict reads the document and the tracked tree alone. A span that spells a branch or a tag
- * gets no exemption: with a governed root (`goals/...`, `packages/...`) it is read as a repository
- * path, and without one (`origin/goals/...`) it is no path at all.
- *
- * @param inline - Parsed inline code span and its source column.
- * @param lineNumber - One-based source line containing the span.
- * @param documentPath - Repository-relative path of the scanned document.
- * @param documentId - Stable paired-document identity used by semantic delta.
- * @param entries - Tracked-path index of the archive side being scanned.
- * @param packageExports - Inline columns whose affirmative export claim has a tracked owner and target.
- * @returns A finding candidate only when the span is a governed missing path rather than a command
- * or a verified package export.
- */
 const inlinePathCandidate = (
   inline: KnowledgeInlineSpan,
   lineNumber: number,
@@ -773,13 +725,11 @@ const documentCandidatesForSide = Effect.fn("Knowledge.documentCandidatesForSide
   return { candidates, commands };
 });
 
-/** The archive-data reads one side's probe substep needs once the tracked-tree pass has finished. */
 interface KnowledgeProbeSideInput {
   readonly commands: ReadonlyArray<KnowledgeCommandOccurrence>;
   readonly indexDocumentId: string;
 }
 
-/** Probe-derived candidates for both sides, plus the policy and evidence the report must carry. */
 interface KnowledgeProbeOutcome {
   readonly base: ReadonlyArray<KnowledgeFindingCandidate>;
   readonly detail: O.Option<string>;
@@ -791,9 +741,6 @@ const probeCandidatesForSide = Effect.fn("Knowledge.probeCandidatesForSide")(fun
   oracle: KnowledgeArchiveOracle,
   side: KnowledgeProbeSideInput
 ) {
-  // Derive provenance first so unsupported archive syntax always fails closed rather than hiding
-  // behind a degradable runtime boot failure. The runtime result is intentionally discarded: it
-  // preserves base-data boot/degradation semantics, while the static tree owns base attribution.
   const commandTree = yield* oracle.commandTree;
   yield* commandProbeResults(oracle, side.commands);
   const candidates = yield* commandCandidatesFromResults(
@@ -812,9 +759,6 @@ const probeCandidatesForHead = Effect.fn("Knowledge.probeCandidatesForHead")(fun
   baseCommands: ReadonlyArray<KnowledgeCommandOccurrence>,
   head: KnowledgeProbeSideInput
 ) {
-  // The current checkout must successfully load every command needed by either revision while using
-  // HEAD data before any merge-base-only failure may degrade coverage. Keep the raw base prefix in the
-  // probe input, then discard its results: only HEAD occurrences may produce HEAD findings.
   const combinedOccurrences = A.appendAll(baseCommands, head.commands);
   const combinedResults = yield* commandProbeResults(oracle, combinedOccurrences);
   const headResults = A.drop(combinedResults, A.length(baseCommands));
@@ -826,10 +770,6 @@ const probeCandidatesForHead = Effect.fn("Knowledge.probeCandidatesForHead")(fun
   });
 });
 
-/**
- * Lines of a base boot failure carried into the report: the probe header plus the thrown error and
- * its runtime banner, which is everything needed to name the missing module without pasting a stack.
- */
 const PROBE_BOOT_EXCERPT_LINES = 5;
 
 const probeBootExcerpt = (error: KnowledgeProbeBootError): string =>
@@ -855,8 +795,6 @@ const degradeToBaseBootFailure = (error: KnowledgeProbeBootError): Effect.Effect
     skippedProbeOutcome(KnowledgeProbePolicy.Enum["skipped-base-boot-failure"], pipe(error, probeBootExcerpt, O.some))
   );
 
-// A current-checkout probe that cannot boot against HEAD data is the branch author's defect, never
-// lost coverage, so HEAD-side boot failures surface as operational errors.
 const headProbeFailure = <A>(
   exit: Exit.Exit<A, KnowledgeOperationalError | KnowledgeProbeBootError>
 ): Effect.Effect<A, KnowledgeOperationalError> =>
@@ -869,10 +807,6 @@ const probeBothSides = Effect.fn("Knowledge.probeBothSides")(function* (
   base: KnowledgeProbeSideInput,
   head: KnowledgeProbeSideInput
 ) {
-  // Every probe below is independent of the others' results: each reads only its own side's archive
-  // data and scratch root, so they run at once. Their exits are then replayed in the sequential order
-  // the precedence rules below were written for, which keeps the reported outcome identical to running
-  // them one after another: a failure is only observed when every step before it succeeded.
   const [currentTreeExit, headStaticTreeExit, headCandidatesExit, baseCandidatesExit] = yield* Effect.all(
     [
       Effect.exit(input.head.currentCommandTree),
@@ -889,10 +823,6 @@ const probeBothSides = Effect.fn("Knowledge.probeBothSides")(function* (
       message: "Static command surface provenance does not match the current-checkout command tree.",
     });
   }
-  // HEAD is observed first because both sides execute the current checkout's code. Its command probe
-  // receives the union of base and HEAD inputs, so a current-code defect in a base-only command fails
-  // as the branch author's operational error before a base-data-only incompatibility may degrade
-  // coverage.
   const headCandidates = yield* headProbeFailure(headCandidatesExit);
   const baseCandidates = yield* baseCandidatesExit;
   return {
@@ -908,15 +838,10 @@ const resolveProbeCandidates = Effect.fn("Knowledge.resolveProbeCandidates")(fun
   base: KnowledgeProbeSideInput,
   head: KnowledgeProbeSideInput
 ) {
-  // Both evaluators run current-checkout code against the selected revision's data. The existing
-  // trust policy remains a defense-in-depth boundary: a skipped comparison stops here with only the
-  // tracked-tree classes and performs no data-driven probe work at all.
   if (!KnowledgeProbePolicy.is.enabled(input.probePolicy)) {
     return skippedProbeOutcome(input.probePolicy, O.none());
   }
   return yield* probeBothSides(input, base, head).pipe(
-    // Whatever base probe results were already collected are discarded with the policy: comparing a
-    // probed base against an unprobed HEAD would report every probe-class finding as resolved.
     Effect.catchTag("KnowledgeProbeBootError", degradeToBaseBootFailure)
   );
 });
@@ -1007,6 +932,17 @@ const findingOrder = Order.mapInput(Order.String, (finding: KnowledgeFinding) =>
  * policy that was actually achieved, which is weaker when the current-checkout probe failed to boot
  * against merge-base archive data. Either way a non-`enabled` report is still a well-formed delta, but
  * one whose empty buckets only cover the classes that need no executable probe.
+ *
+ * Each side derives its static command tree before its runtime probe, so unsupported archive syntax
+ * fails closed instead of hiding behind a degradable boot failure; the base runtime probe runs only
+ * for its boot outcome, and base attribution comes from the static tree. The HEAD command probe
+ * receives the base inputs too and is observed first, so a current-code defect in a base-only
+ * command fails as an operational error before a base-data incompatibility can degrade coverage;
+ * only HEAD occurrences produce HEAD findings.
+ *
+ * The four probes share no scratch root or archive: each reads only its own side's data, so they
+ * run concurrently. Their exits are replayed in sequential order, so a failure is reported only
+ * when every step before it succeeded, as in a one-after-another run.
  *
  * **Example** (Scan two empty archives)
  *
@@ -1150,18 +1086,6 @@ export const guardKnowledgeCloneAttributes = (
 const ROOT_COMMAND_MODULE = "packages/tooling/tool/cli/src/commands/Root.ts";
 const PORTFOLIO_INDEX_MODULE = "packages/tooling/tool/cli/src/commands/Goals/PortfolioIndex.ts";
 
-/**
- * Command-probe program text, bound to the executing checkout's command module.
- *
- * The probe module and its input live in the scratch root, never in the archive, so a scanned revision
- * cannot redirect either file. The command implementation is also loaded from the checkout already
- * executing the semantic-delta command. The archive is only the child process's working directory and
- * therefore contributes data, never executable modules.
- *
- * @param rootCommandModule - Absolute path of the current-checkout root command module.
- * @param inputPath - Absolute path of the tab-delimited command input file.
- * @returns Probe source ready to write into the scratch root.
- */
 const commandProbeSource = (rootCommandModule: string, inputPath: string): string => `
 import * as BunRuntime from "@effect/platform-bun/BunRuntime"
 import * as BunServices from "@effect/platform-bun/BunServices"
@@ -1215,16 +1139,6 @@ const program = Effect.gen(function*() {
 BunRuntime.runMain(BunServices.layer.pipe(Layer.build, Effect.flatMap((context) => Effect.provide(program, context)), Effect.scoped))
 `;
 
-/**
- * Index-probe program text, bound to the executing checkout's index builder.
- *
- * The projection still runs with the archive root as its working directory, so `"."` resolves to the
- * archive data. The module specifier and probe file are absolute paths outside the archive, preventing
- * an archived `PortfolioIndex.ts` (or one of its archived dependencies) from entering the module graph.
- *
- * @param portfolioIndexModule - Absolute path of the current-checkout portfolio index module.
- * @returns Probe source ready to write into the scratch root.
- */
 const indexProbeSource = (portfolioIndexModule: string): string => `
 import * as BunRuntime from "@effect/platform-bun/BunRuntime"
 import * as BunServices from "@effect/platform-bun/BunServices"
@@ -1321,8 +1235,6 @@ const runArchiveProcess = Effect.fn("Knowledge.runArchiveProcess")(function* (
   }).pipe(
     KnowledgeOperationalError.mapError(`Failed to spawn current-checkout ${probeLabel} probe against archive data.`)
   );
-  // The probe writes its structured output in one final call, so a non-zero exit means it never got
-  // there: the current-checkout probe failed to load or the projection itself failed.
   if (result.exitCode !== 0) {
     const output = renderProbeStreams(result, currentCheckoutRoot, archiveRoot, scratchRoot);
     return yield* KnowledgeProbeBootError.make({
@@ -1550,26 +1462,6 @@ export const makeKnowledgeArchiveOracle = Effect.fn("Knowledge.makeArchiveOracle
 
 const READABLE_ARCHIVE_ENTRY_TYPES = HashSet.make("File", "Directory");
 
-/**
- * Materializes only the entry types the scan reads, so a hostile revision cannot aim extraction
- * anywhere.
- *
- * Regular files carry every scanned document and archive-data input; directories carry their
- * structure. Probe modules come exclusively from the current checkout. Links are dropped: the
- * tracked-path oracle already comes from `git ls-tree` rather than the extracted tree, documents whose
- * blob is a link are filtered out by mode before they are ever read, and a link entry in an untrusted
- * archive is the classic primitive for redirecting a later read or write out of the archive root.
- * Dropping them also keeps `strict` extraction meaningful — a repository that tracks a link through
- * another link would otherwise abort the whole scan on an entry nothing reads.
- *
- * The argument is read structurally because the library shares this filter signature with archive
- * creation, where the second parameter is a stat result carrying no entry type at all. Extraction
- * always supplies an entry; anything without a readable type is filtered out rather than admitted.
- *
- * @param _path - Archive-relative entry path, unused: the decision is by entry type alone.
- * @param entry - Tar entry offered for extraction, read structurally for its type name.
- * @returns True only for regular files and directories.
- */
 const isReadableArchiveEntry = (_path: string, entry: unknown): boolean =>
   P.hasProperty(entry, "type") && P.isString(entry.type) && HashSet.has(READABLE_ARCHIVE_ENTRY_TYPES, entry.type);
 
@@ -1586,10 +1478,7 @@ const extractArchive = Effect.fn("Knowledge.extractArchive")(function* (
         strict: true,
         preservePaths: false,
         unlink: true,
-        // Extracted files are data read for their bytes only; nothing reads a timestamp, so skipping
-        // one `utimes` call per entry is free.
         noMtime: true,
-        // The type filter always applies; a path selection only ever narrows it further.
         filter: (entryPath: string, entry: unknown) =>
           isReadableArchiveEntry(entryPath, entry) && admitsPath(entryPath),
       }),
@@ -1597,7 +1486,6 @@ const extractArchive = Effect.fn("Knowledge.extractArchive")(function* (
   });
 });
 
-/** GitHub Actions events whose checked-out revision can come from a repository we do not control. */
 const PULL_REQUEST_EVENT_NAMES = HashSet.make("pull_request", "pull_request_target");
 
 const GithubPullRequestEvent = S.Struct({
@@ -1610,12 +1498,6 @@ const GithubPullRequestEvent = S.Struct({
 
 const decodeGithubPullRequestEvent = S.decodeUnknownEffect(S.fromJsonString(GithubPullRequestEvent));
 
-/**
- * Full name of the repository the pull-request head branch lives in, when the event payload names one.
- *
- * @param eventPath - Value of `GITHUB_EVENT_PATH`, pointing at the runner's event payload file.
- * @returns The `owner/name` of the head repository, or `O.none()` when it cannot be read or decoded.
- */
 const readHeadRepository = Effect.fn("Knowledge.readHeadRepository")(function* (eventPath: string) {
   const fs = yield* FileSystem.FileSystem;
   const event = yield* fs.readFileString(eventPath).pipe(Effect.flatMap(decodeGithubPullRequestEvent), Effect.option);
@@ -1675,16 +1557,6 @@ export const resolveKnowledgeProbePolicy = Effect.fn("Knowledge.resolveProbePoli
     : KnowledgeProbePolicy.Enum["skipped-untrusted-context"];
 });
 
-/**
- * Runs two independent effects at once and reports their outcomes as `first` then `second` would.
- *
- * Both always run to completion; the first failure in sequence order wins, so callers keep the error
- * precedence of the sequential program they replace.
- *
- * @param first - The effect whose failure takes precedence.
- * @param second - The effect whose failure is reported only when `first` succeeds.
- * @returns Both successes as a pair, or the first failure in sequence order.
- */
 const inSequenceOrder = <A, B, E1, E2, R1, R2>(
   first: Effect.Effect<A, E1, R1>,
   second: Effect.Effect<B, E2, R2>
@@ -1766,18 +1638,6 @@ export const inSequenceOrderForTesting: {
 
 const COMMIT_SPECIFIC_ATTRIBUTE = "export-subst";
 
-/**
- * Whether the base side's static command surface is provably the HEAD side's, so one derivation
- * serves both.
- *
- * **Details**
- *
- * The static reader sees only the files {@link KnowledgeCommandSurface.staticCommandTreeInputs}
- * names, and their extracted bytes are a function of blob, mode and in-tree attributes. Equal rows
- * prove equal inputs unless an attribute substitutes commit-specific text, so any `.gitattributes`
- * that is not a regular blob, or that mentions `export-subst` at all, refuses the reuse and both sides
- * derive their own surface as before.
- */
 const sharesStaticCommandSurface = Effect.fn("Knowledge.sharesStaticCommandSurface")(function* (
   baseEntries: ReadonlyArray<KnowledgeTrackedEntry>,
   head: KnowledgeArchiveOracle
@@ -1791,8 +1651,6 @@ const sharesStaticCommandSurface = Effect.fn("Knowledge.sharesStaticCommandSurfa
     return false;
   }
   for (const entry of attributes) {
-    // An attribute file the archive left out (for example through `export-ignore`) cannot be
-    // inspected, so it refuses the reuse rather than failing the comparison.
     const text = yield* head.readBytes(entry.path).pipe(
       Effect.map((bytes) => O.some(textDecoder.decode(bytes))),
       Effect.orElseSucceed(O.none<string>)
@@ -1812,6 +1670,8 @@ const sharesStaticCommandSurface = Effect.fn("Knowledge.sharesStaticCommandSurfa
  * True only when both trees list identical command-source, shared-flag and `.gitattributes` entries
  * and no attribute file can substitute commit-specific text, which is what makes one derivation
  * provably serve both sides.
+ * An attribute file the archive left out (through `export-ignore`, for example) cannot be
+ * inspected, so it refuses the reuse instead of failing the comparison.
  *
  * **Example** (Two empty trees share their surface)
  *
@@ -1838,14 +1698,6 @@ const sharesStaticCommandSurface = Effect.fn("Knowledge.sharesStaticCommandSurfa
  */
 export const sharesStaticCommandSurfaceForTesting = sharesStaticCommandSurface;
 
-/**
- * The base oracle a comparison scans: carrying HEAD's command tree when the static surface is
- * provably shared, and unchanged otherwise.
- *
- * @param base - The base side's oracle.
- * @param head - The HEAD side's oracle, whose command tree is reused when the surface is shared.
- * @returns `base` itself when the surfaces differ, or a copy whose `commandTree` is HEAD's.
- */
 const baseSharingHeadCommandSurface = (
   base: KnowledgeArchiveOracle,
   head: KnowledgeArchiveOracle
@@ -1915,8 +1767,6 @@ const semanticDeltaLive = Effect.fn("Knowledge.semanticDelta")(function* (baseRe
       yield* fs
         .makeDirectory(headRoot)
         .pipe(KnowledgeOperationalError.mapError("Failed to create the HEAD archive root."));
-      // Base and HEAD materialize side by side, one phase at a time, and each phase replays its exits
-      // base first: the first failure reported is the one a base-then-HEAD sequence would report.
       yield* inSequenceOrder(
         writeGitArchive(repoRoot, baseCommit, baseArchive, gitAdapter),
         writeGitArchive(repoRoot, headCommit, headArchive, gitAdapter)
@@ -1983,6 +1833,9 @@ const semanticDeltaLive = Effect.fn("Knowledge.semanticDelta")(function* (baseRe
  * oracle is read from `git ls-tree` rather than from the extracted tree. That separation is what
  * keeps the census honest: extraction drops links and other non-readable entry types, while the
  * entry list still reports every tracked mode so symlinks and gitlinks can be recorded as skipped.
+ * Links are dropped because a link entry in an untrusted archive can redirect a later read or write
+ * out of the archive root, and because strict extraction would otherwise abort the whole scan on a
+ * link through a link that nothing reads.
  *
  * **Gotchas**
  *
@@ -2027,8 +1880,6 @@ export interface KnowledgeMaterializedTree {
   readonly repoRoot: string;
 }
 
-// The archive step shared by the full and the path-selected tree. `selection` narrows extraction and
-// reads only; resolution, the archive itself, the ls-tree entry list and their order never change.
 const materializeTreeWith = Effect.fnUntraced(function* (
   treeish: string,
   selection: O.Option<(repoPath: string) => boolean>

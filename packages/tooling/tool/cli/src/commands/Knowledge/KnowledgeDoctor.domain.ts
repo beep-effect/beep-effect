@@ -128,6 +128,8 @@ const WORKSPACE_SCOPE = "@beep/";
  * plus the installed skill directories. `checkoutInventory` is the tree as a checkout: its packets,
  * workspace packages, the product leaves and declared subjects it pruned, and its own prune
  * declaration (`standards/checkout-prune.jsonc` when the tree tracks one).
+ * `checkoutInventory` fails closed when that declaration does not decode or the inventory reports
+ * prune findings.
  *
  * @see {@link deriveKnowledgeDoctorDomain} for the uncached derivation.
  * @see {@link cacheKnowledgeDoctorDomain} for the memoized live form.
@@ -144,16 +146,8 @@ export interface KnowledgeDoctorDomain {
   readonly skills: Effect.Effect<KnowledgeSkillsFacts, KnowledgeOperationalError>;
 }
 
-/* -------------------------------------------------------------------------------------------------
- * Tree reads
- * ---------------------------------------------------------------------------------------------- */
-
 const trackedPaths = (oracle: KnowledgeTreeOracle): HashSet.HashSet<string> =>
   HashSet.fromIterable(A.map(oracle.trackedEntries, (entry) => entry.path));
-
-/* -------------------------------------------------------------------------------------------------
- * Goal packets
- * ---------------------------------------------------------------------------------------------- */
 
 const packetSlug = (repoPath: string): O.Option<string> => {
   const segments = Str.split("/")(repoPath);
@@ -293,8 +287,6 @@ const ancestorDirectories = (paths: HashSet.HashSet<string>): HashSet.HashSet<st
 
 type PacketFiles = MutableHashMap.MutableHashMap<string, ReadonlyArray<string>>;
 
-// One pass over the tree buckets every packet's entries under one subdirectory (`ops/`,
-// `research/`), so a lookup per packet never rescans the whole tracked tree.
 const packetFilesByPrefix = (oracle: KnowledgeTreeOracle, prefix: string): PacketFiles => {
   const files: PacketFiles = MutableHashMap.empty();
   for (const entry of oracle.trackedEntries) {
@@ -310,9 +302,6 @@ const packetFilesByPrefix = (oracle: KnowledgeTreeOracle, prefix: string): Packe
   return files;
 };
 
-// One pass buckets every tracked file name under its parent directory spelled with a trailing `/`,
-// in tree order. A direct child of `prefix` is exactly a path whose last `/` ends `prefix`, so each
-// packet's decisions and reflections lookup reads one bucket instead of rescanning the whole tree.
 const directFilesByDirectory = (oracle: KnowledgeTreeOracle): MutableHashMap.MutableHashMap<string, Array<string>> => {
   const files = MutableHashMap.empty<string, Array<string>>();
   for (const entry of oracle.trackedEntries) {
@@ -448,10 +437,6 @@ export const readKnowledgeGoalsDoctorFindings = Effect.fn("KnowledgeDoctorDomain
   );
 });
 
-/* -------------------------------------------------------------------------------------------------
- * Workspace packages and exports
- * ---------------------------------------------------------------------------------------------- */
-
 class TsconfigPathsJson extends S.Opaque<TsconfigPathsJson, { readonly brand: unique symbol }>()(
   S.Struct({
     compilerOptions: S.optionalKey(
@@ -526,12 +511,6 @@ const resolveStar = (paths: HashSet.HashSet<string>, file: string, specifier: st
       )
     : O.none();
 
-// A line-leading `export` inside a `/* … */` block is commentary, not a declaration. Blanking
-// the comment (newlines kept) leaves every real line where it was.
-// Block comments are found with TypeScript's own scanner, so a `/*` inside a string,
-// a template, a `//` comment, or a regex literal is never mistaken for an opener (#1702).
-// A `/` starts a regex literal unless the previous token ends an operand; listing the operand
-// enders instead of regex contexts covers every binary operator (`a+/re/`) and keyword operator.
 const OPERAND_ENDERS = HashSet.make(
   ts.SyntaxKind.Identifier,
   ts.SyntaxKind.PrivateIdentifier,
@@ -590,6 +569,10 @@ const blankBlockComments = (text: string): string =>
  * become `stars`; every other star specifier (a package, or an unresolved relative path) is kept in
  * `opaqueStars`, because it is not followed.
  *
+ * A line-leading `export` inside a block comment is commentary, not a declaration. Block comments
+ * are found with the TypeScript scanner, so a `/*` inside a string, a template, a line comment or a
+ * regex literal never opens one, and they are blanked with their newlines kept.
+ *
  * **Example** (Scan declarations and re-exports)
  *
  * ```ts
@@ -639,10 +622,6 @@ const deriveFileExports = (oracle: KnowledgeTreeOracle, paths: HashSet.HashSet<s
       onSome: (value) => scanKnowledgeFileExports(file, value, paths),
     })
   );
-
-/* -------------------------------------------------------------------------------------------------
- * Skills
- * ---------------------------------------------------------------------------------------------- */
 
 const decodeLockV2 = S.decodeUnknownEffect(S.fromJsonString(SkillsLockDocument));
 const decodeLockV1 = S.decodeUnknownEffect(S.fromJsonString(SkillLockFile));
@@ -703,8 +682,6 @@ const DECLARES_LOCK_V1 = /"version"\s*:\s*1\b/u;
 const decodeLockFacts = (lockText: string) =>
   decodeLockV2(lockText).pipe(
     Effect.map((lock) => ({ version: 2 as const, entries: v2Facts(lock, lockText) })),
-    // A lock that does not declare version 1 is a broken v2 lock: report the v2 error,
-    // not the v1 fallback's (#1702).
     Effect.catch((v2Error) =>
       Effect.mapBoth(decodeLockV1(lockText), {
         onFailure: (v1Error) => (DECLARES_LOCK_V1.test(lockText) ? v1Error : v2Error),
@@ -732,11 +709,6 @@ const deriveSkills = Effect.fn("KnowledgeDoctorDomain.skills")(function* (
   return KnowledgeSkillsFacts.make({ lockVersion: O.some(lock.version), entries: lock.entries, installed });
 });
 
-/* -------------------------------------------------------------------------------------------------
- * The tree as a checkout (goals/prunable-product-leaves, seam 1b)
- * ---------------------------------------------------------------------------------------------- */
-
-// Every directory that holds a tracked path, the root excluded.
 const trackedDirectories = (paths: HashSet.HashSet<string>): HashSet.HashSet<string> =>
   HashSet.fromIterable(
     A.flatMap(A.fromIterable(paths), (path) => {
@@ -748,9 +720,6 @@ const trackedDirectories = (paths: HashSet.HashSet<string>): HashSet.HashSet<str
 const toOperationalError = (error: { readonly message: string }) =>
   KnowledgeOperationalError.make({ message: error.message });
 
-// The tree's checkout inventory: tracked packets, workspace packages and directories, and the
-// tree's own prune declaration. A declaration that does not decode, or whose prune entries name
-// tracked paths, fails closed.
 const deriveCheckoutInventory = Effect.fn("KnowledgeDoctorDomain.checkoutInventory")(function* (
   oracle: KnowledgeTreeOracle,
   paths: HashSet.HashSet<string>
@@ -775,10 +744,6 @@ const deriveCheckoutInventory = Effect.fn("KnowledgeDoctorDomain.checkoutInvento
   });
   return yield* Effect.fromResult(checkoutInventoryOf(facts, productLeaves)).pipe(Effect.mapError(toOperationalError));
 });
-
-/* -------------------------------------------------------------------------------------------------
- * Domain construction, caching, and overlay
- * ---------------------------------------------------------------------------------------------- */
 
 /**
  * Derives the domain facts of one tree, uncached.

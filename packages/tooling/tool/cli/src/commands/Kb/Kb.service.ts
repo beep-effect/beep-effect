@@ -123,15 +123,14 @@ const assertionViolations = (
       `Assertion ${a.id}: derivation requires a reference`
     ),
   ]);
-// Each assertion is compared with the most recent earlier assertion of the same capture.
 const everyAssertionViolations = (
   assertions: ReadonlyArray<Assertion>,
   claimIndex: ClaimIndex
 ): ReadonlyArray<string> => {
-  const captures = MutableHashMap.empty<string, Assertion>();
+  const latestAssertionByCapture = MutableHashMap.empty<string, Assertion>();
   return A.flatMap(assertions, (a) => {
-    const previous = MutableHashMap.get(captures, a.captureId);
-    MutableHashMap.set(captures, a.captureId, a);
+    const previous = MutableHashMap.get(latestAssertionByCapture, a.captureId);
+    MutableHashMap.set(latestAssertionByCapture, a.captureId, a);
     return assertionViolations(a, claimIndex, previous);
   });
 };

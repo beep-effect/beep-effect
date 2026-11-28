@@ -31,7 +31,6 @@ import type * as Path from "effect/Path";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { TrackedShellAllowlistOptions } from "./TrackedShellAllowlist.model.ts";
 
-/** `git ls-files --stage` mode of a gitlink, which names a submodule commit, not a file. */
 const GITLINK_MODE = "160000";
 
 const isAllowedFile = S.is(TrackedShellAllowedFile);

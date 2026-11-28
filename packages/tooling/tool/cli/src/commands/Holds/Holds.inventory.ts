@@ -283,7 +283,6 @@ export const isUnpinnedByCatalogBump = (proposition: HoldProposition): boolean =
   proposition.exitAction._tag === "Unpin" &&
   proposition.falsifier._tag === "Scripted" &&
   proposition.falsifier.candidate === "latest" &&
-  // The catalog bump only moves packages that resolve through the catalog.
   A.some(proposition.subject.anchors, (anchor) => anchor._tag === "CatalogEntry") &&
   A.every(proposition.subject.anchors, (anchor) => anchor._tag === "CatalogEntry" || anchor._tag === "SyncpackHeld");
 

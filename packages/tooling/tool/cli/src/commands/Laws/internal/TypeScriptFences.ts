@@ -119,8 +119,6 @@ export class ScriptFence extends S.Opaque<ScriptFence, { readonly brand: unique 
 
 type LanguageFence = { readonly fence: CodeFence; readonly language: string };
 
-// The fences whose info string opens with a language word `pattern` captures, with that word lowercased,
-// and the parse failure as a warning (with no fences) when the parser refused the text.
 const fencesWithLanguage = (
   content: string,
   pattern: RegExp

@@ -51,10 +51,6 @@ import type { KnowledgeDoctorTree, KnowledgeEvaluator } from "./KnowledgeDoctor.
 
 const nfc = Str.normalize("NFC");
 
-/* -------------------------------------------------------------------------------------------------
- * Shared outcome builders
- * ---------------------------------------------------------------------------------------------- */
-
 /**
  * The document identity a doctor finding is filed under.
  *
@@ -193,17 +189,11 @@ const outcomeOf = (
     },
   });
 
-/* -------------------------------------------------------------------------------------------------
- * Prose readers
- * ---------------------------------------------------------------------------------------------- */
-
 const PACKET_STATUS_CLAIM_PATTERN = /`goals\/([a-z0-9][a-z0-9-]*)\/?`([^`\r\n]{0,32}?)`([a-z-]+)`/gu;
 const CLAIM_GAP_PATTERN = /^[\s(:=,]*(?:(?:is|now|currently|lifecycle|status|stays|remains|→|->)[\s(:=,]*)*$/u;
 const SYMBOL_SPAN_PATTERN = /^@beep\/[a-z0-9][a-z0-9-]*(?:\/[A-Za-z0-9._-]+)*(?:#[\w:.-]+)?$/u;
 const SYMBOL_EXPORT_CLAIM_PATTERN = /`([A-Za-z_$][\w$]*)` from `(@beep\/[a-z0-9][a-z0-9-]*(?:\/[A-Za-z0-9._-]+)*)`/gu;
 const PACKET_README_PATTERN = /^goals\/([a-z0-9][a-z0-9-]*)\/README\.md$/u;
-// Live READMEs write `## Current Phase`, `## Current phase`, and titled variants such as
-// `## Current phase — MCP toolkit expansion`; the phase id itself is on the body line.
 const CURRENT_PHASE_HEADING_PATTERN = /^##[ \t]+current[ \t]+phase\b.*$/iu;
 const PHASE_CLAIM_PATTERN = /^(?:\*\*|`)?(P\d+)\b/u;
 
@@ -351,10 +341,6 @@ export const knowledgeCurrentPhaseClaim: {
       : O.none()
 );
 
-/* -------------------------------------------------------------------------------------------------
- * Packet-status evaluator
- * ---------------------------------------------------------------------------------------------- */
-
 const STATUS_FIELD = "initiative.status";
 const PACKET_REMEDIATION = "Update the claim to the packet's manifest, or the manifest to the claim.";
 
@@ -415,8 +401,6 @@ const evaluatePhaseClaim = (
   claim: PacketClaim,
   facts: KnowledgePacketFacts
 ): KnowledgeEvaluationOutcome =>
-  // Phase ids compare case-insensitively (record keys such as `p1` vs a `P1` claim); the
-  // witness names the manifest's own spelling so removing it flips the claim.
   O.match(
     A.findFirst(facts.phaseIds, (id) => Str.toUpperCase(id) === Str.toUpperCase(claim.value)),
     {
@@ -497,10 +481,6 @@ export const KnowledgePacketStatusEvaluator: KnowledgeEvaluator = {
   evaluate: evaluatePacketSpan,
 };
 
-/* -------------------------------------------------------------------------------------------------
- * Symbols evaluator
- * ---------------------------------------------------------------------------------------------- */
-
 const MAX_EXPORT_SEARCH_FILES = 256;
 const SYMBOL_REMEDIATION = "Update the reference to a package, subpath, or export the workspace declares.";
 
@@ -566,8 +546,6 @@ const resolveEntry = Effect.fn("KnowledgeDoctor.resolveSymbolEntry")(function* (
   );
 });
 
-// The export search's verdict: the declaring file, or why no file was found. `bounded` means the
-// search stopped at MAX_EXPORT_SEARCH_FILES; `opaque` lists the star specifiers it could not follow.
 type ExportSearch =
   | { readonly _tag: "Found"; readonly file: string }
   | { readonly _tag: "Missing"; readonly bounded: boolean; readonly opaque: ReadonlyArray<string> };
@@ -722,10 +700,6 @@ export const KnowledgeSymbolsEvaluator: KnowledgeEvaluator = {
   kinds: ["unknown-beep-symbol"],
   evaluate: evaluateSymbolSpan,
 };
-
-/* -------------------------------------------------------------------------------------------------
- * Skills evaluator
- * ---------------------------------------------------------------------------------------------- */
 
 const isSkillGitRevision = S.is(SkillGitRevision);
 

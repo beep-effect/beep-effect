@@ -95,29 +95,10 @@ import type * as Path from "effect/Path";
 import type * as ChildProcess from "effect/process/ChildProcessSpawner";
 import type { PrivateHomePathExemption, PrivateHomePathsOptions } from "./PrivateHomePaths.model.ts";
 
-/**
- * A path separator: `/`, a JSON-escaped `\/`, one to four backslashes (plain,
- * JSON-escaped or JSON-in-JSON), a URL-encoded `%2F` or a URL-encoded
- * backslash `%5C`.
- */
 const SEPARATOR = String.raw`(?:\\{0,4}\/|\\{1,4}|%2[Ff]|%5[Cc])`;
 
-/** Characters of a user name; the `u` flag admits non-ASCII letters. */
 const USER_CHAR = String.raw`[\p{L}\p{N}_.\-]`;
 
-/**
- * Where a home path may start: not right after an HTTP method (`GET /Users/1`
- * is an API route) and not inside a longer relative or composed path
- * (`owner/home/root/`, `${base}/home/.cache`, `../home/x`, a route group's
- * `(marketing)/home/page.tsx`), except right after a glued single-letter flag
- * (`-v/home/<user>`), a shell default expansion or option value
- * (`${HOME:-/home/<user>}`, `--opt=-/home/<user>`), a line-initial diff marker
- * (`-/home/<user>`), an ASCII truncation marker (`.../home/<user>`), a
- * URL-encoded separator or drive colon, a `file://<host>` or
- * `vscode://file` authority, a remote-shell authority
- * (`ssh://<user>@<host>:<port>`, `sftp://`, `scp://`, `rsync://`), or a remote
- * authority such as `vscode-remote://wsl+<distro>`.
- */
 const NOT_AFTER_HTTP_METHOD = String.raw`(?<!\b(?:GET|HEAD|POST|PUT|PATCH|DELETE|OPTIONS) )`;
 
 const BOUNDARY = `${NOT_AFTER_HTTP_METHOD}(?:${A.join(
@@ -132,18 +113,6 @@ const BOUNDARY = `${NOT_AFTER_HTTP_METHOD}(?:${A.join(
   "|"
 )})`;
 
-/**
- * Home directory roots: `/home`, Fedora Atomic's `/var/home`, the automounted
- * `/export/home` and `/net/home`, macOS `/Users`, the WSL share of a Linux
- * distribution (`\\wsl$\<distro>\home`, `\\wsl.localhost\<distro>\home`,
- * or `//wsl.localhost/<distro>/home` as git prints it), and the Windows profile
- * root after a drive letter (`C:\Users`, `C%3A%5CUsers`, the legacy
- * `C:\Documents and Settings`, case-insensitive), a WSL mount
- * (`/mnt/c/Users`), an MSYS drive (`/c/Users`) or a UNC share
- * (`\\server\Users`, `//server/Users`). The forward-slash share needs a
- * capitalized `Users` and no `:` before it, so a protocol-relative
- * `//cdn.example.com/users/1` and `https://host/Users/1` stay web routes.
- */
 const HOME_ROOT = A.join(
   [
     String.raw`(?:\\{2,8}|\/{2,3})wsl(?:\$|\.localhost)${SEPARATOR}[\w.\-]+${SEPARATOR}(?:home|[Uu]sers|USERS)`,
@@ -157,28 +126,13 @@ const HOME_ROOT = A.join(
   "|"
 );
 
-/**
- * A home path whose user does not start a template or a dot directory. The
- * user is the longest run of name characters, so any other character ends it
- * (`/`, `?`, `#`, `@`, `’`, `…`, a quote, whitespace).
- */
 const HOME_PATH_PATTERN = new RegExp(
   String.raw`${BOUNDARY}(?:${HOME_ROOT})${SEPARATOR}(?![.<$\{])(${USER_CHAR}+)(?!${USER_CHAR})`,
   "gu"
 );
 
-/**
- * The dash-encoded home directory that agent tooling writes into project and
- * scratchpad directory names (`-home-<user>-src`, `C--Users-<user>-src`). The
- * tail keeps every encoded segment so a dashed placeholder such as `ec2-user`
- * still matches. A tail without a further encoded segment counts only as a
- * directory with a path beneath it or as an entry of a `projects/` store, so a
- * `-home-dir` flag in prose and a `fix/-home-paths` branch label are not
- * findings.
- */
 const ENCODED_HOME_PATTERN = /(?<![\w-])((?:[A-Za-z]-)?-(?:home|Users)-)([\p{L}\p{N}_][\p{L}\p{N}_-]*)/gu;
 
-/** A file without any home root name cannot match. */
 const HOME_PREFILTER = /home|[Uu]sers|USERS|[Ss]ettings/u;
 
 const PRIVATE_HOME_PATH_SUGGESTION =
@@ -192,13 +146,6 @@ const scopedHomeUsers = HashMap.fromIterable(
   A.map(privateHomePathScopedUsers, (row) => [row.user, HashSet.fromIterable(row.files)] as const)
 );
 
-/**
- * A placeholder or route segment passes in every file; a scoped fleet account
- * only in the files its row names.
- *
- * @param file - Repository-relative path of the scanned file.
- * @returns A predicate on the user segment of one home path.
- */
 const isAllowedHomeUser =
   (file: string) =>
   (user: string): boolean =>
@@ -206,48 +153,18 @@ const isAllowedHomeUser =
     isHomeRouteSegment(user) ||
     O.exists(HashMap.get(scopedHomeUsers, user), HashSet.has(file));
 
-/**
- * A sentence may end right after the user (`/home/<user>.`); trailing dots are
- * not part of the name.
- *
- * @param user - The matched user segment.
- * @returns The user without trailing dots.
- */
 const trimTrailingDots = (user: string): string => F.pipe(user, Str.replace(/\.+$/u, ""));
 
 const firstEncodedSegment = (tail: string): string => A.headNonEmpty(F.pipe(tail, Str.split("-")));
 
-/**
- * An encoded tail is allowed when its first segment is, or when it starts with
- * a dashed placeholder (`ec2-user-src`) followed by an encoded separator.
- *
- * @param allowed - The file's user predicate from `isAllowedHomeUser`.
- * @param tail - Every encoded segment after `-home-` or `-Users-`.
- * @returns Whether the encoded home names an allowed user.
- */
 const isAllowedEncodedTail = (allowed: (user: string) => boolean, tail: string): boolean =>
   allowed(firstEncodedSegment(tail)) ||
   A.some(PlaceholderHomeUser.literals, (user) => tail === user || F.pipe(tail, Str.startsWith(`${user}-`)));
 
-/** An encoded directory entry of a project store such as `~/.claude/projects/`. */
 const PROJECT_STORE_ENTRY = /(?:^|[^\w.-])projects[\\/]$/u;
 
-/**
- * A path continues beneath the match: `/`, or a backslash that does not start
- * a string escape (`\n`, `\t`, `\r`, `\"`, `\'`).
- */
 const CONTINUING_SEPARATOR = /^(?:\/|\\(?![nrt"']))/u;
 
-/**
- * Whether a bare encoded home (`-home-<word>`, no further encoded segment) is a
- * directory: a path continues beneath it, or it is an entry of a `projects/`
- * store. A branch label (`fix/-home-paths`) and a prose flag are neither.
- *
- * @param content - The scanned text.
- * @param start - Offset of the encoded match.
- * @param end - Offset just past the encoded match.
- * @returns Whether the bare encoded home is a directory path component.
- */
 const isEncodedDirectory = (content: string, start: number, end: number): boolean =>
   CONTINUING_SEPARATOR.test(Str.slice(end, end + 2)(content)) ||
   PROJECT_STORE_ENTRY.test(Str.slice(Math.max(0, start - 10), start)(content));
@@ -261,7 +178,6 @@ type HomePathMatch = {
 const homePathMatches = (content: string, allowed: (user: string) => boolean): ReadonlyArray<HomePathMatch> =>
   A.getSomes(
     A.map(A.fromIterable(F.pipe(content, Str.matchAll(HOME_PATH_PATTERN))), (match) =>
-      // The pattern's user group is mandatory, so a match always carries it.
       O.map(O.all([O.fromNullishOr(match.index), O.fromNullishOr(match[1])]), ([index, user]) => ({
         index,
         text: trimTrailingDots(match[0]),
@@ -273,7 +189,6 @@ const homePathMatches = (content: string, allowed: (user: string) => boolean): R
 const encodedHomeMatches = (content: string, allowed: (user: string) => boolean): ReadonlyArray<HomePathMatch> =>
   A.getSomes(
     A.map(A.fromIterable(F.pipe(content, Str.matchAll(ENCODED_HOME_PATTERN))), (match) =>
-      // Both groups of the encoded pattern are mandatory, so a match always carries them.
       O.map(
         O.all([O.fromNullishOr(match.index), O.fromNullishOr(match[1]), O.fromNullishOr(match[2])]),
         ([index, prefix, tail]) => {
@@ -464,7 +379,6 @@ export const applyPrivateHomePathExemption: {
 export const formatPrivateHomePathFinding = (finding: PrivateHomePathFinding): string =>
   `${finding.file}:${finding.line}:${finding.column}  ${finding.match}  →  ${finding.suggestion}`;
 
-// The untracked exemption files whose subject the checkout pruned or owns.
 const prunedExemptionFiles = Effect.fn("PrivateHomePaths.prunedExemptionFiles")(function* (
   options: PrivateHomePathsOptions,
   untracked: ReadonlyArray<PrivateHomePathExemption>
@@ -549,12 +463,6 @@ export const runPrivateHomePaths = Effect.fn("PrivateHomePaths.runPrivateHomePat
     },
   });
   const seen = HashSet.fromIterable(A.map(outcomes, (outcome) => outcome.file));
-  // An untracked row is skipped, not stale, only when the checkout pruned or owns its subject: a
-  // declared product-leaf packet (`prunablePackets`) or product-leaf workspace whose directory is
-  // gone, or a packet or path the checkout's prune declaration names. A row whose subject is
-  // present, undeclared, or the repository's stays strict, so a renamed or archived packet, or an
-  // emptied or untracked-only packet directory, still fails the law. The inventory is read only
-  // when a row is untracked.
   const untracked = A.filter(options.exemptions, (row) => !HashSet.has(seen, row.file));
   const prunedRows = A.isReadonlyArrayEmpty(untracked)
     ? HashSet.empty<string>()

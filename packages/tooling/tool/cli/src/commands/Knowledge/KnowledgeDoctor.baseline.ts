@@ -398,10 +398,6 @@ export class KnowledgeDoctorIdentity extends S.Opaque<KnowledgeDoctorIdentity, {
   )
 ) {}
 
-/* -------------------------------------------------------------------------------------------------
- * Seal files
- * ---------------------------------------------------------------------------------------------- */
-
 /**
  * The seal inputs read from one tree; each is `O.none()` when the tree does not track it.
  *
@@ -462,7 +458,6 @@ const readTrackedText = Effect.fn("KnowledgeDoctor.readTrackedText")(function* (
   );
 });
 
-// Decodes the JSONC text of one seal file, failing with the file's typed input error.
 const decodeKnowledgeSealText = <Schema extends S.Top & { readonly DecodingServices: never }>(
   schema: Schema,
   reason: KnowledgeDoctorInputReason,
@@ -576,10 +571,6 @@ export const readKnowledgeSealFiles = Effect.fn("KnowledgeDoctor.readSealFiles")
     codeowners: yield* readTrackedText(tree, KNOWLEDGE_CODEOWNERS_PATH),
   });
 });
-
-/* -------------------------------------------------------------------------------------------------
- * Keys and durable identity
- * ---------------------------------------------------------------------------------------------- */
 
 const decodeBaselineKey = S.decodeUnknownEffect(KnowledgeBaselineKey);
 
@@ -913,10 +904,6 @@ export const resolveKnowledgeDocumentIdentity = (input: KnowledgeIdentityInput):
   });
 };
 
-/* -------------------------------------------------------------------------------------------------
- * Groups
- * ---------------------------------------------------------------------------------------------- */
-
 const KIND_GROUPS: ReadonlyArray<readonly [ReadonlyArray<KnowledgeFindingKind>, KnowledgeBaselineGroup]> = [
   [
     [
@@ -1106,10 +1093,6 @@ export const classifyKnowledgeBaselineGroup = (input: KnowledgeBaselineGroupInpu
       return input.attributed || removedPackage ? "deleted-target-rot" : "unresolved-reference";
     })
   );
-
-/* -------------------------------------------------------------------------------------------------
- * Mint
- * ---------------------------------------------------------------------------------------------- */
 
 /**
  * The inputs of one mint, all read at the minted commit.
@@ -1368,10 +1351,6 @@ export const verifyKnowledgeBaselineText = Effect.fn("KnowledgeDoctor.verifyBase
   }
 });
 
-/* -------------------------------------------------------------------------------------------------
- * Seal guard
- * ---------------------------------------------------------------------------------------------- */
-
 /**
  * The CI-side facts `--accept-mint` admits a non-removal baseline change on (C8 conditions iii, iv).
  *
@@ -1459,7 +1438,6 @@ const promotionEquivalence = S.toEquivalence(KnowledgeDoctorPromotion);
 const onlyChanges = (changedPaths: ReadonlyArray<string>, repoPath: string): boolean =>
   A.length(changedPaths) === 1 && A.contains(changedPaths, repoPath);
 
-// What a head baseline adds or changes relative to the base one; empty for a pure deletion.
 const nonRemovalChanges = (
   head: KnowledgeDoctorBaseline,
   base: O.Option<KnowledgeDoctorBaseline>
@@ -1481,7 +1459,6 @@ const nonRemovalChanges = (
     },
   });
 
-// Findings for a branch that keeps a sealed baseline but changes it.
 const sealedBaselineChanges = (
   input: KnowledgeSealGuardInput,
   head: KnowledgeDoctorBaseline
@@ -1653,10 +1630,6 @@ const promotionTamper = (input: KnowledgeSealGuardInput): ReadonlyArray<Knowledg
  */
 export const knowledgeSealGuard = (input: KnowledgeSealGuardInput): ReadonlyArray<KnowledgeFindingCandidate> =>
   A.appendAll(baselineTamper(input), promotionTamper(input));
-
-/* -------------------------------------------------------------------------------------------------
- * Check
- * ---------------------------------------------------------------------------------------------- */
 
 /**
  * The inputs of one gating check, all read before the pure classification runs.

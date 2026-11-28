@@ -54,12 +54,9 @@ const ROOT_COMMAND_SOURCE = `${COMMAND_SOURCE_ROOT}/Root.ts`;
 const STATIC_PROJECT_ROOT = "/repo";
 const STATIC_COMMAND_SOURCE_ROOT = `${STATIC_PROJECT_ROOT}/${COMMAND_SOURCE_ROOT}`;
 const STATIC_ROOT_COMMAND_SOURCE = `${STATIC_PROJECT_ROOT}/${ROOT_COMMAND_SOURCE}`;
-// Shared flag declarations commands import; read as source like the command corpus, never executed.
 const SHARED_FLAG_SOURCE = "packages/tooling/library/repo-cli-kit/src/cli/Flags.ts";
-// Checkouts from before beep-cli-composition W3 keep the shared flags inside repo-cli; a base-commit
-// surface must still see them there.
-const LEGACY_SHARED_FLAG_SOURCE = "packages/tooling/tool/cli/src/internal/cli/Flags.ts";
-const SHARED_FLAG_SOURCES = [SHARED_FLAG_SOURCE, LEGACY_SHARED_FLAG_SOURCE] as const;
+const BASE_COMMIT_PRE_KIT_FLAG_SOURCE = "packages/tooling/tool/cli/src/internal/cli/Flags.ts";
+const SHARED_FLAG_SOURCES = [SHARED_FLAG_SOURCE, BASE_COMMIT_PRE_KIT_FLAG_SOURCE] as const;
 const SHARED_FLAG_SPECIFIER = "@beep/repo-cli-kit/cli/Flags";
 const STATIC_SHARED_FLAG_SOURCES = A.map(SHARED_FLAG_SOURCES, (source) => `${STATIC_PROJECT_ROOT}/${source}`);
 
@@ -176,9 +173,6 @@ const StaticCommandNodeJson = S.fromJsonString(StaticCommandNode);
 const decodeStaticCommandNodeJson = S.decodeUnknownEffect(StaticCommandNodeJson);
 const commandNodeEquivalent = S.toEquivalence(StaticCommandNode);
 
-// The command surface is names, aliases, and descendants. Declared options ride on the same node but
-// only the static reader derives them (the runtime projection has no public flag accessor), so the
-// static/live parity check compares the option-free projection.
 const commandSurfaceProjection = (node: StaticCommandNode): StaticCommandNode =>
   StaticCommandNode.make({
     name: node.name,
@@ -701,12 +695,6 @@ const isFlagMember = (expression: Expression, memberName: string): boolean =>
 const isArgumentMember = (expression: Expression, memberName: string): boolean =>
   isImportedBindingMember(expression, "Argument", memberName, "effect/cli");
 
-/**
- * The member name of a `Namespace.member` callee, or `O.none()` for any other callee shape.
- *
- * @param expression - The callee expression to inspect for a namespace member access.
- * @returns The member name only when the receiver is an identifier.
- */
 const memberName = (expression: Expression): O.Option<string> =>
   Node.isPropertyAccessExpression(expression) && Node.isIdentifier(expression.getExpression())
     ? O.some(expression.getName())
@@ -741,7 +729,6 @@ const boundStringArgument = (call: CallExpression, index: number, bindings: Lite
 const isNameNeutralParamMember = (expression: Expression, member: string): boolean =>
   (isFlagMember(expression, member) && isFlagNameNeutralCombinator(member)) || isArgumentMember(expression, member);
 
-// A bare transform such as `Flag.optional` piped without a call.
 const applyBareParamTransform = (
   flags: ReadonlyArray<KnowledgeStaticCommandFlag>,
   transform: PropertyAccessExpression
@@ -790,8 +777,6 @@ const firstExpressionArgument = (call: CallExpression, failure: string): Express
   return first !== undefined && Node.isExpression(first) ? first : failStatic(failure);
 };
 
-// `Flag.<constructor>(name)`, a data-first combinator (`Flag.optional(flag)`, `Flag.withAlias(flag, "x")`),
-// or any `Argument.*` call, which declares no flag.
 const evaluateParamMemberCall = (
   call: CallExpression,
   callee: Expression,
@@ -851,8 +836,6 @@ const evaluateParamCall = (
     : evaluateParamMemberCall(call, callee, bindings, seen);
 };
 
-// A param factory such as `packageFlag("...")`: only bound string arguments bind; defaulted or
-// non-literal parameters stay unbound, so a flag name that depends on one fails the derivation.
 const evaluateParamFactory = (
   call: CallExpression,
   bindings: LiteralBindings,
@@ -928,8 +911,6 @@ const evaluateConfigProperty = (
     : failStatic("a config member uses an unsupported form");
 };
 
-// A command config is a (possibly nested) record of flags and arguments; a member is either another
-// record or one param expression.
 const evaluateConfigOrParam = (
   input: Expression,
   bindings: LiteralBindings,
@@ -943,15 +924,6 @@ const evaluateConfigOrParam = (
     : evaluateParamExpression(expression, bindings, seen);
 };
 
-/**
- * The flags one `Command.make` call declares, or `O.none()` when its config is not statically
- * derivable. Unlike the command names, an underivable option set never fails the surface closed: the
- * Stage-1 gate does not read options, and the doctor reports such commands as unchecked instead.
- *
- * @param call - The `Command.make` call whose second argument declares its config.
- * @param bindings - Bound string literals available when evaluating flag names and aliases.
- * @returns The declared flags, an empty list for absent config, or `O.none()` for underivable config.
- */
 const commandMakeOptions = (
   call: CallExpression,
   bindings: LiteralBindings
@@ -1085,7 +1057,6 @@ const buildStaticCommandTree = Effect.fn("Knowledge.buildStaticCommandTree")(fun
           module: ModuleKind.NodeNext,
           moduleResolution: ModuleResolutionKind.NodeNext,
           target: ScriptTarget.ESNext,
-          // Commands import the shared flags by package path since they moved to @beep/repo-cli-kit.
           paths: { [SHARED_FLAG_SPECIFIER]: [`${STATIC_PROJECT_ROOT}/${SHARED_FLAG_SOURCE}`] },
         },
         skipAddingFilesFromTsConfig: true,
@@ -1108,31 +1079,11 @@ const buildStaticCommandTree = Effect.fn("Knowledge.buildStaticCommandTree")(fun
 const isGitAttributesPath = (repoPath: string): boolean =>
   repoPath === ".gitattributes" || Str.endsWith("/.gitattributes")(repoPath);
 
-/**
- * Whether a repository path's archived bytes can reach {@link buildStaticCommandTree}: the command
- * source root, the shared flag sources, and every in-tree `.gitattributes` file.
- *
- * @param repoPath - Repository-relative path.
- * @returns True when the static command reader, or the attributes shaping its bytes, reads the path.
- */
 const isStaticCommandTreeInput = (repoPath: string): boolean =>
   Str.startsWith(`${COMMAND_SOURCE_ROOT}/`)(repoPath) ||
   A.contains(SHARED_FLAG_SOURCES, repoPath) ||
   isGitAttributesPath(repoPath);
 
-/**
- * Every tracked entry whose archived bytes can reach {@link buildStaticCommandTree}, as sorted
- * `mode objectId path` rows.
- *
- * The static reader enumerates the command source root and the shared flag sources and nothing else,
- * and archive extraction derives each of those files from its blob, its mode, and the in-tree
- * `.gitattributes` files (the canonical archive contract disables every other attribute layer). Two
- * trees with equal rows therefore extract byte-identical command sources, except where an attribute
- * substitutes commit-specific text, which callers must rule out separately.
- *
- * @param entries - `git ls-tree` entries of one revision.
- * @returns The static command reader's inputs, sorted so equal inputs compare equal.
- */
 const staticCommandTreeInputs = (
   entries: ReadonlyArray<{ readonly mode: string; readonly objectId: string; readonly path: string }>
 ): ReadonlyArray<string> =>
@@ -1172,9 +1123,7 @@ const decodeCurrentCommandTree = (output: string): Effect.Effect<StaticCommandNo
 type StaticCommandResolution = {
   readonly status: "resolved" | "unknown";
   readonly canonicalPath: ReadonlyArray<string>;
-  /** The deepest resolved node; on an unknown word, the parent the word was looked up under. */
   readonly node: StaticCommandNode;
-  /** How many leading words the resolution consumed, including an unknown word. */
   readonly consumed: number;
 };
 
@@ -1208,7 +1157,6 @@ const resolveStaticCommand = (
   return [resolution.status, resolution.canonicalPath];
 };
 
-// Rebuilds the node at `path` (canonical names) with `update`, leaving every other node untouched.
 const updateStaticCommandAt = (
   node: StaticCommandNode,
   path: ReadonlyArray<string>,
@@ -1227,27 +1175,12 @@ const updateStaticCommandAt = (
       }),
   });
 
-/**
- * The surface without the command at `path`; the root itself cannot be pruned this way.
- *
- * @param root - The command tree to rebuild without the selected descendant.
- * @param path - Canonical command names locating the descendant from the root.
- * @returns The rebuilt surface, or the original root when the path selects the root itself.
- */
 const pruneStaticCommand = (root: StaticCommandNode, path: ReadonlyArray<string>): StaticCommandNode =>
   O.getOrElse(
     updateStaticCommandAt(root, path, () => O.none()),
     () => root
   );
 
-/**
- * The surface with the flag named `option` (canonical name) removed from the command at `path`.
- *
- * @param root - The command tree containing the flag to remove.
- * @param path - Canonical command names locating the target command from the root.
- * @param option - The canonical flag name to remove; aliases are not matched.
- * @returns The rebuilt surface with other commands and flags preserved.
- */
 const withoutStaticCommandOption = (
   root: StaticCommandNode,
   path: ReadonlyArray<string>,
@@ -1269,6 +1202,23 @@ const withoutStaticCommandOption = (
 
 /**
  * Source-only command-surface operations used by the semantic-delta archive oracle.
+ *
+ * **Details**
+ *
+ * `staticCommandNodeEquivalent` compares names, aliases and descendants only. Declared options
+ * come from the static reader alone, because the runtime projection has no public flag accessor.
+ * An option set that cannot be derived statically leaves `options` absent instead of failing the
+ * tree: the Stage-1 gate does not read options, and the doctor reports such commands unchecked.
+ * On an unknown word, `resolveStaticCommandNode` returns the parent the word was looked up under,
+ * and `consumed` counts the unknown word. `withoutStaticCommandOption` matches the canonical flag
+ * name only, never an alias.
+ *
+ * **Gotchas**
+ *
+ * A flag whose name depends on a defaulted or non-literal factory parameter fails the derivation:
+ * only bound string arguments bind. Two revisions with equal `staticCommandTreeInputs` rows extract
+ * byte-identical command sources, except where a `.gitattributes` rule substitutes commit-specific
+ * text, which callers must rule out separately.
  *
  * **Example** (Build a current-tree probe)
  *

@@ -33,7 +33,6 @@ const outputReplacesSource = () =>
   KbError.make({ message: "Output cannot replace the source; outward output must be outside the ledger root" });
 const outwardCanaryFailed = (where: string) => KbError.make({ message: `Outward canary check failed${where}` });
 
-/** Resolve the output through its real parent and refuse targets that would replace or enclose the source. */
 const resolveBuildTarget = Effect.fnUntraced(function* (root: string, view: KbView, out: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -51,7 +50,6 @@ const resolveBuildTarget = Effect.fnUntraced(function* (root: string, view: KbVi
   return target;
 });
 
-/** An existing target must be an empty real directory, so no stale artifact survives a rebuild. */
 const requireEmptyTarget = Effect.fnUntraced(function* (target: string) {
   const fs = yield* FileSystem.FileSystem;
   if (!(yield* fs.exists(target))) return;
@@ -62,7 +60,6 @@ const requireEmptyTarget = Effect.fnUntraced(function* (target: string) {
   if (actual !== target) return yield* KbError.make({ message: "Output directory cannot be a symbolic link" });
 });
 
-/** Inspect the bytes on disk as well as the in-memory projection. */
 const requireNoCanaryOnDisk = Effect.fnUntraced(function* (target: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;

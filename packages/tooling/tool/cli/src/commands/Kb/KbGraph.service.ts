@@ -53,15 +53,6 @@ const primaryCaptureKinds = HashSet.make(
   "registry",
   "git"
 );
-/**
- * Derive viewer confidence from the selected evidence only, so an outward graph never borrows strength from
- * withheld assertions. Verified: an accepted, captured assertion from a primary capture. Reported: accepted
- * evidence only from statements (self-report, chat, session, internal files) or evidence still pending.
- * Inferred: no accepted or pending evidence.
- *
- * @param evidence - The assertions selected for the claim in the current view.
- * @returns The viewer confidence tier for that evidence.
- */
 const confidenceOf = (evidence: ReadonlyArray<Assertion>): KbGraphConfidence => {
   const accepted = A.filter(evidence, (a) => a.review === "accepted" && a.outcome === "captured");
   if (A.some(accepted, (a) => HashSet.has(primaryCaptureKinds, a.sourceRef.kind))) return "verified";
@@ -70,7 +61,6 @@ const confidenceOf = (evidence: ReadonlyArray<Assertion>): KbGraphConfidence => 
     : "inferred";
 };
 const isHttpUrl = (value: string): boolean => Str.startsWith("https://")(value) || Str.startsWith("http://")(value);
-/** Outward graphs never expose capture-system locators (local paths); a public URL or the derivation basis stands in. */
 const basisLabel = { "public-source": "public source", "own-public-work": "own public work", none: "self-report" };
 const review = Match.type<KbReviewState>().pipe(
   Match.tagsExhaustive({
@@ -127,7 +117,6 @@ export const makeKbGraphExport = Effect.gen(function* () {
     const registry = yield* ledger.readRegistry(root);
     const metadata = HashMap.fromIterable(A.map(registry, (node) => Tuple.make(node.id, node)));
     const selected = selectKb(loaded.claims, loaded.assertions, view);
-    // The graph is a current-state view in both disclosures; superseded versions stay in the N-Quads history.
     const superseded = HashSet.fromIterable(
       A.getSomes(A.map(loaded.claims, (c) => O.map(c.predecessor, claimReferenceKey)))
     );
@@ -220,7 +209,6 @@ export const makeKbGraphExport = Effect.gen(function* () {
     });
   });
   const canaryFailed = (where: string) => KbError.make({ message: `Outward canary check failed${where}` });
-  // The graph output must never resolve to one of the ledger inputs.
   const refuseLedgerTarget = Effect.fnUntraced(function* (root: string, actual: string) {
     for (const name of ["claims.jsonl", "assertions.jsonl", "registry.jsonl"]) {
       const source = path.join(root, name);
@@ -228,7 +216,6 @@ export const makeKbGraphExport = Effect.gen(function* () {
         return yield* KbError.make({ message: "Graph output cannot replace ledger input" });
     }
   });
-  // True when the target already holds these bytes; a differing nonempty target needs --force.
   const isUnchanged = Effect.fnUntraced(function* (target: string, json: string, force: boolean) {
     const old = yield* fs.readFileString(target);
     if (old === json) return true;

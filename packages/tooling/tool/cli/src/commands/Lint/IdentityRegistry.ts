@@ -105,8 +105,6 @@ const IDENTITY_PACKAGES_MODULE = "@beep/identity/packages";
 const IDENTITY_ROOT_MODULE = "@beep/identity/Root";
 const ROOT_COMPOSER_NAME = "$BeepId";
 const FIX_HINT = "Run `bun run beep lint identity-registry --fix` to register missing packages.";
-// Test sources are deliberately exempt from the local-root scan;
-// generated/output directories never carry authored composers.
 const EXCLUDED_SCAN_DIRECTORIES = HashSet.fromIterable([
   "node_modules",
   "dist",
@@ -190,14 +188,11 @@ const isIdentityRootModuleSpecifier = (specifier: string): boolean =>
   specifier !== IDENTITY_PACKAGES_MODULE &&
   (specifier === IDENTITY_PACKAGE_NAME || Str.startsWith(IDENTITY_MODULE_PREFIX)(specifier));
 
-// Modules whose evaluation loads the registry: the registry itself and the barrel that re-exports it.
 const isRegistryLoadingModuleSpecifier = (specifier: string): boolean =>
   specifier === IDENTITY_PACKAGES_MODULE || specifier === IDENTITY_PACKAGE_NAME;
 
-// A package's registry-free leaf: `src/internal/<Composer>.ts`, the composer named after its slug.
 const leafModulePathFor = (slug: string): string => `src/internal/${Str.pascalCase(slug)}Id.ts`;
 
-// Whether an import declaration survives type erasure: a side-effect import, or one with a value binding.
 const importsRuntimeBinding = (declaration: ImportDeclaration): boolean =>
   !declaration.isTypeOnly() &&
   (declaration.getNamespaceImport() !== undefined ||
@@ -205,7 +200,6 @@ const importsRuntimeBinding = (declaration: ImportDeclaration): boolean =>
     A.isReadonlyArrayEmpty(declaration.getNamedImports()) ||
     A.some(declaration.getNamedImports(), (namedImport) => !namedImport.isTypeOnly()));
 
-// What the local-root scan needs to know about the scanned file's package.
 type RootComposerScope = {
   readonly slug: string;
   readonly leafModulePath: string;
@@ -215,7 +209,6 @@ type RootComposerScope = {
 
 type ReportViolation = (kind: IdentityRegistryViolation["kind"], line: number, detail: string) => void;
 
-// The value bindings a file's identity imports introduce: namespace aliases and local names of `$BeepId`.
 type IdentityImportBindings = {
   readonly namespaceAliases: ReadonlyArray<string>;
   readonly rootComposerNames: ReadonlyArray<string>;
@@ -227,7 +220,6 @@ const outsideLeafDetailFor = (scope: RootComposerScope): string =>
 const localMakeDetail = (callee: string): string =>
   `Import the canonical composer from "${IDENTITY_PACKAGES_MODULE}" instead of building a local root via \`${callee}(...)\`.`;
 
-// Rows a value import declaration earns before its named imports are read.
 const checkImportDeclaration = (
   declaration: ImportDeclaration,
   specifier: string,
@@ -249,7 +241,6 @@ const checkImportDeclaration = (
   }
 };
 
-// Checks one value named import from an identity module; returns the local name it binds `$BeepId` to, if any.
 const checkNamedImport = (
   namedImport: ImportSpecifier,
   specifier: string,
@@ -301,7 +292,6 @@ const collectIdentityImportBindings = (
   return { namespaceAliases, rootComposerNames };
 };
 
-// How one file refers to `$BeepId`, and where its `$BeepId.create(...)` arguments go.
 type CompositionScan = {
   readonly scope: RootComposerScope;
   readonly report: ReportViolation;
@@ -315,7 +305,6 @@ const isNamedIn =
   (node: Node): boolean =>
     Node.isIdentifier(node) && A.some(names, Str.equivalence(node.getText()));
 
-// `<namespace alias>.$BeepId`
 const isNamespaceRootAccess = (node: Node, isNamespaceAlias: (node: Node) => boolean): boolean =>
   Node.isPropertyAccessExpression(node) &&
   node.getName() === ROOT_COMPOSER_NAME &&
@@ -349,7 +338,6 @@ const visitCompositionNode = (node: Node, scan: CompositionScan): void => {
   }
 };
 
-// Reports namespace uses of the root and local `make` calls; returns the arguments of every `$BeepId.create(...)`.
 const collectRootCreates = (
   sourceFile: SourceFile,
   bindings: IdentityImportBindings,
@@ -394,7 +382,6 @@ const describeCreates = (createArguments: ReadonlyArray<O.Option<Node>>): string
         ", "
       );
 
-// A leaf holds exactly one `$BeepId.create("<slug>")`, over its own package's registry slug.
 const checkLeafCreates = (
   createArguments: ReadonlyArray<O.Option<Node>>,
   scope: RootComposerScope,
@@ -428,13 +415,6 @@ const collectLocalRootComposerUses = (
   return violations;
 };
 
-/**
- * Slugs present in the generated labs segment (composer group or export
- * block) with no live lab workspace behind them, sorted.
- *
- * @param state - Labs segment diff produced by `LabIdentitySegment.diffLabIdentitySegment`.
- * @returns Sorted stale generated-lab slugs.
- */
 const staleGeneratedLabSlugs = (state: LabIdentitySegmentState): ReadonlyArray<string> =>
   A.sort(
     A.fromIterable(
@@ -446,7 +426,6 @@ const staleGeneratedLabSlugs = (state: LabIdentitySegmentState): ReadonlyArray<s
     Order.String
   );
 
-// Registration surfaces (composer slug, export const) an orphan slug still occupies.
 const orphanSurfaces = (
   composerSlugs: HashSet.HashSet<string>,
   exportSlugs: HashSet.HashSet<string>,
@@ -460,8 +439,6 @@ const orphanSurfaces = (
     Str.isNonEmpty
   );
 
-// Registry completeness rows (live workspaces missing from the registry) plus
-// orphan rows (registered slugs with no live workspace), in report order.
 const registrySlugViolations = (
   registryContent: string,
   slugs: ReadonlyArray<string>,
@@ -497,8 +474,6 @@ const registrySlugViolations = (
   return A.appendAll(completenessViolations, orphanViolations);
 };
 
-// Leaf rows: registry exports that are not an independent pure `$I.create("<slug>")` leaf whose
-// literal equals the slug, so a one-composer bundle would keep a slug it never reads.
 const registryLeafViolations = (
   registryContent: string,
   identityPackagesFilePath: string
@@ -511,8 +486,6 @@ const registryLeafViolations = (
     })
   );
 
-// Labs-segment drift rows: expected labs absent from the generated segment,
-// stale generated entries, and labs registered outside the segment.
 const labsSegmentViolations = (
   labsState: LabIdentitySegmentState,
   identityPackagesFilePath: string
@@ -550,8 +523,6 @@ const labsSegmentViolations = (
   return A.appendAll(A.appendAll(labsMissingViolations, labsExtraViolations), labsMisplacedViolations);
 };
 
-// --fix path: consolidate misplaced labs into the generated segment, register
-// missing workspace packages, log stale generated-lab removals, then re-diff.
 const applyRegistryFixes = Effect.fn("IdentityRegistry.applyRegistryFixes")(function* (
   repoRoot: string,
   identityPackagesFilePath: string,
@@ -579,7 +550,6 @@ const applyRegistryFixes = Effect.fn("IdentityRegistry.applyRegistryFixes")(func
   return yield* LabIdentitySegment.diffLabIdentitySegment(repoRoot);
 });
 
-// Local-root-composer scan across every non-identity workspace source tree.
 const collectLocalRootViolations = Effect.fn("IdentityRegistry.collectLocalRootViolations")(function* (
   repoRoot: string,
   slugsToDirs: ReadonlyArray<readonly [slug: string, dir: string]>
@@ -681,7 +651,6 @@ const collectTermRegistryViolations = Effect.fn("IdentityRegistry.collectTermReg
   );
 });
 
-// Violation report: count header, one row per violation, reported non-zero exit.
 const reportViolations = Effect.fn("IdentityRegistry.reportViolations")(function* (
   violations: A.NonEmptyReadonlyArray<IdentityRegistryViolation>
 ) {
@@ -694,11 +663,9 @@ const reportViolations = Effect.fn("IdentityRegistry.reportViolations")(function
   return yield* failWithReportedExit("lint identity-registry: violations found.");
 });
 
-// Success line summarizing registry and generated-labs-segment health.
 const identityRegistryOkLine = (workspaceCount: number, labCount: number): string =>
   `[lint:identity-registry] OK: ${workspaceCount} workspace packages registered; ${labCount} lab(s) in the generated labs segment; no orphan or local root composers.`;
 
-// The rows that say a registration has no live workspace: an orphan, or a stale generated lab.
 const OwnerlessViolationKind = LiteralKit(["orphan-registration", "labs-segment-extra"]).pipe(
   $I.annoteSchema("OwnerlessViolationKind", {
     description: "Identity-registry violation kinds that report a registration with no live workspace owner.",
@@ -706,14 +673,11 @@ const OwnerlessViolationKind = LiteralKit(["orphan-registration", "labs-segment-
 );
 const isOwnerlessViolationKind = S.is(OwnerlessViolationKind);
 
-// The skipped rows' line: how many, and which pruned workspaces they name.
 const skippedRegistrationsLine = (skipped: A.NonEmptyReadonlyArray<IdentityRegistryViolation>): string =>
   `[lint:identity-registry] skipped ${A.length(skipped)} registration row(s) whose workspace is ${prunedCheckoutSubjectsNote(
     A.map(A.dedupe(A.map(skipped, (violation) => violation.subject)), workspaceSubject)
   )}`;
 
-// The ownerless rows whose workspace the checkout pruned or owns, set aside from the rest. The
-// inventory is read only when there is an ownerless row, so a clean registry reads nothing more.
 const withoutPrunedOwners = Effect.fn("IdentityRegistry.withoutPrunedOwners")(function* (
   repoRoot: string,
   found: ReadonlyArray<IdentityRegistryViolation>
@@ -784,6 +748,11 @@ const runIdentityRegistryLint = Effect.fn("IdentityRegistry.runIdentityRegistryL
  * Reports invalid shards, shard conflicts and generated-artifact drift. A fixture
  * checkout with neither shards nor the generated data module has no term registry.
  * The --fix mode regenerates artifacts first and never edits a shard.
+ *
+ * The local-root-composer scan skips test sources and generated output directories. Each
+ * registry export must be an independent pure `$I.create("<slug>")` leaf whose literal equals
+ * its slug, so a one-composer bundle never keeps a slug it does not read. An orphan or stale
+ * generated-lab row whose workspace the checkout pruned or owns is skipped and only counted.
  *
  * **Example** (Run the identity-registry lint command)
  *

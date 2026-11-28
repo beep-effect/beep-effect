@@ -84,7 +84,6 @@ const makeEffectSchemaInventorySource = Effect.fn("EffectSchemaInventorySource.m
   const git = yield* Git;
   const reference = path.join(root, EffectSchemaInventoryReferencePath);
   const manifestPath = path.join(root, "package.json");
-  // A kit answer that is not git's failure but still the operation's: the adapter's exit-code wording.
   const refusal = <E>(
     invocation: GitInvocation,
     onFailure: (commandLine: string, detail: string) => E,
@@ -118,7 +117,6 @@ const makeEffectSchemaInventorySource = Effect.fn("EffectSchemaInventorySource.m
           reference,
           `${reference} is not a git checkout (${commandLine}: ${detail}); run bun run beep refs provision.`
         );
-      // `--git-common-dir` resolves exactly where `--git-dir` does, so it is the checkout probe.
       yield* git
         .commonDir(reference)
         .pipe(Effect.mapError(adaptGitKitError(GitCommand.commonDir(), gitAdapter(notACheckout))));

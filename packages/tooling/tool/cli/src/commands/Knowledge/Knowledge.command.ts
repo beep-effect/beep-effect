@@ -112,9 +112,6 @@ const indentDetail = (detail: string): string =>
     "\n"
   );
 
-// A skipped run must never read as a clean one, so the missing coverage is named on the same line
-// as the policy rather than left for the reader to infer from absent findings, and an involuntary
-// skip prints the failure that caused it right underneath.
 const renderProbePolicy = (report: KnowledgeSemanticDeltaReport): string => {
   if (KnowledgeProbePolicy.is.enabled(report.probePolicy)) {
     return `probe-policy: ${report.probePolicy}`;
@@ -292,7 +289,6 @@ const classificationCounts = (report: KnowledgeRefsReport): ReadonlyArray<string
     return `  ${Str.padEnd(26)(classification)} ${count}`;
   });
 
-/** Highest observation density first, then path, so the census listing is stable across runs. */
 type DocumentDensity = {
   readonly documentId: string;
   readonly count: number;
@@ -314,10 +310,8 @@ const topDocuments = (report: KnowledgeRefsReport): ReadonlyArray<string> =>
   );
 
 const OMITTED_HINT = "row(s) omitted (--verbose lists them)";
-/** Fold label for the skipped-blob rows; distinct from the `skipped:` header total on purpose. */
 const SKIPPED_FOLD_LABEL = "skipped-blobs";
 
-// Per-class row counts of the quiet observations in one listing, keyed by quiet class.
 const quietClassCounts: (
   observations: ReadonlyArray<KnowledgeRefObservation>
 ) => HashMap.HashMap<KnowledgeRefQuietClassification, number> = flow(
@@ -336,7 +330,6 @@ const quietClassCounts: (
   )
 );
 
-// One omitted-count line per quiet class with rows in the listing, in classification-domain order.
 const quietClassLines = (observations: ReadonlyArray<KnowledgeRefObservation>): ReadonlyArray<string> => {
   const counts = quietClassCounts(observations);
   return A.getSomes(
@@ -346,7 +339,6 @@ const quietClassLines = (observations: ReadonlyArray<KnowledgeRefObservation>): 
   );
 };
 
-// The skipped-blob rows, or one omitted-count line standing in for them when the listing is quiet.
 const skippedLines = (report: KnowledgeRefsReport, options: { readonly verbose: boolean }): ReadonlyArray<string> =>
   Match.value(options.verbose).pipe(
     Match.when(true, () => A.map(report.skipped, (blob) => `  ${blob.reason} ${blob.path}`)),
@@ -629,7 +621,6 @@ const doctorJsonFlag = Flag.Boolean("json").pipe(
   Flag.withDescription("Render the whole doctor report, every finding included, as one JSON line")
 );
 
-// One line per finding kind present, in finding-kind domain order.
 const doctorKindCounts = (report: KnowledgeDoctorReport): ReadonlyArray<string> =>
   A.getSomes(
     A.map(KnowledgeFindingKind.literals, (kind) =>
@@ -650,15 +641,12 @@ const renderAttribution = (attribution: KnowledgeRootAttribution): string =>
       ` ${attribution.change} ${attribution.removedPath} in ${Str.slice(0, 10)(attribution.commit)} "${attribution.subject}"${repair}`
   );
 
-// One blocking root: its group and the split of its dependents by severity.
 interface BlockingRoot {
   readonly advisory: number;
   readonly blocking: number;
   readonly group: KnowledgeCauseGroup;
 }
 
-// The per-root number counts blocking findings only (a blocking delegated root and its blocking
-// dependents), so the lines add up to the headline; advisory dependents are named beside it.
 const renderRoot = ({ advisory, blocking, group }: BlockingRoot): string =>
   `  ${Str.padStart(6)(`${blocking}`)} ${group.causeKey} [${group.rootOrigin}]${pipe(
     group.attribution,
@@ -666,13 +654,11 @@ const renderRoot = ({ advisory, blocking, group }: BlockingRoot): string =>
     O.getOrElse(() => "")
   )}${advisory > 0 ? ` (+${advisory} advisory)` : ""}`;
 
-// Roots with the most blocking findings (root included) first; ties read in cause-key order.
 const rootListingOrder: Order.Order<BlockingRoot> = Order.combine(
   Order.flip(Order.mapInput(Order.Number, (root: BlockingRoot) => root.blocking)),
   Order.mapInput(Order.String, (root: BlockingRoot) => root.group.causeKey)
 );
 
-// A group is blocking when its delegated root or any dependent is a blocking finding.
 const blockingRoots = (report: KnowledgeDoctorReport): ReadonlyArray<BlockingRoot> => {
   const blockingIds = HashSet.fromIterable(
     A.map(
@@ -681,7 +667,6 @@ const blockingRoots = (report: KnowledgeDoctorReport): ReadonlyArray<BlockingRoo
     )
   );
   const isBlocking = (id: KnowledgeFindingId) => HashSet.has(blockingIds, id);
-  // A blocking delegated root counts toward its own line, so the lines sum to the headline.
   const roots = A.map(report.groups, (group): BlockingRoot => {
     const dependents = A.length(A.filter(group.dependents, isBlocking));
     return {
@@ -780,7 +765,6 @@ export const renderKnowledgeDoctorHumanReport = (report: KnowledgeDoctorReport):
 const OMITTED_DOCTOR_HINT = "row(s) omitted (--json lists them)";
 const UNCLASSIFIED_DOCUMENT_LIMIT = 10;
 
-// Count pairs sorted by count descending, then key, so the listing reads the same on every run.
 const countPairOrder: Order.Order<readonly [string, number]> = Order.combine(
   Order.flip(Order.mapInput(Order.Number, ([, count]: readonly [string, number]) => count)),
   Order.mapInput(Order.String, ([key]: readonly [string, number]) => key)
@@ -796,7 +780,6 @@ const countBy = (keys: ReadonlyArray<string>): ReadonlyArray<readonly [string, n
     countPairOrder
   );
 
-// The K9 burn-down worklist by evaluator and by document (risk 3 of the C PR 2b verdict).
 const unclassifiedWorklist = (report: KnowledgeDoctorReport): ReadonlyArray<string> => {
   const rows = A.filter(report.findings, (row) => row.finding.kind === "unclassified-reference-span");
   return A.match(rows, {
@@ -818,7 +801,6 @@ const unclassifiedWorklist = (report: KnowledgeDoctorReport): ReadonlyArray<stri
   });
 };
 
-// "verified" counts spans checked at the tree, failing ones included (risk 4 of the C PR 2b verdict).
 const verifiedNote = (report: KnowledgeDoctorReport): string =>
   `  (verified = checked at the tree, not passed: ${A.length(
     A.filter(report.findings, (row) => row.spanClass === "verified" && row.origin === "owned")
@@ -959,8 +941,6 @@ export const renderKnowledgeLeasesReport = (report: KnowledgeLeasesReport): stri
     "\n"
   );
 
-// C8 condition (i): `--accept-mint` applies only in CI, to the mint App's pull request from the mint
-// branch of this repository. The command checks it itself instead of trusting its caller.
 const mintPullRequestReasons = Effect.gen(function* () {
   const ci = yield* isCi;
   const reasons = yield* readKnowledgeMintPullRequest().pipe(Effect.map(knowledgeMintPullRequestRefusals));

@@ -176,7 +176,6 @@ const lintSnapshot = Effect.fn("Holds.lintSnapshot")(function* (live: ReadonlyAr
   return lintHolds(snapshot, live);
 });
 
-// The anchor keys each hold lost, from the Orphaned findings.
 const goneAnchorsByHold = (findings: ReadonlyArray<HoldLintFinding>): HashMap.HashMap<string, ReadonlyArray<string>> =>
   A.reduce(findings, HashMap.empty<string, ReadonlyArray<string>>(), (gone, finding) =>
     finding._tag === "Orphaned"
@@ -188,7 +187,6 @@ const goneAnchorsByHold = (findings: ReadonlyArray<HoldLintFinding>): HashMap.Ha
       : gone
   );
 
-// Every anchor the lint can check is gone, so nothing in config still enforces the hold.
 const isFullyOrphaned = (version: HoldClaim, gone: ReadonlyArray<string>): boolean =>
   A.length(gone) ===
   A.length(A.filter(holdProposition(version).subject.anchors, (anchor) => anchor._tag !== "SyncpackHeld"));
@@ -229,7 +227,6 @@ const writeLintFixes = Effect.fn("Holds.writeLintFixes")(function* (
   yield* ledger.appendEvents(A.map(tombstones, (tombstone) => tombstone.event));
   const currentVersions5 = yield* ledger.currentClaims;
   yield* ledger.writeHeldList(heldListFor(currentVersions5));
-  // A hold that lost only some anchors may still apply, so it stays live and the lint keeps failing on it.
   const kept = A.filter(live, (version) =>
     O.exists(HashMap.get(gone, holdProposition(version).holdId), (keys) => !isFullyOrphaned(version, keys))
   );
@@ -254,6 +251,10 @@ const writeLintFixes = Effect.fn("Holds.writeLintFixes")(function* (
  *
  * Unrecorded sites cannot be fixed mechanically: each needs a hold record with
  * an exit condition. Any finding left after `write` fails the program.
+ *
+ * A record is tombstoned only when every anchor the lint can check (all but
+ * held-list patterns) is gone. One that keeps some anchors may still apply, so
+ * it stays live and the lint keeps failing on it until it is fixed by hand.
  *
  * **Example** (Build the lint program)
  *
@@ -316,7 +317,6 @@ const exitText = (version: HoldClaim): string =>
     EscalateToGoal: ({ slug }) => `EscalateToGoal goals/${slug}`,
   });
 
-// A probe that cannot run returns no run, so its hold keeps whatever it had and cannot be retired this time.
 const probeNow = Effect.fn("Holds.probeNow")(function* (version: HoldClaim, commitSha: string) {
   const probe = yield* HoldProbe;
   return yield* probe
@@ -342,7 +342,6 @@ const flipLine = (version: HoldClaim, unpinned: boolean, dryRun: boolean): strin
 
 const maxLifetimeMillis = 180 * 24 * 60 * 60 * 1000;
 
-// A hold past its lease or its 180-day lifetime escalates whatever its probe says.
 const escalationLine = (all: ReadonlyArray<HoldClaim>, now: DateTime.Utc) => (version: HoldClaim) => {
   const firstRecorded = A.reduce(
     A.filter(all, (row) => row.logicalKey === version.logicalKey),
@@ -376,7 +375,7 @@ const escalationLine = (all: ReadonlyArray<HoldClaim>, now: DateTime.Utc) => (ve
  * reported instead of retired. Retired holds get a `Retracted` tombstone and the
  * syncpack held list is regenerated, so the catalog bump that follows moves the
  * package in the same change. A hold past its lease or 180 days after its first
- * version is reported for escalation.
+ * version is reported for escalation and never retired, whatever its probe says.
  *
  * **Example** (Build the update program)
  *
@@ -402,7 +401,6 @@ export const runHoldsUpdate = Effect.fn("Holds.updateProgram")(function* (input:
     (version) => Effect.map(ledger.runsFor(version), (runs) => [version, runs] as const),
     { concurrency: 1 }
   );
-  // A flipped hold is probed again, so its retirement rests on a run against the version the bump will install.
   const toProbe = A.filter(
     stored,
     ([version, runs]) =>
@@ -414,14 +412,12 @@ export const runHoldsUpdate = Effect.fn("Holds.updateProgram")(function* (input:
     ([version, runs]) => Effect.map(probeNow(version, input.commitSha), (result) => ({ version, runs, ...result })),
     { concurrency: 1 }
   );
-  // Plan on the fresh runs in memory, so a dry run previews what a real run would do.
   const verdicts = A.map(stored, ([version, runs]) => {
     const fresh = A.findFirst(probed, (entry) => holdClaimKey(entry.version) === holdClaimKey(version));
     const freshRun = O.flatMap(fresh, (entry) => entry.run);
     const failed = O.isSome(fresh) && O.isNone(freshRun);
     return { version, freshRun, flipped: !failed && confirmHoldRuns([...O.toArray(freshRun), ...runs]) === "Flipped" };
   });
-  // A hold past its lease or 180-day lifetime escalates whatever its probe says, so it is never auto-retired.
   const allVersions7 = yield* ledger.allClaims;
   const escalate = escalationLine(allVersions7, now);
   const flipped = A.filter(verdicts, (entry) => entry.flipped);
@@ -478,7 +474,6 @@ const falsifierText = (version: HoldClaim): string =>
 const whyLines = Effect.fn("Holds.whyLines")(function* (head: HoldClaim, versionCount: number) {
   const ledger = yield* HoldLedger;
   const proposition = holdProposition(head);
-  // Same liveness as `liveHoldVersions`; only a live head reads probe runs, so damaged run history cannot hide a retirement.
   const status =
     head.review._tag === "Retracted"
       ? `tombstoned ${head.review.at.pipe(DateTime.formatIso, Str.slice(0, 10))}: ${head.review.reason}`
@@ -499,6 +494,11 @@ const whyLines = Effect.fn("Holds.whyLines")(function* (head: HoldClaim, version
 /**
  * Explain every hold record that governs a package: live holds with their
  * lease and confirmed verdict, and tombstoned holds with why they ended.
+ *
+ * **Details**
+ *
+ * Only a live head reads its probe runs. A tombstoned or expired record reports
+ * how it ended without them, so damaged run history cannot hide a retirement.
  *
  * **Example** (Build the why program)
  *

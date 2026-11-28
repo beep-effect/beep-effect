@@ -45,10 +45,8 @@ import type {
   RetiredEffectPathsOptions,
 } from "./RetiredEffectPaths.model.ts";
 
-/** `effect/` + `unstable` at a word boundary, plus any `/segment` chain that follows it. */
 const MODULE_SPECIFIER_PATTERN = /effect\/unstable\b(?:\/[\w*-]+)*/gu;
 
-/** A retired `unstable/<module>` source directory, or the retired arbitrary module file. */
 const SOURCE_PATH_PATTERN =
   /(?<![\w-])unstable\/(?:arbitrary\/Arbitrary\.(?:d\.ts|ts|js)\b|(?:ai|cli|cluster|devtools|encoding|eventlog|http|httpapi|net|observability|persistence|process|reactivity|rpc|schema|socket|sql|workers|workflow|arbitrary)\b)/gu;
 
@@ -60,16 +58,9 @@ const SOURCE_PATH_PATTERN =
  */
 const LINK_FRAGMENT_PATTERN = /\](?:\(|:[ \t]*)[^\s)#]*(?:#[^\s)]*|(?=[\s)]|$))/gu;
 
-/**
- * A retired path's GitHub heading slug (`effect/unstable/reactivity/Atom` →
- * `effectunstablereactivityatom`), searched only inside a link fragment. The
- * slug runs to the next hyphen, since slugging turns the heading's spaces into
- * hyphens.
- */
-const ANCHOR_SLUG_PATTERN = /effectunstable[\p{L}\p{N}_]*/gu;
+const HEADING_SLUG_ENDS_AT_HYPHEN_PATTERN = /effectunstable[\p{L}\p{N}_]*/gu;
 
-/** Cheap pre-filter: every match of every rule contains this literal. */
-const RULE_LITERAL = "unstable";
+const LITERAL_IN_EVERY_RULE_MATCH = "unstable";
 
 type RawMatch = {
   readonly index: number;
@@ -92,7 +83,7 @@ const collectAnchorSlugMatches = (content: string): ReadonlyArray<RawMatch> =>
     (link: RawMatch) => {
       const fragmentStart = Str.length(A.headNonEmpty(Str.split(link.text, "#"))) + 1;
       return A.map(
-        collectMatches(Str.slice(fragmentStart)(link.text), ANCHOR_SLUG_PATTERN, "anchor-slug"),
+        collectMatches(Str.slice(fragmentStart)(link.text), HEADING_SLUG_ENDS_AT_HYPHEN_PATTERN, "anchor-slug"),
         (match) => ({
           ...match,
           index: link.index + fragmentStart + match.index,
@@ -217,7 +208,7 @@ export const scanText: {
   (content: string): (file: string) => ReadonlyArray<RetiredEffectPathFinding>;
   (file: string, content: string): ReadonlyArray<RetiredEffectPathFinding>;
 } = F.dual(2, (file: string, content: string): ReadonlyArray<RetiredEffectPathFinding> => {
-  if (!F.pipe(content, Str.includes(RULE_LITERAL))) {
+  if (!F.pipe(content, Str.includes(LITERAL_IN_EVERY_RULE_MATCH))) {
     return A.empty();
   }
   const moduleMatches = collectMatches(content, MODULE_SPECIFIER_PATTERN, "module-specifier");

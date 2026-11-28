@@ -224,7 +224,6 @@ const validateEntriesStillMatchViolations = Effect.fn(function* (
       continue;
     }
 
-    // Read through the FileSystem service so the check honours the provided platform layer.
     const sourceText = yield* fs.readFileString(absoluteEntryPath);
     const sourceFile = project.createSourceFile(absoluteEntryPath, sourceText, { overwrite: true });
 

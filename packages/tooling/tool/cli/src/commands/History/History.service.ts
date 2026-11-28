@@ -43,10 +43,8 @@ import type {
 
 const $I = $RepoCliId.create("commands/History/History.service");
 
-/** How many note blobs are hashed at once when a published ref is compared. */
-const HASH_CONCURRENCY = 8;
+const NOTE_BLOB_HASH_CONCURRENCY = 8;
 
-/** How many SHAs of one category the human summary lists before eliding the rest. */
 const LISTED_SHAS = 20;
 
 /**
@@ -67,6 +65,11 @@ export interface HistoryNotesShape {
    * row. A note matches when its blob id equals the blob id of
    * `historyNoteBody(row)`, so no note blob is read. The report never fails
    * the effect for drift; {@link historyNotesCheckProblems} decides that.
+   *
+   * **Gotchas**
+   *
+   * A shallow clone fails with {@link HistoryGitError}: its `rev-list` covers only the
+   * shallow window, so valid keys would read as unreachable.
    */
   readonly check: (
     options: HistoryNotesCheckOptions
@@ -150,12 +153,6 @@ const gitError = (operation: string, message: string) => (cause: unknown) =>
   HistoryGitError.make({ operation, message, cause });
 
 const sortShas = A.sort(Order.String);
-/**
- * The commit SHA of one map row.
- *
- * @param row - A `[sha, message]` map entry.
- * @returns The entry's commit SHA.
- */
 const rowKey = ([key]: readonly [string, HistoryCommitMessage]): string => key;
 const byKey = Order.mapInput(Order.String, rowKey);
 
@@ -207,7 +204,7 @@ const makeHistoryNotes = Effect.gen(function* () {
             onSuccess: (expected) => expected !== note,
           })
         ),
-      { concurrency: HASH_CONCURRENCY }
+      { concurrency: NOTE_BLOB_HASH_CONCURRENCY }
     );
     return {
       notes: notes.length,
@@ -218,14 +215,10 @@ const makeHistoryNotes = Effect.gen(function* () {
     };
   });
 
-  // Decodes the map and proves every key reachable from `base`; shared by
-  // check and write so both refuse a shallow clone the same way.
   const loadRows = Effect.fn("HistoryNotes.loadRows")(function* (root: string, mapPath: string, base: string) {
     const map = yield* readMap(root, mapPath);
     const rows = A.sort(R.toEntries(map), byKey);
     const keys = A.map(rows, rowKey);
-    // A shallow clone's rev-list is only the shallow window, so valid keys
-    // would read as unreachable: fail closed instead of reporting them.
     const shallow = yield* git
       .isShallow(root)
       .pipe(Effect.mapError(gitError("is-shallow", "Cannot tell whether this clone is shallow.")));
@@ -310,8 +303,6 @@ const makeHistoryNotes = Effect.gen(function* () {
     });
   });
 
-  // Makes `value` present in (`wanted`) or absent from the multi-valued `key`,
-  // leaving the key's other values alone; reports what changed.
   const reconcileConfigValue = Effect.fn("HistoryNotes.reconcileConfigValue")(function* (
     root: string,
     key: string,
@@ -332,8 +323,6 @@ const makeHistoryNotes = Effect.gen(function* () {
     return wanted ? HistoryConfigChange.Enum.added : HistoryConfigChange.Enum.removed;
   });
 
-  // Probes origin for the overlay ref, then reconciles the origin refspec and
-  // (with `fetch`) fetches the ref; an unpublished ref is a notice.
   const syncOrigin = Effect.fn("HistoryNotes.syncOrigin")(function* (root: string, fetch: boolean) {
     const published = yield* git.lsRemote(root, "origin", { patterns: [HISTORY_NOTES_REF] }).pipe(
       Effect.mapBoth({
@@ -341,8 +330,6 @@ const makeHistoryNotes = Effect.gen(function* () {
         onSuccess: A.some((entry) => entry.ref === HISTORY_NOTES_REF),
       })
     );
-    // A refspec for an unpublished ref would break every plain `git fetch`,
-    // so an unpublished ref drops any copy.
     const fetchRefspec = yield* reconcileConfigValue(
       root,
       "remote.origin.fetch",
@@ -451,13 +438,6 @@ export const historyNotesCheckProblems = (report: HistoryNotesCheckReport): Read
     ),
   ]);
 
-/**
- * One labelled SHA category, listing at most {@link LISTED_SHAS} and counting the rest.
- *
- * @param label - The category name printed before each SHA.
- * @param shas - The category's SHAs, already sorted.
- * @returns One indented line per listed SHA, plus an "and N more" line when elided.
- */
 const shaLines = (label: string, shas: ReadonlyArray<string>): ReadonlyArray<string> => [
   ...A.map(A.take(shas, LISTED_SHAS), (sha) => `  ${label}: ${sha}`),
   ...(shas.length > LISTED_SHAS ? [`  ${label}: ... and ${shas.length - LISTED_SHAS} more`] : []),

@@ -30,7 +30,6 @@ import type * as HashMap from "effect/HashMap";
 const $I = $RepoCliId.create("commands/Lint/EcosystemPolarity");
 const ECOSYSTEM_ROOT = "packages/ecosystem";
 const SOURCE_EXTENSIONS: ReadonlyArray<string> = [".ts", ".tsx", ".mts", ".cts"];
-/** Every `@beep/*` module specifier is a forbidden repo-internal edge (`forbidImports` is a prefix match before `*`). */
 const SOURCE_IMPORT_RULES: ReadonlyArray<BoundaryRule.Encoded> = [{ forbidImports: ["@beep/*"] }];
 
 /**
@@ -312,6 +311,11 @@ const manifestViolations = Effect.fn("EcosystemPolarity.manifestViolations")(fun
 
 /**
  * Check ecosystem members for forbidden repo-internal runtime edges.
+ *
+ * **Details**
+ *
+ * Every beep-scope module specifier in a member source is a forbidden edge: the rule matches the
+ * scope as a prefix, so no workspace package is exempt.
  *
  * **Example** (Run a full-repo polarity check)
  *

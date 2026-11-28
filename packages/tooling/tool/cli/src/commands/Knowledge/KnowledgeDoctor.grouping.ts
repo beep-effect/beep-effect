@@ -39,10 +39,6 @@ const $I = $RepoCliId.create("commands/Knowledge/KnowledgeDoctor.grouping");
 
 const isCommitSha = S.is(KnowledgeCommitSha);
 
-/* -------------------------------------------------------------------------------------------------
- * Delegated goals-doctor findings
- * ---------------------------------------------------------------------------------------------- */
-
 const goalsDoctorDetail = (finding: GoalDoctorFinding): string =>
   pipe(Str.slice(Str.length(`${finding.slug} ${finding.kind}`))(finding.key), Str.trimStart);
 
@@ -140,10 +136,6 @@ export const knowledgeDelegatedRow = (finding: GoalDoctorFinding): KnowledgeDele
   });
 };
 
-/* -------------------------------------------------------------------------------------------------
- * Path removals
- * ---------------------------------------------------------------------------------------------- */
-
 /**
  * The `Git.log` options whose listing {@link knowledgePathRemovalsFromLog} reads, newest commit first.
  *
@@ -170,7 +162,6 @@ export const KNOWLEDGE_PATH_REMOVAL_LOG = {
   quotePath: false,
 } as const;
 
-// A deletion removes its path; a rename removes its source and names its target.
 const removalOfChange = (commit: KnowledgeCommitSha, subject: string, change: NameStatusEntry) =>
   Match.value(change.status).pipe(
     Match.when("deleted", () =>
@@ -243,24 +234,22 @@ export const knowledgePathRemovalsFromLog: (
   entries: ReadonlyArray<CommitLogEntry>
 ) => ReadonlyArray<KnowledgePathRemoval> = A.flatMap(commitRemovals);
 
-// A removed path and every directory above it: the keys the removal index files it under.
 const pathPrefixes = (path: string): ReadonlyArray<string> =>
   A.drop(
     A.scan(Str.split("/")(path), "", (prefix, segment) => (Str.isEmpty(prefix) ? segment : `${prefix}/${segment}`)),
     1
   );
 
-// Each removed path and every directory above it, mapped to its newest removal.
 const removalIndex = (removals: ReadonlyArray<KnowledgePathRemoval>): HashMap.HashMap<string, KnowledgePathRemoval> => {
-  const index = MutableHashMap.empty<string, KnowledgePathRemoval>();
+  const newestRemovalByKey = MutableHashMap.empty<string, KnowledgePathRemoval>();
   for (const removal of removals) {
     for (const key of pathPrefixes(removal.path)) {
-      if (!MutableHashMap.has(index, key)) {
-        MutableHashMap.set(index, key, removal);
+      if (!MutableHashMap.has(newestRemovalByKey, key)) {
+        MutableHashMap.set(newestRemovalByKey, key, removal);
       }
     }
   }
-  return HashMap.fromIterable(index);
+  return HashMap.fromIterable(newestRemovalByKey);
 };
 
 /**
@@ -333,7 +322,6 @@ export const knowledgeRemovalCommitsFromLog = (
     isCommitSha(entry.sha) ? [KnowledgeRemovalCommit.make({ commit: entry.sha, paths: entry.paths })] : A.empty()
   );
 
-// Claims every still-unclaimed target a commit removes, itself or a path under it; true when any.
 const claimTargets = (paths: ReadonlyArray<string>, remaining: MutableHashSet.MutableHashSet<string>): boolean => {
   const claimed = A.filter(A.flatMap(paths, pathPrefixes), (key) => MutableHashSet.has(remaining, key));
   for (const key of claimed) {
@@ -407,10 +395,6 @@ export const selectKnowledgeRemovalCommits: {
   (history: ReadonlyArray<KnowledgeRemovalCommit>, query: KnowledgePathRemovalQuery): ReadonlyArray<KnowledgeCommitSha>;
 } = dual(2, selectRemovalCommits);
 
-/* -------------------------------------------------------------------------------------------------
- * Cause targets and attribution
- * ---------------------------------------------------------------------------------------------- */
-
 const CAUSE_TARGETS: ReadonlyArray<readonly [string, (rest: string) => string]> = [
   ["path:", (rest) => rest],
   ["goals-doctor:manifest-missing:", (rest) => `goals/${rest}/ops/manifest.json`],
@@ -470,8 +454,6 @@ export const knowledgeCauseTargetPath = (causeKey: string): O.Option<string> =>
 export const knowledgeRemovalTargets = (findings: ReadonlyArray<KnowledgeDoctorFinding>): HashSet.HashSet<string> =>
   HashSet.fromIterable(A.getSomes(A.map(findings, (finding) => knowledgeCauseTargetPath(finding.causeKey))));
 
-// A rename of the target itself proposes its new path; a rename of a file under a directory target
-// proposes the directory the file moved into, when the file kept its relative place.
 const repairTarget = (target: string, removal: KnowledgePathRemoval): O.Option<string> =>
   O.flatMap(removal.renamedTo, (renamedTo) => {
     const suffix = Str.slice(Str.length(target))(removal.path);
@@ -488,10 +470,6 @@ const attributionOf = (target: string, removal: KnowledgePathRemoval): Knowledge
     removedPath: removal.path,
     repairTarget: repairTarget(target, removal),
   });
-
-/* -------------------------------------------------------------------------------------------------
- * Grouping
- * ---------------------------------------------------------------------------------------------- */
 
 const dependentsByCause = (
   findings: ReadonlyArray<KnowledgeDoctorFinding>

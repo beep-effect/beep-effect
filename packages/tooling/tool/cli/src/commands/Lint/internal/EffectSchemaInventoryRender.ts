@@ -35,10 +35,8 @@ import type {
   EffectSchemaInventoryRow,
 } from "../EffectSchemaInventory.schemas.ts";
 
-/** Module list source named in the index header. */
 const MODULE_LIST_PATH = "packages/tooling/tool/cli/src/commands/Lint/internal/EffectSchemaInventoryModules.ts";
 
-/** File name of the generated index inside the fixture directory. */
 const INDEX_FILE = "INDEX.md";
 
 const hashBytes = S.decodeUnknownEffect(Sha256HexFromBytes);

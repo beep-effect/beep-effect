@@ -36,7 +36,6 @@ import type {
 
 const LOG_PREFIX = "[effect-schema-inventory]";
 
-/** Every request resolves to this effect, so the three cases share one error and service union. */
 type RunEffect = Effect.Effect<
   void,
   | EffectSchemaInventoryCatalogPinError
@@ -92,9 +91,6 @@ export const effectSchemaInventoryRequestFromFlags = Effect.fn("EffectSchemaInve
   }
 );
 
-// Reads every module at the pin and extracts its rows. An empty result fails: a zero-row
-// inventory means the sources or the extractor broke, and must never be written or accepted by
-// `--check` (a single empty module, such as the side-effect-only `enable` entry, is legitimate).
 const extractPinned = Effect.fn("EffectSchemaInventoryRun.extractPinned")(function* () {
   const source = yield* EffectSchemaInventorySource;
   const pin = yield* source.readPin;
@@ -148,6 +144,9 @@ export const generateEffectSchemaInventory = Effect.fn("EffectSchemaInventoryRun
  * root must re-render to its committed bytes. Both need the pinned
  * sources, so this is the local proof; hosted CI verifies the committed rows only and cannot
  * verify prompts.
+ *
+ * Zero rows in total fails the check as it fails generation; one module with no rows, such as a
+ * side-effect-only entry, passes.
  *
  * **Example** (Build a check)
  *

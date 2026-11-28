@@ -52,16 +52,10 @@ const hostOf = (labels: ReadonlyArray<string>): string => A.join(labels, ".");
 
 const publicOriginHost = hostOf(publicOriginHostLabels);
 
-/** The public origin, assembled at runtime so this file never spells it. */
 const publicOrigin = `https://${publicOriginHost}`;
 
-/** A host may not continue as a longer DNS name (`.devtools`, `.shop`, `.sh.example`). */
 const HOST_END = String.raw`(?![\w-]|\.[\w-])`;
 
-/**
- * `//` as written, JSON-escaped (`\/\/`), or percent-encoded (`%2F%2F`), with an
- * optional http(s) scheme in the same spelling.
- */
 const AUTHORITY_PREFIX = String.raw`(?:https?(?::|%3A))?(?:\/\/|\\\/\\\/|%2F%2F)`;
 
 const RETIRED_HOSTS = A.join(
@@ -69,18 +63,11 @@ const RETIRED_HOSTS = A.join(
   "|"
 );
 
-/**
- * Rule 1: a retired host, or any subdomain of one, after an authority prefix or
- * after `@` (an email domain), or standing alone (`<host>`, `docs.<host>`,
- * `docs.<host>/page`) where it cannot be part of a longer name or a file path
- * (`scripts/<host>`).
- */
 const RETIRED_AUTHORITY_PATTERN = new RegExp(
   String.raw`(?:(?:${AUTHORITY_PREFIX}|@)|(?<![\w.@/\\-]))(?:[\w-]+\.)*(?:${RETIRED_HOSTS})${HOST_END}`,
   "giu"
 );
 
-/** Rule 2: the apex or `www` public origin with an http(s) scheme; service subdomains do not match. */
 const PUBLIC_ORIGIN_PATTERN = new RegExp(
   String.raw`(?<![\w.-])https?:\/\/(?:www\.)?${Regex.escape(publicOriginHost)}${HOST_END}`,
   "giu"
@@ -132,7 +119,6 @@ const collectMatches = (content: string, pattern: RegExp): ReadonlyArray<RawMatc
     )
   );
 
-/** `//` as written, JSON-escaped (`\/\/`), or percent-encoded (`%2F%2F`, any case): the match is an IRI, not prose. */
 const AUTHORITY_SEPARATOR_PATTERN = /\/\/|\\\/\\\/|%2F%2F/iu;
 
 const defang = (host: string): string => F.pipe(host, Str.replaceAll(".", "[.]"));

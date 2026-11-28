@@ -24,10 +24,8 @@ import type * as Path from "effect/Path";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { NoTrackedPythonOptions } from "./NoTrackedPython.model.ts";
 
-/** `git ls-files --stage` mode of a gitlink, which names a submodule commit, not a file. */
 const GITLINK_MODE = "160000";
 
-/** One `git ls-files` pathspec per banned extension; git matches `*` across directories. */
 const PYTHON_PATHSPECS = A.map(TrackedPythonExtension.literals, (extension) => `*${extension}`);
 
 /**

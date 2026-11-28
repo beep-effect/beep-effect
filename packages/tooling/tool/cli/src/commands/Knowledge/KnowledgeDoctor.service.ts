@@ -178,10 +178,6 @@ const $I = $RepoCliId.create("commands/Knowledge/KnowledgeDoctor.service");
 
 const nfc = Str.normalize("NFC");
 
-/* -------------------------------------------------------------------------------------------------
- * Tree contract
- * ---------------------------------------------------------------------------------------------- */
-
 type KnowledgeTreeEntryIndex = {
   readonly directories: HashSet.HashSet<string>;
   readonly paths: HashSet.HashSet<string>;
@@ -281,8 +277,6 @@ export interface KnowledgeEvaluator {
 export const makeKnowledgeTreeEntryIndex = (entries: ReadonlyArray<KnowledgeTrackedEntry>): KnowledgeTreeEntryIndex => {
   const directories = MutableHashSet.empty<string>();
   for (const entry of entries) {
-    // Walk the parent chain deepest first and stop at the first directory already indexed: it was
-    // added together with every one of its own parents, so the rest of the chain is present too.
     let parent = parentTreeDirectory(entry.path);
     while (O.isSome(parent) && !MutableHashSet.has(directories, parent.value)) {
       MutableHashSet.add(directories, parent.value);
@@ -295,7 +289,6 @@ export const makeKnowledgeTreeEntryIndex = (entries: ReadonlyArray<KnowledgeTrac
   };
 };
 
-// The directory that contains a tracked path: everything before its last `/`, or none at the top level.
 const parentTreeDirectory = (repoPath: string): O.Option<string> =>
   O.map(Str.lastIndexOf("/")(repoPath), (index) => Str.slice(0, index)(repoPath));
 
@@ -352,10 +345,6 @@ export const KNOWLEDGE_PRODUCER_OUTPUTS: ReadonlyArray<KnowledgeProducerOutput> 
   KnowledgeProducerOutput.make({ producerId: "producer://explorations/atlas", targetPath: EXPLORATION_ATLAS_PATH }),
 ];
 
-/* -------------------------------------------------------------------------------------------------
- * Span extraction
- * ---------------------------------------------------------------------------------------------- */
-
 const HISTORICAL_BLOCK_PATTERN = /^\s*<!-- beep:historical commit=([0-9a-f]{40}) -->\s*$/u;
 const HISTORICAL_FRONTMATTER_PATTERN = /^beep-historical:\s*["']?([0-9a-f]{40})["']?\s*$/u;
 const GENERATED_INFO_PATTERN = /(?:^|\s)beep:generated=(\S+)/u;
@@ -363,8 +352,6 @@ const FRONTMATTER_VALUE_FIRST_LINE = 2;
 
 const isBlank = (line: KnowledgeDocumentFenceLine): boolean => Str.isEmpty(Str.trim(line.text));
 
-// The `beep-historical:` key of a closed YAML frontmatter block, numbered as a document line: the
-// block's first value line is line 2, after the opening fence.
 const documentCitation = (text: string): O.Option<KnowledgeHistoricalCitation> =>
   pipe(
     O.fromUndefinedOr(FrontmatterSource.split(text).frontmatter),
@@ -382,8 +369,6 @@ const documentCitation = (text: string): O.Option<KnowledgeHistoricalCitation> =
     )
   );
 
-// The 0-based [start, end] line range of the Markdown block that follows a block marker: a fence
-// through its closing delimiter, or a run of non-blank prose lines up to the next blank line.
 const nextBlockRange = (
   lines: ReadonlyArray<KnowledgeDocumentFenceLine>,
   markerIndex: number
@@ -438,8 +423,6 @@ const blockCitations = (
 const spanLocation = (documentPath: string, line: number, column: number): KnowledgeFindingLocation =>
   KnowledgeFindingLocation.make({ path: documentPath, line: S.Natural.make(line), column: S.Natural.make(column) });
 
-// A span the prose introduces as a branch ("branch `goals/x`") names a Git ref, not a path, even when
-// the ref no longer exists locally (K29).
 const BRANCH_NAME_PREFIX = /\bbranch(?:es)?\s+$/iu;
 
 const namesBranch = (text: string, column: number): boolean => BRANCH_NAME_PREFIX.test(Str.slice(0, column - 1)(text));
@@ -467,44 +450,6 @@ const proseSpans = (
   return A.appendAll(A.appendAll(assertions, inline), knowledgeDomainLineSpans(line.text));
 };
 
-/**
- * Extracts every reference-shaped span and historical marker from one decoded document.
- *
- * **Details**
- *
- * Spans come from the Stage-1 readers: inline code spans on prose lines (a `bun run beep` span is a
- * command, a governed repository spelling a path unless the prose introduces it as a branch, as in
- * "branch `goals/x`"; the refs the clone holds are never read) and `beep:assert path-exists`
- * markers that fill a whole prose line (a marker quoted in inline code or written mid-line asserts
- * nothing). Fenced content is never read as spans: an unmarked fence is a
- * decoy, and a fence whose info string carries `beep:generated=<producer-id>` is one
- * `generated-fence` span on its opening delimiter. A block marker scopes the next Markdown block
- * (a fence through its closing delimiter, or the run of non-blank prose lines that follows), a
- * frontmatter `beep-historical:` key scopes the document, and the block marker wins where both apply.
- *
- * **Gotchas**
- *
- * Block boundaries come from the Stage-1 line reader (fence verdicts plus blank lines), not a full
- * Markdown AST, so a loose list separated by blank lines is several blocks.
- *
- * **Example** (Extract one live path span)
- *
- * ```ts
- * import { extractKnowledgeDocumentSpans } from "@beep/repo-cli/commands/Knowledge/KnowledgeDoctor.service"
- *
- * const extraction = extractKnowledgeDocumentSpans("docs/README.md", "See `goals/INDEX.md`.")
- *
- * console.log(extraction.spans.length) // 1
- * ```
- *
- * @param documentPath - Repository-relative path of the scanned document.
- * @param text - Decoded document text.
- * @param packages - Workspace export facts from the scanned tree, when available.
- * @param entries - Tracked entries used to prove the export targets.
- * @returns Source-ordered spans plus every historical marker in the document.
- * @category parsing
- * @since 0.0.0
- */
 const extractDocumentSpans = (
   documentPath: string,
   text: string,
@@ -572,6 +517,24 @@ const extractDocumentSpans = (
 /**
  * Extracts reference spans without tree-specific package export evidence.
  *
+ * **Details**
+ *
+ * Spans come from the Stage-1 readers: inline code spans on prose lines (a `bun run beep` span is a
+ * command, a governed repository spelling a path unless the prose introduces it as a branch, as in
+ * "branch `goals/x`"; the refs the clone holds are never read) and `beep:assert path-exists`
+ * markers that fill a whole prose line (a marker quoted in inline code or written mid-line asserts
+ * nothing). Fenced content is never read as spans: an unmarked fence is a
+ * decoy, and a fence whose info string carries `beep:generated=<producer-id>` is one
+ * `generated-fence` span on its opening delimiter. A block marker scopes the next Markdown block
+ * (a fence through its closing delimiter, or the run of non-blank prose lines that follows), a
+ * frontmatter `beep-historical:` key scopes the document, and the block marker wins where both
+ * apply.
+ *
+ * **Gotchas**
+ *
+ * Block boundaries come from the Stage-1 line reader (fence verdicts plus blank lines), not a full
+ * Markdown AST, so a loose list separated by blank lines is several blocks.
+ *
  * **Example** (Extract a relative path)
  * ```ts
  * import { extractKnowledgeDocumentSpans } from "@beep/repo-cli/commands/Knowledge/KnowledgeDoctor.service"
@@ -586,14 +549,8 @@ export const extractKnowledgeDocumentSpans: {
   (documentPath: string, text: string): KnowledgeDocumentExtraction;
 } = dual(2, (documentPath: string, text: string) => extractDocumentSpans(documentPath, text));
 
-/* -------------------------------------------------------------------------------------------------
- * Classification rule table
- * ---------------------------------------------------------------------------------------------- */
-
-/** The classification context of one span: the span and its citation once validated. */
 type KnowledgeSpanClassificationInput = {
   readonly span: KnowledgeSpan;
-  /** The span's citation commit when it is shape-valid and an ancestor of the scanned tree. */
   readonly validCitation: O.Option<KnowledgeCommitSha>;
 };
 
@@ -692,10 +649,6 @@ export const classifyKnowledgeSpan = (input: KnowledgeSpanClassificationInput): 
     O.getOrElse(() => KnowledgeSpanClass.Enum.unclassified)
   );
 
-/* -------------------------------------------------------------------------------------------------
- * Evaluators
- * ---------------------------------------------------------------------------------------------- */
-
 const failed = (first: KnowledgeEvaluationFailure, ...rest: ReadonlyArray<KnowledgeEvaluationFailure>) =>
   EvaluationFailed.make({ failures: [first, ...rest] });
 
@@ -767,8 +720,6 @@ type OptionToken = {
   readonly long: boolean;
 };
 
-// Mirrors the Effect CLI lexer: `--name[=value]` is one long option, `-abc` is one short option per
-// character up to an `=`, and negative numbers and everything after a bare `--` are values.
 const optionTokens = (words: ReadonlyArray<string>): ReadonlyArray<OptionToken> =>
   A.flatMap(
     A.takeWhile(words, (word) => !Str.equivalence(word, END_OF_OPTIONS)),
@@ -961,20 +912,11 @@ export const KNOWLEDGE_DOCTOR_EVALUATORS: ReadonlyArray<KnowledgeEvaluator> = [
   KnowledgeSkillsLocalEvaluator,
 ];
 
-/* -------------------------------------------------------------------------------------------------
- * Counterfactual overlay and harness
- * ---------------------------------------------------------------------------------------------- */
-
 const isAtOrBelowTreePath =
   (repoPath: string) =>
   (candidate: string): boolean =>
     Str.equivalence(candidate, repoPath) || Str.startsWith(`${repoPath}/`)(candidate);
 
-// Removes one path and everything below it. The entry index is updated in place of a rebuild, so one
-// counterfactual costs a pass over the entry list rather than re-indexing every tracked path: the
-// removed entries leave `paths`, every directory at or below the removed path leaves `directories`
-// (all of its entries were removed), and an ancestor of the removed path stays exactly when some
-// kept entry still lies beneath it. `makeKnowledgeTreeEntryIndex(kept)` is the specification.
 const withoutTrackedPath = (tree: KnowledgeDoctorTree, removedPath: string): KnowledgeDoctorTree => {
   const isRemoved = isAtOrBelowTreePath(removedPath);
   const removed = A.filter(tree.trackedEntries, (entry) => isRemoved(entry.path));
@@ -990,7 +932,6 @@ const withoutTrackedPath = (tree: KnowledgeDoctorTree, removedPath: string): Kno
       parent = parentTreeDirectory(parent.value);
     }
   }
-  // Deepest ancestor first: once one still holds a kept entry, every shallower one does as well.
   const emptiedAncestors: Array<string> = [];
   let ancestor = parentTreeDirectory(removedPath);
   while (O.isSome(ancestor)) {
@@ -1001,7 +942,6 @@ const withoutTrackedPath = (tree: KnowledgeDoctorTree, removedPath: string): Kno
     emptiedAncestors.push(ancestor.value);
     ancestor = parentTreeDirectory(ancestor.value);
   }
-  // Per-value removal touches one trie path each; `HashSet.difference` would re-filter the whole set.
   const removeAll = (set: HashSet.HashSet<string>, values: Iterable<string>): HashSet.HashSet<string> =>
     A.reduce(A.fromIterable(values), set, (rest, value) => HashSet.remove(rest, value));
   const paths = removeAll(
@@ -1051,7 +991,8 @@ const withoutCommandWitness = (tree: KnowledgeDoctorTree, witness: CommandNodeWi
  * it removes that flag from the command, and from the global flags when the command is the root. A
  * producer witness unregisters the producer output. A manifest-field, export, or lock-entry witness
  * removes that one fact from the domain ({@link knowledgeDomainWithout}). Nothing else about the
- * tree changes.
+ * tree changes. Hiding a tree entry leaves `entryIndex` equal to `makeKnowledgeTreeEntryIndex`
+ * over the kept entries, without re-indexing the whole tree.
  *
  * **Gotchas**
  *
@@ -1221,10 +1162,6 @@ export const knowledgeCounterfactualVerdicts = Effect.fn("KnowledgeDoctor.counte
   return A.flatten(perSpan);
 });
 
-/* -------------------------------------------------------------------------------------------------
- * Scan
- * ---------------------------------------------------------------------------------------------- */
-
 const evaluatorFor = (
   evaluators: ReadonlyArray<KnowledgeEvaluator>,
   span: KnowledgeSpan
@@ -1383,9 +1320,6 @@ const evaluateSpan = Effect.fn("KnowledgeDoctor.evaluateSpan")(function* (
   );
 });
 
-// goals/prunable-product-leaves, seam 1b: a missing path the tree's checkout pruned or owns (a
-// pruned product leaf or packet, or a path its prune declaration names) is no broken link; neither is
-// a goals-doctor finding of a packet the checkout pruned or owns. Both are skipped and counted.
 const PATH_FAILURE_KINDS = HashSet.make("broken-tracked-path", "failed-assertion");
 const PATH_CAUSE_PREFIX = "path:";
 
@@ -1402,8 +1336,6 @@ const prunedGoalFinding =
     isCheckoutPathPruned(inventory, `goals/${finding.slug}`) ||
     O.exists(O.fromUndefinedOr(finding.target), (target) => isCheckoutPathPruned(inventory, target));
 
-// The rows the tree's checkout keeps, and how many it skipped. The inventory is read only when a
-// row could be skipped, so a tree without one reads nothing more.
 const withoutPrunedRows = Effect.fn("KnowledgeDoctor.withoutPrunedRows")(function* <Row>(
   tree: KnowledgeDoctorTree,
   rows: ReadonlyArray<Row>,
@@ -1421,8 +1353,6 @@ const withoutPrunedRows = Effect.fn("KnowledgeDoctor.withoutPrunedRows")(functio
 
 const isPathFailureRow = (row: FindingRow): boolean => HashSet.has(PATH_FAILURE_KINDS, row.candidate.kind);
 
-// Every goals-doctor finding the tree's bytes determine, listed as delegated: the goals doctor keeps
-// the gate, and each one is a causal root for the claims beneath it.
 const delegatedFindings = Effect.fn("KnowledgeDoctor.delegatedFindings")(function* (tree: KnowledgeDoctorTree) {
   const goalFindings = yield* tree.domain.goalsDoctorFindings;
   const { kept: keptGoalFindings, skipped } = yield* withoutPrunedRows(
@@ -1466,7 +1396,6 @@ const citationAncestry = Effect.fn("KnowledgeDoctor.citationAncestry")(function*
   return HashMap.fromIterable(verdicts);
 });
 
-// The tree's removals for exactly the targets one grouping of these findings looks up.
 const findingRemovals = (tree: KnowledgeDoctorTree, findings: ReadonlyArray<KnowledgeDoctorFinding>) =>
   tree.pathRemovals(KnowledgePathRemovalQuery.make({ targets: knowledgeRemovalTargets(findings) }));
 
@@ -1610,10 +1539,6 @@ export const scanKnowledgeDoctorTree = Effect.fn("KnowledgeDoctor.scanTree")(fun
   });
 });
 
-/* -------------------------------------------------------------------------------------------------
- * Trees
- * ---------------------------------------------------------------------------------------------- */
-
 /**
  * Inputs for an in-memory doctor tree.
  *
@@ -1713,9 +1638,6 @@ export const makeKnowledgeDoctorMemoryTree = (input: KnowledgeDoctorMemoryTreeIn
 
 const COMMAND_ROOT_MODULE = "packages/tooling/tool/cli/src/commands/Root.ts";
 
-// `Git.isAncestor` answers true for an ancestor and false for a non-ancestor (git's silent exit 1).
-// Any failed run (an unknown object, most often) is a non-ancestor in a full clone and an operational
-// failure in a shallow one, where missing history cannot be told apart from a bad citation.
 const isAncestorLive = Effect.fn("KnowledgeDoctor.isAncestor")(function* (
   repoRoot: string,
   treeCommit: string,
@@ -1736,17 +1658,11 @@ const isAncestorLive = Effect.fn("KnowledgeDoctor.isAncestor")(function* (
     : false;
 });
 
-// Both history reads run on their own instance with a 64 MiB fail-closed bound and the patient
-// deadline, so neither goes partial. The tree-only walk measured 19.8 MB on this repository in
-// November 2026 (the whole-history rename-detecting log it replaced, 22.4 MB), past the kit's default
-// 16 MiB bound; the rename-detecting resolution prints only its selected commits, at most that much.
 const KNOWLEDGE_HISTORY_GIT_OPTIONS = GitOptions.make({
   maxOutputBytes: 64 * 1024 * 1024,
   timeout: PATIENT_GIT_OPTIONS.timeout,
 });
 
-// The tree-only removal walk, newest first. History is optional evidence: a shallow clone or any
-// failed git run (an overflow of the 64 MiB bound included) yields `O.none()`, never a failure.
 const removalWalkLive = Effect.fn("KnowledgeDoctor.removalWalk")(function* (repoRoot: string, treeCommit: string) {
   const git = yield* Git;
   const shallow = yield* git.isShallow(repoRoot).pipe(Effect.option);
@@ -1759,9 +1675,6 @@ const removalWalkLive = Effect.fn("KnowledgeDoctor.removalWalk")(function* (repo
     .pipe(Effect.map(knowledgeRemovalCommitsFromLog), Effect.option);
 });
 
-// The rename-detecting removals of the named commits only (`--no-walk`, so git never walks their
-// ancestry), read exactly as the whole-history walk would print them; any failed git run yields
-// `O.none()`.
 const resolveRemovalCommitsLive = Effect.fn("KnowledgeDoctor.resolveRemovalCommits")(function* (
   repoRoot: string,
   commits: A.NonEmptyReadonlyArray<KnowledgeCommitSha>
@@ -1780,15 +1693,11 @@ type KnowledgeRemovalResolver = (
 
 type KnowledgeRemovalReader = Pick<KnowledgeDoctorTree, "pathRemovals" | "removedPaths">;
 
-// One reader's memory: the removals of every commit it resolved, and the latch a failed resolution
-// sets, after which every read of the reader is `O.none()`.
 type KnowledgeRemovalReaderState = {
   readonly resolved: MutableHashMap.MutableHashMap<string, ReadonlyArray<KnowledgePathRemoval>>;
   readonly failed: MutableRef.MutableRef<boolean>;
 };
 
-// Files each resolved removal under its commit, every asked commit included (a commit can resolve to
-// no removal rows).
 const cacheResolved = (
   state: KnowledgeRemovalReaderState,
   commits: ReadonlyArray<KnowledgeCommitSha>,
@@ -1902,6 +1811,12 @@ export const makeKnowledgePathRemovalReader: {
  * The tree-only walk from `treeCommit` runs once, on first use, and is shared by every read; each
  * query then resolves its own commits through {@link makeKnowledgePathRemovalReader}. A shallow clone
  * or any failed git run yields `O.none()`, never a failure.
+ *
+ * **Gotchas**
+ *
+ * History reads run on their own git instance with a 64 MiB fail-closed output bound and the
+ * patient deadline, because this repository's walk outgrows the kit's 16 MiB default; an
+ * overflow is a failed run and yields `O.none()`.
  *
  * **Example** (Read is effectful)
  *
@@ -2062,10 +1977,6 @@ export const makeKnowledgeDoctorTreePaths = Effect.fn("KnowledgeDoctor.makeTreeP
   return yield* liveDoctorTree(materialized, MutableHashMap.empty());
 });
 
-/* -------------------------------------------------------------------------------------------------
- * Gate
- * ---------------------------------------------------------------------------------------------- */
-
 type DoctorGitError = KnowledgeDoctorInputError | KnowledgeOperationalError;
 
 const doctorGitAdapter = (subject: string): GitCommandErrorAdapter<DoctorGitError> => ({
@@ -2114,13 +2025,11 @@ export const knowledgeShallowHistoryError: {
       : O.none()
 );
 
-// A tree read only through `readKnowledgeSealFiles` needs its seal inputs extracted, not the whole tree.
 const materializeKnowledgeSealTree = (treeish: string) =>
   Effect.map(materializeKnowledgeTreePaths(treeish, KNOWLEDGE_SEAL_FILE_PATHS), (materialized) => materialized.oracle);
 
 type DoctorRefs = { readonly repoRoot: string; readonly head: string; readonly mergeBase: string };
 
-// A kit failure with git's exit code becomes `onExit`; one without (git never ran) is the operational spawn failure.
 const exitCodeOr =
   <A>(invocation: GitInvocation, spawnMessage: string, onExit: Effect.Effect<A>) =>
   (error: GitKitError): Effect.Effect<A, KnowledgeOperationalError> =>
@@ -2130,7 +2039,6 @@ const exitCodeOr =
       onTruncated: O.none(),
     });
 
-// `git diff --name-only -z <mergeBase> <head>`: the paths the head changed since the merge-base, sorted and unique.
 const changedSinceMergeBase = Effect.fn("KnowledgeDoctor.changedSinceMergeBase")(function* (refs: DoctorRefs) {
   const git = yield* Git;
   const range = { base: refs.mergeBase, head: refs.head, twoDot: true } as const;
@@ -2152,7 +2060,6 @@ const resolveDoctorRefs = Effect.fn("KnowledgeDoctor.resolveRefs")(function* (ba
     KnowledgeOperationalError.mapError("Failed to locate the repository root for the knowledge doctor.")
   );
   const git = yield* Git;
-  // Only a git that ran and failed passes the gate (as an empty answer did); a spawn failure stays operational.
   const shallow = yield* git
     .isShallow(repoRoot)
     .pipe(
@@ -2251,7 +2158,6 @@ const mintInputAt = Effect.fn("KnowledgeDoctor.mintInputAt")(function* (commit: 
   return {
     tree,
     report,
-    // After the scan, so a history the scan found unavailable fails the mint closed.
     removedPaths: yield* tree.removedPaths,
     files,
     previousPromotions: yield* previousPromotions(tree, files),
@@ -2285,15 +2191,6 @@ const mintAcceptance = Effect.fn("KnowledgeDoctor.mintAcceptance")(function* (
   return KnowledgeMintAcceptance.make({ mintedAtIsAncestor, reproduces });
 });
 
-// The two sides the gate compares: the HEAD doctor tree with its seal files, and the merge-base seal
-// inputs, extracted side by side. Exits replay HEAD side first: a failure of the HEAD tree or its seal
-// files wins over a merge-base failure, as in the HEAD-then-base sequence.
-//
-// The CI phase labels exist to name the step a stalled hosted run is stuck in (#2688), so with the two
-// sides overlapping each side labels its own start and end, and the last line names the side still
-// running. `read-removals` prints where the history walk starts; the scan joins that walk inside its
-// report grouping, so `scanTree` labels the join (`join-removals`, `removals-joined`) and a stalled
-// `git log` is not blamed on the scan. `tree` is the unlabelled tree for reads after the join.
 type DoctorCheckSides = {
   readonly tree: KnowledgeDoctorTree;
   readonly scanTree: KnowledgeDoctorTree;
@@ -2312,9 +2209,6 @@ const readDoctorCheckSides = <E1, R1, E2, R2>(
       Effect.gen(function* () {
         yield* progress("materialize-head");
         const tree = yield* headTree;
-        // The tree-only history walk behind `removedPaths` and `pathRemovals` never fails and depends
-        // only on the head commit, so it starts here and its `git log` runs beside the scan; later
-        // reads join the same cached walk.
         yield* progress("read-removals");
         yield* Effect.forkScoped(tree.removedPaths);
         yield* progress("read-head-seal");
@@ -2408,10 +2302,6 @@ const checkLive = Effect.fn("KnowledgeDoctor.checkLive")(function* (options: Kno
       );
       yield* progress("scan-tree");
       const report = yield* scanKnowledgeDoctorTree(scanTree);
-      // The scan read these same targets, so this read spawns nothing: it is the scan's resolved
-      // commits, or the `O.none()` a failed scan resolution latched. The check regroups the report's
-      // findings with governance rows, whose cause keys (`seal:`, `lease:`, or an expired lease's
-      // report cause key) name no target the report's findings do not.
       const removals = yield* findingRemovals(tree, report.findings);
       const adapter = doctorGitAdapter(`mintedAt ${baseline.mintedAt}`);
       yield* progress("read-renames");
@@ -2522,7 +2412,6 @@ const mintWriteContext = Effect.fn("KnowledgeDoctor.mintWriteContext")(function*
   const base = yield* resolveGitCommit(repoRoot, baseRef, doctorGitAdapter(baseRef));
   const git = yield* Git;
   const untracked = { untrackedFiles: "no" } as const;
-  // A git that ran and failed reads as not clean; one that never ran is the operational spawn failure.
   const clean = yield* git
     .status(repoRoot, untracked)
     .pipe(
@@ -2541,8 +2430,6 @@ const mintWriteContext = Effect.fn("KnowledgeDoctor.mintWriteContext")(function*
   });
 });
 
-// The only writer of the sealed baseline: the CI mint, after every write condition holds and only
-// when the mint changes the committed file.
 const mintLive = Effect.fn("KnowledgeDoctor.mintLive")(function* (options: KnowledgeDoctorMintOptions) {
   const repoRoot = yield* findRepoRoot().pipe(
     KnowledgeOperationalError.mapError("Failed to locate the repository root for the knowledge doctor mint.")
@@ -2665,6 +2552,14 @@ const leasesLive = Effect.fn("KnowledgeDoctor.leasesLive")(function* (options: K
  * of the sealed baseline: a dry run returns the outcome, and a write checks the CI context first and
  * writes only a changed file. `ciMode` decides whether the quality lane runs the read-only report or
  * the gate. `leases` evaluates the lease file without scanning the corpus.
+ *
+ * **Gotchas**
+ *
+ * `check` reads the HEAD side and the merge-base seal inputs side by side; a failure of the HEAD
+ * tree or its seal files wins over a merge-base failure. Each side prints its own CI phase labels,
+ * and the scan labels its join of the history walk (`join-removals`, `removals-joined`), so the
+ * last label of a stalled run names the side or the `git log` it is stuck in. `mintFile` reads
+ * history after the scan, so a history the scan found unavailable fails the mint closed.
  *
  * @see {@link KnowledgeDoctor} for the service tag.
  * @category services

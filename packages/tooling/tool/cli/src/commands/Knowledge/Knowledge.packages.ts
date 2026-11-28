@@ -35,8 +35,6 @@ const readTextIfTracked = (oracle: KnowledgeTreeOracle, paths: HashSet.HashSet<s
 
 const dirname = (repoPath: string): string => A.join(A.dropRight(Str.split("/")(repoPath), 1), "/");
 
-// Joins a relative spelling onto a repository directory, resolving `.` and `..` segments. A path
-// that climbs above the repository root is not a repository path.
 const joinRepoPath = (base: string, relative: string): O.Option<string> =>
   pipe(
     A.appendAll(Str.isEmpty(base) ? A.empty<string>() : Str.split("/")(base), Str.split("/")(relative)),
@@ -88,9 +86,6 @@ class PackageManifestJson extends S.Opaque<PackageManifestJson, { readonly brand
 const decodePackageManifest = Jsonc.bind(PackageManifestJson).decode;
 const CONDITION_ORDER = ["bun", "import", "default", "types", "require", "node"] as const;
 
-// Resolves one exports-map value to its target spelling: a string is the target, `null` blocks the
-// key, an array falls through to its first resolvable member, and a condition object prefers the
-// runtime conditions in `CONDITION_ORDER` before any other key.
 const exportTarget = (value: unknown): O.Option<string> => {
   if (P.isString(value)) {
     return O.some(value);
@@ -166,7 +161,6 @@ const readWorkspacePackage = (oracle: KnowledgeTreeOracle, manifestPath: string)
     )
   );
 
-// The root manifest's workspace globs, in either the array or the `{ packages }` spelling.
 const workspaceGlobs = (value: unknown): ReadonlyArray<string> => {
   const list = P.isObject(value) && !A.isArray(value) ? O.getOrUndefined(R.get(value, "packages")) : value;
   return A.isArray(list) ? A.filter(list, P.isString) : A.empty();
